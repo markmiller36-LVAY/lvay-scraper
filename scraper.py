@@ -14,7 +14,7 @@ import os
 import time
 from datetime import datetime
 
-DB_PATH = "lvay_sports.db"
+DB_PATH = "lvay_v2.db"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -255,7 +255,3 @@ def run_all_sports():
 
 if __name__ == "__main__":
     run_all_sports()
-
-
-if __name__ == "__main__":
-    run_scrape()
