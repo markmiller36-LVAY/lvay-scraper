@@ -219,6 +219,35 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+
+@app.route("/api/scrape/now")
+def scrape_now():
+    """Trigger a full scrape immediately — use to test and seed data."""
+    from scraper import run_all_sports
+    try:
+        total = run_all_sports()
+        return jsonify({"status": "ok", "records_saved": total})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/scrape/baseball")
+def scrape_baseball_now():
+    """Trigger baseball scrape only."""
+    from scraper import scrape_baseball
+    try:
+        total = scrape_baseball()
+        return jsonify({"status": "ok", "sport": "baseball", "records_saved": total})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/scrape/softball")
+def scrape_softball_now():
+    """Trigger softball scrape only."""
+    from scraper import scrape_softball
+    try:
+        total = scrape_softball()
+        return jsonify({"status": "ok", "sport": "softball", "records_saved": total})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
