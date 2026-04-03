@@ -205,7 +205,7 @@ def update_last_updated_tab(sheet):
             WHERE sport=? ORDER BY id DESC LIMIT 1
         """, (sport,))
         last = c.fetchone()
-        last_scrape = last["ran_at"][:16].replace("T", " ") if last else "Never"
+        last_scrape = datetime.fromisoformat(last["ran_at"]).strftime("%m/%d/%Y %I:%M %p") if last else "Never"
         status = "Active" if total > 0 else "No data yet"
         data.append([sport.title(), total, last_scrape, status])
 
