@@ -12,7 +12,7 @@ import os
 from datetime import datetime
 
 app = Flask(__name__)
-DB_PATH = "lvay_sports.db"
+DB_PATH = "lvay_v2.db"
 SEASON_YEAR = os.environ.get("SEASON_YEAR", "2026")
 
 
