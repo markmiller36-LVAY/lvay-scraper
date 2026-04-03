@@ -22,6 +22,46 @@ def get_db():
     return conn
 
 
+def init_db():
+    """Create tables if they don't exist yet — safe to call multiple times."""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS games (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            school      TEXT,
+            week        TEXT,
+            game_date   TEXT,
+            opponent    TEXT,
+            location    TEXT,
+            class_      TEXT,
+            district    TEXT,
+            home_away   TEXT,
+            out_of_state TEXT,
+            win_loss    TEXT,
+            score       TEXT,
+            season      TEXT,
+            scraped_at  TEXT,
+            UNIQUE(school, week, season)
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS scrape_log (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            ran_at      TEXT,
+            pages       INTEGER,
+            games_found INTEGER,
+            status      TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
+with app.app_context():
+    init_db()
+
+
 @app.route("/")
 def index():
     return jsonify({
