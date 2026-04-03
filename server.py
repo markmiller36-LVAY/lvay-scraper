@@ -222,32 +222,47 @@ if __name__ == "__main__":
 
 @app.route("/api/scrape/now")
 def scrape_now():
-    """Trigger a full scrape immediately — use to test and seed data."""
+    """Trigger a full scrape in background — returns immediately."""
+    import threading
     from scraper import run_all_sports
-    try:
-        total = run_all_sports()
-        return jsonify({"status": "ok", "records_saved": total})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+    from sheets_exporter import export_all_to_sheets
+    def run():
+        try:
+            run_all_sports()
+            export_all_to_sheets()
+        except Exception as e:
+            print(f"Background scrape error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({"status": "started", "message": "Full scrape running in background — check /api/status in 3-5 minutes"})
 
 
 @app.route("/api/scrape/baseball")
 def scrape_baseball_now():
-    """Trigger baseball scrape only."""
+    """Trigger baseball scrape in background — returns immediately."""
+    import threading
     from scraper import scrape_baseball
-    try:
-        total = scrape_baseball()
-        return jsonify({"status": "ok", "sport": "baseball", "records_saved": total})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+    from sheets_exporter import export_all_to_sheets
+    def run():
+        try:
+            scrape_baseball()
+            export_all_to_sheets()
+        except Exception as e:
+            print(f"Background baseball error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({"status": "started", "sport": "baseball", "message": "Baseball scrape running in background — check /api/status in 2-3 minutes"})
 
 
 @app.route("/api/scrape/softball")
 def scrape_softball_now():
-    """Trigger softball scrape only."""
+    """Trigger softball scrape in background — returns immediately."""
+    import threading
     from scraper import scrape_softball
-    try:
-        total = scrape_softball()
-        return jsonify({"status": "ok", "sport": "softball", "records_saved": total})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+    from sheets_exporter import export_all_to_sheets
+    def run():
+        try:
+            scrape_softball()
+            export_all_to_sheets()
+        except Exception as e:
+            print(f"Background softball error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({"status": "started", "sport": "softball", "message": "Softball scrape running in background — check /api/status in 2-3 minutes"})
