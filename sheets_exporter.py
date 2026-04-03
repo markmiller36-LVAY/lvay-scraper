@@ -24,7 +24,7 @@ import json
 import os
 from datetime import datetime
 
-DB_PATH = "lvay_v2.db"
+DB_PATH = "/data/lvay_v2.db"
 SHEET_ID = "1u_cJBAWTQJIAO36HZTYvPa7QfE0JoOEqx12c1U4t4mk"
 
 SCOPES = [
