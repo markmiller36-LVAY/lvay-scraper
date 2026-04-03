@@ -11,7 +11,7 @@ import schedule
 import time
 import threading
 from datetime import datetime
-from scraper import run_scrape
+from scraper import run_all_sports as run_scrape
 from server import app
 
 FOOTBALL_SEASON_START_MONTH = 9   # September
