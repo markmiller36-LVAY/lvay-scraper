@@ -53,7 +53,7 @@ def get_or_create_tab(sheet, tab_name, headers):
         # Clear existing data but keep the sheet
         ws.clear()
     except gspread.WorksheetNotFound:
-        ws = sheet.add_worksheet(title=tab_name, rows=2000, cols=20)
+        ws = sheet.add_worksheet(title=tab_name, rows=15000, cols=20)
 
     # Write headers with formatting
     ws.update("A1", [headers])
@@ -251,3 +251,41 @@ def export_all_to_sheets():
 
 if __name__ == "__main__":
     export_all_to_sheets()
+
+
+def export_official_ratings(sheet, season="2026"):
+    """Export official LHSAA power ratings to Google Sheets."""
+    from pdf_scraper import get_ratings_for_sheet
+
+    rows, week = get_ratings_for_sheet(season)
+    if not rows:
+        print("  No official power ratings in database yet — run pdf_scraper first")
+        return 0
+
+    tab_name = f"Official Power Ratings W{week}"
+    headers = ["Rank", "Track", "Division", "School", "Power Rating",
+               "Strength Factor", "Wins", "Losses", "District", "Week", "Season"]
+
+    ws = get_or_create_tab(sheet, tab_name, headers)
+
+    data = []
+    for r in rows:
+        data.append([
+            r["rank"],
+            r["track"].title(),
+            r["division"],
+            r["school"],
+            r["power_rating"],
+            r["strength_factor"],
+            r["wins"],
+            r["losses"],
+            r["district"],
+            r["week"],
+            r["season"],
+        ])
+
+    if data:
+        ws.update("A2", data)
+
+    print(f"  Exported {len(data)} official ratings to '{tab_name}'")
+    return len(data)
