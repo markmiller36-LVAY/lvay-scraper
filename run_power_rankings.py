@@ -57,6 +57,7 @@ def init_tables(conn):
             div_bonus      REAL,
             opp_quality    REAL,
             total_pts      REAL,
+            is_district    INTEGER DEFAULT 0,
             calculated_at  TEXT,
             UNIQUE(sport, season, school, week)
         )
@@ -247,12 +248,21 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         for g in r.breakdown:
             week_num = g["week"]
             meta     = game_meta.get((r.name, week_num), {})
+            # Check if district game using school_database
+            school_info = get_school(r.name)
+            opp_info    = get_school(meta.get("opponent", g["opponent"]))
+            is_district = 0
+            if school_info and opp_info:
+                if (school_info.get("class") == opp_info.get("class") and
+                    school_info.get("district") == opp_info.get("district")):
+                    is_district = 1
+
             c.execute("""
                 INSERT OR REPLACE INTO game_power_points
                 (sport, season, school, week, opponent, result, score,
                  opp_wins, opp_losses, opp_division,
-                 base_pts, div_bonus, opp_quality, total_pts, calculated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 base_pts, div_bonus, opp_quality, total_pts, is_district, calculated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 sport, season, r.name, week_num,
                 meta.get("opponent", g["opponent"]),
@@ -265,6 +275,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
                 g["div"],
                 g["oppq"],
                 g["total"],
+                is_district,
                 now_str
             ))
 
