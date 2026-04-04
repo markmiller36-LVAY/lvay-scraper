@@ -93,6 +93,28 @@ def load_scores(conn, season=SEASON, sport=SPORT):
     return scores
 
 
+def load_oos_opponents(conn, season=SEASON, sport=SPORT):
+    """Load OOS opponent records — keyed by (school, week)."""
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT school, week, opponent, division, opp_wins, opp_losses
+            FROM oos_opponents
+            WHERE sport=? AND season=?
+        """, (sport, season))
+        oos = {}
+        for r in c.fetchall():
+            oos[(r["school"], r["week"])] = {
+                "opponent":   r["opponent"],
+                "division":   r["division"],
+                "opp_wins":   r["opp_wins"],
+                "opp_losses": r["opp_losses"],
+            }
+        return oos
+    except Exception:
+        return {}
+
+
 def build_school_records(rows):
     records = {}
     for r in rows:
@@ -121,6 +143,8 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     init_tables(conn)
 
     rows = load_games(conn, season, sport)
+    oos_lookup = load_oos_opponents(conn, season, sport)
+    print(f'  OOS lookup: {len(oos_lookup)} games loaded')
     if not rows:
         print(f"  No games found for {sport} season {season}")
         conn.close()
@@ -183,12 +207,22 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         except Exception:
             week_num = 0
 
-        opp_record   = school_records.get(opponent, {"wins": 0, "losses": 0})
-        opp_wins     = opp_record["wins"]
-        opp_losses   = opp_record["losses"]
-        opp_info     = get_school(opponent)
-        opp_division = opp_info["division"] if opp_info else "Unknown"
-        opp_class    = opp_info["class"]    if opp_info else ""
+        # Check OOS lookup first
+        oos_key = (school, week_num)
+        if oos_key in oos_lookup:
+            oos_data     = oos_lookup[oos_key]
+            opp_wins     = oos_data["opp_wins"]
+            opp_losses   = oos_data["opp_losses"]
+            opp_division = oos_data["division"]
+            opp_class    = ""
+            oos          = True
+        else:
+            opp_record   = school_records.get(opponent, {"wins": 0, "losses": 0})
+            opp_wins     = opp_record["wins"]
+            opp_losses   = opp_record["losses"]
+            opp_info     = get_school(opponent)
+            opp_division = opp_info["division"] if opp_info else "Unknown"
+            opp_class    = opp_info["class"]    if opp_info else ""
         score        = scores_lookup.get((school, str(week_num)), "")
 
         game_meta[(school, week_num)] = {
