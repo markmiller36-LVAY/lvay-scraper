@@ -457,6 +457,8 @@ def get_all_schedules():
     try:
         c.execute("""
             SELECT g.school, g.week, g.game_date, g.home_away,
+                   g.district_class as opp_district_class,
+                   CASE WHEN g.tournament='D' THEN 1 ELSE 0 END as is_district,
                    gp.opponent, gp.result, gp.score,
                    gp.opp_wins, gp.opp_losses, gp.opp_division,
                    gp.base_pts, gp.div_bonus, gp.opp_quality, gp.total_pts,
@@ -493,19 +495,21 @@ def get_all_schedules():
                     'games':        []
                 }
             by_school[s]['games'].append({
-                'week':        r['week'],
-                'game_date':   r['game_date'] or '',
-                'home_away':   r['home_away'] or '',
-                'opponent':    r['opponent'],
-                'result':      r['result'],
-                'score':       r['score'] or '',
-                'opp_wins':    r['opp_wins'],
-                'opp_losses':  r['opp_losses'],
-                'opp_division':r['opp_division'] or '',
-                'base_pts':    r['base_pts'],
-                'div_bonus':   r['div_bonus'],
-                'opp_quality': r['opp_quality'],
-                'total_pts':   r['total_pts'],
+                'week':             r['week'],
+                'game_date':        r['game_date'] or '',
+                'home_away':        r['home_away'] or '',
+                'opponent':         r['opponent'],
+                'result':           r['result'],
+                'score':            r['score'] or '',
+                'opp_wins':         r['opp_wins'],
+                'opp_losses':       r['opp_losses'],
+                'opp_division':     r['opp_division'] or '',
+                'opp_district_class': r['opp_district_class'] or '',
+                'is_district':      r['is_district'],
+                'base_pts':         r['base_pts'],
+                'div_bonus':        r['div_bonus'],
+                'opp_quality':      r['opp_quality'],
+                'total_pts':        r['total_pts'],
             })
 
         return jsonify({
