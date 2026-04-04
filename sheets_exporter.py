@@ -2,15 +2,14 @@
 LVAY - Google Sheets Exporter
 ================================
 Writes scraped LHSAA sports data to the LVAY Google Sheet.
+NO formatting calls — pure data only for reliability.
 
-Sheet tabs built:
+Tabs built:
   Football Scores (2025)
-  Football Power Rankings (2025)   ← organized by division
+  Football Power Rankings (2025)
   Football Needs Review
   Football District Records
   Instructions
-
-Credentials loaded from env var GOOGLE_CREDENTIALS_JSON.
 """
 
 import gspread
@@ -30,8 +29,6 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive",
 ]
 
-# Division display order for Power Rankings tab
-# NS = Non-Select, S = Select
 DIVISION_ORDER = [
     "Non-Select Division I",
     "Non-Select Division II",
@@ -43,7 +40,6 @@ DIVISION_ORDER = [
     "Select Division IV",
 ]
 
-# Short display labels for the sheet
 DIVISION_LABELS = {
     "Non-Select Division I":   "NS I",
     "Non-Select Division II":  "NS II",
@@ -55,91 +51,48 @@ DIVISION_LABELS = {
     "Select Division IV":      "S IV",
 }
 
-# Header row background colors per division group (alternating for readability)
-DIVISION_COLORS = {
-    "Non-Select Division I":   {"red": 0.13, "green": 0.29, "blue": 0.53},  # dark blue
-    "Non-Select Division II":  {"red": 0.18, "green": 0.40, "blue": 0.60},
-    "Non-Select Division III": {"red": 0.24, "green": 0.52, "blue": 0.69},
-    "Non-Select Division IV":  {"red": 0.29, "green": 0.62, "blue": 0.75},
-    "Select Division I":       {"red": 0.50, "green": 0.19, "blue": 0.19},  # dark red
-    "Select Division II":      {"red": 0.63, "green": 0.28, "blue": 0.21},
-    "Select Division III":     {"red": 0.74, "green": 0.38, "blue": 0.27},
-    "Select Division IV":      {"red": 0.82, "green": 0.49, "blue": 0.35},
-}
 
-
-# ─── AUTH ────────────────────────────────────────────────────────────────────
+# ─── AUTH ─────────────────────────────────────────────────────────────────────
 
 def get_client():
-    creds_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
-    if not creds_json:
-        raise ValueError("GOOGLE_CREDENTIALS_JSON environment variable not set")
-    creds_dict = json.loads(creds_json)
+    # Try secret file first (Render Secret Files)
+    secret_path = "/etc/secrets/google-credentials.json"
+    if os.path.exists(secret_path):
+        with open(secret_path, "r") as f:
+            creds_dict = json.load(f)
+    else:
+        # Fallback to environment variable
+        creds_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+        if not creds_json:
+            raise ValueError("No Google credentials found — checked /etc/secrets/google-credentials.json and GOOGLE_CREDENTIALS_JSON env var")
+        creds_dict = json.loads(creds_json)
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     return gspread.authorize(creds)
 
 
-# ─── TAB HELPERS ─────────────────────────────────────────────────────────────
+# ─── HELPERS ──────────────────────────────────────────────────────────────────
 
 def get_or_create_tab(sheet, tab_name, rows=3000, cols=20):
-    """Get existing tab or create it. Returns cleared worksheet."""
     try:
         ws = sheet.worksheet(tab_name)
         ws.clear()
     except gspread.WorksheetNotFound:
         ws = sheet.add_worksheet(title=tab_name, rows=rows, cols=cols)
+    time.sleep(1)
     return ws
 
 
-def write_header_row(ws, row_num, headers, bg_color=None):
-    """Write a header row with optional background color."""
-    if bg_color is None:
-        bg_color = {"red": 0.13, "green": 0.29, "blue": 0.53}
-
-    ws.update(f"A{row_num}", [headers])
-    col_letter = chr(ord("A") + len(headers) - 1)
-    ws.format(f"A{row_num}:{col_letter}{row_num}", {
-        "backgroundColor": bg_color,
-        "textFormat": {
-            "bold": True,
-            "foregroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}
-        },
-        "horizontalAlignment": "CENTER"
-    })
-
-
-def write_division_header(ws, row_num, division_name, num_cols):
-    """Write a division separator row (merged-style label)."""
-    color = DIVISION_COLORS.get(division_name, {"red": 0.3, "green": 0.3, "blue": 0.3})
-    label = division_name.upper()
-    # Fill all columns with the label in col A, blanks in rest
-    row_data = [label] + [""] * (num_cols - 1)
-    ws.update(f"A{row_num}", [row_data])
-    col_letter = chr(ord("A") + num_cols - 1)
-    ws.format(f"A{row_num}:{col_letter}{row_num}", {
-        "backgroundColor": color,
-        "textFormat": {
-            "bold": True,
-            "fontSize": 11,
-            "foregroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}
-        },
-        "horizontalAlignment": "LEFT"
-    })
-
-
-def batch_write(ws, start_row, data, chunk_size=200):
+def batch_write(ws, start_row, data, chunk_size=250):
     """Write data in chunks to avoid Sheets API limits."""
     for i in range(0, len(data), chunk_size):
         chunk = data[i:i + chunk_size]
         ws.update(f"A{start_row + i}", chunk)
-        if i + chunk_size < len(data):
-            time.sleep(1)  # avoid 429
+        time.sleep(1)
 
 
-# ─── FOOTBALL SCORES TAB ─────────────────────────────────────────────────────
+# ─── FOOTBALL SCORES ──────────────────────────────────────────────────────────
 
 def build_football_scores(sheet, season=SEASON):
-    """Write Football Scores tab — all games ordered by week."""
     tab_name = f"Football Scores ({season})"
     print(f"  Building {tab_name}...")
 
@@ -158,14 +111,12 @@ def build_football_scores(sheet, season=SEASON):
     rows = c.fetchall()
     conn.close()
 
-    headers = [
+    ws = get_or_create_tab(sheet, tab_name)
+    ws.update("A1", [[
         "School", "Week", "Date", "H/A", "Opponent",
         "Division", "District", "W/L", "Score", "Power Pts",
         "Opp Division", "Opp W", "Opp L"
-    ]
-
-    ws = get_or_create_tab(sheet, tab_name)
-    write_header_row(ws, 1, headers)
+    ]])
 
     data = []
     for r in rows:
@@ -192,16 +143,14 @@ def build_football_scores(sheet, season=SEASON):
     return len(data)
 
 
-# ─── FOOTBALL POWER RANKINGS TAB ─────────────────────────────────────────────
+# ─── FOOTBALL POWER RANKINGS ──────────────────────────────────────────────────
 
 def build_football_power_rankings(sheet, season=SEASON):
     """
-    Write Football Power Rankings tab.
-    Organized by division in this order:
-      NS I → NS II → NS III → NS IV → S I → S II → S III → S IV
-
-    Each division gets a colored header row followed by its schools
-    ranked by power rating descending.
+    Rankings organized by division:
+    NS I -> NS II -> NS III -> NS IV -> S I -> S II -> S III -> S IV
+    Each division gets a label row then schools ranked by power pts.
+    NO formatting calls — plain data only.
     """
     tab_name = f"Football Power Rankings ({season})"
     print(f"  Building {tab_name}...")
@@ -209,8 +158,6 @@ def build_football_power_rankings(sheet, season=SEASON):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-
-    # Pull all schools with their computed power ratings
     c.execute("""
         SELECT
             school,
@@ -229,10 +176,9 @@ def build_football_power_rankings(sheet, season=SEASON):
     all_schools = [dict(r) for r in c.fetchall()]
     conn.close()
 
-    # Group schools by division
+    # Group by division
     by_division = {div: [] for div in DIVISION_ORDER}
     unmatched = []
-
     for school in all_schools:
         div = school.get("division") or ""
         if div in by_division:
@@ -240,47 +186,34 @@ def build_football_power_rankings(sheet, season=SEASON):
         else:
             unmatched.append(school)
 
-    # Sort each division group by power points descending
+    # Sort each division by power pts descending
     for div in DIVISION_ORDER:
         by_division[div].sort(key=lambda x: x["total_power_pts"] or 0, reverse=True)
 
-    # Column headers (repeated under each division header)
     col_headers = [
         "Div Rank", "School", "Division", "District",
-        "W", "L", "T", "Games", "Power Pts", "Updated"
+        "W", "L", "T", "Games", "Power Pts"
     ]
-    num_cols = len(col_headers)
     now_str = datetime.now().strftime("%m/%d/%Y %I:%M %p")
 
     ws = get_or_create_tab(sheet, tab_name)
 
-    # Title row
-    ws.update("A1", [[f"LVAY Football Power Rankings — {season} Season (Updated {now_str})"]])
-    ws.format("A1", {
-        "textFormat": {"bold": True, "fontSize": 13},
-        "horizontalAlignment": "LEFT"
-    })
+    # Build one big flat list — no API calls per row, just data
+    all_rows = []
+    all_rows.append([f"LVAY Football Power Rankings {season} — Updated {now_str}"] + [""] * 8)
+    all_rows.append(col_headers)
 
-    current_row = 2
     total_schools = 0
-
     for division in DIVISION_ORDER:
         schools = by_division[division]
         if not schools:
-            continue  # skip empty divisions
+            continue
 
-        # Division header row
-        write_division_header(ws, current_row, division, num_cols)
-        current_row += 1
+        # Division label row (plain text, no formatting call)
+        all_rows.append([f"=== {division.upper()} ==="] + [""] * 8)
 
-        # Column headers under each division
-        write_header_row(ws, current_row, col_headers)
-        current_row += 1
-
-        # School rows
-        data = []
         for rank, s in enumerate(schools, 1):
-            data.append([
+            all_rows.append([
                 rank,
                 s["school"] or "",
                 DIVISION_LABELS.get(s["division"], s["division"] or ""),
@@ -290,29 +223,15 @@ def build_football_power_rankings(sheet, season=SEASON):
                 s["ties"] or 0,
                 s["games_played"] or 0,
                 round(s["total_power_pts"] or 0, 4),
-                now_str,
             ])
+            total_schools += 1
 
-        if data:
-            batch_write(ws, current_row, data)
-            current_row += len(data)
-            total_schools += len(data)
+        all_rows.append([""] * 9)  # spacer
 
-        # Blank spacer row between divisions
-        current_row += 1
-        time.sleep(0.5)  # be kind to Sheets API between divisions
-
-    # Unmatched schools (bad/missing division data) at the bottom
     if unmatched:
-        ws.update(f"A{current_row}", [["UNMATCHED / MISSING DIVISION"]])
-        ws.format(f"A{current_row}", {"textFormat": {"bold": True}})
-        current_row += 1
-        write_header_row(ws, current_row, col_headers,
-                         bg_color={"red": 0.5, "green": 0.5, "blue": 0.5})
-        current_row += 1
-        data = []
+        all_rows.append(["=== UNMATCHED / MISSING DIVISION ==="] + [""] * 8)
         for rank, s in enumerate(unmatched, 1):
-            data.append([
+            all_rows.append([
                 rank,
                 s["school"] or "",
                 s["division"] or "UNKNOWN",
@@ -322,19 +241,19 @@ def build_football_power_rankings(sheet, season=SEASON):
                 s["ties"] or 0,
                 s["games_played"] or 0,
                 round(s["total_power_pts"] or 0, 4),
-                now_str,
             ])
-        batch_write(ws, current_row, data)
-        total_schools += len(data)
+            total_schools += 1
+
+    # One bulk write — no per-row or per-division formatting
+    batch_write(ws, 1, all_rows)
 
     print(f"    Written {total_schools} school rankings")
     return total_schools
 
 
-# ─── NEEDS REVIEW TAB ────────────────────────────────────────────────────────
+# ─── NEEDS REVIEW ─────────────────────────────────────────────────────────────
 
 def build_needs_review(sheet, season=SEASON):
-    """Flag games with missing/suspicious data."""
     tab_name = "Football Needs Review"
     print(f"  Building {tab_name}...")
 
@@ -358,23 +277,20 @@ def build_needs_review(sheet, season=SEASON):
     rows = c.fetchall()
     conn.close()
 
-    headers = [
+    ws = get_or_create_tab(sheet, tab_name)
+    ws.update("A1", [[
         "School", "Week", "Date", "Opponent", "W/L", "Score",
         "Division", "District", "Power Pts", "Issue"
-    ]
-    ws = get_or_create_tab(sheet, tab_name)
-    write_header_row(ws, 1, headers,
-                     bg_color={"red": 0.72, "green": 0.15, "blue": 0.15})
+    ]])
 
     data = []
     for r in rows:
         issues = []
-        if not r["division"]:     issues.append("missing division")
-        if not r["district"]:     issues.append("missing district")
-        if not r["win_loss"]:     issues.append("missing W/L")
-        if not r["score"]:        issues.append("missing score")
+        if not r["division"]:         issues.append("missing division")
+        if not r["district"]:         issues.append("missing district")
+        if not r["win_loss"]:         issues.append("missing W/L")
+        if not r["score"]:            issues.append("missing score")
         if r["power_points"] is None: issues.append("missing power pts")
-
         data.append([
             r["school"] or "",
             r["week"] or "",
@@ -390,18 +306,17 @@ def build_needs_review(sheet, season=SEASON):
 
     if data:
         batch_write(ws, 2, data)
-        print(f"    ⚠️  {len(data)} games need review")
+        print(f"    {len(data)} games need review")
     else:
-        ws.update("A2", [["✅ No issues found!"]])
-        print(f"    ✅ No issues found!")
+        ws.update("A2", [["No issues found!"]])
+        print(f"    No issues found!")
 
     return len(data)
 
 
-# ─── DISTRICT RECORDS TAB ────────────────────────────────────────────────────
+# ─── DISTRICT RECORDS ─────────────────────────────────────────────────────────
 
 def build_district_records(sheet, season=SEASON):
-    """Write per-school district win/loss records."""
     tab_name = "Football District Records"
     print(f"  Building {tab_name}...")
 
@@ -426,14 +341,11 @@ def build_district_records(sheet, season=SEASON):
     rows = c.fetchall()
     conn.close()
 
-    headers = [
-        "School", "Division", "District",
-        "Dist W", "Dist L",
-        "Total W", "Total L",
-        "Power Pts"
-    ]
     ws = get_or_create_tab(sheet, tab_name)
-    write_header_row(ws, 1, headers)
+    ws.update("A1", [[
+        "School", "Division", "District",
+        "Dist W", "Dist L", "Total W", "Total L", "Power Pts"
+    ]])
 
     data = []
     for r in rows:
@@ -455,66 +367,44 @@ def build_district_records(sheet, season=SEASON):
     return len(data)
 
 
-# ─── INSTRUCTIONS TAB ────────────────────────────────────────────────────────
+# ─── INSTRUCTIONS ─────────────────────────────────────────────────────────────
 
 def build_instructions_tab(sheet):
-    """Write a human-readable instructions/legend tab."""
     tab_name = "Instructions"
     print(f"  Building {tab_name}...")
-
     ws = get_or_create_tab(sheet, tab_name)
     now_str = datetime.now().strftime("%m/%d/%Y %I:%M %p CST")
-
-    content = [
+    ws.update("A1", [
         ["LVAY Football Data — Google Sheet Guide"],
         [""],
         ["Last Updated:", now_str],
-        ["Source:", "lhsaaonline.org — scraped automatically by lvay-scraper on Render"],
+        ["Source:", "lhsaaonline.org — auto-scraped by lvay-scraper on Render"],
         [""],
-        ["TABS IN THIS SHEET"],
-        [f"Football Scores ({SEASON})", "Every game for every school — week, date, opponent, W/L, score, power pts"],
-        [f"Football Power Rankings ({SEASON})", "All 304 schools ranked by power pts, organized by division (NS I → NS IV → S I → S IV)"],
-        ["Football Needs Review", "Games flagged for missing division, district, score, or power pts data"],
-        ["Football District Records", "Each school's district W/L record, total record, and power pts"],
-        ["Instructions", "This tab — legend and guide"],
+        ["TAB", "CONTENTS"],
+        [f"Football Scores ({SEASON})", "Every game — week, date, opponent, W/L, score, power pts"],
+        [f"Football Power Rankings ({SEASON})", "304 schools ranked by power pts grouped NS I thru S IV"],
+        ["Football Needs Review", "Games flagged for missing data"],
+        ["Football District Records", "District W/L record per school"],
         [""],
-        ["DIVISION ABBREVIATIONS"],
-        ["NS I",  "Non-Select Division I   (largest non-select schools)"],
-        ["NS II", "Non-Select Division II"],
-        ["NS III","Non-Select Division III"],
-        ["NS IV", "Non-Select Division IV  (smallest non-select schools)"],
-        ["S I",   "Select Division I       (largest select/private schools)"],
-        ["S II",  "Select Division II"],
-        ["S III", "Select Division III"],
-        ["S IV",  "Select Division IV      (smallest select/private schools)"],
-        [""],
-        ["POWER POINTS FORMULA (LHSAA Football)"],
-        ["Win vs opponent", "Opponent's total games played × opponent win %  +  division bonus"],
-        ["Loss vs opponent", "Opponent's total games played × opponent win % × 0.5  (half credit)"],
-        ["Division bonus", "+2 pts per division level above you (unified I/II/III/IV regardless of track)"],
-        [""],
-        ["QUESTIONS?", "Contact LVAY admin — this sheet is auto-generated, do not manually edit data tabs"],
-    ]
-
-    ws.update("A1", content)
-    ws.format("A1", {"textFormat": {"bold": True, "fontSize": 14}})
-    ws.format("A6", {"textFormat": {"bold": True, "fontSize": 12}})
-    ws.format("A12", {"textFormat": {"bold": True, "fontSize": 12}})
-    ws.format("A20", {"textFormat": {"bold": True, "fontSize": 12}})
-
-    print(f"    Instructions tab written")
+        ["DIVISION KEY", ""],
+        ["NS I",   "Non-Select Division I"],
+        ["NS II",  "Non-Select Division II"],
+        ["NS III", "Non-Select Division III"],
+        ["NS IV",  "Non-Select Division IV"],
+        ["S I",    "Select Division I"],
+        ["S II",   "Select Division II"],
+        ["S III",  "Select Division III"],
+        ["S IV",   "Select Division IV"],
+    ])
+    print(f"    Done")
 
 
-# ─── MAIN ────────────────────────────────────────────────────────────────────
+# ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 def export_football_to_sheets(season=SEASON):
-    """
-    Main entry point — builds all football tabs in the Google Sheet.
-    Called from server.py via /api/build/football-sheets
-    """
     print(f"\n{'='*54}")
     print(f"LVAY Football Google Sheets Export — Season {season}")
-    print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S %Z')}")
+    print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"{'='*54}")
 
     try:
@@ -527,40 +417,38 @@ def export_football_to_sheets(season=SEASON):
 
     try:
         scores = build_football_scores(sheet, season)
-        print(f"  Football Scores ({season})... {scores} games")
     except Exception as e:
-        print(f"  ERROR building scores tab: {e}")
+        print(f"  ERROR scores tab: {e}")
         scores = 0
 
     try:
         rankings = build_football_power_rankings(sheet, season)
-        print(f"  Football Power Rankings ({season})... {rankings} schools")
     except Exception as e:
-        print(f"  ERROR building rankings tab: {e}")
+        print(f"  ERROR rankings tab: {e}")
         rankings = 0
 
     try:
         flagged = build_needs_review(sheet, season)
     except Exception as e:
-        print(f"  ERROR building needs-review tab: {e}")
+        print(f"  ERROR needs-review tab: {e}")
         flagged = 0
 
     try:
         districts = build_district_records(sheet, season)
     except Exception as e:
-        print(f"  ERROR building district records tab: {e}")
+        print(f"  ERROR district records tab: {e}")
         districts = 0
 
     try:
         build_instructions_tab(sheet)
     except Exception as e:
-        print(f"  ERROR building instructions tab: {e}")
+        print(f"  ERROR instructions tab: {e}")
 
     print(f"\n{'='*54}")
-    print(f"DONE! Football {season} Google Sheets layer complete.")
-    print(f"  Scores: {scores} games")
-    print(f"  Rankings: {rankings} schools")
-    print(f"  Needs Review: {flagged} flagged")
+    print(f"DONE! Football {season} Google Sheets complete.")
+    print(f"  Scores:           {scores} games")
+    print(f"  Rankings:         {rankings} schools")
+    print(f"  Needs Review:     {flagged} flagged")
     print(f"  District Records: {districts} schools")
     print(f"Sheet: https://docs.google.com/spreadsheets/d/{SHEET_ID}")
     print(f"{'='*54}\n")
