@@ -76,12 +76,17 @@ def load_football_games():
 def load_school_profiles():
     """Load school division data."""
     try:
-        import sys
-        sys.path.insert(0, '/app')
         from school_database import SCHOOLS
         return SCHOOLS
-    except:
-        return {}
+    except ImportError:
+        try:
+            import sys
+            sys.path.insert(0, '/opt/render/project/src')
+            from school_database import SCHOOLS
+            return SCHOOLS
+        except:
+            print("  WARNING: school_database not found - division/class data will be empty")
+            return {}
 
 
 def calculate_records(games):
@@ -113,7 +118,7 @@ def calculate_records(games):
 
 def calculate_power_ratings(games, profiles):
     """Calculate football power ratings using LHSAA formula."""
-    from playoff_predictor.power_rating_engine import (
+    from power_rating_engine import (
         PowerRatingEngine, Team, GameResult, DIVISION_RANK
     )
 
