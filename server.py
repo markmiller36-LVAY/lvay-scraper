@@ -458,7 +458,14 @@ def get_all_schedules():
         c.execute("""
             SELECT g.school, g.week, g.game_date, g.home_away,
                    g.district_class as opp_district_class,
-                   CASE WHEN g.tournament='D' THEN 1 ELSE 0 END as is_district,
+                   CASE WHEN EXISTS (
+                       SELECT 1 FROM games g2 
+                       WHERE g2.school = gp.opponent 
+                       AND g2.sport = 'football' 
+                       AND g2.season = gp.season
+                       AND g2.opponent = gp.school
+                       AND g2.district_class = g.district_class
+                   ) THEN 1 ELSE 0 END as is_district,
                    gp.opponent, gp.result, gp.score,
                    gp.opp_wins, gp.opp_losses, gp.opp_division,
                    gp.base_pts, gp.div_bonus, gp.opp_quality, gp.total_pts,
