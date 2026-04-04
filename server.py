@@ -305,7 +305,7 @@ def get_ratings():
 def calculate_rankings():
     """Trigger power rankings calculation in background."""
     import threading
-    from power_rankings_calculator import run_power_rankings
+    from run_power_rankings import run_power_rankings
     def run():
         try:
             run_power_rankings()
