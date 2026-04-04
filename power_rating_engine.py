@@ -63,6 +63,11 @@ DIVISION_RANK = {
     "Division I (Play Up)":    4,
 }
 
+CLASS_RANK = {
+    "5A": 5, "4A": 4, "3A": 3, "2A": 2, "1A": 1,
+    "B": 1, "C": 0,
+}
+
 PLAYOFF_SIZES = {
     "non-select": 28,
     "select":     24,
@@ -253,10 +258,16 @@ class PowerRatingEngine:
             gp.base = config.get("forfeit_bonus", 0)
 
         # Division bonus — OOS games do NOT get div bonus
+        # LHSAA 14.12: +2 for each class & division the opponent is ABOVE you
+        # Opponent must be higher in BOTH class AND division to get bonus
         if config["has_div_bonus"] and not oos:
-            diff = game.opponent_div_rank - team.div_rank
-            if diff > 0:
-                gp.div_bonus = diff * config["div_bonus_per_div"]
+            opp_class_rank  = CLASS_RANK.get(game.opponent_class, 0)
+            team_class_rank = CLASS_RANK.get(team.classification, 0)
+            div_diff   = game.opponent_div_rank - team.div_rank
+            class_diff = opp_class_rank - team_class_rank
+            if div_diff > 0 and class_diff > 0:
+                # Both class AND division are higher — award bonus per division level
+                gp.div_bonus = div_diff * config["div_bonus_per_div"]
             # Play-up bonus (basketball)
             if game.playing_up and config.get("play_up_bonus"):
                 gp.div_bonus += config["play_up_bonus"]
