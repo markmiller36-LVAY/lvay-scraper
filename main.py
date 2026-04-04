@@ -4,13 +4,12 @@ LVAY - Scheduler + Server
 Runs the scraper on schedule and exports to Google Sheets.
 Also serves the JSON API for WordPress.
 """
-
 import schedule
 import time
 import threading
 from datetime import datetime
 from scraper import run_all_sports
-from sheets_exporter import export_all_to_sheets
+from sheets_exporter import export_football_to_sheets  # ← updated
 from server import app
 
 
@@ -21,7 +20,7 @@ def scheduled_run():
         # Step 1: Scrape LHSAA
         run_all_sports()
         # Step 2: Export to Google Sheets
-        export_all_to_sheets()
+        export_football_to_sheets()  # ← updated
     except Exception as e:
         print(f"[SCHEDULER] ERROR: {e}")
 
