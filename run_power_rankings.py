@@ -1,58 +1,70 @@
 """
 LVAY - Football Power Rankings Runner
 =======================================
-Step 3 of the pipeline:
+Reads games from DB, enriches with school_database divisions,
+runs PowerRatingEngine, writes results to:
 
-  1. scraper.py        → raw games in DB
-  2. (this script)     → enrich + calculate + write power_rankings table
-  3. sheets_exporter.py → read power_rankings → write to Google Sheet
-
-What this does:
-  - Reads all football games from games table
-  - Looks up each school in school_database.py → gets division + track
-  - For each game, looks up the opponent's record to get opponent_wins/losses
-  - Feeds everything into PowerRatingEngine
-  - Writes results to power_rankings table
+  power_rankings      — one row per school (rank, power_rating, W/L)
+  game_power_points   — one row per game (base, div_bonus, opp_quality, total)
 """
 
 import sqlite3
 import os
 from datetime import datetime
 from power_rating_engine import PowerRatingEngine, Team, GameResult
-from school_database import get_school, get_division
+from school_database import get_school
 
 DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 SEASON  = "2025"
 SPORT   = "football"
 
 
-def init_power_rankings_table(conn):
-    """Create power_rankings table if it doesn't exist."""
+def init_tables(conn):
     conn.execute("""
         CREATE TABLE IF NOT EXISTS power_rankings (
-            id           INTEGER PRIMARY KEY AUTOINCREMENT,
-            sport        TEXT,
-            season       TEXT,
-            school       TEXT,
-            division     TEXT,
-            track        TEXT,
-            class_       TEXT,
-            district     INTEGER,
-            rank         INTEGER,
-            power_rating REAL,
-            wins         INTEGER,
-            losses       INTEGER,
-            ties         INTEGER,
-            games_played INTEGER,
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            sport         TEXT,
+            season        TEXT,
+            school        TEXT,
+            division      TEXT,
+            track         TEXT,
+            class_        TEXT,
+            district      INTEGER,
+            rank          INTEGER,
+            power_rating  REAL,
+            wins          INTEGER,
+            losses        INTEGER,
+            ties          INTEGER,
+            games_played  INTEGER,
             calculated_at TEXT,
             UNIQUE(sport, season, school)
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS game_power_points (
+            id             INTEGER PRIMARY KEY AUTOINCREMENT,
+            sport          TEXT,
+            season         TEXT,
+            school         TEXT,
+            week           INTEGER,
+            opponent       TEXT,
+            result         TEXT,
+            score          TEXT,
+            opp_wins       INTEGER,
+            opp_losses     INTEGER,
+            opp_division   TEXT,
+            base_pts       REAL,
+            div_bonus      REAL,
+            opp_quality    REAL,
+            total_pts      REAL,
+            calculated_at  TEXT,
+            UNIQUE(sport, season, school, week)
         )
     """)
     conn.commit()
 
 
 def load_games(conn, season=SEASON, sport=SPORT):
-    """Load all games for a sport/season from DB."""
     c = conn.cursor()
     c.execute("""
         SELECT school, opponent, win_loss, week, score,
@@ -65,12 +77,22 @@ def load_games(conn, season=SEASON, sport=SPORT):
     return c.fetchall()
 
 
+def load_scores(conn, season=SEASON, sport=SPORT):
+    """Load scores for display purposes."""
+    c = conn.cursor()
+    c.execute("""
+        SELECT school, week, score
+        FROM games
+        WHERE sport=? AND season=?
+    """, (sport, season))
+    scores = {}
+    for r in c.fetchall():
+        key = (r["school"], str(r["week"] or "").replace("Week ", "").strip())
+        scores[key] = r["score"] or ""
+    return scores
+
+
 def build_school_records(rows):
-    """
-    Build a lookup of each school's wins/losses from the raw game rows.
-    Used to calculate opponent quality.
-    Returns: { school_name: {"wins": N, "losses": N, "gp": N} }
-    """
     records = {}
     for r in rows:
         school = r["school"]
@@ -95,9 +117,8 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    init_power_rankings_table(conn)
+    init_tables(conn)
 
-    # Load all games
     rows = load_games(conn, season, sport)
     if not rows:
         print(f"  No games found for {sport} season {season}")
@@ -106,17 +127,15 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     print(f"  Loaded {len(rows)} games")
 
-    # Build school win/loss records for opponent quality
+    scores_lookup  = load_scores(conn, season, sport)
     school_records = build_school_records(rows)
     print(f"  {len(school_records)} school profiles loaded")
 
-    # Initialize engine
-    engine = PowerRatingEngine()
-
-    # Add all teams with their division from school_database
+    engine      = PowerRatingEngine()
     schools_seen = set()
     unmatched    = []
 
+    # Register all teams
     for r in rows:
         school = r["school"]
         if school in schools_seen:
@@ -126,7 +145,6 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         db_info  = get_school(school)
         division = db_info["division"] if db_info else "Unknown"
         class_   = db_info["class"]    if db_info else (r["class_"] or "")
-        track    = db_info["track"]    if db_info else "unknown"
 
         if not db_info or division == "Unknown":
             unmatched.append(school)
@@ -140,14 +158,11 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     print(f"  {len(schools_seen)} schools registered")
     if unmatched:
-        print(f"  ⚠️  {len(unmatched)} schools not found in school_database:")
-        for s in unmatched:
-            print(f"      - {s}")
+        print(f"  ⚠️  {len(unmatched)} unmatched schools")
 
-    # Score validation
-    validation_issues = 0
+    # Add all games
+    game_meta = {}  # (school, week_num) -> {opp_wins, opp_losses, opp_division, score}
 
-    # Add all games to engine
     for r in rows:
         school   = r["school"]
         opponent = r["opponent"]
@@ -155,7 +170,6 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         week_str = r["week"] or ""
         oos      = str(r["out_of_state"] or "").strip().upper() in ("Y", "YES", "1", "TRUE")
 
-        # Normalize result
         if wl == "Tie":
             result = "T"
         elif wl in ("W", "L", "T"):
@@ -163,21 +177,27 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         else:
             continue
 
-        # Week number
         try:
             week_num = int(week_str.replace("Week ", "").strip())
         except Exception:
             week_num = 0
 
-        # Opponent record (for opponent quality)
-        opp_record = school_records.get(opponent, {"wins": 0, "losses": 0})
-        opp_wins   = opp_record["wins"]
-        opp_losses = opp_record["losses"]
-
-        # Opponent division from school_database
+        opp_record   = school_records.get(opponent, {"wins": 0, "losses": 0})
+        opp_wins     = opp_record["wins"]
+        opp_losses   = opp_record["losses"]
         opp_info     = get_school(opponent)
         opp_division = opp_info["division"] if opp_info else "Unknown"
         opp_class    = opp_info["class"]    if opp_info else ""
+        score        = scores_lookup.get((school, str(week_num)), "")
+
+        game_meta[(school, week_num)] = {
+            "opponent":     opponent,
+            "result":       result,
+            "score":        score,
+            "opp_wins":     opp_wins,
+            "opp_losses":   opp_losses,
+            "opp_division": opp_division,
+        }
 
         engine.add_game(GameResult(
             team=school,
@@ -192,21 +212,19 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             week=week_num,
         ))
 
-    print(f"  Score validation: {validation_issues} games flagged")
-
-    # Run engine
+    # Calculate ratings
     print(f"  Calculating power ratings...")
     ratings = engine.rate_all()
     print(f"  Power ratings calculated for {len(ratings)} schools")
 
-    # Write to power_rankings table
     now_str = datetime.now().isoformat()
-    c = conn.cursor()
+    c       = conn.cursor()
 
-    # Clear old ratings for this sport/season
-    c.execute("DELETE FROM power_rankings WHERE sport=? AND season=?", (sport, season))
+    # Clear old data
+    c.execute("DELETE FROM power_rankings WHERE sport=? AND season=?",    (sport, season))
+    c.execute("DELETE FROM game_power_points WHERE sport=? AND season=?", (sport, season))
 
-    inserted = 0
+    # Write power_rankings
     for r in ratings:
         db_info  = get_school(r.name)
         division = db_info["division"] if db_info else r.division
@@ -221,17 +239,41 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             sport, season, r.name, division, track, class_, district,
-            r.rank, r.power_rating, r.wins, r.losses, r.ties, r.games_played,
-            now_str
+            r.rank, r.power_rating, r.wins, r.losses, r.ties,
+            r.games_played, now_str
         ))
-        inserted += 1
+
+        # Write per-game breakdown from engine's breakdown list
+        for g in r.breakdown:
+            week_num = g["week"]
+            meta     = game_meta.get((r.name, week_num), {})
+            c.execute("""
+                INSERT OR REPLACE INTO game_power_points
+                (sport, season, school, week, opponent, result, score,
+                 opp_wins, opp_losses, opp_division,
+                 base_pts, div_bonus, opp_quality, total_pts, calculated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                sport, season, r.name, week_num,
+                meta.get("opponent", g["opponent"]),
+                g["result"],
+                meta.get("score", ""),
+                meta.get("opp_wins", 0),
+                meta.get("opp_losses", 0),
+                meta.get("opp_division", ""),
+                g["base"],
+                g["div"],
+                g["oppq"],
+                g["total"],
+                now_str
+            ))
 
     conn.commit()
     conn.close()
 
     print(f"\n{'='*54}")
-    print(f"DONE! Power rankings calculated.")
-    print(f"  Schools ranked: {inserted}")
+    print(f"DONE!")
+    print(f"  Schools ranked:    {len(ratings)}")
     print(f"  Unmatched schools: {len(unmatched)}")
     print(f"  Top 5:")
     for r in ratings[:5]:
