@@ -447,3 +447,72 @@ def get_game_points(school_name):
     except Exception as e:
         conn.close()
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/schedules/football")
+def get_all_schedules():
+    """Get all game breakdowns for all schools — for the schedules page."""
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT g.school, g.week, g.game_date, g.home_away,
+                   gp.opponent, gp.result, gp.score,
+                   gp.opp_wins, gp.opp_losses, gp.opp_division,
+                   gp.base_pts, gp.div_bonus, gp.opp_quality, gp.total_pts,
+                   pr.division, pr.class_, pr.district,
+                   pr.wins, pr.losses, pr.power_rating, pr.rank
+            FROM game_power_points gp
+            JOIN games g ON g.school = gp.school
+                AND g.sport = 'football'
+                AND g.season = gp.season
+                AND CAST(REPLACE(g.week,'Week ','') AS INTEGER) = gp.week
+            LEFT JOIN power_rankings pr ON pr.school = gp.school
+                AND pr.sport = 'football'
+                AND pr.season = gp.season
+            WHERE gp.sport = 'football' AND gp.season = '2025'
+            ORDER BY gp.school, gp.week ASC
+        """)
+        rows = [dict(r) for r in c.fetchall()]
+        conn.close()
+
+        # Group by school
+        by_school = {}
+        for r in rows:
+            s = r['school']
+            if s not in by_school:
+                by_school[s] = {
+                    'school':       s,
+                    'division':     r['division'],
+                    'class_':       r['class_'],
+                    'district':     r['district'],
+                    'wins':         r['wins'],
+                    'losses':       r['losses'],
+                    'power_rating': r['power_rating'],
+                    'rank':         r['rank'],
+                    'games':        []
+                }
+            by_school[s]['games'].append({
+                'week':        r['week'],
+                'game_date':   r['game_date'] or '',
+                'home_away':   r['home_away'] or '',
+                'opponent':    r['opponent'],
+                'result':      r['result'],
+                'score':       r['score'] or '',
+                'opp_wins':    r['opp_wins'],
+                'opp_losses':  r['opp_losses'],
+                'opp_division':r['opp_division'] or '',
+                'base_pts':    r['base_pts'],
+                'div_bonus':   r['div_bonus'],
+                'opp_quality': r['opp_quality'],
+                'total_pts':   r['total_pts'],
+            })
+
+        return jsonify({
+            'season': '2025',
+            'total_schools': len(by_school),
+            'schools': list(by_school.values())
+        })
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
