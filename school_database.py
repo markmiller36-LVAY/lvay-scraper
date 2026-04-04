@@ -1,367 +1,110 @@
 """
 LHSAA School Database
 ======================
-Complete lookup table for all Louisiana football schools.
-Built from official LHSAA documents:
+Division assignments built from official LHSAA 2025 final power rankings.
+Alignment (class + district) from Football.pdf 2025-2026 alignment document.
 
-IMPORTANT: LHSAA reclassifies schools every two years.
-Update this file when new designation documents are released.
 Current cycle: 2024-2026
-Next cycle: 2026-2028 (update before 2026 season)
-
-  - School_Designation_Football.pdf (enrollment + Non-Select/Select division)
-  - Football.pdf (2025-2026 alignment: class + district)
-
-Usage:
-  from school_database import SCHOOLS, get_school, get_division
-
-  school = get_school("Calvary Baptist")
-  print(school)
-  # {'name': 'Calvary Baptist', 'classification': '2A', 'district': 1,
-  #  'division': 'Select Division III', 'enrollment': 357, 'track': 'select'}
+Next update: Before 2026 season when new reclassification is released.
 """
 
-# ─── NON-SELECT SCHOOLS ───────────────────────────────────────────────────────
-# Format: "School Name": {"enrollment": N, "division": "Non-Select Division X"}
+# ─── DIVISION ASSIGNMENTS (from official 2025 LHSAA final rankings) ──────────
 
-NON_SELECT = {
-    # Division I (enrollment 936+)
-    "Dutchtown":          {"enrollment": 2613, "division": "Non-Select Division I"},
-    "Denham Springs":     {"enrollment": 2381, "division": "Non-Select Division I"},
-    "St. Amant":          {"enrollment": 2364, "division": "Non-Select Division I"},
-    "Chalmette":          {"enrollment": 2174, "division": "Non-Select Division I"},
-    "East Ascension":     {"enrollment": 2098, "division": "Non-Select Division I"},
-    "Walker":             {"enrollment": 2078, "division": "Non-Select Division I"},
-    "Mandeville":         {"enrollment": 2066, "division": "Non-Select Division I"},
-    "West Monroe":        {"enrollment": 2004, "division": "Non-Select Division I"},
-    "Barbe":              {"enrollment": 1970, "division": "Non-Select Division I"},
-    "Sulphur":            {"enrollment": 1897, "division": "Non-Select Division I"},
-    "Airline":            {"enrollment": 1866, "division": "Non-Select Division I"},
-    "Southside":          {"enrollment": 1828, "division": "Non-Select Division I"},
-    "Zachary":            {"enrollment": 1788, "division": "Non-Select Division I"},
-    "Slidell":            {"enrollment": 1705, "division": "Non-Select Division I"},
-    "Covington":          {"enrollment": 1580, "division": "Non-Select Division I"},
-    "Central - B.R.":     {"enrollment": 1554, "division": "Non-Select Division I"},
-    "Northshore":         {"enrollment": 1534, "division": "Non-Select Division I"},
-    "Fontainebleau":      {"enrollment": 1532, "division": "Non-Select Division I"},
-    "Benton":             {"enrollment": 1491, "division": "Non-Select Division I"},
-    "Hahnville":          {"enrollment": 1485, "division": "Non-Select Division I"},
-    "Destrehan":          {"enrollment": 1449, "division": "Non-Select Division I"},
-    "Live Oak":           {"enrollment": 1364, "division": "Non-Select Division I"},
-    "Haughton":           {"enrollment": 1332, "division": "Non-Select Division I"},
-    "Thibodaux":          {"enrollment": 1315, "division": "Non-Select Division I"},
-    "H.L. Bourgeois":     {"enrollment": 1301, "division": "Non-Select Division I"},
-    "Terrebonne":         {"enrollment": 1297, "division": "Non-Select Division I"},
-    "Parkway":            {"enrollment": 1290, "division": "Non-Select Division I"},
-    "New Iberia":         {"enrollment": 1265, "division": "Non-Select Division I"},
-    "Central Lafourche":  {"enrollment": 1259, "division": "Non-Select Division I"},
-    "Ruston":             {"enrollment": 1239, "division": "Non-Select Division I"},
-    "Prairieville":       {"enrollment": 1175, "division": "Non-Select Division I"},
-    "East St. John":      {"enrollment": 1142, "division": "Non-Select Division I"},
-    "Natchitoches Central":{"enrollment": 1140, "division": "Non-Select Division I"},
-    "Sam Houston":        {"enrollment": 1137, "division": "Non-Select Division I"},
-    "Ouachita Parish":    {"enrollment": 1134, "division": "Non-Select Division I"},
-    "Salmen":             {"enrollment": 1058, "division": "Non-Select Division I"},
-    "Neville":            {"enrollment": 1033, "division": "Non-Select Division I"},
-    "Northwood - Shrev.": {"enrollment": 1029, "division": "Non-Select Division I"},
-    "South Lafourche":    {"enrollment": 995,  "division": "Non-Select Division I"},
-    "West Ouachita":      {"enrollment": 991,  "division": "Non-Select Division I"},
-    "Westgate":           {"enrollment": 936,  "division": "Non-Select Division I"},
+SELECT_D1 = [
+    "Edna Karr", "Teurlings Catholic", "St. Augustine", "Catholic - B.R.",
+    "Alexandria", "Tioga", "John Curtis Christian", "Evangel Christian",
+    "St. Paul's", "St. Thomas More", "Archbishop Rummel", "Brother Martin",
+    "Hammond", "Acadiana", "Riverdale", "McDonogh #35", "Jesuit", "Bonnabel",
+    "Carencro", "Captain Shreve", "Liberty", "Holy Cross", "Lafayette",
+    "Pineville", "Comeaux", "Woodlawn - B.R.", "Warren Easton", "John Ehret",
+    "Huntington", "Southwood", "L. W. Higgins", "C.E. Byrd", "Scotlandville",
+    "Ponchatoula", "West Jefferson", "East Jefferson", "Ben Franklin",
+]
 
-    # Division II (enrollment 463-933)
-    "Belle Chasse":       {"enrollment": 933,  "division": "Non-Select Division II"},
-    "South Terrebonne":   {"enrollment": 923,  "division": "Non-Select Division II"},
-    "Lakeshore":          {"enrollment": 846,  "division": "Non-Select Division II"},
-    "A.J. Ellender":      {"enrollment": 816,  "division": "Non-Select Division II"},
-    "Pearl River":        {"enrollment": 815,  "division": "Non-Select Division II"},
-    "LaGrange":           {"enrollment": 813,  "division": "Non-Select Division II"},
-    "North DeSoto":       {"enrollment": 809,  "division": "Non-Select Division II"},
-    "North Vermilion":    {"enrollment": 807,  "division": "Non-Select Division II"},
-    "Assumption":         {"enrollment": 805,  "division": "Non-Select Division II"},
-    "Broadmoor":          {"enrollment": 791,  "division": "Non-Select Division II"},
-    "Beau Chene":         {"enrollment": 769,  "division": "Non-Select Division II"},
-    "Cecilia":            {"enrollment": 761,  "division": "Non-Select Division II"},
-    "Brusly":             {"enrollment": 748,  "division": "Non-Select Division II"},
-    "Minden":             {"enrollment": 732,  "division": "Non-Select Division II"},
-    "Breaux Bridge":      {"enrollment": 717,  "division": "Non-Select Division II"},
-    "Woodlawn - Shrev.":  {"enrollment": 713,  "division": "Non-Select Division II"},
-    "Plaquemine":         {"enrollment": 706,  "division": "Non-Select Division II"},
-    "Franklin Parish":    {"enrollment": 699,  "division": "Non-Select Division II"},
-    "Morgan City":        {"enrollment": 679,  "division": "Non-Select Division II"},
-    "Livonia":            {"enrollment": 676,  "division": "Non-Select Division II"},
-    "Franklinton":        {"enrollment": 675,  "division": "Non-Select Division II"},
-    "Opelousas":          {"enrollment": 674,  "division": "Non-Select Division II"},
-    "Bossier":            {"enrollment": 660,  "division": "Non-Select Division II"},
-    "Lutcher":            {"enrollment": 650,  "division": "Non-Select Division II"},
-    "DeRidder":           {"enrollment": 644,  "division": "Non-Select Division II"},
-    "Wossman":            {"enrollment": 641,  "division": "Non-Select Division II"},
-    "Rayne":              {"enrollment": 622,  "division": "Non-Select Division II"},
-    "Iowa":               {"enrollment": 617,  "division": "Non-Select Division II"},
-    "Grant":              {"enrollment": 613,  "division": "Non-Select Division II"},
-    "Eunice":             {"enrollment": 608,  "division": "Non-Select Division II"},
-    "West Feliciana":     {"enrollment": 602,  "division": "Non-Select Division II"},
-    "Carroll":            {"enrollment": 592,  "division": "Non-Select Division II"},
-    "Abbeville":          {"enrollment": 570,  "division": "Non-Select Division II"},
-    "Albany":             {"enrollment": 564,  "division": "Non-Select Division II"},
-    "Iota":               {"enrollment": 563,  "division": "Non-Select Division II"},
-    "Bastrop":            {"enrollment": 562,  "division": "Non-Select Division II"},
-    "Northwest":          {"enrollment": 553,  "division": "Non-Select Division II"},
-    "Jennings":           {"enrollment": 545,  "division": "Non-Select Division II"},
-    "St. Martinville":    {"enrollment": 544,  "division": "Non-Select Division II"},
-    "South Beauregard":   {"enrollment": 540,  "division": "Non-Select Division II"},
-    "Sterlington":        {"enrollment": 534,  "division": "Non-Select Division II"},
-    "Kaplan":             {"enrollment": 530,  "division": "Non-Select Division II"},
-    "Erath":              {"enrollment": 527,  "division": "Non-Select Division II"},
-    "Church Point":       {"enrollment": 504,  "division": "Non-Select Division II"},
-    "Jena":               {"enrollment": 496,  "division": "Non-Select Division II"},
-    "Berwick":            {"enrollment": 492,  "division": "Non-Select Division II"},
-    "North Webster":      {"enrollment": 482,  "division": "Non-Select Division II"},
-    "Crowley":            {"enrollment": 475,  "division": "Non-Select Division II"},
-    "Pine Prairie":       {"enrollment": 468,  "division": "Non-Select Division II"},
-    "Westlake":           {"enrollment": 465,  "division": "Non-Select Division II"},
-    "Bogalusa":           {"enrollment": 463,  "division": "Non-Select Division II"},
+SELECT_D2 = [
+    "St. Charles", "Loyola Prep", "Lake Charles College Prep", "University Lab",
+    "Madison Prep", "Vandebilt Catholic", "Archbishop Shaw", "E.D. White",
+    "St. Michael the Archangel", "Haynes Academy", "George Washington Carver",
+    "John F. Kennedy", "Booker T. Washington - Shr.", "Leesville",
+    "Patrick Taylor - Science/Tech.", "Lord Beaconsfield Landry", "Northside",
+    "Belaire", "Kenner Discovery Health Science", "Istrouma",
+    "Frederick A Douglass", "Livingston Collegiate", "Abramson", "Loranger",
+    "Buckeye", "Archbishop Hannan", "Helix Mentorship Academy", "Peabody",
+    "Washington-Marion", "Eleanor McMain", "McKinley", "Sophie B. Wright",
+    "Booker T. Washington - N.O.", "Tara", "Bolton Academy",
+    "Young Audiences Charter", "The Willow School",
+]
 
-    # Division III (enrollment ~250-462)
-    "Mamou":              {"enrollment": 459,  "division": "Non-Select Division III"},
-    "Port Allen":         {"enrollment": 450,  "division": "Non-Select Division III"},
-    "Ville Platte":       {"enrollment": 440,  "division": "Non-Select Division III"},
-    "Richwood":           {"enrollment": 434,  "division": "Non-Select Division III"},
-    "St. James":          {"enrollment": 424,  "division": "Non-Select Division III"},
-    "Marksville":         {"enrollment": 422,  "division": "Non-Select Division III"},
-    "Patterson":          {"enrollment": 422,  "division": "Non-Select Division III"},
-    "Caldwell Parish":    {"enrollment": 417,  "division": "Non-Select Division III"},
-    "Pine":               {"enrollment": 405,  "division": "Non-Select Division III"},
-    "Springfield":        {"enrollment": 403,  "division": "Non-Select Division III"},
-    "Donaldsonville":     {"enrollment": 399,  "division": "Non-Select Division III"},
-    "Vidalia":            {"enrollment": 397,  "division": "Non-Select Division III"},
-    "Kinder":             {"enrollment": 385,  "division": "Non-Select Division III"},
-    "Port Barre":         {"enrollment": 384,  "division": "Non-Select Division III"},
-    "Winnfield":          {"enrollment": 375,  "division": "Non-Select Division III"},
-    "Loreauville":        {"enrollment": 369,  "division": "Non-Select Division III"},
-    "Many":               {"enrollment": 360,  "division": "Non-Select Division III"},
-    "Mansfield":          {"enrollment": 351,  "division": "Non-Select Division III"},
-    "Avoyelles":          {"enrollment": 350,  "division": "Non-Select Division III"},
-    "Union Parish":       {"enrollment": 350,  "division": "Non-Select Division III"},
-    "Red River":          {"enrollment": 339,  "division": "Non-Select Division III"},
-    "Madison":            {"enrollment": 329,  "division": "Non-Select Division III"},
-    "Rayville":           {"enrollment": 327,  "division": "Non-Select Division III"},
-    "Baker":              {"enrollment": 324,  "division": "Non-Select Division III"},
-    "Green Oaks":         {"enrollment": 322,  "division": "Non-Select Division III"},
-    "Lakeside":           {"enrollment": 320,  "division": "Non-Select Division III"},
-    "St. Helena College & Career Acad.": {"enrollment": 316, "division": "Non-Select Division III"},
-    "Oakdale":            {"enrollment": 312,  "division": "Non-Select Division III"},
-    "Oak Grove":          {"enrollment": 307,  "division": "Non-Select Division III"},
-    "Plain Dealing":      {"enrollment": 300,  "division": "Non-Select Division III"},
-    "North Iberville":    {"enrollment": 295,  "division": "Non-Select Division III"},
-    "Gueydan":            {"enrollment": 290,  "division": "Non-Select Division III"},
-    "Teurlings Catholic": {"enrollment": 280,  "division": "Non-Select Division III"},
-    "White Castle":       {"enrollment": 275,  "division": "Non-Select Division III"},
-    "General Trass":      {"enrollment": 270,  "division": "Non-Select Division III"},
-    "Basile":             {"enrollment": 265,  "division": "Non-Select Division III"},
-    "Logansport":         {"enrollment": 260,  "division": "Non-Select Division III"},
-    "Central Private":    {"enrollment": 255,  "division": "Non-Select Division III"},
-    "Montgomery":         {"enrollment": 250,  "division": "Non-Select Division III"},
-    # Additional III schools from alignment doc
-    "DeQuincy":           {"enrollment": 400,  "division": "Non-Select Division III"},
-    "East Beauregard":    {"enrollment": 380,  "division": "Non-Select Division III"},
-    "Pickering":          {"enrollment": 360,  "division": "Non-Select Division III"},
-    "Rosepine":           {"enrollment": 349,  "division": "Non-Select Division III"},
-    "Vinton":             {"enrollment": 340,  "division": "Non-Select Division III"},
-    "Ferriday":           {"enrollment": 330,  "division": "Non-Select Division III"},
-    "East Feliciana":     {"enrollment": 310,  "division": "Non-Select Division III"},
-    "Grand Lake":         {"enrollment": 300,  "division": "Non-Select Division III"},
-    "Homer":              {"enrollment": 295,  "division": "Non-Select Division III"},
-    "Haynesville":        {"enrollment": 285,  "division": "Non-Select Division III"},
-    "Arcadia":            {"enrollment": 280,  "division": "Non-Select Division III"},
-    "Glenbrook":          {"enrollment": 270,  "division": "Non-Select Division III"},
-    "Jonesboro-Hodge":    {"enrollment": 265,  "division": "Non-Select Division III"},
-    "Cedar Creek":        {"enrollment": 260,  "division": "Non-Select Division III"},
-    "Lincoln Preparatory School": {"enrollment": 255, "division": "Non-Select Division III"},
-    "Ringgold":           {"enrollment": 250,  "division": "Non-Select Division III"},
-    "Block":              {"enrollment": 245,  "division": "Non-Select Division III"},
-    "Delhi":              {"enrollment": 240,  "division": "Non-Select Division III"},
-    "Delta Charter":      {"enrollment": 235,  "division": "Non-Select Division III"},
-    "St. Frederick":      {"enrollment": 230,  "division": "Non-Select Division III"},
-    "Lakeview":           {"enrollment": 225,  "division": "Non-Select Division III"},
-    "LaSalle":            {"enrollment": 220,  "division": "Non-Select Division III"},
-    "Northwood - Lena":   {"enrollment": 215,  "division": "Non-Select Division III"},
-    "St. Mary's":         {"enrollment": 210,  "division": "Non-Select Division III"},
-    "Elton":              {"enrollment": 205,  "division": "Non-Select Division III"},
-    "Hamilton Christian": {"enrollment": 200,  "division": "Non-Select Division III"},
-    "Merryville":         {"enrollment": 195,  "division": "Non-Select Division III"},
-    "Oberlin":            {"enrollment": 190,  "division": "Non-Select Division III"},
-    "North Caddo":        {"enrollment": 333,  "division": "Non-Select Division III"},
-    "Mangham":            {"enrollment": 300,  "division": "Non-Select Division III"},
-    "Oak Grove":          {"enrollment": 307,  "division": "Non-Select Division III"},
-    "Ouachita Christian": {"enrollment": 290,  "division": "Non-Select Division III"},
-    "Varnado":            {"enrollment": 200,  "division": "Non-Select Division III"},
-    "West St. John":      {"enrollment": 195,  "division": "Non-Select Division III"},
-    "Kentwood":           {"enrollment": 190,  "division": "Non-Select Division III"},
-    "Southern Lab":       {"enrollment": 185,  "division": "Non-Select Division III"},
-    "Thrive Academy":     {"enrollment": 180,  "division": "Non-Select Division III"},
-    "Crescent City":      {"enrollment": 175,  "division": "Non-Select Division III"},
-    "Riverside Academy":  {"enrollment": 170,  "division": "Non-Select Division III"},
-    "St. Martin's Episcopal": {"enrollment": 165, "division": "Non-Select Division III"},
-    "West St. Mary":      {"enrollment": 300,  "division": "Non-Select Division III"},
-}
+SELECT_D3 = [
+    "Lafayette Christian", "Notre Dame", "Jewel Sumner", "Isidore Newman",
+    "Dunham", "Calvary Baptist", "Lafayette Renaissance Charter Academy",
+    "Bunkie", "Catholic - N.I.", "Amite", "Metairie Park Country Day",
+    "Northlake Christian", "Holy Savior Menard", "Slaughter Community Charter",
+    "Episcopal", "Parkview Baptist", "D'Arbonne Woods Charter", "De La Salle",
+    "Pope John Paul II", "Thomas Jefferson", "St. Louis Catholic",
+    "Beekman Charter", "Walter L. Cohen", "Glen Oaks", "Independence",
+    "Rosepine", "Sarah T. Reed", "Houma Christian", "North Caddo",
+    "St. Thomas Aquinas", "Jefferson Rise Charter", "Collegiate Baton Rouge",
+    "Fisher", "Capitol", "Magnolia School of Excellence",
+]
 
-# ─── SELECT SCHOOLS ───────────────────────────────────────────────────────────
+SELECT_D4 = [
+    "Westminster Christian", "Riverside Academy", "Hamilton Christian",
+    "Catholic - P.C.", "Ascension Catholic", "Ascension Episcopal",
+    "Ouachita Christian", "Covenant Christian", "St. Edmund", "Southern Lab",
+    "Kentwood", "St. John", "Sacred Heart", "St. Frederick",
+    "St. Martin's Episcopal", "Opelousas Catholic", "Ascension Christian",
+    "Delta Charter", "Cedar Creek", "Westminster Christian - Lafayette",
+    "St. Mary's", "Vermilion Catholic", "Central Catholic",
+    "Lincoln Preparatory School", "Central Private", "Delhi Charter",
+    "Glenbrook", "Hanson Memorial", "Berchmans Academy", "Northwood - Lena",
+    "Crescent City", "Thrive Academy", "Block", "Highland Baptist",
+]
 
-SELECT = {
-    # Select Division I (enrollment 875+)
-    "Bonnabel":           {"enrollment": 2311, "division": "Select Division I"},
-    "Catholic - B.R.":    {"enrollment": 2147, "division": "Select Division I"},
-    "Ponchatoula":        {"enrollment": 2093, "division": "Select Division I"},
-    "Jesuit":             {"enrollment": 1925, "division": "Select Division I"},
-    "John Ehret":         {"enrollment": 1923, "division": "Select Division I"},
-    "Brother Martin":     {"enrollment": 1839, "division": "Select Division I"},
-    "Captain Shreve":     {"enrollment": 1783, "division": "Select Division I"},
-    "Lafayette":          {"enrollment": 1744, "division": "Select Division I"},
-    "Acadiana":           {"enrollment": 1707, "division": "Select Division I"},
-    "Hammond":            {"enrollment": 1641, "division": "Select Division I"},
-    "West Jefferson":     {"enrollment": 1569, "division": "Select Division I"},
-    "C.E. Byrd":          {"enrollment": 1470, "division": "Select Division I"},
-    "Alexandria":         {"enrollment": 1469, "division": "Select Division I"},
-    "St. Paul's":         {"enrollment": 1408, "division": "Select Division I"},
-    "Woodlawn - B.R.":    {"enrollment": 1398, "division": "Select Division I"},
-    "East Jefferson":     {"enrollment": 1379, "division": "Select Division I"},
-    "Huntington":         {"enrollment": 1301, "division": "Select Division I"},
-    "Pineville":          {"enrollment": 1277, "division": "Select Division I"},
-    "Riverdale":          {"enrollment": 1267, "division": "Select Division I"},
-    "Liberty":            {"enrollment": 1230, "division": "Select Division I"},
-    "Carencro":           {"enrollment": 1161, "division": "Select Division I"},
-    "Warren Easton":      {"enrollment": 1130, "division": "Select Division I"},
-    "Edna Karr":          {"enrollment": 1121, "division": "Select Division I"},
-    "L. W. Higgins":      {"enrollment": 1105, "division": "Select Division I"},
-    "Archbishop Rummel":  {"enrollment": 1084, "division": "Select Division I"},
-    "Ben Franklin":       {"enrollment": 1057, "division": "Select Division I"},
-    "St. Augustine":      {"enrollment": 1030, "division": "Select Division I"},
-    "Scotlandville":      {"enrollment": 897,  "division": "Select Division I"},
-    "Holy Cross":         {"enrollment": 881,  "division": "Select Division I"},
-    "John Curtis Christian": {"enrollment": 412, "division": "Select Division I"},
-    "Evangel Christian":  {"enrollment": 313,  "division": "Select Division I"},
-    "Southwood":          {"enrollment": 1019, "division": "Select Division I"},
-    "St. Thomas More":    {"enrollment": 1016, "division": "Select Division I"},
-    "Tioga":              {"enrollment": 931,  "division": "Select Division I"},
-    "Comeaux":            {"enrollment": 926,  "division": "Select Division I"},
+NS_D1 = [
+    "Ruston", "Neville", "Destrehan", "Denham Springs", "Central - B.R.",
+    "Parkway", "Northwood - Shrev.", "Southside", "Terrebonne", "West Monroe",
+    "Hahnville", "East Ascension", "Zachary", "Ouachita Parish", "Thibodaux",
+    "Westgate", "Airline", "Mandeville", "St. Amant", "Salmen", "West Ouachita",
+    "Slidell", "South Lafourche", "Natchitoches Central", "Prairieville", "Barbe",
+    "Covington", "Dutchtown", "Chalmette", "H.L. Bourgeois", "Northshore",
+    "Live Oak", "Sam Houston", "East St. John", "Benton", "Central Lafourche",
+    "Fontainebleau", "Sulphur", "Haughton", "Walker", "New Iberia",
+]
 
-    # Select Division II (enrollment 492-875)
-    "Tara":               {"enrollment": 846,  "division": "Select Division II"},
-    "Kenner Discovery Health Science": {"enrollment": 824, "division": "Select Division II"},
-    "The Willow School":  {"enrollment": 769,  "division": "Select Division II"},
-    "Archbishop Shaw":    {"enrollment": 758,  "division": "Select Division II"},
-    "George Washington Carver": {"enrollment": 755, "division": "Select Division II"},
-    "Leesville":          {"enrollment": 755,  "division": "Select Division II"},
-    "McKinley":           {"enrollment": 742,  "division": "Select Division II"},
-    "Peabody":            {"enrollment": 737,  "division": "Select Division II"},
-    "Booker T. Washington - Shr.": {"enrollment": 724, "division": "Select Division II"},
-    "Eleanor McMain":     {"enrollment": 720,  "division": "Select Division II"},
-    "Belaire":            {"enrollment": 681,  "division": "Select Division II"},
-    "E.D. White":         {"enrollment": 668,  "division": "Select Division II"},
-    "Northside":          {"enrollment": 667,  "division": "Select Division II"},
-    "Archbishop Hannan":  {"enrollment": 663,  "division": "Select Division II"},
-    "Abramson":           {"enrollment": 653,  "division": "Select Division II"},
-    "Frederick A Douglass": {"enrollment": 653, "division": "Select Division II"},
-    "Vandebilt Catholic": {"enrollment": 637,  "division": "Select Division II"},
-    "Loranger":           {"enrollment": 632,  "division": "Select Division II"},
-    "St. Michael the Archangel": {"enrollment": 623, "division": "Select Division II"},
-    "Istrouma":           {"enrollment": 588,  "division": "Select Division II"},
-    "Washington-Marion":  {"enrollment": 572,  "division": "Select Division II"},
-    "St. Charles":        {"enrollment": 418,  "division": "Select Division II"},
-    "Loyola Prep":        {"enrollment": 401,  "division": "Select Division II"},
-    "Lake Charles College Prep": {"enrollment": 601, "division": "Select Division II"},
-    "Booker T. Washington - N.O.": {"enrollment": 600, "division": "Select Division II"},
-    "John F. Kennedy":    {"enrollment": 596,  "division": "Select Division II"},
-    "Madison Prep":       {"enrollment": 594,  "division": "Select Division II"},
-    "Young Audiences Charter": {"enrollment": 587, "division": "Select Division II"},
-    "Livingston Collegiate": {"enrollment": 582, "division": "Select Division II"},
-    "Helix Mentorship Academy": {"enrollment": 573, "division": "Select Division II"},
-    "Buckeye":            {"enrollment": 570,  "division": "Select Division II"},
-    "Haynes Academy":     {"enrollment": 553,  "division": "Select Division II"},
-    "Lord Beaconsfield Landry": {"enrollment": 541, "division": "Select Division II"},
-    "Sophie B. Wright":   {"enrollment": 522,  "division": "Select Division II"},
-    "Patrick Taylor - Science/Tech.": {"enrollment": 520, "division": "Select Division II"},
-    "Bolton":             {"enrollment": 500,  "division": "Select Division II"},
-    "University Lab":     {"enrollment": 492,  "division": "Select Division II"},
+NS_D2 = [
+    "North DeSoto", "Iowa", "Belle Chasse", "Lakeshore", "Plaquemine", "Brusly",
+    "Franklin Parish", "Franklinton", "Jennings", "Lutcher", "West Feliciana",
+    "Minden", "Cecilia", "Pearl River", "Northwest", "DeRidder", "Eunice",
+    "South Terrebonne", "Opelousas", "Carroll", "Wossman", "Bossier", "Iota",
+    "St. Martinville", "Rayne", "Abbeville", "Albany", "Livonia", "Broadmoor",
+    "Assumption", "A.J. Ellender", "Woodlawn - Shrev.", "Breaux Bridge", "Grant",
+    "South Beauregard", "North Vermilion", "Morgan City", "Bastrop", "LaGrange",
+    "Beau Chene",
+]
 
-    # Select Division III (enrollment <492)
-    "Bunkie":             {"enrollment": 487,  "division": "Select Division III"},
-    "Parkview Baptist":   {"enrollment": 484,  "division": "Select Division III"},
-    "St. Louis Catholic": {"enrollment": 482,  "division": "Select Division III"},
-    "Collegiate Baton Rouge": {"enrollment": 481, "division": "Select Division III"},
-    "Glen Oaks":          {"enrollment": 473,  "division": "Select Division III"},
-    "De La Salle":        {"enrollment": 453,  "division": "Select Division III"},
-    "Amite":              {"enrollment": 397,  "division": "Select Division III"},
-    "Thomas Jefferson":   {"enrollment": 398,  "division": "Select Division III"},
-    "Jewel Sumner":       {"enrollment": 382,  "division": "Select Division III"},
-    "Jefferson Rise Charter": {"enrollment": 378, "division": "Select Division III"},
-    "Sarah T. Reed":      {"enrollment": 391,  "division": "Select Division III"},
-    "Northlake Christian": {"enrollment": 386, "division": "Select Division III"},
-    "Isidore Newman":     {"enrollment": 383,  "division": "Select Division III"},
-    "Lafayette Renaissance Charter Academy": {"enrollment": 362, "division": "Select Division III"},
-    "Calvary Baptist":    {"enrollment": 357,  "division": "Select Division III"},
-    "Walter L. Cohen":    {"enrollment": 355,  "division": "Select Division III"},
-    "Episcopal":          {"enrollment": 352,  "division": "Select Division III"},
-    "Rosepine":           {"enrollment": 349,  "division": "Select Division III"},
-    "Independence":       {"enrollment": 345,  "division": "Select Division III"},
-    "Pope John Paul II":  {"enrollment": 345,  "division": "Select Division III"},
-    "Beekman Charter":    {"enrollment": 342,  "division": "Select Division III"},
-    "North Caddo":        {"enrollment": 333,  "division": "Select Division III"},
-    "Lake Charles College Prep": {"enrollment": 329, "division": "Select Division III"},
-    "Lafayette Christian": {"enrollment": 329, "division": "Select Division III"},
-    "D'Arbonne Woods Charter": {"enrollment": 312, "division": "Select Division III"},
-    "St. Thomas Aquinas": {"enrollment": 304,  "division": "Select Division III"},
-    "Notre Dame":         {"enrollment": 302,  "division": "Select Division III"},
-    "Dunham":             {"enrollment": 301,  "division": "Select Division III"},
-    "The Delores Taylor Arthur School": {"enrollment": 292, "division": "Select Division III"},
-    "Catholic - N.I.":    {"enrollment": 286,  "division": "Select Division III"},
-    "Magnolia School of Excellence": {"enrollment": 283, "division": "Select Division III"},
-    "Houma Christian":    {"enrollment": 282,  "division": "Select Division III"},
-    "Metairie Park Country Day": {"enrollment": 266, "division": "Select Division III"},
-    "Slaughter Community Charter": {"enrollment": 254, "division": "Select Division III"},
-    "Holy Savior Menard": {"enrollment": 252,  "division": "Select Division III"},
-    "Capitol":            {"enrollment": 251,  "division": "Select Division III"},
-    "Berchmans Academy":  {"enrollment": 245,  "division": "Select Division III"},
-    "Hamilton Christian": {"enrollment": 245,  "division": "Select Division III"},
-    "McDonogh #35":       {"enrollment": 847,  "division": "Select Division II"},
-    "Teurlings Catholic": {"enrollment": 875,  "division": "Select Division I"},
-    "Ascension Catholic": {"enrollment": 240,  "division": "Select Division III"},
-    "Ascension Episcopal": {"enrollment": 235, "division": "Select Division III"},
-    "Ascension Christian": {"enrollment": 230, "division": "Select Division III"},
-    "Covenant Christian":  {"enrollment": 225, "division": "Select Division III"},
-    "Central Catholic":    {"enrollment": 220, "division": "Select Division III"},
-    "Centerville":         {"enrollment": 215, "division": "Select Division III"},
-    "Hanson Memorial":     {"enrollment": 210, "division": "Select Division III"},
-    "Jeanerette":          {"enrollment": 205, "division": "Select Division III"},
-    "East Iberville":      {"enrollment": 200, "division": "Select Division III"},
-    "St. John":            {"enrollment": 195, "division": "Select Division III"},
-    "White Castle":        {"enrollment": 275, "division": "Select Division III"},
-    "Sacred Heart":        {"enrollment": 252, "division": "Select Division III"},
-    "St. Edmund":          {"enrollment": 248, "division": "Select Division III"},
-    "Westminster Christian": {"enrollment": 244, "division": "Select Division III"},
-    "Opelousas Catholic":  {"enrollment": 240, "division": "Select Division III"},
-    "North Central":       {"enrollment": 235, "division": "Select Division III"},
-    "Catholic - P.C.":     {"enrollment": 230, "division": "Select Division III"},
-    "Highland Baptist":    {"enrollment": 225, "division": "Select Division III"},
-    "Vermilion Catholic":  {"enrollment": 220, "division": "Select Division III"},
-    "Gueydan":             {"enrollment": 215, "division": "Select Division III"},
-    "Westminster Christian - Lafayette": {"enrollment": 210, "division": "Select Division III"},
-    "South Plaquemines":   {"enrollment": 205, "division": "Select Division III"},
-    "St. Martin's Episcopal": {"enrollment": 200, "division": "Select Division III"},
-    "Riverside Academy":   {"enrollment": 195, "division": "Select Division III"},
-    "Crescent City":       {"enrollment": 190, "division": "Select Division III"},
-    "Ecole Classique":     {"enrollment": 185, "division": "Select Division III"},
-    "Varnado":             {"enrollment": 180, "division": "Select Division III"},
-    "West St. John":       {"enrollment": 175, "division": "Select Division III"},
-    "Southern Lab":        {"enrollment": 170, "division": "Select Division III"},
-    "Thrive Academy":      {"enrollment": 165, "division": "Select Division III"},
-    "JS Clark Leadership Academy": {"enrollment": 160, "division": "Select Division III"},
-    "Kenner Discovery Health Science": {"enrollment": 824, "division": "Select Division II"},
-}
+NS_D3 = [
+    "Jena", "Sterlington", "St. James", "Kinder", "Erath", "Oak Grove",
+    "Loreauville", "Mansfield", "Marksville", "Church Point", "Richwood",
+    "Union Parish", "Pine", "Many", "Donaldsonville", "Avoyelles",
+    "St. Helena College & Career Acad.", "Westlake", "Red River", "Kaplan",
+    "Rayville", "Caldwell Parish", "North Webster", "Patterson", "Winnfield",
+    "Ville Platte", "Port Allen", "Bogalusa", "Port Barre", "Mamou", "Lakeside",
+    "Green Oaks", "Baker", "Vidalia", "Springfield", "Madison", "Crowley",
+    "Oakdale", "Berwick", "Pine Prairie",
+]
 
-# ─── 2025-2026 ALIGNMENT (Class + District) ───────────────────────────────────
-# Built from Football.pdf alignment document
-# Format: "School Name": {"class": "5A", "district": 1}
+NS_D4 = [
+    "Haynesville", "Mangham", "South Plaquemines", "Jeanerette", "Logansport",
+    "North Iberville", "East Feliciana", "Vinton", "Jonesboro-Hodge", "Ferriday",
+    "Elton", "Welsh", "Grand Lake", "West St. Mary", "West St. John", "Homer",
+    "Franklin", "General Trass", "Basile", "Montgomery", "Lake Arthur", "LaSalle",
+    "Northeast", "North Central", "DeQuincy", "Delcambre", "Arcadia", "Varnado",
+    "East Iberville", "Merryville", "Oberlin", "Centerville", "White Castle",
+    "East Beauregard", "Delhi", "Lakeview", "Plain Dealing", "Gueydan",
+]
+
+# ─── 2025-2026 ALIGNMENT (Class + District from Football.pdf) ────────────────
 
 ALIGNMENT = {
     # 5A
@@ -674,50 +417,42 @@ ALIGNMENT = {
     "West St. John": {"class": "1A", "district": 10},
 }
 
-# ─── COMBINED LOOKUP ──────────────────────────────────────────────────────────
+# ─── BUILD MASTER LOOKUP ──────────────────────────────────────────────────────
 
 def build_schools():
-    """Combine designation and alignment into one master lookup."""
     schools = {}
 
-    # Add non-select schools
-    for name, info in NON_SELECT.items():
-        schools[name] = {
-            "name":       name,
-            "division":   info["division"],
-            "enrollment": info["enrollment"],
-            "track":      "non-select",
-            "class":      None,
-            "district":   None,
-        }
+    division_lists = [
+        (SELECT_D1, "Select Division I",       "select"),
+        (SELECT_D2, "Select Division II",      "select"),
+        (SELECT_D3, "Select Division III",     "select"),
+        (SELECT_D4, "Select Division IV",      "select"),
+        (NS_D1,     "Non-Select Division I",   "non-select"),
+        (NS_D2,     "Non-Select Division II",  "non-select"),
+        (NS_D3,     "Non-Select Division III", "non-select"),
+        (NS_D4,     "Non-Select Division IV",  "non-select"),
+    ]
 
-    # Add select schools
-    for name, info in SELECT.items():
-        if name in schools:
-            continue  # Skip duplicates
-        schools[name] = {
-            "name":       name,
-            "division":   info["division"],
-            "enrollment": info["enrollment"],
-            "track":      "select",
-            "class":      None,
-            "district":   None,
-        }
-
-    # Overlay alignment data (class + district)
-    for name, info in ALIGNMENT.items():
-        if name in schools:
-            schools[name]["class"]    = info["class"]
-            schools[name]["district"] = info["district"]
-        else:
-            # School in alignment but not designation — add with defaults
+    for school_list, division, track in division_lists:
+        for name in school_list:
+            align = ALIGNMENT.get(name, {})
             schools[name] = {
-                "name":       name,
-                "division":   "Unknown",
-                "enrollment": 0,
-                "track":      "unknown",
-                "class":      info["class"],
-                "district":   info["district"],
+                "name":     name,
+                "division": division,
+                "track":    track,
+                "class":    align.get("class"),
+                "district": align.get("district"),
+            }
+
+    # Add any alignment schools not in division lists
+    for name, align in ALIGNMENT.items():
+        if name not in schools:
+            schools[name] = {
+                "name":     name,
+                "division": "Unknown",
+                "track":    "unknown",
+                "class":    align.get("class"),
+                "district": align.get("district"),
             }
 
     return schools
@@ -727,16 +462,12 @@ SCHOOLS = build_schools()
 
 
 def get_school(name: str) -> dict | None:
-    """Look up a school by name. Returns None if not found."""
-    # Exact match first
     if name in SCHOOLS:
         return SCHOOLS[name]
-    # Case-insensitive match
     name_lower = name.lower()
     for school_name, data in SCHOOLS.items():
         if school_name.lower() == name_lower:
             return data
-    # Partial match
     for school_name, data in SCHOOLS.items():
         if name_lower in school_name.lower():
             return data
@@ -744,32 +475,27 @@ def get_school(name: str) -> dict | None:
 
 
 def get_division(name: str) -> str:
-    """Get a school's division string."""
     school = get_school(name)
     return school["division"] if school else "Unknown"
 
 
 def get_class(name: str) -> str:
-    """Get a school's classification."""
     school = get_school(name)
     return school["class"] if school else "Unknown"
 
 
 def get_track(name: str) -> str:
-    """Get whether school is select or non-select."""
     school = get_school(name)
     return school["track"] if school else "unknown"
 
 
 if __name__ == "__main__":
-    # Quick tests
-    print(f"Total schools in database: {len(SCHOOLS)}")
-    print()
-
-    test_schools = ["Calvary Baptist", "Huntington", "Ruston", "Edna Karr", "North DeSoto"]
-    for name in test_schools:
+    print(f"Total schools: {len(SCHOOLS)}")
+    test = ["Airline", "Calvary Baptist", "Haynesville", "Westminster Christian",
+            "North DeSoto", "Jena", "Lafayette Christian", "Mangham"]
+    for name in test:
         s = get_school(name)
         if s:
-            print(f"{name}: {s['class']} | District {s['district']} | {s['division']} | Track: {s['track']}")
+            print(f"  {name}: {s['class']} D{s['district']} | {s['division']}")
         else:
-            print(f"{name}: NOT FOUND")
+            print(f"  {name}: NOT FOUND")
