@@ -386,3 +386,64 @@ def build_football_scores_tab():
         "status": "started",
         "message": "Building Football Scores tab — this takes 5-10 minutes, check sheet when done"
     })
+
+
+@app.route("/api/build/football-divisions")
+def build_football_divisions():
+    """Build 8 division tabs + 5 class tabs for football rankings."""
+    import threading
+    from sheets_exporter import export_division_and_class_tabs
+    def run():
+        try:
+            export_division_and_class_tabs()
+        except Exception as e:
+            print(f"Division tabs error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({
+        "status": "started",
+        "message": "Building 13 division/class tabs — check sheet in 5 minutes"
+    })
+
+
+@app.route("/api/gamepoints/<path:school_name>")
+def get_game_points(school_name):
+    """Get per-game power point breakdown for a school."""
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT week, opponent, result, score,
+                   opp_wins, opp_losses, opp_division,
+                   base_pts, div_bonus, opp_quality, total_pts
+            FROM game_power_points
+            WHERE sport='football' AND season='2025'
+              AND LOWER(school) LIKE LOWER(?)
+            ORDER BY week ASC
+        """, (f"%{school_name}%",))
+        games = [dict(r) for r in c.fetchall()]
+
+        # Also get overall ranking
+        c.execute("""
+            SELECT school, rank, power_rating, wins, losses,
+                   division, class_, district
+            FROM power_rankings
+            WHERE sport='football' AND season='2025'
+              AND LOWER(school) LIKE LOWER(?)
+        """, (f"%{school_name}%",))
+        ranking = dict(c.fetchone() or {})
+        conn.close()
+
+        return jsonify({
+            "school":       ranking.get("school", school_name),
+            "rank":         ranking.get("rank"),
+            "power_rating": ranking.get("power_rating"),
+            "record":       f"{ranking.get('wins',0)}-{ranking.get('losses',0)}",
+            "division":     ranking.get("division"),
+            "class":        ranking.get("class_"),
+            "district":     ranking.get("district"),
+            "games":        games,
+            "total_games":  len(games),
+        })
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
