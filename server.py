@@ -225,11 +225,11 @@ def scrape_now():
     """Trigger a full scrape in background — returns immediately."""
     import threading
     from scraper import run_all_sports
-    from sheets_exporter import export_all_to_sheets
+    from sheets_exporter import export_football_to_sheets  # ← fixed
     def run():
         try:
             run_all_sports()
-            export_all_to_sheets()
+            export_football_to_sheets()
         except Exception as e:
             print(f"Background scrape error: {e}")
     threading.Thread(target=run, daemon=True).start()
@@ -241,11 +241,11 @@ def scrape_baseball_now():
     """Trigger baseball scrape in background — returns immediately."""
     import threading
     from scraper import scrape_baseball
-    from sheets_exporter import export_all_to_sheets
+    from sheets_exporter import export_football_to_sheets  # ← fixed
     def run():
         try:
             scrape_baseball()
-            export_all_to_sheets()
+            export_football_to_sheets()
         except Exception as e:
             print(f"Background baseball error: {e}")
     threading.Thread(target=run, daemon=True).start()
@@ -257,11 +257,11 @@ def scrape_softball_now():
     """Trigger softball scrape in background — returns immediately."""
     import threading
     from scraper import scrape_softball
-    from sheets_exporter import export_all_to_sheets
+    from sheets_exporter import export_football_to_sheets  # ← fixed
     def run():
         try:
             scrape_softball()
-            export_all_to_sheets()
+            export_football_to_sheets()
         except Exception as e:
             print(f"Background softball error: {e}")
     threading.Thread(target=run, daemon=True).start()
@@ -273,13 +273,9 @@ def scrape_ratings_now():
     """Trigger official power ratings PDF scrape in background."""
     import threading
     from pdf_scraper import scrape_latest_ratings
-    from sheets_exporter import export_official_ratings, get_client, SHEET_ID
     def run():
         try:
             scrape_latest_ratings()
-            client = get_client()
-            sheet = client.open_by_key(SHEET_ID)
-            export_official_ratings(sheet)
         except Exception as e:
             print(f"PDF scrape error: {e}")
     threading.Thread(target=run, daemon=True).start()
@@ -289,9 +285,7 @@ def scrape_ratings_now():
 @app.route("/api/ratings")
 def get_ratings():
     """Get official power ratings from database."""
-    import sqlite3 as sq
-    conn = sq.connect(DB_PATH)
-    conn.row_factory = sq.Row
+    conn = get_db()
     c = conn.cursor()
     try:
         c.execute("""
@@ -302,7 +296,7 @@ def get_ratings():
         rows = [dict(r) for r in c.fetchall()]
         conn.close()
         return jsonify({"ratings": rows, "total": len(rows)})
-    except sq.OperationalError:
+    except sqlite3.OperationalError:
         conn.close()
         return jsonify({"ratings": [], "total": 0, "note": "No ratings scraped yet"})
 
@@ -327,9 +321,7 @@ def calculate_rankings():
 @app.route("/api/rankings/<sport>")
 def get_rankings(sport):
     """Get calculated power rankings from database."""
-    import sqlite3 as sq
-    conn = sq.connect(DB_PATH)
-    conn.row_factory = sq.Row
+    conn = get_db()
     c = conn.cursor()
     try:
         c.execute("""
@@ -340,7 +332,7 @@ def get_rankings(sport):
         rows = [dict(r) for r in c.fetchall()]
         conn.close()
         return jsonify({"sport": sport, "rankings": rows, "total": len(rows)})
-    except sq.OperationalError:
+    except sqlite3.OperationalError:
         conn.close()
         return jsonify({"sport": sport, "rankings": [], "note": "No rankings calculated yet"})
 
@@ -366,14 +358,14 @@ def import_football_2025():
 def build_football_sheets():
     """Build complete Football 2025 Google Sheets layer."""
     import threading
+    from sheets_exporter import export_football_to_sheets  # ← fixed
     def run():
         try:
-            from football_sheets_layer import build_football_sheets_layer
-            build_football_sheets_layer()
+            export_football_to_sheets()
         except Exception as e:
             print(f"Football sheets error: {e}")
     threading.Thread(target=run, daemon=True).start()
     return jsonify({
         "status": "started",
-        "message": "Building Football 2025 Google Sheets layer — check sheet in 5 minutes"
+        "message": "Building Football 2025 Google Sheets — check sheet in 5 minutes"
     })
