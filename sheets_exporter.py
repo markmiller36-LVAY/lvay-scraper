@@ -1,8 +1,14 @@
 """
 LVAY - Google Sheets Exporter
 ================================
-Writes scraped LHSAA sports data to the LVAY Google Sheet.
+Writes LHSAA football data to the LVAY Google Sheet.
 NO formatting calls — pure data only for reliability.
+
+Real DB columns used:
+  school, week, game_date, home_away, opponent,
+  class_, district, district_class, win_loss, score, season
+
+Power rankings come from power_rankings table (school, rank, power_pts, class_, district).
 
 Tabs built:
   Football Scores (2025)
@@ -29,6 +35,9 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive",
 ]
 
+# Division order for rankings tab
+# class_ values in DB are like "5A", "4A", "1A", "B" etc.
+# and division comes from power_rankings table as "Non-Select Division I" etc.
 DIVISION_ORDER = [
     "Non-Select Division I",
     "Non-Select Division II",
@@ -55,16 +64,14 @@ DIVISION_LABELS = {
 # ─── AUTH ─────────────────────────────────────────────────────────────────────
 
 def get_client():
-    # Try secret file first (Render Secret Files)
     secret_path = "/etc/secrets/google-credentials.json"
     if os.path.exists(secret_path):
         with open(secret_path, "r") as f:
             creds_dict = json.load(f)
     else:
-        # Fallback to environment variable
         creds_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
         if not creds_json:
-            raise ValueError("No Google credentials found — checked /etc/secrets/google-credentials.json and GOOGLE_CREDENTIALS_JSON env var")
+            raise ValueError("No Google credentials found")
         creds_dict = json.loads(creds_json)
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     return gspread.authorize(creds)
@@ -83,7 +90,6 @@ def get_or_create_tab(sheet, tab_name, rows=3000, cols=20):
 
 
 def batch_write(ws, start_row, data, chunk_size=250):
-    """Write data in chunks to avoid Sheets API limits."""
     for i in range(0, len(data), chunk_size):
         chunk = data[i:i + chunk_size]
         ws.update(f"A{start_row + i}", chunk)
@@ -100,22 +106,19 @@ def build_football_scores(sheet, season=SEASON):
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute("""
-        SELECT
-            school, week, game_date, home_away, opponent,
-            division, district, win_loss, score, power_points,
-            opponent_division, opponent_wins, opponent_losses
+        SELECT school, week, game_date, home_away, opponent,
+               class_, district, district_class, win_loss, score
         FROM games
         WHERE sport='football' AND season=?
         ORDER BY school, CAST(REPLACE(week,'Week ','') AS INTEGER)
-    """, (season,))
+    """, (str(season),))
     rows = c.fetchall()
     conn.close()
 
     ws = get_or_create_tab(sheet, tab_name)
     ws.update("A1", [[
         "School", "Week", "Date", "H/A", "Opponent",
-        "Division", "District", "W/L", "Score", "Power Pts",
-        "Opp Division", "Opp W", "Opp L"
+        "Class", "District", "District/Class", "W/L", "Score"
     ]])
 
     data = []
@@ -126,14 +129,11 @@ def build_football_scores(sheet, season=SEASON):
             r["game_date"] or "",
             r["home_away"] or "",
             r["opponent"] or "",
-            r["division"] or "",
+            r["class_"] or "",
             r["district"] or "",
+            r["district_class"] or "",
             r["win_loss"] or "",
             r["score"] or "",
-            r["power_points"] if r["power_points"] is not None else "",
-            r["opponent_division"] or "",
-            r["opponent_wins"] if r["opponent_wins"] is not None else "",
-            r["opponent_losses"] if r["opponent_losses"] is not None else "",
         ])
 
     if data:
@@ -147,10 +147,9 @@ def build_football_scores(sheet, season=SEASON):
 
 def build_football_power_rankings(sheet, season=SEASON):
     """
-    Rankings organized by division:
-    NS I -> NS II -> NS III -> NS IV -> S I -> S II -> S III -> S IV
-    Each division gets a label row then schools ranked by power pts.
-    NO formatting calls — plain data only.
+    Pull from power_rankings table if it exists,
+    otherwise fall back to computing W/L from games table grouped by school.
+    Organized: NS I -> NS II -> NS III -> NS IV -> S I -> S II -> S III -> S IV
     """
     tab_name = f"Football Power Rankings ({season})"
     print(f"  Building {tab_name}...")
@@ -158,22 +157,51 @@ def build_football_power_rankings(sheet, season=SEASON):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute("""
-        SELECT
-            school,
-            division,
-            district,
-            SUM(CASE WHEN win_loss='W' THEN 1 ELSE 0 END) as wins,
-            SUM(CASE WHEN win_loss='L' THEN 1 ELSE 0 END) as losses,
-            SUM(CASE WHEN win_loss='Tie' THEN 1 ELSE 0 END) as ties,
-            ROUND(SUM(COALESCE(power_points, 0)), 4) as total_power_pts,
-            COUNT(CASE WHEN win_loss IN ('W','L','Tie') THEN 1 END) as games_played
-        FROM games
-        WHERE sport='football' AND season=?
-        GROUP BY school
-        ORDER BY total_power_pts DESC
-    """, (season,))
-    all_schools = [dict(r) for r in c.fetchall()]
+
+    # Try power_rankings table first
+    all_schools = []
+    try:
+        c.execute("""
+            SELECT school, division, district, class_,
+                   wins, losses, power_pts, rank
+            FROM power_rankings
+            WHERE sport='football' AND season=?
+            ORDER BY power_pts DESC
+        """, (str(season),))
+        all_schools = [dict(r) for r in c.fetchall()]
+        print(f"    Using power_rankings table ({len(all_schools)} schools)")
+    except Exception:
+        pass
+
+    # Fallback: compute from games table
+    if not all_schools:
+        print(f"    power_rankings table not found — computing from games table")
+        c.execute("""
+            SELECT school, class_, district, district_class,
+                SUM(CASE WHEN win_loss='W' THEN 1 ELSE 0 END) as wins,
+                SUM(CASE WHEN win_loss='L' THEN 1 ELSE 0 END) as losses,
+                SUM(CASE WHEN win_loss='Tie' THEN 1 ELSE 0 END) as ties,
+                COUNT(CASE WHEN win_loss IN ('W','L','Tie') THEN 1 END) as games_played
+            FROM games
+            WHERE sport='football' AND season=?
+            GROUP BY school
+            ORDER BY wins DESC, losses ASC
+        """, (str(season),))
+        rows = c.fetchall()
+        for r in rows:
+            all_schools.append({
+                "school": r["school"],
+                "division": "",
+                "district": r["district"] or r["district_class"] or "",
+                "class_": r["class_"] or "",
+                "wins": r["wins"] or 0,
+                "losses": r["losses"] or 0,
+                "ties": r["ties"] or 0,
+                "games_played": r["games_played"] or 0,
+                "power_pts": 0,
+                "rank": 0,
+            })
+
     conn.close()
 
     # Group by division
@@ -186,19 +214,15 @@ def build_football_power_rankings(sheet, season=SEASON):
         else:
             unmatched.append(school)
 
-    # Sort each division by power pts descending
+    # Sort each division by power_pts desc
     for div in DIVISION_ORDER:
-        by_division[div].sort(key=lambda x: x["total_power_pts"] or 0, reverse=True)
+        by_division[div].sort(key=lambda x: float(x.get("power_pts") or 0), reverse=True)
 
-    col_headers = [
-        "Div Rank", "School", "Division", "District",
-        "W", "L", "T", "Games", "Power Pts"
-    ]
     now_str = datetime.now().strftime("%m/%d/%Y %I:%M %p")
+    col_headers = ["Div Rank", "School", "Division", "Class", "District", "W", "L", "Games", "Power Pts"]
 
     ws = get_or_create_tab(sheet, tab_name)
 
-    # Build one big flat list — no API calls per row, just data
     all_rows = []
     all_rows.append([f"LVAY Football Power Rankings {season} — Updated {now_str}"] + [""] * 8)
     all_rows.append(col_headers)
@@ -208,45 +232,41 @@ def build_football_power_rankings(sheet, season=SEASON):
         schools = by_division[division]
         if not schools:
             continue
-
-        # Division label row (plain text, no formatting call)
         all_rows.append([f"=== {division.upper()} ==="] + [""] * 8)
-
         for rank, s in enumerate(schools, 1):
             all_rows.append([
                 rank,
-                s["school"] or "",
-                DIVISION_LABELS.get(s["division"], s["division"] or ""),
-                s["district"] or "",
-                s["wins"] or 0,
-                s["losses"] or 0,
-                s["ties"] or 0,
-                s["games_played"] or 0,
-                round(s["total_power_pts"] or 0, 4),
+                s.get("school") or "",
+                DIVISION_LABELS.get(s.get("division", ""), s.get("division") or ""),
+                s.get("class_") or "",
+                s.get("district") or "",
+                s.get("wins") or 0,
+                s.get("losses") or 0,
+                s.get("games_played") or s.get("wins", 0) + s.get("losses", 0),
+                round(float(s.get("power_pts") or 0), 4),
             ])
             total_schools += 1
+        all_rows.append([""] * 9)
 
-        all_rows.append([""] * 9)  # spacer
-
+    # Unmatched (no division set) — sort by wins
     if unmatched:
-        all_rows.append(["=== UNMATCHED / MISSING DIVISION ==="] + [""] * 8)
+        unmatched.sort(key=lambda x: float(x.get("power_pts") or 0), reverse=True)
+        all_rows.append(["=== CLASS ONLY (DIVISION NOT YET ASSIGNED) ==="] + [""] * 8)
         for rank, s in enumerate(unmatched, 1):
             all_rows.append([
                 rank,
-                s["school"] or "",
-                s["division"] or "UNKNOWN",
-                s["district"] or "",
-                s["wins"] or 0,
-                s["losses"] or 0,
-                s["ties"] or 0,
-                s["games_played"] or 0,
-                round(s["total_power_pts"] or 0, 4),
+                s.get("school") or "",
+                s.get("class_") or "",
+                s.get("class_") or "",
+                s.get("district") or "",
+                s.get("wins") or 0,
+                s.get("losses") or 0,
+                s.get("games_played") or s.get("wins", 0) + s.get("losses", 0),
+                round(float(s.get("power_pts") or 0), 4),
             ])
             total_schools += 1
 
-    # One bulk write — no per-row or per-division formatting
     batch_write(ws, 1, all_rows)
-
     print(f"    Written {total_schools} school rankings")
     return total_schools
 
@@ -262,35 +282,31 @@ def build_needs_review(sheet, season=SEASON):
     c = conn.cursor()
     c.execute("""
         SELECT school, week, game_date, opponent, win_loss, score,
-               division, district, power_points
+               class_, district, district_class, needs_review
         FROM games
         WHERE sport='football' AND season=?
           AND (
-            division IS NULL OR division = ''
-            OR district IS NULL OR district = ''
-            OR win_loss IS NULL OR win_loss = ''
+            win_loss IS NULL OR win_loss = ''
             OR score IS NULL OR score = ''
-            OR power_points IS NULL
+            OR needs_review = 1
           )
         ORDER BY school, week
-    """, (season,))
+    """, (str(season),))
     rows = c.fetchall()
     conn.close()
 
     ws = get_or_create_tab(sheet, tab_name)
     ws.update("A1", [[
         "School", "Week", "Date", "Opponent", "W/L", "Score",
-        "Division", "District", "Power Pts", "Issue"
+        "Class", "District", "District/Class", "Issue"
     ]])
 
     data = []
     for r in rows:
         issues = []
-        if not r["division"]:         issues.append("missing division")
-        if not r["district"]:         issues.append("missing district")
-        if not r["win_loss"]:         issues.append("missing W/L")
-        if not r["score"]:            issues.append("missing score")
-        if r["power_points"] is None: issues.append("missing power pts")
+        if not r["win_loss"]:  issues.append("missing W/L")
+        if not r["score"]:     issues.append("missing score")
+        if r["needs_review"]:  issues.append("flagged")
         data.append([
             r["school"] or "",
             r["week"] or "",
@@ -298,9 +314,9 @@ def build_needs_review(sheet, season=SEASON):
             r["opponent"] or "",
             r["win_loss"] or "",
             r["score"] or "",
-            r["division"] or "",
+            r["class_"] or "",
             r["district"] or "",
-            r["power_points"] if r["power_points"] is not None else "",
+            r["district_class"] or "",
             ", ".join(issues),
         ])
 
@@ -323,41 +339,38 @@ def build_district_records(sheet, season=SEASON):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
+    # district games identified by tournament='D' in DB
     c.execute("""
-        SELECT
-            school, division, district,
-            SUM(CASE WHEN win_loss='W' AND district_game=1 THEN 1 ELSE 0 END) as dist_wins,
-            SUM(CASE WHEN win_loss='L' AND district_game=1 THEN 1 ELSE 0 END) as dist_losses,
+        SELECT school, class_, district, district_class,
+            SUM(CASE WHEN win_loss='W' AND tournament='D' THEN 1 ELSE 0 END) as dist_wins,
+            SUM(CASE WHEN win_loss='L' AND tournament='D' THEN 1 ELSE 0 END) as dist_losses,
             SUM(CASE WHEN win_loss='W' THEN 1 ELSE 0 END) as total_wins,
-            SUM(CASE WHEN win_loss='L' THEN 1 ELSE 0 END) as total_losses,
-            ROUND(SUM(COALESCE(power_points,0)), 4) as power_pts
+            SUM(CASE WHEN win_loss='L' THEN 1 ELSE 0 END) as total_losses
         FROM games
         WHERE sport='football' AND season=?
         GROUP BY school
-        ORDER BY division, district,
-                 dist_wins DESC, dist_losses ASC,
-                 power_pts DESC
-    """, (season,))
+        ORDER BY class_, district, dist_wins DESC, dist_losses ASC
+    """, (str(season),))
     rows = c.fetchall()
     conn.close()
 
     ws = get_or_create_tab(sheet, tab_name)
     ws.update("A1", [[
-        "School", "Division", "District",
-        "Dist W", "Dist L", "Total W", "Total L", "Power Pts"
+        "School", "Class", "District", "District/Class",
+        "Dist W", "Dist L", "Total W", "Total L"
     ]])
 
     data = []
     for r in rows:
         data.append([
             r["school"] or "",
-            DIVISION_LABELS.get(r["division"], r["division"] or ""),
+            r["class_"] or "",
             r["district"] or "",
+            r["district_class"] or "",
             r["dist_wins"] or 0,
             r["dist_losses"] or 0,
             r["total_wins"] or 0,
             r["total_losses"] or 0,
-            round(r["power_pts"] or 0, 4),
         ])
 
     if data:
@@ -381,10 +394,10 @@ def build_instructions_tab(sheet):
         ["Source:", "lhsaaonline.org — auto-scraped by lvay-scraper on Render"],
         [""],
         ["TAB", "CONTENTS"],
-        [f"Football Scores ({SEASON})", "Every game — week, date, opponent, W/L, score, power pts"],
-        [f"Football Power Rankings ({SEASON})", "304 schools ranked by power pts grouped NS I thru S IV"],
-        ["Football Needs Review", "Games flagged for missing data"],
-        ["Football District Records", "District W/L record per school"],
+        [f"Football Scores ({SEASON})", "Every game — week, date, opponent, W/L, score"],
+        [f"Football Power Rankings ({SEASON})", "Schools grouped NS I thru S IV, ranked by power pts"],
+        ["Football Needs Review", "Games flagged for missing W/L or score"],
+        ["Football District Records", "District and overall W/L per school"],
         [""],
         ["DIVISION KEY", ""],
         ["NS I",   "Non-Select Division I"],
