@@ -360,3 +360,20 @@ def import_football_2025():
         "status": "started",
         "message": "Football 2025 import running — check /api/status in 30 seconds"
     })
+
+
+@app.route("/api/build/football-sheets")
+def build_football_sheets():
+    """Build complete Football 2025 Google Sheets layer."""
+    import threading
+    def run():
+        try:
+            from football_sheets_layer import build_football_sheets_layer
+            build_football_sheets_layer()
+        except Exception as e:
+            print(f"Football sheets error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({
+        "status": "started",
+        "message": "Building Football 2025 Google Sheets layer — check sheet in 5 minutes"
+    })
