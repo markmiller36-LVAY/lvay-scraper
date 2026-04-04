@@ -534,3 +534,20 @@ def migrate_add_district_flag():
     except Exception as e:
         conn.close()
         return jsonify({"status": "already exists", "message": str(e)})
+
+
+@app.route("/api/import/oos2025")
+def import_oos_2025():
+    """Import 2025 OOS opponent records into DB."""
+    import threading
+    def run():
+        try:
+            from import_oos_2025 import run as do_import
+            do_import()
+        except Exception as e:
+            print(f"OOS import error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({
+        "status": "started",
+        "message": "Importing OOS opponent records — check logs"
+    })
