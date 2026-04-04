@@ -4,7 +4,7 @@ Run once via /api/import/oos2025
 """
 import sqlite3
 import os
-import pandas as pd
+
 
 DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 
