@@ -266,3 +266,97 @@ def scrape_softball_now():
             print(f"Background softball error: {e}")
     threading.Thread(target=run, daemon=True).start()
     return jsonify({"status": "started", "sport": "softball", "message": "Softball scrape running in background — check /api/status in 2-3 minutes"})
+
+
+@app.route("/api/scrape/ratings")
+def scrape_ratings_now():
+    """Trigger official power ratings PDF scrape in background."""
+    import threading
+    from pdf_scraper import scrape_latest_ratings
+    from sheets_exporter import export_official_ratings, get_client, SHEET_ID
+    def run():
+        try:
+            scrape_latest_ratings()
+            client = get_client()
+            sheet = client.open_by_key(SHEET_ID)
+            export_official_ratings(sheet)
+        except Exception as e:
+            print(f"PDF scrape error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({"status": "started", "message": "PDF ratings scrape running in background"})
+
+
+@app.route("/api/ratings")
+def get_ratings():
+    """Get official power ratings from database."""
+    import sqlite3 as sq
+    conn = sq.connect(DB_PATH)
+    conn.row_factory = sq.Row
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT * FROM official_power_ratings
+            WHERE week = (SELECT MAX(week) FROM official_power_ratings)
+            ORDER BY track, division, rank
+        """)
+        rows = [dict(r) for r in c.fetchall()]
+        conn.close()
+        return jsonify({"ratings": rows, "total": len(rows)})
+    except sq.OperationalError:
+        conn.close()
+        return jsonify({"ratings": [], "total": 0, "note": "No ratings scraped yet"})
+
+
+@app.route("/api/rankings/calculate")
+def calculate_rankings():
+    """Trigger power rankings calculation in background."""
+    import threading
+    from power_rankings_calculator import run_power_rankings
+    def run():
+        try:
+            run_power_rankings()
+        except Exception as e:
+            print(f"Rankings calc error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({
+        "status": "started",
+        "message": "Power rankings calculating in background — check sheet in 3-5 minutes"
+    })
+
+
+@app.route("/api/rankings/<sport>")
+def get_rankings(sport):
+    """Get calculated power rankings from database."""
+    import sqlite3 as sq
+    conn = sq.connect(DB_PATH)
+    conn.row_factory = sq.Row
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT * FROM power_rankings
+            WHERE sport=?
+            ORDER BY rank ASC
+        """, (sport,))
+        rows = [dict(r) for r in c.fetchall()]
+        conn.close()
+        return jsonify({"sport": sport, "rankings": rows, "total": len(rows)})
+    except sq.OperationalError:
+        conn.close()
+        return jsonify({"sport": sport, "rankings": [], "note": "No rankings calculated yet"})
+
+
+@app.route("/api/import/football2025")
+def import_football_2025():
+    """Import 2025 football season data from Excel into database."""
+    import threading
+    def run():
+        try:
+            from import_football_2025 import main
+            main()
+        except Exception as e:
+            print(f"Import error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({
+        "status": "started",
+        "message": "Football 2025 import running — check /api/status in 30 seconds"
+    })
