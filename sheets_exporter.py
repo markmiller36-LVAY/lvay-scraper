@@ -447,3 +447,322 @@ def export_football_scores(season=SEASON):
 
 if __name__ == "__main__":
     export_football_to_sheets()
+
+
+# ─── DIVISION TABS ────────────────────────────────────────────────────────────
+
+DIVISION_TAB_NAMES = {
+    "Non-Select Division I":   "NS Division I",
+    "Non-Select Division II":  "NS Division II",
+    "Non-Select Division III": "NS Division III",
+    "Non-Select Division IV":  "NS Division IV",
+    "Select Division I":       "S Division I",
+    "Select Division II":      "S Division II",
+    "Select Division III":     "S Division III",
+    "Select Division IV":      "S Division IV",
+}
+
+CLASS_ORDER = ["5A", "4A", "3A", "2A", "1A"]
+
+
+def load_power_rankings(season=SEASON):
+    """Load all schools from power_rankings table."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT school, division, track, class_, district,
+                   wins, losses, ties, games_played, power_rating, rank
+            FROM power_rankings
+            WHERE sport='football' AND season=?
+            ORDER BY rank ASC
+        """, (str(season),))
+        rows = [dict(r) for r in c.fetchall()]
+    except Exception as e:
+        print(f"    ERROR loading power_rankings: {e}")
+        rows = []
+    conn.close()
+    return rows
+
+
+def write_rankings_tab(sheet, tab_name, schools, group_label=""):
+    """Write a ranked list of schools to a tab."""
+    ws = get_or_create_tab(sheet, tab_name)
+
+    col_headers = ["Rank", "School", "Division", "Class", "District",
+                   "W", "L", "Games", "Power Rating"]
+
+    all_rows = []
+    if group_label:
+        all_rows.append([group_label] + [""] * 8)
+    all_rows.append(col_headers)
+
+    for rank, s in enumerate(schools, 1):
+        all_rows.append([
+            rank,
+            s.get("school") or "",
+            DIVISION_LABELS.get(s.get("division", ""), s.get("division") or ""),
+            s.get("class_") or "",
+            s.get("district") or "",
+            s.get("wins") or 0,
+            s.get("losses") or 0,
+            s.get("games_played") or 0,
+            round(float(s.get("power_rating") or 0), 2),
+        ])
+
+    batch_write(ws, 1, all_rows)
+    print(f"    {tab_name}: {len(schools)} schools")
+    return len(schools)
+
+
+def build_division_tabs(sheet, season=SEASON):
+    """Build 8 individual division tabs."""
+    print(f"  Building division tabs...")
+    all_schools = load_power_rankings(season)
+    if not all_schools:
+        print(f"    No data found")
+        return 0
+
+    total = 0
+    for division in DIVISION_ORDER:
+        tab_name = DIVISION_TAB_NAMES.get(division, division)
+        schools  = [s for s in all_schools if s.get("division") == division]
+        schools.sort(key=lambda x: float(x.get("power_rating") or 0), reverse=True)
+        if schools:
+            write_rankings_tab(sheet, tab_name, schools,
+                               group_label=f"LVAY Football {season} — {tab_name}")
+            total += len(schools)
+        time.sleep(1)
+
+    return total
+
+
+def load_game_breakdowns(season=SEASON, sport="football"):
+    """Load all per-game power point breakdowns from game_power_points table."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT school, week, opponent, result, score,
+                   opp_wins, opp_losses, opp_division,
+                   base_pts, div_bonus, opp_quality, total_pts
+            FROM game_power_points
+            WHERE sport=? AND season=?
+            ORDER BY school, week ASC
+        """, (sport, str(season)))
+        rows = c.fetchall()
+    except Exception as e:
+        print(f"    WARNING: game_power_points table not found: {e}")
+        rows = []
+    conn.close()
+
+    # Group by school
+    by_school = {}
+    for r in rows:
+        s = r["school"]
+        if s not in by_school:
+            by_school[s] = []
+        by_school[s].append(dict(r))
+    return by_school
+
+
+def build_class_tabs(sheet, season=SEASON):
+    """
+    Build 5 class tabs (5A-1A).
+    Each tab grouped by district, each school shown in Excel-style format:
+      - School name header row
+      - Summary row: Class, Division, Overall record, District record, Power Rating
+      - Column headers
+      - One row per game: Week, Date, H/A, Opponent (W-L), Opp Division, W/L, Score, Base, Div Bonus, OppQ, Total Pts
+      - Spacer between schools
+    """
+    print(f"  Building class tabs (Excel style)...")
+    all_schools   = load_power_rankings(season)
+    game_breakdowns = load_game_breakdowns(season)
+
+    if not all_schools:
+        print(f"    No data found")
+        return 0
+
+    # Also load district W/L from games table
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT school,
+                SUM(CASE WHEN win_loss='W' THEN 1 ELSE 0 END) as total_wins,
+                SUM(CASE WHEN win_loss='L' THEN 1 ELSE 0 END) as total_losses
+            FROM games
+            WHERE sport='football' AND season=? AND district_class IS NOT NULL AND district_class != ''
+            GROUP BY school
+        """, (str(season),))
+        dist_records = {r["school"]: {"dw": r["total_wins"], "dl": r["total_losses"]} for r in c.fetchall()}
+    except Exception:
+        dist_records = {}
+
+    # Load game dates and H/A from games table
+    c.execute("""
+        SELECT school, week, game_date, home_away, opponent, district_class
+        FROM games
+        WHERE sport='football' AND season=?
+    """, (str(season),))
+    game_details = {}
+    for r in c.fetchall():
+        week_num = str(r["week"] or "").replace("Week ", "").strip()
+        game_details[(r["school"], week_num)] = {
+            "date":    r["game_date"] or "",
+            "ha":      r["home_away"] or "",
+            "dist_class": r["district_class"] or "",
+        }
+    conn.close()
+
+    now_str     = datetime.now().strftime("%m/%d/%Y %I:%M %p")
+    game_headers = ["Week", "Date", "H/A", "Opponent", "Opp Record",
+                    "Opp Division", "W/L", "Score",
+                    "Base Pts", "Div Bonus", "Opp Quality", "Game Total"]
+
+    total = 0
+    for class_ in CLASS_ORDER:
+        tab_name = f"Class {class_}"
+        schools  = [s for s in all_schools if s.get("class_") == class_]
+
+        if not schools:
+            continue
+
+        districts = sorted(set(
+            int(s.get("district") or 0)
+            for s in schools
+            if s.get("district")
+        ))
+
+        ws = get_or_create_tab(sheet, tab_name)
+
+        all_rows = []
+        all_rows.append([f"LVAY Football {season} — {tab_name} — Updated {now_str}"] + [""] * 11)
+
+        for dist in districts:
+            dist_schools = [s for s in schools if int(s.get("district") or 0) == dist]
+            dist_schools.sort(key=lambda x: float(x.get("power_rating") or 0), reverse=True)
+
+            # District header
+            all_rows.append([f"=== DISTRICT {dist} ==="] + [""] * 11)
+            all_rows.append([""] * 12)  # spacer
+
+            for s in dist_schools:
+                name    = s.get("school") or ""
+                div     = DIVISION_LABELS.get(s.get("division", ""), s.get("division") or "")
+                cls     = s.get("class_") or ""
+                wins    = s.get("wins") or 0
+                losses  = s.get("losses") or 0
+                pr      = round(float(s.get("power_rating") or 0), 2)
+                dr      = dist_records.get(name, {})
+                dw      = dr.get("dw", 0)
+                dl      = dr.get("dl", 0)
+
+                # School name header
+                all_rows.append([name] + [""] * 11)
+
+                # Summary row
+                all_rows.append([
+                    cls, div,
+                    f"Overall: {wins} - {losses}", "",
+                    f"District: {dw} - {dl}", "",
+                    "PR:", pr,
+                    "", "", "", ""
+                ])
+
+                # Column headers
+                all_rows.append(game_headers)
+
+                # Game rows
+                games = game_breakdowns.get(name, [])
+                for g in games:
+                    week_num = str(g.get("week") or "")
+                    detail   = game_details.get((name, week_num), {})
+                    opp      = g.get("opponent") or ""
+                    opp_w    = g.get("opp_wins") or 0
+                    opp_l    = g.get("opp_losses") or 0
+                    opp_div  = DIVISION_LABELS.get(g.get("opp_division", ""), g.get("opp_division") or "")
+
+                    all_rows.append([
+                        f"Wk{week_num}",
+                        detail.get("date", ""),
+                        detail.get("ha", ""),
+                        opp,
+                        f"{opp_w} - {opp_l}",
+                        opp_div,
+                        g.get("result") or "",
+                        g.get("score") or "",
+                        g.get("base_pts") or 0,
+                        g.get("div_bonus") or 0,
+                        g.get("opp_quality") or 0,
+                        g.get("total_pts") or 0,
+                    ])
+
+                all_rows.append([""] * 12)  # spacer between schools
+                total += 1
+
+        # Schools with no district
+        no_dist = [s for s in schools if not s.get("district")]
+        if no_dist:
+            no_dist.sort(key=lambda x: float(x.get("power_rating") or 0), reverse=True)
+            all_rows.append(["=== NO DISTRICT ASSIGNED ==="] + [""] * 8)
+            all_rows.append(col_headers)
+            for rank, s in enumerate(no_dist, 1):
+                all_rows.append([
+                    rank,
+                    s.get("school") or "",
+                    DIVISION_LABELS.get(s.get("division", ""), s.get("division") or ""),
+                    s.get("class_") or "",
+                    "",
+                    s.get("wins") or 0,
+                    s.get("losses") or 0,
+                    s.get("games_played") or 0,
+                    round(float(s.get("power_rating") or 0), 2),
+                ])
+
+        batch_write(ws, 1, all_rows)
+        print(f"    {tab_name}: {len(schools)} schools across {len(districts)} districts")
+        total += len(schools)
+        time.sleep(1)
+
+    return total
+
+
+def export_division_and_class_tabs(season=SEASON):
+    """Build all 13 breakdown tabs — 8 division + 5 class."""
+    print(f"\n{'='*54}")
+    print(f"LVAY Football — Division & Class Tabs")
+    print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"{'='*54}")
+
+    try:
+        client = get_client()
+        sheet  = client.open_by_key(SHEET_ID)
+        print(f"Connected: {sheet.title}")
+    except Exception as e:
+        print(f"ERROR connecting: {e}")
+        return False
+
+    try:
+        div_total = build_division_tabs(sheet, season)
+    except Exception as e:
+        print(f"  ERROR division tabs: {e}")
+        div_total = 0
+
+    try:
+        class_total = build_class_tabs(sheet, season)
+    except Exception as e:
+        print(f"  ERROR class tabs: {e}")
+        class_total = 0
+
+    print(f"\n{'='*54}")
+    print(f"DONE!")
+    print(f"  Division tabs: {div_total} schools across 8 tabs")
+    print(f"  Class tabs:    {class_total} schools across 5 tabs")
+    print(f"Sheet: https://docs.google.com/spreadsheets/d/{SHEET_ID}")
+    print(f"{'='*54}\n")
+    return True
