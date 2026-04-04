@@ -239,21 +239,20 @@ class PowerRatingEngine:
         if game.result in ("OD", "JV", "PPD"):
             return gp
 
-        # Out of state opponents — only OppQ counts, no base or div bonus
         oos = game.opponent_out_of_state
 
-        # Base points
-        if not oos:
-            if game.result == "W":
-                gp.base = config["win_points"]
-            elif game.result == "L":
-                gp.base = config["loss_points"]
-            elif game.result == "T":
-                gp.base = config["tie_points"]
-            elif game.result == "DF":
-                gp.base = config.get("forfeit_bonus", 0)
+        # Base points — OOS games get full base points (win=10, loss=0)
+        # Only div bonus is excluded for OOS games
+        if game.result == "W":
+            gp.base = config["win_points"]
+        elif game.result == "L":
+            gp.base = config["loss_points"]
+        elif game.result == "T":
+            gp.base = config["tie_points"]
+        elif game.result == "DF":
+            gp.base = config.get("forfeit_bonus", 0)
 
-        # Division bonus
+        # Division bonus — OOS games do NOT get div bonus
         if config["has_div_bonus"] and not oos:
             diff = game.opponent_div_rank - team.div_rank
             if diff > 0:
@@ -273,13 +272,12 @@ class PowerRatingEngine:
         elif style == "raw_wins":
             gp.opp_quality = float(game.opponent_wins)
         elif style == "soccer_weighted":
-            # Soccer: weighted by result regardless of OOS
             if game.result == "W":
-                gp.opp_quality = game.opponent_win_pct * 1.0   # 100%
+                gp.opp_quality = game.opponent_win_pct * 1.0
             elif game.result == "L":
-                gp.opp_quality = game.opponent_win_pct * 0.5   # 50%
+                gp.opp_quality = game.opponent_win_pct * 0.5
             elif game.result == "T":
-                gp.opp_quality = game.opponent_win_pct * 0.75  # 75%
+                gp.opp_quality = game.opponent_win_pct * 0.75
 
         return gp
 
@@ -401,27 +399,3 @@ if __name__ == "__main__":
         for g in r.breakdown:
             print(f"    Wk{g['week']} vs {g['opponent']}: {g['result']} | "
                   f"Base:{g['base']} + Div:{g['div']} + OppQ:{g['oppq']} = {g['total']}")
-
-    print("\n=== BASEBALL ===")
-    eng2 = PowerRatingEngine()
-    eng2.add_team(Team("Calvary Baptist", "Select Division III", "2A", "baseball"))
-    eng2.add_game(GameResult("Calvary Baptist", "Brother Martin", "W", "baseball",
-                             opponent_wins=20, opponent_losses=5,
-                             opponent_division="Select Division I", week=1))
-    for r in eng2.rate_all():
-        print(f"  #{r.rank} {r.name} PR={r.power_rating} {r.record}")
-
-    print("\n=== SOCCER ===")
-    eng3 = PowerRatingEngine()
-    eng3.add_team(Team("Calvary Baptist", "Select Division III", "2A", "soccer"))
-    eng3.add_game(GameResult("Calvary Baptist", "Opp A", "W", "soccer",
-                             opponent_wins=10, opponent_losses=5, week=1))
-    eng3.add_game(GameResult("Calvary Baptist", "Opp B", "L", "soccer",
-                             opponent_wins=8, opponent_losses=2, week=2))
-    eng3.add_game(GameResult("Calvary Baptist", "Opp C", "T", "soccer",
-                             opponent_wins=6, opponent_losses=4, week=3))
-    for r in eng3.rate_all():
-        print(f"  #{r.rank} {r.name} PR={r.power_rating} {r.record}")
-        for g in r.breakdown:
-            print(f"    Wk{g['week']} vs {g['opponent']}: {g['result']} | "
-                  f"OppQ:{g['oppq']} Total:{g['total']}")
