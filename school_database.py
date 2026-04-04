@@ -84,7 +84,7 @@ NS_D2 = [
 ]
 
 NS_D3 = [
-    "Jena", "Sterlington", "St. James", "Kinder", "Erath", "Oak Grove",
+    "Jena", "Sterlington", "St. James", "Kinder", "Erath", "Oak Grove", "Pickering",
     "Loreauville", "Mansfield", "Marksville", "Church Point", "Richwood",
     "Union Parish", "Pine", "Many", "Donaldsonville", "Avoyelles",
     "St. Helena College & Career Acad.", "Westlake", "Red River", "Kaplan",
@@ -95,7 +95,7 @@ NS_D3 = [
 ]
 
 NS_D4 = [
-    "Haynesville", "Mangham", "South Plaquemines", "Jeanerette", "Logansport",
+    "Haynesville", "Mangham", "South Plaquemines", "Jeanerette", "Logansport", "Ringgold",
     "North Iberville", "East Feliciana", "Vinton", "Jonesboro-Hodge", "Ferriday",
     "Elton", "Welsh", "Grand Lake", "West St. Mary", "West St. John", "Homer",
     "Franklin", "General Trass", "Basile", "Montgomery", "Lake Arthur", "LaSalle",
@@ -320,6 +320,7 @@ ALIGNMENT = {
     "Red River": {"class": "2A", "district": 3},
     "Winnfield": {"class": "2A", "district": 3},
     "DeQuincy": {"class": "2A", "district": 4},
+    "Pickering": {"class": "2A", "district": 4},
     "East Beauregard": {"class": "2A", "district": 4},
     "Pickering": {"class": "2A", "district": 4},
     "Rosepine": {"class": "2A", "district": 4},
@@ -359,6 +360,7 @@ ALIGNMENT = {
     "Walter L. Cohen": {"class": "2A", "district": 10},
     # 1A
     "Arcadia": {"class": "1A", "district": 1},
+    "Ringgold": {"class": "1A", "district": 1},
     "Cedar Creek": {"class": "1A", "district": 1},
     "Glenbrook": {"class": "1A", "district": 1},
     "Haynesville": {"class": "1A", "district": 1},
