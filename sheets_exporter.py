@@ -169,12 +169,15 @@ def export_scores(sheet, sport):
             ])
 
     if data:
-        # Write in batches of 500 to avoid API limits
+        import time
+        # Write in batches of 500 with delay to avoid API rate limits
         batch_size = 500
         for i in range(0, len(data), batch_size):
             batch = data[i:i + batch_size]
             start_row = i + 2
             ws.update(f"A{start_row}", batch)
+            if i + batch_size < len(data):
+                time.sleep(2)  # 2 second delay between batches
 
     print(f"  Exported {len(data)} games to '{tab_name}'")
     return len(data)
@@ -229,12 +232,15 @@ def export_all_to_sheets():
         print(f"ERROR connecting to Google Sheets: {e}")
         return False
 
+    import time
     total = 0
     for sport in ["baseball", "softball", "football"]:
         print(f"\nExporting {sport}...")
         try:
             total += export_standings(sheet, sport)
+            time.sleep(3)  # pause between standings and scores
             total += export_scores(sheet, sport)
+            time.sleep(5)  # pause between sports
         except Exception as e:
             print(f"  ERROR exporting {sport}: {e}")
 
