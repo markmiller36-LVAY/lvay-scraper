@@ -369,3 +369,20 @@ def build_football_sheets():
         "status": "started",
         "message": "Building Football 2025 Google Sheets — check sheet in 5 minutes"
     })
+
+
+@app.route("/api/build/football-scores")
+def build_football_scores_tab():
+    """Build Football Scores tab separately — slow, 2997 rows."""
+    import threading
+    from sheets_exporter import export_football_scores
+    def run():
+        try:
+            export_football_scores()
+        except Exception as e:
+            print(f"Football scores error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({
+        "status": "started",
+        "message": "Building Football Scores tab — this takes 5-10 minutes, check sheet when done"
+    })
