@@ -520,3 +520,17 @@ def get_all_schedules():
     except Exception as e:
         conn.close()
         return jsonify({'error': str(e)}), 500
+
+
+@app.route("/api/migrate/add-district-flag")
+def migrate_add_district_flag():
+    """Add is_district column to game_power_points if missing."""
+    conn = get_db()
+    try:
+        conn.execute("ALTER TABLE game_power_points ADD COLUMN is_district INTEGER DEFAULT 0")
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "ok", "message": "is_district column added successfully"})
+    except Exception as e:
+        conn.close()
+        return jsonify({"status": "already exists", "message": str(e)})
