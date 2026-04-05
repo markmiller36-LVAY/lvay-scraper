@@ -292,6 +292,7 @@ ALIGNMENT = {
     "Patrick Taylor - Science/Tech.": {"class": "3A", "district": 9},
     "Thomas Jefferson": {"class": "3A", "district": 9},
     "Young Audiences Charter": {"class": "3A", "district": 9},
+    "Bolton Academy": {"class": "3A", "district": 10},
     "Booker T. Washington - N.O.": {"class": "3A", "district": 10},
     "De La Salle": {"class": "3A", "district": 10},
     "John F. Kennedy": {"class": "3A", "district": 10},
@@ -501,3 +502,4 @@ if __name__ == "__main__":
             print(f"  {name}: {s['class']} D{s['district']} | {s['division']}")
         else:
             print(f"  {name}: NOT FOUND")
+            
