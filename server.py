@@ -455,6 +455,7 @@ def get_all_schedules():
     conn = get_db()
     c = conn.cursor()
     try:
+        # Get all counting games from game_power_points
         c.execute("""
             SELECT g.school, g.week, g.game_date, g.home_away,
                    g.district_class as opp_district_class,
@@ -476,6 +477,22 @@ def get_all_schedules():
             ORDER BY gp.school, gp.week ASC
         """)
         rows = [dict(r) for r in c.fetchall()]
+
+        # Also get PPD/cancelled games from games table
+        c.execute("""
+            SELECT g.school, g.week, g.game_date, g.home_away,
+                   g.opponent, g.win_loss, g.score,
+                   pr.division, pr.class_, pr.district,
+                   pr.wins, pr.losses, pr.power_rating, pr.rank
+            FROM games g
+            LEFT JOIN power_rankings pr ON pr.school = g.school
+                AND pr.sport = 'football'
+                AND pr.season = g.season
+            WHERE g.sport = 'football' AND g.season = '2025'
+            AND g.win_loss = 'PPD'
+            ORDER BY g.school, CAST(REPLACE(g.week,'Week ','') AS INTEGER) ASC
+        """)
+        ppd_rows = [dict(r) for r in c.fetchall()]
         conn.close()
 
         # Group by school
@@ -511,6 +528,33 @@ def get_all_schedules():
                 'opp_quality':      r['opp_quality'],
                 'total_pts':        r['total_pts'],
             })
+
+        # Add PPD games
+        for r in ppd_rows:
+            s = r['school']
+            if s not in by_school:
+                continue  # skip if school not in rankings
+            by_school[s]['games'].append({
+                'week':             r['week'],
+                'game_date':        r['game_date'] or '',
+                'home_away':        r['home_away'] or '',
+                'opponent':         r['opponent'] or '',
+                'result':           'PPD',
+                'score':            'Cancelled',
+                'opp_wins':         0,
+                'opp_losses':       0,
+                'opp_division':     '',
+                'opp_district_class': '',
+                'is_district':      0,
+                'base_pts':         0,
+                'div_bonus':        0,
+                'opp_quality':      0,
+                'total_pts':        0,
+            })
+
+        # Sort each school's games by week number
+        for s in by_school:
+            by_school[s]['games'].sort(key=lambda g: int(str(g['week']).replace('Week ', '')) if str(g['week']).replace('Week ', '').isdigit() else 0)
 
         return jsonify({
             'season': '2025',
