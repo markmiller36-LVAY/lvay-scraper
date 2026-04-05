@@ -647,3 +647,18 @@ def migrate_oos_add_class():
     except Exception as e:
         conn.close()
         return jsonify({"status": "already exists", "message": str(e)})
+
+
+@app.route("/api/debug/oos")
+def debug_oos():
+    """Show OOS opponent records in DB."""
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        c.execute("SELECT school, week, opponent, division, class_, opp_wins, opp_losses FROM oos_opponents WHERE sport='football' AND season='2025' ORDER BY school, week")
+        rows = [dict(r) for r in c.fetchall()]
+        conn.close()
+        return jsonify({"count": len(rows), "records": rows})
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
