@@ -258,19 +258,17 @@ class PowerRatingEngine:
             gp.base = config.get("forfeit_bonus", 0)
 
         # Division bonus
-        # In-state games: opponent must be higher in BOTH class AND division
-        # OOS games: bonus based on CLASS difference only (can't assign Select/NS to other states)
+        # In-state: opponent must be higher in BOTH class AND division
+        # OOS: award +2 per class level higher (class only — no Select/NS in other states)
         if config["has_div_bonus"]:
             opp_class_rank  = CLASS_RANK.get(game.opponent_class, 0)
             team_class_rank = CLASS_RANK.get(team.classification, 0)
             div_diff        = game.opponent_div_rank - team.div_rank
             class_diff      = opp_class_rank - team_class_rank
             if oos:
-                # OOS: award +2 per class level higher, ignore division
                 if class_diff > 0:
                     gp.div_bonus = class_diff * config["div_bonus_per_div"]
             else:
-                # In-state: both class AND division must be higher
                 if div_diff > 0 and class_diff > 0:
                     gp.div_bonus = div_diff * config["div_bonus_per_div"]
             # Play-up bonus (basketball)
