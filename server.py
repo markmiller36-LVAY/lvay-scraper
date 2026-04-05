@@ -633,3 +633,17 @@ def fix_cancelled_games():
     except Exception as e:
         conn.close()
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/migrate/oos-add-class")
+def migrate_oos_add_class():
+    """Add class_ column to oos_opponents table."""
+    conn = get_db()
+    try:
+        conn.execute("ALTER TABLE oos_opponents ADD COLUMN class_ TEXT DEFAULT ''")
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "ok", "message": "class_ column added to oos_opponents"})
+    except Exception as e:
+        conn.close()
+        return jsonify({"status": "already exists", "message": str(e)})
