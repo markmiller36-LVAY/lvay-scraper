@@ -551,3 +551,41 @@ def import_oos_2025():
         "status": "started",
         "message": "Importing OOS opponent records — check logs"
     })
+
+
+@app.route("/api/fix/cancelled-games")
+def fix_cancelled_games():
+    """Mark known cancelled games as PPD so they don't count in power ratings."""
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        # Riverside Academy vs Crescent City Week 10 - game was cancelled
+        c.execute("""
+            UPDATE games 
+            SET win_loss='PPD', score='Cancelled'
+            WHERE sport='football' AND season='2025'
+            AND school='Riverside Academy' 
+            AND CAST(REPLACE(week,'Week ','') AS INTEGER) = 10
+        """)
+        ra_rows = c.rowcount
+
+        c.execute("""
+            UPDATE games 
+            SET win_loss='PPD', score='Cancelled'
+            WHERE sport='football' AND season='2025'
+            AND school='Crescent City' 
+            AND CAST(REPLACE(week,'Week ','') AS INTEGER) = 10
+        """)
+        cc_rows = c.rowcount
+
+        conn.commit()
+        conn.close()
+        return jsonify({
+            "status": "ok",
+            "riverside_academy_updated": ra_rows,
+            "crescent_city_updated": cc_rows,
+            "message": "Week 10 cancelled game marked as PPD for both schools"
+        })
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
