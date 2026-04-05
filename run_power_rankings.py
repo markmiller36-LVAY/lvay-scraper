@@ -98,7 +98,7 @@ def load_oos_opponents(conn, season=SEASON, sport=SPORT):
     c = conn.cursor()
     try:
         c.execute("""
-            SELECT school, week, opponent, division, opp_wins, opp_losses
+            SELECT school, week, opponent, division, class_, opp_wins, opp_losses
             FROM oos_opponents
             WHERE sport=? AND season=?
         """, (sport, season))
@@ -107,6 +107,7 @@ def load_oos_opponents(conn, season=SEASON, sport=SPORT):
             oos[(r["school"], r["week"])] = {
                 "opponent":   r["opponent"],
                 "division":   r["division"],
+                "class_":     r["class_"] if r["class_"] else "",
                 "opp_wins":   r["opp_wins"],
                 "opp_losses": r["opp_losses"],
             }
@@ -214,7 +215,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             opp_wins     = oos_data["opp_wins"]
             opp_losses   = oos_data["opp_losses"]
             opp_division = oos_data["division"]
-            opp_class    = ""
+            opp_class    = oos_data.get("class_", "")
             oos          = True
         else:
             opp_record   = school_records.get(opponent, {"wins": 0, "losses": 0})
