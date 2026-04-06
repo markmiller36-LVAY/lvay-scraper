@@ -58,7 +58,7 @@ SELECT_D4 = [
     "St. Mary's", "Vermilion Catholic", "Central Catholic",
     "Lincoln Preparatory School", "Central Private", "Delhi Charter",
     "Glenbrook", "Hanson Memorial", "Berchmans Academy", "Northwood - Lena",
-    "Crescent City", "Thrive Academy", "Block", "Highland Baptist",
+    "Crescent City", "Thrive Academy", "Block", "Highland Baptist", "Pickering",
 ]
 
 NS_D1 = [
@@ -84,7 +84,7 @@ NS_D2 = [
 ]
 
 NS_D3 = [
-    "Jena", "Sterlington", "St. James", "Kinder", "Erath", "Oak Grove", "Pickering",
+    "Jena", "Sterlington", "St. James", "Kinder", "Erath", "Oak Grove",
     "Loreauville", "Mansfield", "Marksville", "Church Point", "Richwood",
     "Union Parish", "Pine", "Many", "Donaldsonville", "Avoyelles",
     "St. Helena College & Career Acad.", "Westlake", "Red River", "Kaplan",
@@ -323,7 +323,6 @@ ALIGNMENT = {
     "DeQuincy": {"class": "2A", "district": 4},
     "Pickering": {"class": "2A", "district": 4},
     "East Beauregard": {"class": "2A", "district": 4},
-    "Pickering": {"class": "2A", "district": 4},
     "Rosepine": {"class": "2A", "district": 4},
     "Vinton": {"class": "2A", "district": 4},
     "Avoyelles": {"class": "2A", "district": 5},
@@ -502,4 +501,3 @@ if __name__ == "__main__":
             print(f"  {name}: {s['class']} D{s['district']} | {s['division']}")
         else:
             print(f"  {name}: NOT FOUND")
-            
