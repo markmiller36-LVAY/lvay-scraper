@@ -29,6 +29,10 @@ OOS_GAMES = [
     {'school': 'Delhi',             'week': 9, 'opponent': 'Pensacola Catholic, FL',                 'div': 'NS2', 'cls': '4A', 'opp_wins': 9,  'opp_losses': 1},
     # St. Frederick WK8 — Cypress Christian TX — CORRECTED to S3 (was wrongly NS4)
     {'school': 'St. Frederick',     'week': 8, 'opponent': 'Cypress Christian School, TX',           'div': 'S3',  'cls': '2A', 'opp_wins': 9,  'opp_losses': 0},
+    # Haynesville WK2 — Harmony Grove High School AR (NS3, 2A) — 3W 7L
+    {'school': 'Haynesville',       'week': 2, 'opponent': 'Harmony Grove High School, AR',          'div': 'NS3', 'cls': '2A', 'opp_wins': 3,  'opp_losses': 7},
+    # St. Edmund WK2 — Muenster Sacred Heart TX (NS4, 1A) — 2W 7L
+    {'school': 'St. Edmund',        'week': 2, 'opponent': 'Muenster Sacred Heart, TX',              'div': 'NS4', 'cls': '1A', 'opp_wins': 2,  'opp_losses': 7},
 ]
 
 
