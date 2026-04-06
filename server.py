@@ -240,8 +240,8 @@ def import_oos_2025():
 def calculate_rankings():
     def run():
         try:
-            from run_power_rankings import run as do_rankings
-            do_rankings()
+            from run_power_rankings import run_power_rankings
+            run_power_rankings()
         except Exception as e:
             print(f"Rankings calc error: {e}")
     threading.Thread(target=run, daemon=True).start()
