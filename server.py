@@ -226,36 +226,44 @@ def fix_stfrederick_oos():
 
 @app.route("/api/fix/haynesville-oos")
 def fix_haynesville_oos():
-    """Remove the bad Haynesville OOS game insert from games table."""
+    """Insert Haynesville WK2 Harmony Grove AR game (missed by scraper)."""
     conn = get_db()
     c = conn.cursor()
-    c.execute("""
-        DELETE FROM games
-        WHERE sport='football' AND season='2025'
-        AND school='Haynesville' AND week='Week 2'
-        AND opponent='Harmony Grove High School, AR'
-    """)
-    rows = c.rowcount
-    conn.commit()
-    conn.close()
-    return jsonify({"status": "ok", "rows_deleted": rows, "message": "Haynesville bad OOS game row removed"})
+    try:
+        c.execute("""
+            INSERT OR IGNORE INTO games
+            (sport, season, school, week, game_date, opponent, win_loss, score, home_away, district_class, tournament)
+            VALUES ('football','2025','Haynesville','Week 2','2025-09-12',
+                    'Harmony Grove High School, AR','W','42-14','H','NS3','')
+        """)
+        rows = c.rowcount
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "ok", "rows_inserted": rows, "message": "Haynesville Wk2 OOS game inserted"})
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/fix/stedmund-oos")
 def fix_stedmund_oos():
-    """Remove the bad St. Edmund OOS game insert from games table."""
+    """Insert St. Edmund WK2 Muenster Sacred Heart TX game (missed by scraper)."""
     conn = get_db()
     c = conn.cursor()
-    c.execute("""
-        DELETE FROM games
-        WHERE sport='football' AND season='2025'
-        AND school='St. Edmund' AND week='Week 2'
-        AND opponent='Muenster Sacred Heart, TX'
-    """)
-    rows = c.rowcount
-    conn.commit()
-    conn.close()
-    return jsonify({"status": "ok", "rows_deleted": rows, "message": "St. Edmund bad OOS game row removed"})
+    try:
+        c.execute("""
+            INSERT OR IGNORE INTO games
+            (sport, season, school, week, game_date, opponent, win_loss, score, home_away, district_class, tournament)
+            VALUES ('football','2025','St. Edmund','Week 2','2025-09-13',
+                    'Muenster Sacred Heart, TX','W','55-6','A','NS4','')
+        """)
+        rows = c.rowcount
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "ok", "rows_inserted": rows, "message": "St. Edmund Wk2 OOS game inserted"})
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/import/oos2025")
