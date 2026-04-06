@@ -254,12 +254,12 @@ class PowerRatingEngine:
             if oos:
                 # OOS: class only — +2 per class level higher
                 if class_diff > 0:
-                    gp.div_bonus = class_diff * config["div_bonus_per_div"]
+                    gp.div_bonus = div_diff * config["div_bonus_per_div"]
             else:
                 # In-state: BOTH class AND division must be higher
-                # Bonus = class_diff x 2 (not div_diff)
+                # Bonus = div_diff x 2 (confirmed correct formula)
                 if div_diff > 0 and class_diff > 0:
-                    gp.div_bonus = class_diff * config["div_bonus_per_div"]
+                    gp.div_bonus = div_diff * config["div_bonus_per_div"]
 
             if game.playing_up and config.get("play_up_bonus"):
                 gp.div_bonus += config["play_up_bonus"]
