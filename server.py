@@ -224,6 +224,46 @@ def fix_stfrederick_oos():
 
 # ── OOS IMPORT & RANKINGS ────────────────────────────────────
 
+@app.route("/api/fix/haynesville-oos")
+def fix_haynesville_oos():
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        c.execute("""
+            INSERT OR IGNORE INTO games
+            (sport, season, school, week, game_date, opponent, win_loss, score, home_away, district_class, tournament)
+            VALUES ('football','2025','Haynesville','Week 2','2025-09-12',
+                    'Harmony Grove High School, AR','W','42-14','H','NS3','')
+        """)
+        rows = c.rowcount
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "ok", "rows_inserted": rows, "message": "Haynesville Wk2 OOS game added (NS3)"})
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/fix/stedmund-oos")
+def fix_stedmund_oos():
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        c.execute("""
+            INSERT OR IGNORE INTO games
+            (sport, season, school, week, game_date, opponent, win_loss, score, home_away, district_class, tournament)
+            VALUES ('football','2025','St. Edmund','Week 2','2025-09-13',
+                    'Muenster Sacred Heart, TX','W','55-6','A','NS4','')
+        """)
+        rows = c.rowcount
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "ok", "rows_inserted": rows, "message": "St. Edmund Wk2 OOS game added (NS4)"})
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/import/oos2025")
 def import_oos_2025():
     def run():
