@@ -226,29 +226,29 @@ def fix_stfrederick_oos():
 
 @app.route("/api/fix/new-oos-games")
 def fix_new_oos_games():
-    """Insert all newly discovered OOS games into the games table."""
+    """Remove any wrongly inserted OOS games from games table — these schools already have the game in DB, just needed in oos_opponents for quality lookup."""
     conn = get_db()
     c = conn.cursor()
-    new_games = [
-        ('football','2025','DeRidder',       'Week 3','2025-09-19','Newton High School, TX',    'L','16-36','A','NS4',''),
-        ('football','2025','Neville',         'Week 3','2025-09-19','Oak Grove, MS',             'L','7-36', 'H','NS1',''),
-        ('football','2025','Northshore',      'Week 1','2025-09-05','Picayune Memorial, MS',     'L','13-27','H','NS1',''),
-        ('football','2025','North DeSoto',    'Week 2','2025-09-12','Center High School, TX',    'W','49-20','A','NS2',''),
-        ('football','2025','Ouachita Parish', 'Week 4','2025-09-26','Port Gibson, MS',           'W','51-6', 'H','NS3',''),
-        ('football','2025','West Monroe',     'Week 2','2025-09-12','Pulaski Academy, AR',       'W','31-17','H','S1', ''),
-        ('football','2025','Ruston',          'Week 4','2025-09-25','Midland-Legacy High School, TX','W','49-21','H','NS1',''),
+    to_delete = [
+        ('DeRidder',       'Week 3', 'Newton High School, TX'),
+        ('Neville',        'Week 3', 'Oak Grove, MS'),
+        ('Northshore',     'Week 1', 'Picayune Memorial, MS'),
+        ('North DeSoto',   'Week 2', 'Center High School, TX'),
+        ('Ouachita Parish','Week 4', 'Port Gibson, MS'),
+        ('West Monroe',    'Week 2', 'Pulaski Academy, AR'),
+        ('Ruston',         'Week 4', 'Midland-Legacy High School, TX'),
     ]
-    inserted = 0
-    for g in new_games:
+    deleted = 0
+    for school, week, opponent in to_delete:
         c.execute("""
-            INSERT OR IGNORE INTO games
-            (sport, season, school, week, game_date, opponent, win_loss, score, home_away, district_class, tournament)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)
-        """, g)
-        inserted += c.rowcount
+            DELETE FROM games
+            WHERE sport='football' AND season='2025'
+            AND school=? AND week=? AND opponent=?
+        """, (school, week, opponent))
+        deleted += c.rowcount
     conn.commit()
     conn.close()
-    return jsonify({"status": "ok", "rows_inserted": inserted, "message": f"Inserted {inserted} new OOS game records"})
+    return jsonify({"status": "ok", "rows_deleted": deleted, "message": f"Removed {deleted} wrongly inserted OOS game records"})
 
 
 @app.route("/api/fix/haynesville-oos")
