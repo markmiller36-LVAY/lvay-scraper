@@ -79,7 +79,6 @@ def load_games(conn, season=SEASON, sport=SPORT):
 
 
 def load_scores(conn, season=SEASON, sport=SPORT):
-    """Load scores for display purposes."""
     c = conn.cursor()
     c.execute("""
         SELECT school, week, score
@@ -157,9 +156,10 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     school_records = build_school_records(rows)
     print(f"  {len(school_records)} school profiles loaded")
 
-    engine      = PowerRatingEngine()
+    engine       = PowerRatingEngine()
     schools_seen = set()
     unmatched    = []
+    oos_missing  = []  # OOS games flagged but not in oos_opponents table
 
     # Register all teams
     for r in rows:
@@ -187,7 +187,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         print(f"  ⚠️  {len(unmatched)} unmatched schools")
 
     # Add all games
-    game_meta = {}  # (school, week_num) -> {opp_wins, opp_losses, opp_division, score}
+    game_meta = {}
 
     for r in rows:
         school   = r["school"]
@@ -208,23 +208,34 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         except Exception:
             week_num = 0
 
-        # Check OOS lookup first
+        # Check OOS lookup table first
         oos_key = (school, week_num)
         if oos_key in oos_lookup:
+            # ✅ OOS data found — use it
             oos_data     = oos_lookup[oos_key]
             opp_wins     = oos_data["opp_wins"]
             opp_losses   = oos_data["opp_losses"]
             opp_division = oos_data["division"]
             opp_class    = oos_data.get("class_", "")
             oos          = True
+        elif oos:
+            # ⚠️ Flagged as OOS by scraper but no lookup entry
+            # Do NOT misidentify as Louisiana school — use zeros
+            opp_wins     = 0
+            opp_losses   = 0
+            opp_division = "Unknown"
+            opp_class    = ""
+            oos_missing.append(f"{school} Wk{week_num} vs {opponent}")
         else:
+            # In-state game — look up normally
             opp_record   = school_records.get(opponent, {"wins": 0, "losses": 0})
             opp_wins     = opp_record["wins"]
             opp_losses   = opp_record["losses"]
             opp_info     = get_school(opponent)
             opp_division = opp_info["division"] if opp_info else "Unknown"
             opp_class    = opp_info["class"]    if opp_info else ""
-        score        = scores_lookup.get((school, str(week_num)), "")
+
+        score = scores_lookup.get((school, str(week_num)), "")
 
         game_meta[(school, week_num)] = {
             "opponent":     opponent,
@@ -248,6 +259,11 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             week=week_num,
         ))
 
+    if oos_missing:
+        print(f"  ⚠️  {len(oos_missing)} OOS games flagged but missing from oos_opponents:")
+        for m in oos_missing:
+            print(f"      {m}")
+
     # Calculate ratings
     print(f"  Calculating power ratings...")
     ratings = engine.rate_all()
@@ -256,11 +272,9 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     now_str = datetime.now().isoformat()
     c       = conn.cursor()
 
-    # Clear old data
     c.execute("DELETE FROM power_rankings WHERE sport=? AND season=?",    (sport, season))
     c.execute("DELETE FROM game_power_points WHERE sport=? AND season=?", (sport, season))
 
-    # Write power_rankings
     for r in ratings:
         db_info  = get_school(r.name)
         division = db_info["division"] if db_info else r.division
@@ -279,11 +293,9 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             r.games_played, now_str
         ))
 
-        # Write per-game breakdown from engine's breakdown list
         for g in r.breakdown:
-            week_num = g["week"]
-            meta     = game_meta.get((r.name, week_num), {})
-            # Check if district game using school_database
+            week_num    = g["week"]
+            meta        = game_meta.get((r.name, week_num), {})
             school_info = get_school(r.name)
             opp_info    = get_school(meta.get("opponent", g["opponent"]))
             is_district = 0
@@ -321,6 +333,8 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     print(f"DONE!")
     print(f"  Schools ranked:    {len(ratings)}")
     print(f"  Unmatched schools: {len(unmatched)}")
+    if oos_missing:
+        print(f"  OOS missing:       {len(oos_missing)} — add to oos_opponents table")
     print(f"  Top 5:")
     for r in ratings[:5]:
         print(f"    #{r.rank} {r.name} | PR={r.power_rating} | {r.record} | {r.division}")
