@@ -103,7 +103,7 @@ def load_oos_opponents(conn, season=SEASON, sport=SPORT):
         """, (sport, season))
         oos = {}
         for r in c.fetchall():
-            oos[(r["school"], r["week"])] = {
+            oos[(r["school"], int(r["week"]))] = {
                 "opponent":   r["opponent"],
                 "division":   r["division"],
                 "class_":     r["class_"] if r["class_"] else "",
