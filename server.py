@@ -84,6 +84,13 @@ def init_db():
 
 with app.app_context():
     init_db()
+    # Auto-import OOS opponent records on startup
+    try:
+        from import_oos_2025 import run as import_oos
+        import_oos()
+        print("OOS opponents imported on startup")
+    except Exception as e:
+        print(f"OOS import on startup error: {e}")
 
 
 # ── STATUS ──────────────────────────────────────────────────
