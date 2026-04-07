@@ -333,6 +333,47 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", port=port, debug=False)
 
 
+@app.route("/api/schedules/football")
+def schedules_football():
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        # Get all schools from power_rankings
+        c.execute("""
+            SELECT pr.school, pr.division, pr.track, pr.class_, pr.district,
+                   pr.power_rating, pr.wins, pr.losses, pr.ties, pr.games_played
+            FROM power_rankings pr
+            WHERE pr.sport='football' AND pr.season='2025'
+            ORDER BY pr.class_ DESC, pr.district ASC, pr.school ASC
+        """)
+        schools = [dict(r) for r in c.fetchall()]
+
+        for s in schools:
+            # Get game breakdown for each school
+            c.execute("""
+                SELECT gpp.week, gpp.opponent, gpp.result, gpp.score,
+                       gpp.opp_wins, gpp.opp_losses, gpp.opp_division,
+                       gpp.base_pts, gpp.div_bonus, gpp.opp_quality,
+                       gpp.total_pts, gpp.is_district,
+                       g.home_away, g.game_date
+                FROM game_power_points gpp
+                LEFT JOIN games g ON (
+                    g.sport='football' AND g.season='2025'
+                    AND g.school=gpp.school
+                    AND CAST(REPLACE(g.week,'Week ','') AS INTEGER)=gpp.week
+                )
+                WHERE gpp.sport='football' AND gpp.season='2025' AND gpp.school=?
+                ORDER BY gpp.week ASC
+            """, (s['school'],))
+            s['games'] = [dict(r) for r in c.fetchall()]
+
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
+    conn.close()
+    return jsonify({"sport": "football", "season": "2025", "count": len(schools), "schools": schools})
+
+
 @app.route("/api/breakdown/football/<school>")
 def breakdown_football(school):
     conn = get_db()
