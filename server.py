@@ -224,6 +224,33 @@ def fix_stfrederick_oos():
 
 # ── OOS IMPORT & RANKINGS ────────────────────────────────────
 
+@app.route("/api/fix/new-oos-games")
+def fix_new_oos_games():
+    """Insert all newly discovered OOS games into the games table."""
+    conn = get_db()
+    c = conn.cursor()
+    new_games = [
+        ('football','2025','DeRidder',       'Week 3','2025-09-19','Newton High School, TX',    'L','16-36','A','NS4',''),
+        ('football','2025','Neville',         'Week 3','2025-09-19','Oak Grove, MS',             'L','7-36', 'H','NS1',''),
+        ('football','2025','Northshore',      'Week 1','2025-09-05','Picayune Memorial, MS',     'L','13-27','H','NS1',''),
+        ('football','2025','North DeSoto',    'Week 2','2025-09-12','Center High School, TX',    'W','49-20','A','NS2',''),
+        ('football','2025','Ouachita Parish', 'Week 4','2025-09-26','Port Gibson, MS',           'W','51-6', 'H','NS3',''),
+        ('football','2025','West Monroe',     'Week 2','2025-09-12','Pulaski Academy, AR',       'W','31-17','H','S1', ''),
+        ('football','2025','Ruston',          'Week 4','2025-09-25','Midland-Legacy High School, TX','W','49-21','H','NS1',''),
+    ]
+    inserted = 0
+    for g in new_games:
+        c.execute("""
+            INSERT OR IGNORE INTO games
+            (sport, season, school, week, game_date, opponent, win_loss, score, home_away, district_class, tournament)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)
+        """, g)
+        inserted += c.rowcount
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "ok", "rows_inserted": inserted, "message": f"Inserted {inserted} new OOS game records"})
+
+
 @app.route("/api/fix/haynesville-oos")
 def fix_haynesville_oos():
     """Insert Haynesville WK2 Harmony Grove AR game (missed by scraper)."""
@@ -295,6 +322,29 @@ def calculate_rankings():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
+
+
+@app.route("/api/breakdown/football/<school>")
+def breakdown_football(school):
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT week, opponent, result, score,
+                   opp_wins, opp_losses, opp_division,
+                   base_pts, div_bonus, opp_quality, total_pts
+            FROM game_power_points
+            WHERE sport='football' AND season='2025' AND school=?
+            ORDER BY week ASC
+        """, (school,))
+        rows = [dict(r) for r in c.fetchall()]
+        total = sum(r["total_pts"] for r in rows)
+        pr = round(total / len(rows), 2) if rows else 0
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
+    conn.close()
+    return jsonify({"school": school, "calculated_pr": pr, "games": rows})
 
 
 @app.route("/api/rankings/football")
