@@ -417,3 +417,239 @@ def rankings_football():
         return jsonify({"error": str(e)}), 500
     conn.close()
     return jsonify({"sport": "football", "season": "2025", "count": len(rows), "rankings": rows})
+@app.route("/control-panel")
+def control_panel():
+    html = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LVAY Football Control Panel</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; padding: 1.5rem; }
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 1.5rem; color: #1a1a1a; }
+  .section { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+  .section-title { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 12px; }
+  .formula-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; font-size: 13px; }
+  .formula-label { min-width: 170px; color: #333; }
+  .formula-val { font-weight: 600; min-width: 30px; text-align: right; }
+  .formula-note { font-size: 11px; color: #999; }
+  .divtabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .divtab { font-size: 12px; padding: 5px 11px; border-radius: 6px; border: 1px solid #ddd; background: transparent; color: #666; cursor: pointer; }
+  .divtab.active { background: #EBF4FF; color: #1a6eb5; border-color: #1a6eb5; font-weight: 500; }
+  .divtab:hover { background: #f5f5f5; }
+  .status { font-size: 13px; color: #888; padding: 8px 0; }
+  .status.err { color: #c0392b; }
+  .rank-wrap { max-height: 400px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 7px 10px; font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #eee; position: sticky; top: 0; background: #fff; }
+  td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+  tr:last-child td { border-bottom: none; }
+  tr.clickable:hover { background: #f9f9f9; cursor: pointer; }
+  .w { color: #27ae60; font-weight: 600; }
+  .l { color: #c0392b; }
+  .badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 20px; margin-left: 4px; }
+  .badge-ns { background: #EBF4FF; color: #1a6eb5; }
+  .badge-s { background: #FFF3CD; color: #856404; }
+  .search-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+  .search-row input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; outline: none; }
+  .search-row input:focus { border-color: #1a6eb5; }
+  .search-row button { padding: 8px 16px; background: #1a6eb5; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+  .search-row button:hover { background: #155a9a; }
+  .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1rem; }
+  .metric { background: #f8f8f8; border-radius: 8px; padding: 12px; }
+  .metric-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .metric-value { font-size: 20px; font-weight: 600; }
+  .school-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+  .school-name { font-size: 18px; font-weight: 600; }
+  .school-meta { font-size: 13px; color: #888; margin-top: 2px; }
+  .school-pr { font-size: 28px; font-weight: 700; text-align: right; }
+  .school-rank { font-size: 13px; color: #888; text-align: right; }
+  .checklist-item { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+  .checklist-item:last-child { border-bottom: none; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .dot.done { background: #27ae60; }
+  .dot.todo { background: transparent; border: 2px solid #ccc; }
+  @media (max-width: 600px) { .metric-grid { grid-template-columns: repeat(2,1fr); } }
+</style>
+</head>
+<body>
+<h1>LVAY — Football Control Panel</h1>
+
+<div class="section">
+  <div class="section-title">Formula reference — LHSAA 14.12</div>
+  <div class="formula-row"><span class="formula-label">Win base points</span><span class="formula-val">10</span><span class="formula-note">per game</span></div>
+  <div class="formula-row"><span class="formula-label">Loss base points</span><span class="formula-val">0</span></div>
+  <div class="formula-row"><span class="formula-label">Tie base points</span><span class="formula-val">5</span></div>
+  <div class="formula-row"><span class="formula-label">In-state div bonus</span><span class="formula-val">+2</span><span class="formula-note">per div higher — requires both class AND div higher</span></div>
+  <div class="formula-row"><span class="formula-label">OOS class bonus</span><span class="formula-val">+2</span><span class="formula-note">per class higher — class only, no div requirement</span></div>
+  <div class="formula-row"><span class="formula-label">Opponent quality (OppQ)</span><span class="formula-val">×10</span><span class="formula-note">(opp wins ÷ opp games) × 10, added every game</span></div>
+  <div class="formula-row"><span class="formula-label">Final power rating</span><span class="formula-val">÷ GP</span><span class="formula-note">total points ÷ games played, rounded to 2dp</span></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Live rankings by division</div>
+  <div class="divtabs">
+    <button class="divtab active" data-div="Non-Select Division I" onclick="setDiv(this)">NS Div I</button>
+    <button class="divtab" data-div="Non-Select Division II" onclick="setDiv(this)">NS Div II</button>
+    <button class="divtab" data-div="Non-Select Division III" onclick="setDiv(this)">NS Div III</button>
+    <button class="divtab" data-div="Non-Select Division IV" onclick="setDiv(this)">NS Div IV</button>
+    <button class="divtab" data-div="Select Division I" onclick="setDiv(this)">S Div I</button>
+    <button class="divtab" data-div="Select Division II" onclick="setDiv(this)">S Div II</button>
+    <button class="divtab" data-div="Select Division III" onclick="setDiv(this)">S Div III</button>
+    <button class="divtab" data-div="Select Division IV" onclick="setDiv(this)">S Div IV</button>
+  </div>
+  <div id="rank-status" class="status">Loading rankings...</div>
+  <div class="rank-wrap" id="rank-wrap" style="display:none">
+    <table>
+      <thead><tr><th>#</th><th>School</th><th>Class</th><th>Record</th><th>GP</th><th>PR</th></tr></thead>
+      <tbody id="rank-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">School lookup — game-by-game breakdown</div>
+  <div class="search-row">
+    <input type="text" id="school-input" placeholder="e.g. Calvary Baptist" />
+    <button onclick="lookupSchool()">Look up</button>
+  </div>
+  <div id="school-status" class="status" style="display:none"></div>
+  <div id="school-result" style="display:none">
+    <div class="school-header">
+      <div>
+        <div class="school-name" id="s-name"></div>
+        <div class="school-meta" id="s-meta"></div>
+      </div>
+      <div>
+        <div class="school-pr" id="s-pr"></div>
+        <div class="school-rank" id="s-rank"></div>
+      </div>
+    </div>
+    <div class="metric-grid">
+      <div class="metric"><div class="metric-label">Record</div><div class="metric-value" id="s-record">—</div></div>
+      <div class="metric"><div class="metric-label">Games played</div><div class="metric-value" id="s-gp">—</div></div>
+      <div class="metric"><div class="metric-label">Class</div><div class="metric-value" id="s-class">—</div></div>
+      <div class="metric"><div class="metric-label">District</div><div class="metric-value" id="s-district">—</div></div>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="min-width:500px">
+        <thead><tr><th>Wk</th><th>Opponent</th><th>Result</th><th>Score</th><th>Base</th><th>Div+</th><th>OppQ</th><th>Total</th></tr></thead>
+        <tbody id="s-games"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Pipeline status</div>
+  <div class="checklist-item"><div class="dot done"></div><span>Scraper — LHSAA schedule pages → SQLite</span></div>
+  <div class="checklist-item"><div class="dot done"></div><span>OOS import — out-of-state opponent records</span></div>
+  <div class="checklist-item"><div class="dot done"></div><span>Power rating engine (power_rating_engine.py)</span></div>
+  <div class="checklist-item"><div class="dot done"></div><span>Rankings calculate endpoint</span></div>
+  <div class="checklist-item"><div class="dot done"></div><span>Google Sheets exporter — all 8 division tabs</span></div>
+  <div class="checklist-item"><div class="dot done"></div><span>WordPress display via HTML iframe endpoints</span></div>
+  <div class="checklist-item"><div class="dot done"></div><span>99.3% accuracy vs LHSAA (301/303 exact)</span></div>
+  <div class="checklist-item"><div class="dot todo"></div><span style="color:#999">Add OppQ as visible column in rankings display</span></div>
+</div>
+
+<script>
+  let allRankings = [];
+  let currentDiv = 'Non-Select Division I';
+
+  async function loadRankings() {
+    const statusEl = document.getElementById('rank-status');
+    try {
+      const r = await fetch('/api/rankings/football');
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      allRankings = data.rankings || [];
+      if (!allRankings.length) throw new Error('empty response');
+      statusEl.style.display = 'none';
+      renderDivision(currentDiv);
+    } catch(e) {
+      statusEl.textContent = 'Error: ' + e.message;
+      statusEl.className = 'status err';
+    }
+  }
+
+  function setDiv(btn) {
+    currentDiv = btn.dataset.div;
+    document.querySelectorAll('.divtab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    if (allRankings.length) renderDivision(currentDiv);
+  }
+
+  function renderDivision(div) {
+    const statusEl = document.getElementById('rank-status');
+    const wrapEl = document.getElementById('rank-wrap');
+    const schools = allRankings.filter(s => s.division === div);
+    if (!schools.length) {
+      wrapEl.style.display = 'none';
+      statusEl.style.display = 'block';
+      statusEl.textContent = 'No schools for: ' + div;
+      statusEl.className = 'status';
+      return;
+    }
+    schools.sort((a,b) => b.power_rating - a.power_rating);
+    const tbody = document.getElementById('rank-body');
+    tbody.innerHTML = '';
+    schools.forEach((s, i) => {
+      const tr = document.createElement('tr');
+      tr.className = 'clickable';
+      const cls = s.class_ || s.class || '';
+      const rec = (s.wins||0) + '-' + (s.losses||0);
+      const badge = s.division.startsWith('Select')
+        ? '<span class="badge badge-s">S</span>'
+        : '<span class="badge badge-ns">NS</span>';
+      tr.innerHTML = `<td>${i+1}</td><td>${s.school}${badge}</td><td>${cls}</td><td>${rec}</td><td>${s.games_played||'—'}</td><td><strong>${(+s.power_rating).toFixed(2)}</strong></td>`;
+      tr.onclick = () => { document.getElementById('school-input').value = s.school; lookupSchool(); };
+      tbody.appendChild(tr);
+    });
+    wrapEl.style.display = 'block';
+    statusEl.style.display = 'none';
+  }
+
+  async function lookupSchool() {
+    const name = document.getElementById('school-input').value.trim();
+    if (!name) return;
+    const ss = document.getElementById('school-status');
+    const sr = document.getElementById('school-result');
+    ss.style.display = 'block';
+    ss.className = 'status';
+    ss.textContent = 'Loading ' + name + '...';
+    sr.style.display = 'none';
+    try {
+      const r = await fetch('/api/gamepoints/' + encodeURIComponent(name));
+      if (!r.ok) throw new Error('not found');
+      const d = await r.json();
+      document.getElementById('s-name').textContent = d.school;
+      document.getElementById('s-meta').textContent = (d.division||'') + ' · District ' + (d.district||'—');
+      document.getElementById('s-pr').textContent = (+(d.power_rating||0)).toFixed(2);
+      document.getElementById('s-rank').textContent = 'Rank #' + (d.rank||'—');
+      document.getElementById('s-record').textContent = d.record||'—';
+      document.getElementById('s-gp').textContent = d.total_games||'—';
+      document.getElementById('s-class').textContent = d.class||d.class_||'—';
+      document.getElementById('s-district').textContent = d.district||'—';
+      const tbody = document.getElementById('s-games');
+      tbody.innerHTML = '';
+      (d.games||[]).forEach(g => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${g.week}</td><td>${g.opponent}</td><td class="${g.result==='W'?'w':'l'}">${g.result}</td><td>${g.score||'—'}</td><td>${(+(g.base_pts||0)).toFixed(1)}</td><td>${(+(g.div_bonus||0)).toFixed(1)}</td><td>${(+(g.opp_quality||0)).toFixed(2)}</td><td><strong>${(+(g.total_pts||0)).toFixed(2)}</strong></td>`;
+        tbody.appendChild(tr);
+      });
+      ss.style.display = 'none';
+      sr.style.display = 'block';
+    } catch(e) {
+      ss.textContent = 'School not found — check spelling, e.g. "Calvary Baptist"';
+      ss.className = 'status err';
+    }
+  }
+
+  document.getElementById('school-input').addEventListener('keydown', e => { if(e.key==='Enter') lookupSchool(); });
+  loadRankings();
+</script>
+</body>
+</html>"""
+    return html
