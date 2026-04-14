@@ -653,3 +653,71 @@ def control_panel():
 </body>
 </html>"""
     return html
+
+
+# ── BASEBALL / SOFTBALL SCHEDULES ────────────────────────────────────────────
+
+@app.route("/api/schedules/baseball")
+def schedules_baseball():
+    return get_sport_schedules("baseball")
+
+@app.route("/api/schedules/softball")
+def schedules_softball():
+    return get_sport_schedules("softball")
+
+def get_sport_schedules(sport):
+    conn = get_db()
+    c = conn.cursor()
+    school_filter = request.args.get("school")
+    season = os.environ.get("SEASON_YEAR", "2026")
+
+    if school_filter:
+        c.execute("""
+            SELECT DISTINCT school FROM games
+            WHERE sport=? AND season=?
+            AND LOWER(school) LIKE LOWER(?)
+            ORDER BY school ASC
+        """, (sport, season, f"%{school_filter}%"))
+    else:
+        c.execute("""
+            SELECT DISTINCT school FROM games
+            WHERE sport=? AND season=?
+            ORDER BY school ASC
+        """, (sport, season))
+
+    school_rows = c.fetchall()
+    schools = []
+
+    for row in school_rows:
+        school = row[0]
+        c.execute("""
+            SELECT game_date, opponent, home_away, win_loss, score,
+                   class_, district, opponent_class, out_of_state
+            FROM games
+            WHERE school=? AND sport=? AND season=?
+            ORDER BY game_date ASC
+        """, (school, sport, season))
+
+        games = [dict(zip([d[0] for d in c.description], r)) for r in c.fetchall()]
+        wins   = sum(1 for g in games if (g["win_loss"] or "").upper() in ("W","WIN"))
+        losses = sum(1 for g in games if (g["win_loss"] or "").upper() in ("L","LOSS"))
+        ties   = sum(1 for g in games if (g["win_loss"] or "").upper() in ("T","TIE"))
+
+        schools.append({
+            "school":  school,
+            "sport":   sport,
+            "season":  season,
+            "record":  f"{wins}-{losses}-{ties}" if ties else f"{wins}-{losses}",
+            "wins":    wins,
+            "losses":  losses,
+            "ties":    ties,
+            "games":   games,
+        })
+
+    conn.close()
+    return jsonify({
+        "sport":   sport,
+        "season":  season,
+        "count":   len(schools),
+        "schools": schools
+    })
