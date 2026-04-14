@@ -3,12 +3,14 @@ LVAY Scraper - API Server
 """
 
 from flask import Flask, jsonify
+from flask_cors import CORS
 import sqlite3
 import os
 from datetime import datetime
 import threading
 
 app = Flask(__name__)
+CORS(app)
 DB_PATH = "/data/lvay_v2.db"
 
 
