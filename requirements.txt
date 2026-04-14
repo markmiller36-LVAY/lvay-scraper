@@ -6,3 +6,4 @@ lxml==5.2.2
 gunicorn==22.0.0
 gspread==6.1.2
 google-auth==2.29.0
+flask-cors
