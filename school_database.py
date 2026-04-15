@@ -573,7 +573,6 @@ def normalize_school_name(name: str) -> str:
     s = re.sub(r"\s+", " ", s).strip()
     return s
 
-
 # ──────────────────────────────────────────────────────────────────────────────
 # BUILD MASTER LOOKUP
 # ──────────────────────────────────────────────────────────────────────────────
@@ -616,11 +615,26 @@ def build_schools():
     for name, info in SUPPLEMENTAL_SCHOOLS.items():
         if name not in schools:
             override = SPECIAL_DIVISION_OVERRIDES.get(name)
+            school_class = info["class"]
+
+            if override:
+                division = override["division"]
+                track = override["track"]
+            elif school_class == "B":
+                division = "Class B"
+                track = "small-school"
+            elif school_class == "C":
+                division = "Class C"
+                track = "small-school"
+            else:
+                division = "Unknown"
+                track = "unknown"
+
             schools[name] = {
                 "name": name,
-                "division": override["division"] if override else "Unknown",
-                "track": override["track"] if override else "unknown",
-                "class": info["class"],
+                "division": division,
+                "track": track,
+                "class": school_class,
                 "district": info["district"],
             }
 
@@ -713,6 +727,8 @@ if __name__ == "__main__":
         "Midland",
         "Rapides",
         "Ecole Classique",
+        "Anacoco",
+        "Calvin",
     ]
 
     for name in test_names:
