@@ -31,7 +31,11 @@ HEADERS = {
     "Content-Type": "application/x-www-form-urlencoded",
 }
 
-CLASSIFICATIONS = ["1A", "2A", "3A", "4A", "5A"]
+CLASSIFICATIONS_BY_SPORT = {
+    "football": ["1A", "2A", "3A", "4A", "5A"],
+    "baseball": ["1A", "2A", "3A", "4A", "5A", "B", "C"],
+    "softball": ["1A", "2A", "3A", "4A", "5A", "B", "C"],
+}
 
 SPORTS = {
     "football": {
@@ -385,7 +389,9 @@ def scrape_class_loop_sport(sport_key: str):
     print(f"\n--- {sport_key.upper()} (season={season}) ---")
     total = 0
 
-    for class_ in CLASSIFICATIONS:
+    classifications = CLASSIFICATIONS_BY_SPORT.get(sport_key, [])
+
+for class_ in classifications:
         print(f"  Class {class_}...")
         html = fetch_page(sport_key, season, class_)
         if not html:
