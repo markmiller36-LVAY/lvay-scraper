@@ -298,7 +298,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         division = db_info["division"] if db_info else "Unknown"
         class_ = db_info["class"] if db_info else (r.get("class_") or "")
 
-        if not db_info or division == "Unknown":
+        if not db_info:
             unmatched.append(school)
 
         engine.add_team(Team(
@@ -313,9 +313,9 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     print(f"  {len(schools_seen)} schools registered")
     if unmatched_unique:
         print(f"  ⚠️  {len(unmatched_unique)} unmatched schools")
-        print("  UNMATCHED SCHOOLS:")
+        print("\nUNMATCHED SCHOOLS:")
         for name in unmatched_unique:
-            print(f"    - {name}")
+            print(f" - {name}")
 
     game_meta = {}
 
