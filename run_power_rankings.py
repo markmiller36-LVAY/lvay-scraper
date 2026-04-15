@@ -310,7 +310,11 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     print(f"  {len(schools_seen)} schools registered")
     if unmatched:
-        print(f"  ⚠️  {len(unmatched)} unmatched schools")
+        unmatched_unique = sorted(set(unmatched))
+        print(f"  ⚠️  {len(unmatched_unique)} unmatched schools")
+        print("\nUNMATCHED SCHOOLS:")
+        for name in unmatched_unique:
+            print(f" - {name}")
 
     game_meta = {}
 
@@ -454,7 +458,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     print(f"\n{'='*54}")
     print("DONE!")
     print(f"  Schools ranked:    {len(ratings)}")
-    print(f"  Unmatched schools: {len(unmatched)}")
+    print(f"  Unmatched schools: {len(sorted(set(unmatched)))}")
     if oos_missing:
         print(f"  OOS missing:       {len(oos_missing)} — add to oos_opponents table")
     print("  Top 5:")
