@@ -124,7 +124,8 @@ def load_sheet_overrides(sport: str, season: str) -> dict:
     tab_name = get_override_tab_name(sport, season)
 
     try:
-        sheet = client.open(GOOGLE_SHEET_NAME)
+        sheet_id = os.environ.get("GOOGLE_SHEET_ID")
+        sheet = client.open_by_key(sheet_id)
         ws = sheet.worksheet(tab_name)
     except Exception as e:
         print(f"  Override tab not found or unreadable: {tab_name} ({e})")
