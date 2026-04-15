@@ -438,6 +438,73 @@ ALIGNMENT = {
 
 # ─── BUILD MASTER LOOKUP ──────────────────────────────────────────────────────
 
+SUPPLEMENTAL_SCHOOLS = {
+    "Acadiana Renaissance Charter": {"class": "3A", "district": 5},
+    "Avoyelles Public Charter": {"class": "B", "district": 5},
+    "David Thibodaux": {"class": "4A", "district": 4},
+    "False River": {"class": "C", "district": 7},
+    "Morris Jeff": {"class": "3A", "district": 10},
+    "New Orleans Military & Maritime": {"class": "4A", "district": 10},
+    "St. Joseph's - Plaucheville": {"class": "C", "district": 4},
+    "V.B. Glencoe Charter": {"class": "C", "district": 6},
+
+    "Anacoco": {"class": "B", "district": 4},
+    "Bell City": {"class": "B", "district": 6},
+    "Calvin": {"class": "C", "district": 2},
+    "Castor": {"class": "B", "district": 1},
+    "Choudrant": {"class": "B", "district": 2},
+    "Claiborne Christian": {"class": "C", "district": 1},
+    "Converse": {"class": "B", "district": 3},
+    "Dodson": {"class": "C", "district": 2},
+    "Downsville": {"class": "B", "district": 2},
+    "Doyle": {"class": "3A", "district": 8},
+    "Doyline": {"class": "B", "district": 1},
+    "Ebarb": {"class": "C", "district": 3},
+    "Ecole Classique": {"class": "1A", "district": 10},
+    "Elizabeth": {"class": "B", "district": 4},
+    "Episcopal of Acadiana": {"class": "B", "district": 6},
+    "Evans": {"class": "C", "district": 3},
+    "Fairview": {"class": "B", "district": 4},
+    "Family Christian": {"class": "C", "district": 7},
+    "Family Community": {"class": "B", "district": 2},
+    "Florien": {"class": "B", "district": 3},
+    "Forest": {"class": "B", "district": 2},
+    "French Settlement": {"class": "2A", "district": 9},
+    "Georgetown": {"class": "C", "district": 2},
+    "Glenmora": {"class": "B", "district": 5},
+    "Grace Christian": {"class": "B", "district": 5},
+    "Hackberry": {"class": "C", "district": 5},
+    "Harrisonburg": {"class": "B", "district": 5},
+    "Hathaway": {"class": "B", "district": 6},
+    "Hicks": {"class": "B", "district": 4},
+    "Holden": {"class": "B", "district": 7},
+    "Hornbeck": {"class": "C", "district": 3},
+    "Lacassine": {"class": "B", "district": 6},
+    "Maurepas": {"class": "C", "district": 7},
+    "Midland": {"class": "2A", "district": 6},
+    "Monterey": {"class": "B", "district": 5},
+    "Mt. Hermon": {"class": "B", "district": 7},
+    "Negreet": {"class": "B", "district": 3},
+    "Northside Christian": {"class": "C", "district": 6},
+    "Oak Hill": {"class": "B", "district": 5},
+    "Pitkin": {"class": "B", "district": 4},
+    "Plainview": {"class": "C", "district": 4},
+    "Pleasant Hill": {"class": "C", "district": 3},
+    "Quitman": {"class": "B", "district": 1},
+    "Rapides": {"class": "2A", "district": 5},
+    "Reeves": {"class": "C", "district": 6},
+    "Saline": {"class": "C", "district": 1},
+    "Simpson": {"class": "C", "district": 3},
+    "Simsboro": {"class": "B", "district": 1},
+    "Singer": {"class": "C", "district": 5},
+    "South Cameron": {"class": "C", "district": 5},
+    "Stanley": {"class": "B", "district": 3},
+    "Starks": {"class": "C", "district": 5},
+    "Summerfield": {"class": "C", "district": 1},
+    "Weston": {"class": "B", "district": 1},
+    "Zwolle": {"class": "B", "district": 3},
+}
+
 def build_schools():
     schools = {}
 
@@ -473,6 +540,16 @@ def build_schools():
                 "class":    align.get("class"),
                 "district": align.get("district"),
             }
+            
+    for name, info in SUPPLEMENTAL_SCHOOLS.items():
+        if name not in schools:
+            schools[name] = {
+                "name": name,
+                "division": "Unknown",
+                "track": "unknown",
+                "class": info["class"],
+                "district": info["district"],
+            }        
 
     return schools
 
