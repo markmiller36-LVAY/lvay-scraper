@@ -439,14 +439,14 @@ ALIGNMENT = {
 # ─── BUILD MASTER LOOKUP ──────────────────────────────────────────────────────
 
 SUPPLEMENTAL_SCHOOLS = {
-    "Acadiana Renaissance Charter": {"class": "3A", "district": 5},
+    "Acadiana Renaissance Charter Academy": {"class": "3A", "district": 5},
     "Avoyelles Public Charter": {"class": "B", "district": 5},
-    "David Thibodaux": {"class": "4A", "district": 4},
+    "David Thibodaux STEM Magnet": {"class": "4A", "district": 4},
     "False River": {"class": "C", "district": 7},
-    "Morris Jeff": {"class": "3A", "district": 10},
+    "Morris Jeff Community School": {"class": "3A", "district": 10},
     "New Orleans Military & Maritime": {"class": "4A", "district": 10},
     "St. Joseph's - Plaucheville": {"class": "C", "district": 4},
-    "V.B. Glencoe Charter": {"class": "C", "district": 6},
+    "V. B. Glencoe Charter School": {"class": "C", "district": 6},
 
     "Anacoco": {"class": "B", "district": 4},
     "Bell City": {"class": "B", "district": 6},
