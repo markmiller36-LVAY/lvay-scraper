@@ -11,6 +11,7 @@ Features:
 - Per-sport ENABLED flags
 - Per-sport active season windows
 - Sport-specific season-year handling
+- Sport-specific class lists
 - SQLite storage
 - Scrape logging
 """
@@ -119,28 +120,29 @@ SPORTS = {
     },
 }
 
+
 def now_local() -> datetime:
     return datetime.now()
 
+
 def month_day(dt: datetime) -> str:
     return dt.strftime("%m-%d")
+
 
 def is_in_active_window(active_start: str, active_end: str, dt: Optional[datetime] = None) -> bool:
     dt = dt or now_local()
     today_md = month_day(dt)
 
-    # Standard same-year window, e.g. 08-01 to 12-31
     if active_start <= active_end:
         return active_start <= today_md <= active_end
 
-    # Wraparound window, e.g. 10-15 to 02-28
     return today_md >= active_start or today_md <= active_end
+
 
 def resolve_season_year(sport_key: str, dt: Optional[datetime] = None) -> str:
     dt = dt or now_local()
     config = SPORTS[sport_key]
 
-    # Optional explicit override from environment
     env_override = os.environ.get(f"{sport_key.upper()}_SEASON_YEAR")
     if env_override:
         return env_override
@@ -151,11 +153,10 @@ def resolve_season_year(sport_key: str, dt: Optional[datetime] = None) -> str:
         return str(dt.year)
 
     if mode == "school_year":
-        # Aug-Dec => current school-year start
-        # Jan-Jul => previous school-year start
         return str(dt.year if dt.month >= 8 else dt.year - 1)
 
     raise ValueError(f"Unknown season_mode for {sport_key}: {mode}")
+
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -200,6 +201,7 @@ def init_db():
     conn.commit()
     conn.close()
 
+
 def save_games(games):
     if not games:
         return 0
@@ -234,11 +236,13 @@ def save_games(games):
     conn.close()
     return saved
 
+
 def build_payload(template, season, classification=""):
     return {
         k: v.format(season=season, classification=classification)
         for k, v in template.items()
     }
+
 
 def fetch_page(sport_key, season, classification=""):
     config = SPORTS[sport_key]
@@ -264,6 +268,7 @@ def fetch_page(sport_key, season, classification=""):
     except requests.RequestException as e:
         print(f"  Fetch error ({sport_key} {classification}): {e}")
         return None
+
 
 def parse_football(html, season):
     soup = BeautifulSoup(html, "html.parser")
@@ -301,6 +306,7 @@ def parse_football(html, season):
             })
 
     return games
+
 
 def parse_baseball_softball(html, sport, season):
     soup = BeautifulSoup(html, "html.parser")
@@ -341,6 +347,7 @@ def parse_baseball_softball(html, sport, season):
 
     return games
 
+
 def log_scrape(sport, games_found, status, note=""):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -350,6 +357,7 @@ def log_scrape(sport, games_found, status, note=""):
     )
     conn.commit()
     conn.close()
+
 
 def should_scrape_sport(sport_key: str, dt: Optional[datetime] = None):
     dt = dt or now_local()
@@ -367,6 +375,7 @@ def should_scrape_sport(sport_key: str, dt: Optional[datetime] = None):
 
     return True, "active"
 
+
 def scrape_football():
     sport_key = "football"
     season = resolve_season_year(sport_key)
@@ -383,6 +392,30 @@ def scrape_football():
     log_scrape(sport_key, saved, "success", f"season={season}")
     return saved
 
+
+def scrape_class_loop_sport(sport_key: str):
+    season = resolve_season_year(sport_key)
+
+    print(f"\n--- {sport_key.upper()} (season={season}) ---")
+    total = 0
+
+    classifications = CLASSIFICATIONS_BY_SPORT.get(sport_key, [])
+
+    for class_ in classifications:
+        print(f"  Class {class_}...")
+        html = fetch_page(sport_key, season, class_)
+        if not html:
+            continue
+
+        games = parse_baseball_softball(html, sport_key, season)
+        print(f"    Parsed {len(games)} games")
+        total += save_games(games)
+        time.sleep(2)
+
+    log_scrape(sport_key, total, "success", f"season={season}")
+    return total
+
+
 def scrape_sport(sport_key: str):
     config = SPORTS[sport_key]
 
@@ -393,6 +426,7 @@ def scrape_sport(sport_key: str):
         return scrape_football()
 
     raise ValueError(f"No scraper implemented for {sport_key}")
+
 
 def run_all_sports():
     now = now_local()
@@ -416,6 +450,7 @@ def run_all_sports():
 
     print(f"\nDONE — {total} records saved/updated")
     return total
+
 
 if __name__ == "__main__":
     run_all_sports()
