@@ -437,13 +437,15 @@ ALIGNMENT = {
 
 # ─── BUILD MASTER LOOKUP ──────────────────────────────────────────────────────
 
+import re
+
 SUPPLEMENTAL_SCHOOLS = {
     "Acadiana Renaissance Charter Academy": {"class": "3A", "district": 5},
-    "Avoyelles Public Charter": {"class": "B", "district": 5},
+    "Avoyelles Public Charter School": {"class": "B", "district": 5},
     "David Thibodaux STEM Magnet": {"class": "4A", "district": 4},
-    "False River": {"class": "C", "district": 7},
+    "False River Academy": {"class": "C", "district": 7},
     "Morris Jeff Community School": {"class": "3A", "district": 10},
-    "New Orleans Military & Maritime": {"class": "4A", "district": 10},
+    "New Orleans Military and Maritime Academy": {"class": "4A", "district": 10},
     "St. Joseph's - Plaucheville": {"class": "C", "district": 4},
     "V. B. Glencoe Charter School": {"class": "C", "district": 6},
 
@@ -504,6 +506,25 @@ SUPPLEMENTAL_SCHOOLS = {
     "Zwolle": {"class": "B", "district": 3},
 }
 
+
+def normalize_school_name(name: str) -> str:
+    if not name:
+        return ""
+
+    s = str(name).strip()
+
+    # normalize curly punctuation and dashes
+    s = s.replace("’", "'").replace("‘", "'")
+    s = s.replace("“", '"').replace("”", '"')
+    s = s.replace("–", "-").replace("—", "-")
+    s = s.replace("&", "and")
+
+    # collapse whitespace
+    s = re.sub(r"\s+", " ", s).strip()
+
+    return s
+
+
 def build_schools():
     schools = {}
 
@@ -539,35 +560,61 @@ def build_schools():
                 "class":    align.get("class"),
                 "district": align.get("district"),
             }
-            
+
+    # Add supplemental schools
     for name, info in SUPPLEMENTAL_SCHOOLS.items():
         if name not in schools:
             schools[name] = {
-                "name": name,
+                "name":     name,
                 "division": "Unknown",
-                "track": "unknown",
-                "class": info["class"],
+                "track":    "unknown",
+                "class":    info["class"],
                 "district": info["district"],
-            }        
+            }
 
     return schools
 
 
 SCHOOLS = build_schools()
 
+# normalized lookup map for all canonical school names
+NORMALIZED_SCHOOLS = {normalize_school_name(name): info for name, info in SCHOOLS.items()}
+
+# normalized alias map
+NORMALIZED_ALIASES = {
+    normalize_school_name(alias): canonical
+    for alias, canonical in SCHOOL_ALIASES.items()
+}
+
 
 def get_school(name):
     if not name:
         return None
 
-    schools = build_schools()
+    raw = str(name).strip()
+    normalized = normalize_school_name(raw)
 
-    if name in schools:
-        return schools[name]
+    # exact raw match
+    if raw in SCHOOLS:
+        return SCHOOLS[raw]
 
-    alias = SCHOOL_ALIASES.get(name)
-    if alias and alias in schools:
-        return schools[alias]
+    # exact alias raw match
+    alias = SCHOOL_ALIASES.get(raw)
+    if alias and alias in SCHOOLS:
+        return SCHOOLS[alias]
+
+    # normalized direct match
+    if normalized in NORMALIZED_SCHOOLS:
+        return NORMALIZED_SCHOOLS[normalized]
+
+    # normalized alias match
+    alias = NORMALIZED_ALIASES.get(normalized)
+    if alias:
+        alias_normalized = normalize_school_name(alias)
+        if alias in SCHOOLS:
+            return SCHOOLS[alias]
+        if alias_normalized in NORMALIZED_SCHOOLS:
+            return NORMALIZED_SCHOOLS[alias_normalized]
 
     return None
 
@@ -589,8 +636,16 @@ def get_track(name: str) -> str:
 
 if __name__ == "__main__":
     print(f"Total schools: {len(SCHOOLS)}")
-    test = ["Airline", "Calvary Baptist", "Haynesville", "Westminster Christian",
-            "North DeSoto", "Jena", "Lafayette Christian", "Mangham"]
+    test = [
+        "Acadiana Renaissance Charter",
+        "David Thibodaux",
+        "Morris Jeff",
+        "V.B. Glencoe Charter",
+        "Anacoco",
+        "Quitman",
+        "False River",
+        "New Orleans Military & Maritime",
+    ]
     for name in test:
         s = get_school(name)
         if s:
