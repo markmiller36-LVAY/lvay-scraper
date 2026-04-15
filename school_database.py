@@ -569,15 +569,6 @@ def get_school(name):
     if alias and alias in schools:
         return schools[alias]
 
-    normalized = normalize_school_name(name)
-
-    if normalized in schools:
-        return schools[normalized]
-
-    alias = SCHOOL_ALIASES.get(normalized)
-    if alias and alias in schools:
-        return schools[alias]
-
     return None
 
 
