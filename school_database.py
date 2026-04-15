@@ -15,16 +15,16 @@ Next update: Before 2026 season when new reclassification is released.
 # --- SCHOOL NAME NORMALIZATION / ALIASES ---
 
 SCHOOL_ALIASES = {
-    "Acadiana Renaissance Charter": "Acadiana Renaissance",
-    "Avoyelles Public Charter": "Avoyelles Public",
-    "David Thibodaux": "David Thibodaux STEM",
+    "Acadiana Renaissance Charter": "Acadiana Renaissance Charter Academy",
+    "Avoyelles Public Charter": "Avoyelles Public Charter School",
+    "David Thibodaux": "David Thibodaux STEM Magnet",
     "False River": "False River Academy",
-    "Morris Jeff": "Morris Jeff Community",
-    "N.O. Charter Science and Math": "New Orleans Charter Science & Math",
-    "New Orleans Military & Maritime": "New Orleans Military and Maritime",
+    "Morris Jeff": "Morris Jeff Community School",
+    "New Orleans Military & Maritime": "New Orleans Military and Maritime Academy",
     "St. Joseph's - Plaucheville": "St. Joseph's",
-    "V.B. Glencoe Charter": "V. B. Glencoe Charter",
+    "V.B. Glencoe Charter": "V. B. Glencoe Charter School",
 }
+
 # --- DIVISION ASSIGNMENTS ---
 
 SELECT_D1 = [
