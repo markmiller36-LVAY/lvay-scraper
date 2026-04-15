@@ -383,28 +383,6 @@ def scrape_football():
     log_scrape(sport_key, saved, "success", f"season={season}")
     return saved
 
-def scrape_class_loop_sport(sport_key: str):
-    season = resolve_season_year(sport_key)
-
-    print(f"\n--- {sport_key.upper()} (season={season}) ---")
-    total = 0
-
-    classifications = CLASSIFICATIONS_BY_SPORT.get(sport_key, [])
-
-for class_ in classifications:
-        print(f"  Class {class_}...")
-        html = fetch_page(sport_key, season, class_)
-        if not html:
-            continue
-
-        games = parse_baseball_softball(html, sport_key, season)
-        print(f"    Parsed {len(games)} games")
-        total += save_games(games)
-        time.sleep(2)
-
-    log_scrape(sport_key, total, "success", f"season={season}")
-    return total
-
 def scrape_sport(sport_key: str):
     config = SPORTS[sport_key]
 
