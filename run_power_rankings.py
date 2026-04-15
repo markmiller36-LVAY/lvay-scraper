@@ -9,6 +9,7 @@ and writes results to:
   game_power_points   — one row per counted game
 """
 
+import json
 import os
 import sqlite3
 from datetime import datetime
@@ -21,11 +22,11 @@ from school_database import get_school
 
 DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 
-# You can still override these in Render if needed.
+# Manual test selector for now
 SPORT = os.environ.get("RANKINGS_SPORT", "baseball")
 SEASON = os.environ.get("RANKINGS_SEASON", "2025")
 
-GOOGLE_SHEET_NAME = os.environ.get("GOOGLE_SHEET_NAME", "LVAY Master Data")
+GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID", "")
 GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
 
 
@@ -84,12 +85,9 @@ def get_gspread_client():
         print("  No GOOGLE_SERVICE_ACCOUNT_JSON found; skipping overrides")
         return None
 
-    import json
     creds_dict = json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
-
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive",
     ]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
     return gspread.authorize(creds)
@@ -101,6 +99,10 @@ def normalize_bool(value) -> bool:
 
 def normalize_text(value) -> str:
     return str(value or "").strip()
+
+
+def normalize_key_text(value) -> str:
+    return str(value or "").strip().lower()
 
 
 def load_sheet_overrides(sport: str, season: str) -> dict:
@@ -124,8 +126,10 @@ def load_sheet_overrides(sport: str, season: str) -> dict:
     tab_name = get_override_tab_name(sport, season)
 
     try:
-        sheet_id = os.environ.get("GOOGLE_SHEET_ID")
-        sheet = client.open_by_key(sheet_id)
+        if not GOOGLE_SHEET_ID:
+            print("  No GOOGLE_SHEET_ID found; skipping overrides")
+            return {}
+        sheet = client.open_by_key(GOOGLE_SHEET_ID)
         ws = sheet.worksheet(tab_name)
     except Exception as e:
         print(f"  Override tab not found or unreadable: {tab_name} ({e})")
@@ -137,9 +141,9 @@ def load_sheet_overrides(sport: str, season: str) -> dict:
     for row in rows:
         row_sport = normalize_text(row.get("sport"))
         row_season = normalize_text(row.get("season"))
-        school = normalize_text(row.get("school"))
+        school = normalize_key_text(row.get("school"))
         game_date = normalize_text(row.get("game_date"))
-        opponent = normalize_text(row.get("opponent"))
+        opponent = normalize_key_text(row.get("opponent"))
         active = normalize_bool(row.get("active"))
 
         if not active:
@@ -232,9 +236,9 @@ def apply_override_to_row(row, sport: str, season: str, overrides: dict) -> dict
     key = (
         sport,
         season,
-        normalize_text(row_data.get("school")),
+        normalize_key_text(row_data.get("school")),
         normalize_text(row_data.get("game_date")),
-        normalize_text(row_data.get("opponent")),
+        normalize_key_text(row_data.get("opponent")),
     )
 
     override = overrides.get(key)
@@ -306,7 +310,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     print(f"  {len(schools_seen)} schools registered")
     if unmatched:
-        print(f"  ⚠️ {len(unmatched)} unmatched schools")
+        print(f"  ⚠️  {len(unmatched)} unmatched schools")
 
     game_meta = {}
 
@@ -376,7 +380,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         ))
 
     if oos_missing:
-        print(f"  ⚠️ {len(oos_missing)} OOS games flagged but missing from oos_opponents:")
+        print(f"  ⚠️  {len(oos_missing)} OOS games flagged but missing from oos_opponents:")
         for m in oos_missing:
             print(f"      {m}")
 
