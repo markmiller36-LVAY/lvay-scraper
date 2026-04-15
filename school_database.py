@@ -557,21 +557,27 @@ def build_schools():
 SCHOOLS = build_schools()
 
 
-def get_school(name: str) -> dict | None:
-    name = SCHOOL_ALIASES.get(name, name)
+def get_school(name):
+    if not name:
+        return None
 
-    if name in SCHOOLS:
-        return SCHOOLS[name]
+    schools = build_schools()
 
-    name_lower = name.lower()
+    if name in schools:
+        return schools[name]
 
-    for school_name, data in SCHOOLS.items():
-        if school_name.lower() == name_lower:
-            return data
+    alias = ALIASES.get(name)
+    if alias and alias in schools:
+        return schools[alias]
 
-    for school_name, data in SCHOOLS.items():
-        if name_lower in school_name.lower():
-            return data
+    normalized = normalize_school_name(name)
+
+    if normalized in schools:
+        return schools[normalized]
+
+    alias = ALIASES.get(normalized)
+    if alias and alias in schools:
+        return schools[alias]
 
     return None
 
