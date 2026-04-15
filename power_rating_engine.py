@@ -11,26 +11,26 @@ FOOTBALL (14.12):
 
 BASEBALL (10.10):
   Win=20, Loss=0, Tie=5, Double Forfeit=+1 to winner
-  Div bonus: +2 per class & division higher
+  Div bonus: +2 per class higher, with division also higher for in-state
   OppQ: Opponent's Wins (raw — no multiplier)
   Power Rating = Total Points / Games Played
 
 SOFTBALL (19.7.3):
   Win=20, Loss=0, Tie=5, Double Forfeit=+1 to winner
-  Div bonus: +2 per class & division higher
+  Div bonus: +2 per class higher, with division also higher for in-state
   OppQ: Opponent's Wins (raw)
   Power Rating = Total Points / Games Played
 
 BASKETBALL 1A-5A (11.6):
   Win=25, Loss=0
-  Div bonus: +2 per class & division higher
+  Div bonus: +2 per class higher, with division also higher for in-state
   Play-up bonus: +2
   OppQ: (Opp Wins / Opp GP) x 34
   Power Rating = Total Points / Games Played
 
 BASKETBALL Class B&C (11.6):
   Win=8, Loss=0
-  Div bonus: +2 per class & division higher
+  Div bonus: +2 per class higher, with division also higher for in-state
   OppQ: (Opp Wins / Opp GP) x 44
   Power Rating = Total Points / Games Played
 
@@ -45,31 +45,49 @@ SOCCER (18.5.5):
 from dataclasses import dataclass, field
 from typing import Optional
 
+# Division rank is only used as a gate / ordering concept for "playing up".
+# Class B and Class C are intentionally below Division IV so bonus logic can
+# still compare them cleanly against 1A-5A divisions.
 DIVISION_RANK = {
+    # Generic / legacy labels
     "Division I":              4,
     "Division II":             3,
     "Division III":            2,
     "Division IV":             1,
+    "Division I (Play Up)":    4,
+
+    # Non-select
     "Non-Select Division I":   4,
     "Non-Select Division II":  3,
     "Non-Select Division III": 2,
     "Non-Select Division IV":  1,
+
+    # Select
     "Select Division I":       4,
     "Select Division II":      3,
     "Select Division III":     2,
     "Select Division IV":      1,
-    "Division I (Play Up)":    4,
+
+    # Small schools
+    "Class B":                 0,
+    "Class C":                -1,
 }
 
 CLASS_RANK = {
-    "5A": 5, "4A": 4, "3A": 3, "2A": 2, "1A": 1,
-    "B": 1, "C": 0,
+    "5A": 5,
+    "4A": 4,
+    "3A": 3,
+    "2A": 2,
+    "1A": 1,
+    "B":  0,
+    "C": -1,
 }
 
 PLAYOFF_SIZES = {
     "non-select": 28,
     "select":     24,
     "soccer":     24,
+    "small-school": 24,
 }
 
 SPORT_CONFIGS = {
@@ -228,7 +246,7 @@ class PowerRatingEngine:
         self.games[game.team].append(game)
 
     def score_game(self, game: GameResult, team: Team) -> GamePoints:
-        gp     = GamePoints(game=game)
+        gp = GamePoints(game=game)
         config = get_sport_config(team.sport, team.classification)
 
         if game.result in ("OD", "JV", "PPD"):
@@ -236,6 +254,7 @@ class PowerRatingEngine:
 
         oos = game.opponent_out_of_state
 
+        # Base points
         if game.result == "W":
             gp.base = config["win_points"]
         elif game.result == "L":
@@ -245,25 +264,30 @@ class PowerRatingEngine:
         elif game.result == "DF":
             gp.base = config.get("forfeit_bonus", 0)
 
+        # Division / play-up bonus
         if config["has_div_bonus"]:
-            opp_class_rank  = CLASS_RANK.get(game.opponent_class, 0)
+            opp_class_rank = CLASS_RANK.get(game.opponent_class, 0)
             team_class_rank = CLASS_RANK.get(team.classification, 0)
-            div_diff        = game.opponent_div_rank - team.div_rank
-            class_diff      = opp_class_rank - team_class_rank
+            class_diff = opp_class_rank - team_class_rank
+
+            opp_div_rank = game.opponent_div_rank
+            team_div_rank = team.div_rank
+            div_diff = opp_div_rank - team_div_rank
 
             if oos:
-                # OOS: class only — +2 per class level higher
+                # OOS: class only
                 if class_diff > 0:
-                    gp.div_bonus = div_diff * config["div_bonus_per_div"]
+                    gp.div_bonus = class_diff * config["div_bonus_per_div"]
             else:
-                # In-state: BOTH class AND division must be higher
-                # Bonus = div_diff x 2 (confirmed correct formula)
-                if div_diff > 0 and class_diff > 0:
-                    gp.div_bonus = div_diff * config["div_bonus_per_div"]
+                # In-state: opponent must be both a higher class and higher division
+                # Bonus amount is driven by CLASS difference
+                if class_diff > 0 and div_diff > 0:
+                    gp.div_bonus = class_diff * config["div_bonus_per_div"]
 
             if game.playing_up and config.get("play_up_bonus"):
                 gp.div_bonus += config["play_up_bonus"]
 
+        # Opponent quality
         style = config["opp_quality"]
         if style == "win_pct_x10":
             gp.opp_quality = game.opponent_win_pct * 10
@@ -286,7 +310,8 @@ class PowerRatingEngine:
     def rate_team(self, team_name: str) -> Optional[TeamRating]:
         if team_name not in self.teams:
             return None
-        team  = self.teams[team_name]
+
+        team = self.teams[team_name]
         games = self.games.get(team_name, [])
         if not games:
             return None
@@ -298,12 +323,18 @@ class PowerRatingEngine:
         for game in games:
             if game.result in ("OD", "JV", "PPD"):
                 continue
+
             gp = self.score_game(game, team)
-            total   += gp.total
+            total += gp.total
             counted += 1
-            if game.result == "W":   wins   += 1
-            elif game.result == "L": losses += 1
-            elif game.result == "T": ties   += 1
+
+            if game.result == "W":
+                wins += 1
+            elif game.result == "L":
+                losses += 1
+            elif game.result == "T":
+                ties += 1
+
             breakdown.append({
                 "week":     game.week,
                 "opponent": game.opponent,
@@ -332,14 +363,16 @@ class PowerRatingEngine:
     def rate_all(self) -> list[TeamRating]:
         ratings = [r for name in self.teams if (r := self.rate_team(name))]
         ratings.sort(key=lambda r: r.power_rating, reverse=True)
+
         for i, r in enumerate(ratings):
             r.rank = i + 1
+
         return ratings
 
 
 class PlayoffPredictor:
     def __init__(self, engine: PowerRatingEngine):
-        self.engine    = engine
+        self.engine = engine
         self.overrides = {}
 
     def flip(self, team: str, week: int, result: str):
@@ -350,40 +383,61 @@ class PlayoffPredictor:
 
     def simulate(self) -> list[TeamRating]:
         import copy
+
         eng = copy.deepcopy(self.engine)
+
         for key, result in self.overrides.items():
             team_name, week = key.split("::")
             if team_name in eng.games:
                 for g in eng.games[team_name]:
                     if str(g.week) == str(week):
                         g.result = result
+
         return eng.rate_all()
 
     def what_if(self, team: str, week: int, wins: bool) -> dict:
         self.flip(team, week, "W" if wins else "L")
         standings = self.simulate()
         self.reset()
+
         for r in standings:
             if r.name == team:
-                return {"team": team, "week": week,
-                        "scenario": "wins" if wins else "loses",
-                        "new_rank": r.rank, "new_pr": r.power_rating,
-                        "record": r.record}
+                return {
+                    "team": team,
+                    "week": week,
+                    "scenario": "wins" if wins else "loses",
+                    "new_rank": r.rank,
+                    "new_pr": r.power_rating,
+                    "record": r.record,
+                }
+
         return {"error": "Team not found"}
 
 
 if __name__ == "__main__":
     print("=== FOOTBALL bonus fix test ===")
     eng = PowerRatingEngine()
+
     # Haynesville (1A, NS4) beats North Webster (3A, NS3)
-    # Expected div bonus: class_diff=2, so +4
+    # class_diff = 3A - 1A = 2, division is higher too, so bonus should be +4
     eng.add_team(Team("Haynesville", "Non-Select Division IV", "1A", "football"))
-    eng.add_game(GameResult("Haynesville", "North Webster", "W", "football",
-                            opponent_wins=4, opponent_losses=6,
-                            opponent_division="Non-Select Division III",
-                            opponent_class="3A", week=1))
+    eng.add_game(GameResult(
+        "Haynesville",
+        "North Webster",
+        "W",
+        "football",
+        opponent_wins=4,
+        opponent_losses=6,
+        opponent_division="Non-Select Division III",
+        opponent_class="3A",
+        week=1,
+    ))
+
     for r in eng.rate_all():
         print(f"  {r.name} PR={r.power_rating}")
         for g in r.breakdown:
-            print(f"    Wk{g['week']}: Base={g['base']} Div={g['div']} OppQ={g['oppq']} Total={g['total']}")
-        print(f"  Expected div bonus: 4.0, Expected total: 14+4+4=18... /1 game = 18.0")
+            print(
+                f"    Wk{g['week']}: "
+                f"Base={g['base']} Div={g['div']} OppQ={g['oppq']} Total={g['total']}"
+            )
+        print("  Expected div bonus: 4.0")
