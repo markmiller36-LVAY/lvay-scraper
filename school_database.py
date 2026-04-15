@@ -1,6 +1,7 @@
 """
 LHSAA School Database
-======================
+=====================
+
 Division assignments built from official LHSAA 2025 final power rankings.
 Alignment (class + district) from Football.pdf 2025-2026 alignment document.
 
@@ -8,11 +9,11 @@ Current cycle: 2024-2026
 Next update: Before 2026 season when new reclassification is released.
 """
 
-# ─── DIVISION ASSIGNMENTS (from official 2025 LHSAA final rankings) ──────────
-# Current cycle: 2024-2026
-# Next update: Before 2026 season when new reclassification is released.
+import re
 
-# --- SCHOOL NAME NORMALIZATION / ALIASES ---
+# ──────────────────────────────────────────────────────────────────────────────
+# SCHOOL NAME NORMALIZATION / ALIASES
+# ──────────────────────────────────────────────────────────────────────────────
 
 SCHOOL_ALIASES = {
     "Acadiana Renaissance Charter": "Acadiana Renaissance Charter Academy",
@@ -24,7 +25,9 @@ SCHOOL_ALIASES = {
     "V.B. Glencoe Charter": "V. B. Glencoe Charter School",
 }
 
-# --- DIVISION ASSIGNMENTS ---
+# ──────────────────────────────────────────────────────────────────────────────
+# DIVISION ASSIGNMENTS
+# ──────────────────────────────────────────────────────────────────────────────
 
 SELECT_D1 = [
     "Edna Karr", "Teurlings Catholic", "St. Augustine", "Catholic - B.R.",
@@ -111,16 +114,19 @@ NS_D3 = [
 ]
 
 NS_D4 = [
-    "Haynesville", "Mangham", "South Plaquemines", "Jeanerette", "Logansport", "Ringgold",
-    "North Iberville", "East Feliciana", "Vinton", "Jonesboro-Hodge", "Ferriday",
-    "Elton", "Welsh", "Grand Lake", "West St. Mary", "West St. John", "Homer",
-    "Franklin", "General Trass", "Basile", "Montgomery", "Lake Arthur", "LaSalle",
-    "Northeast", "North Central", "DeQuincy", "Delcambre", "Arcadia", "Varnado",
-    "East Iberville", "Merryville", "Oberlin", "Centerville", "White Castle",
-    "East Beauregard", "Delhi", "Lakeview", "Plain Dealing", "Gueydan",
+    "Haynesville", "Mangham", "South Plaquemines", "Jeanerette", "Logansport",
+    "Ringgold", "North Iberville", "East Feliciana", "Vinton", "Jonesboro-Hodge",
+    "Ferriday", "Elton", "Welsh", "Grand Lake", "West St. Mary", "West St. John",
+    "Homer", "Franklin", "General Trass", "Basile", "Montgomery", "Lake Arthur",
+    "LaSalle", "Northeast", "North Central", "DeQuincy", "Delcambre", "Arcadia",
+    "Varnado", "East Iberville", "Merryville", "Oberlin", "Centerville",
+    "White Castle", "East Beauregard", "Delhi", "Lakeview", "Plain Dealing",
+    "Gueydan",
 ]
 
-# ─── 2025-2026 ALIGNMENT (Class + District from Football.pdf) ────────────────
+# ──────────────────────────────────────────────────────────────────────────────
+# 2025-2026 ALIGNMENT (Class + District from Football.pdf)
+# ──────────────────────────────────────────────────────────────────────────────
 
 ALIGNMENT = {
     # 5A
@@ -192,6 +198,7 @@ ALIGNMENT = {
     "L. W. Higgins": {"class": "5A", "district": 10},
     "Riverdale": {"class": "5A", "district": 10},
     "West Jefferson": {"class": "5A", "district": 10},
+
     # 4A
     "Booker T. Washington - Shr.": {"class": "4A", "district": 1},
     "Bossier": {"class": "4A", "district": 1},
@@ -257,6 +264,7 @@ ALIGNMENT = {
     "Frederick A Douglass": {"class": "4A", "district": 10},
     "George Washington Carver": {"class": "4A", "district": 10},
     "McDonogh #35": {"class": "4A", "district": 10},
+
     # 3A
     "Bastrop": {"class": "3A", "district": 1},
     "Carroll": {"class": "3A", "district": 1},
@@ -315,6 +323,7 @@ ALIGNMENT = {
     "Livingston Collegiate": {"class": "3A", "district": 10},
     "Lord Beaconsfield Landry": {"class": "3A", "district": 10},
     "Sophie B. Wright": {"class": "3A", "district": 10},
+
     # 2A
     "Calvary Baptist": {"class": "2A", "district": 1},
     "D'Arbonne Woods Charter": {"class": "2A", "district": 1},
@@ -374,6 +383,7 @@ ALIGNMENT = {
     "Sarah T. Reed": {"class": "2A", "district": 10},
     "South Plaquemines": {"class": "2A", "district": 10},
     "Walter L. Cohen": {"class": "2A", "district": 10},
+
     # 1A
     "Arcadia": {"class": "1A", "district": 1},
     "Ringgold": {"class": "1A", "district": 1},
@@ -383,7 +393,6 @@ ALIGNMENT = {
     "Jonesboro-Hodge": {"class": "1A", "district": 1},
     "Lincoln Preparatory School": {"class": "1A", "district": 1},
     "Plain Dealing": {"class": "1A", "district": 1},
-    "Ringgold": {"class": "1A", "district": 1},
     "Block": {"class": "1A", "district": 2},
     "Delhi": {"class": "1A", "district": 2},
     "Delta Charter": {"class": "1A", "district": 2},
@@ -435,9 +444,9 @@ ALIGNMENT = {
     "West St. John": {"class": "1A", "district": 10},
 }
 
-# ─── BUILD MASTER LOOKUP ──────────────────────────────────────────────────────
-
-import re
+# ──────────────────────────────────────────────────────────────────────────────
+# SUPPLEMENTAL SCHOOLS
+# ──────────────────────────────────────────────────────────────────────────────
 
 SUPPLEMENTAL_SCHOOLS = {
     "Acadiana Renaissance Charter Academy": {"class": "3A", "district": 5},
@@ -448,7 +457,6 @@ SUPPLEMENTAL_SCHOOLS = {
     "New Orleans Military and Maritime Academy": {"class": "4A", "district": 10},
     "St. Joseph's - Plaucheville": {"class": "C", "district": 4},
     "V. B. Glencoe Charter School": {"class": "C", "district": 6},
-
     "Anacoco": {"class": "B", "district": 4},
     "Bell City": {"class": "B", "district": 6},
     "Calvin": {"class": "C", "district": 2},
@@ -506,6 +514,9 @@ SUPPLEMENTAL_SCHOOLS = {
     "Zwolle": {"class": "B", "district": 3},
 }
 
+# ──────────────────────────────────────────────────────────────────────────────
+# NORMALIZATION
+# ──────────────────────────────────────────────────────────────────────────────
 
 def normalize_school_name(name: str) -> str:
     if not name:
@@ -513,62 +524,61 @@ def normalize_school_name(name: str) -> str:
 
     s = str(name).strip()
 
-    # normalize curly punctuation and dashes
     s = s.replace("’", "'").replace("‘", "'")
     s = s.replace("“", '"').replace("”", '"')
     s = s.replace("–", "-").replace("—", "-")
     s = s.replace("&", "and")
 
-    # collapse whitespace
     s = re.sub(r"\s+", " ", s).strip()
-
     return s
 
+
+# ──────────────────────────────────────────────────────────────────────────────
+# BUILD MASTER LOOKUP
+# ──────────────────────────────────────────────────────────────────────────────
 
 def build_schools():
     schools = {}
 
     division_lists = [
-        (SELECT_D1, "Select Division I",       "select"),
-        (SELECT_D2, "Select Division II",      "select"),
-        (SELECT_D3, "Select Division III",     "select"),
-        (SELECT_D4, "Select Division IV",      "select"),
-        (NS_D1,     "Non-Select Division I",   "non-select"),
-        (NS_D2,     "Non-Select Division II",  "non-select"),
-        (NS_D3,     "Non-Select Division III", "non-select"),
-        (NS_D4,     "Non-Select Division IV",  "non-select"),
+        (SELECT_D1, "Select Division I", "select"),
+        (SELECT_D2, "Select Division II", "select"),
+        (SELECT_D3, "Select Division III", "select"),
+        (SELECT_D4, "Select Division IV", "select"),
+        (NS_D1, "Non-Select Division I", "non-select"),
+        (NS_D2, "Non-Select Division II", "non-select"),
+        (NS_D3, "Non-Select Division III", "non-select"),
+        (NS_D4, "Non-Select Division IV", "non-select"),
     ]
 
     for school_list, division, track in division_lists:
         for name in school_list:
             align = ALIGNMENT.get(name, {})
             schools[name] = {
-                "name":     name,
+                "name": name,
                 "division": division,
-                "track":    track,
-                "class":    align.get("class"),
+                "track": track,
+                "class": align.get("class"),
                 "district": align.get("district"),
             }
 
-    # Add any alignment schools not in division lists
     for name, align in ALIGNMENT.items():
         if name not in schools:
             schools[name] = {
-                "name":     name,
+                "name": name,
                 "division": "Unknown",
-                "track":    "unknown",
-                "class":    align.get("class"),
+                "track": "unknown",
+                "class": align.get("class"),
                 "district": align.get("district"),
             }
 
-    # Add supplemental schools
     for name, info in SUPPLEMENTAL_SCHOOLS.items():
         if name not in schools:
             schools[name] = {
-                "name":     name,
+                "name": name,
                 "division": "Unknown",
-                "track":    "unknown",
-                "class":    info["class"],
+                "track": "unknown",
+                "class": info["class"],
                 "district": info["district"],
             }
 
@@ -576,16 +586,18 @@ def build_schools():
 
 
 SCHOOLS = build_schools()
-
-# normalized lookup map for all canonical school names
-NORMALIZED_SCHOOLS = {normalize_school_name(name): info for name, info in SCHOOLS.items()}
-
-# normalized alias map
+NORMALIZED_SCHOOLS = {
+    normalize_school_name(name): info
+    for name, info in SCHOOLS.items()
+}
 NORMALIZED_ALIASES = {
     normalize_school_name(alias): canonical
     for alias, canonical in SCHOOL_ALIASES.items()
 }
 
+# ──────────────────────────────────────────────────────────────────────────────
+# LOOKUP HELPERS
+# ──────────────────────────────────────────────────────────────────────────────
 
 def get_school(name):
     if not name:
@@ -594,25 +606,22 @@ def get_school(name):
     raw = str(name).strip()
     normalized = normalize_school_name(raw)
 
-    # exact raw match
     if raw in SCHOOLS:
         return SCHOOLS[raw]
 
-    # exact alias raw match
     alias = SCHOOL_ALIASES.get(raw)
     if alias and alias in SCHOOLS:
         return SCHOOLS[alias]
 
-    # normalized direct match
     if normalized in NORMALIZED_SCHOOLS:
         return NORMALIZED_SCHOOLS[normalized]
 
-    # normalized alias match
     alias = NORMALIZED_ALIASES.get(normalized)
     if alias:
-        alias_normalized = normalize_school_name(alias)
         if alias in SCHOOLS:
             return SCHOOLS[alias]
+
+        alias_normalized = normalize_school_name(alias)
         if alias_normalized in NORMALIZED_SCHOOLS:
             return NORMALIZED_SCHOOLS[alias_normalized]
 
@@ -634,21 +643,36 @@ def get_track(name: str) -> str:
     return school["track"] if school else "unknown"
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# LOCAL TEST
+# ──────────────────────────────────────────────────────────────────────────────
+
 if __name__ == "__main__":
     print(f"Total schools: {len(SCHOOLS)}")
-    test = [
+
+    test_names = [
+        "Airline",
+        "Calvary Baptist",
+        "Haynesville",
+        "Westminster Christian",
+        "North DeSoto",
+        "Jena",
+        "Lafayette Christian",
+        "Mangham",
         "Acadiana Renaissance Charter",
         "David Thibodaux",
         "Morris Jeff",
         "V.B. Glencoe Charter",
-        "Anacoco",
-        "Quitman",
         "False River",
         "New Orleans Military & Maritime",
     ]
-    for name in test:
-        s = get_school(name)
-        if s:
-            print(f"  {name}: {s['class']} D{s['district']} | {s['division']}")
+
+    for name in test_names:
+        school = get_school(name)
+        if school:
+            print(
+                f"  {name}: "
+                f"{school['class']} D{school['district']} | {school['division']}"
+            )
         else:
             print(f"  {name}: NOT FOUND")
