@@ -25,9 +25,8 @@ SCHOOL_ALIASES = {
     "St. Joseph's - Plaucheville": "St. Joseph's",
     "V.B. Glencoe Charter": "V. B. Glencoe Charter",
 }
-
 # --- DIVISION ASSIGNMENTS ---
-SELECT_1 = [
+
 SELECT_D1 = [
     "Edna Karr", "Teurlings Catholic", "St. Augustine", "Catholic - B.R.",
     "Alexandria", "Tioga", "John Curtis Christian", "Evangel Christian",
