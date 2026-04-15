@@ -21,7 +21,6 @@ SCHOOL_ALIASES = {
     "False River": "False River Academy",
     "Morris Jeff": "Morris Jeff Community School",
     "New Orleans Military & Maritime": "New Orleans Military and Maritime Academy",
-    "St. Joseph's - Plaucheville": "St. Joseph's",
     "V.B. Glencoe Charter": "V. B. Glencoe Charter School",
 }
 
@@ -566,7 +565,7 @@ def get_school(name):
     if name in schools:
         return schools[name]
 
-    alias = ALIASES.get(name)
+    alias = SCHOOL_ALIASES.get(name)
     if alias and alias in schools:
         return schools[alias]
 
@@ -575,7 +574,7 @@ def get_school(name):
     if normalized in schools:
         return schools[normalized]
 
-    alias = ALIASES.get(normalized)
+    alias = SCHOOL_ALIASES.get(normalized)
     if alias and alias in schools:
         return schools[alias]
 
