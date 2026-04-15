@@ -9,7 +9,25 @@ Next update: Before 2026 season when new reclassification is released.
 """
 
 # ─── DIVISION ASSIGNMENTS (from official 2025 LHSAA final rankings) ──────────
+# Current cycle: 2024-2026
+# Next update: Before 2026 season when new reclassification is released.
 
+# --- SCHOOL NAME NORMALIZATION / ALIASES ---
+
+SCHOOL_ALIASES = {
+    "Acadiana Renaissance Charter": "Acadiana Renaissance",
+    "Avoyelles Public Charter": "Avoyelles Public",
+    "David Thibodaux": "David Thibodaux STEM",
+    "False River": "False River Academy",
+    "Morris Jeff": "Morris Jeff Community",
+    "N.O. Charter Science and Math": "New Orleans Charter Science & Math",
+    "New Orleans Military & Maritime": "New Orleans Military and Maritime",
+    "St. Joseph's - Plaucheville": "St. Joseph's",
+    "V.B. Glencoe Charter": "V. B. Glencoe Charter",
+}
+
+# --- DIVISION ASSIGNMENTS ---
+SELECT_1 = [
 SELECT_D1 = [
     "Edna Karr", "Teurlings Catholic", "St. Augustine", "Catholic - B.R.",
     "Alexandria", "Tioga", "John Curtis Christian", "Evangel Christian",
@@ -464,15 +482,21 @@ SCHOOLS = build_schools()
 
 
 def get_school(name: str) -> dict | None:
+    name = SCHOOL_ALIASES.get(name, name)
+
     if name in SCHOOLS:
         return SCHOOLS[name]
+
     name_lower = name.lower()
+
     for school_name, data in SCHOOLS.items():
         if school_name.lower() == name_lower:
             return data
+
     for school_name, data in SCHOOLS.items():
         if name_lower in school_name.lower():
             return data
+
     return None
 
 
