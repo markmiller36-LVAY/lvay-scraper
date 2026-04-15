@@ -114,14 +114,13 @@ NS_D3 = [
 ]
 
 NS_D4 = [
-    "Haynesville", "Mangham", "South Plaquemines", "Jeanerette", "Logansport",
-    "Ringgold", "North Iberville", "East Feliciana", "Vinton", "Jonesboro-Hodge",
-    "Ferriday", "Elton", "Welsh", "Grand Lake", "West St. Mary", "West St. John",
-    "Homer", "Franklin", "General Trass", "Basile", "Montgomery", "Lake Arthur",
-    "LaSalle", "Northeast", "North Central", "DeQuincy", "Delcambre", "Arcadia",
-    "Varnado", "East Iberville", "Merryville", "Oberlin", "Centerville",
-    "White Castle", "East Beauregard", "Delhi", "Lakeview", "Plain Dealing",
-    "Gueydan",
+    "Haynesville", "Mangham", "South Plaquemines", "Jeanerette", "Logansport", "Ringgold",
+    "North Iberville", "East Feliciana", "Vinton", "Jonesboro-Hodge", "Ferriday",
+    "Elton", "Welsh", "Grand Lake", "West St. Mary", "West St. John", "Homer",
+    "Franklin", "General Trass", "Basile", "Montgomery", "Lake Arthur", "LaSalle",
+    "Northeast", "North Central", "DeQuincy", "Delcambre", "Arcadia", "Varnado",
+    "East Iberville", "Merryville", "Oberlin", "Centerville", "White Castle",
+    "East Beauregard", "Delhi", "Lakeview", "Plain Dealing", "Gueydan",
 ]
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -457,6 +456,7 @@ SUPPLEMENTAL_SCHOOLS = {
     "New Orleans Military and Maritime Academy": {"class": "4A", "district": 10},
     "St. Joseph's - Plaucheville": {"class": "C", "district": 4},
     "V. B. Glencoe Charter School": {"class": "C", "district": 6},
+
     "Anacoco": {"class": "B", "district": 4},
     "Bell City": {"class": "B", "district": 6},
     "Calvin": {"class": "C", "district": 2},
@@ -515,6 +515,49 @@ SUPPLEMENTAL_SCHOOLS = {
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
+# DIVISION / TRACK OVERRIDES FOR SUPPLEMENTAL 1A-4A SCHOOLS
+# ──────────────────────────────────────────────────────────────────────────────
+
+SPECIAL_DIVISION_OVERRIDES = {
+    "David Thibodaux STEM Magnet": {
+        "division": "Select Division II",
+        "track": "select",
+    },
+    "New Orleans Military and Maritime Academy": {
+        "division": "Select Division II",
+        "track": "select",
+    },
+    "Acadiana Renaissance Charter Academy": {
+        "division": "Select Division III",
+        "track": "select",
+    },
+    "Morris Jeff Community School": {
+        "division": "Select Division III",
+        "track": "select",
+    },
+    "Doyle": {
+        "division": "Non-Select Division III",
+        "track": "non-select",
+    },
+    "French Settlement": {
+        "division": "Non-Select Division IV",
+        "track": "non-select",
+    },
+    "Midland": {
+        "division": "Non-Select Division IV",
+        "track": "non-select",
+    },
+    "Rapides": {
+        "division": "Select Division IV",
+        "track": "select",
+    },
+    "Ecole Classique": {
+        "division": "Select Division IV",
+        "track": "select",
+    },
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
 # NORMALIZATION
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -523,12 +566,10 @@ def normalize_school_name(name: str) -> str:
         return ""
 
     s = str(name).strip()
-
     s = s.replace("’", "'").replace("‘", "'")
     s = s.replace("“", '"').replace("”", '"')
     s = s.replace("–", "-").replace("—", "-")
     s = s.replace("&", "and")
-
     s = re.sub(r"\s+", " ", s).strip()
     return s
 
@@ -541,14 +582,14 @@ def build_schools():
     schools = {}
 
     division_lists = [
-        (SELECT_D1, "Select Division I", "select"),
-        (SELECT_D2, "Select Division II", "select"),
-        (SELECT_D3, "Select Division III", "select"),
-        (SELECT_D4, "Select Division IV", "select"),
-        (NS_D1, "Non-Select Division I", "non-select"),
-        (NS_D2, "Non-Select Division II", "non-select"),
-        (NS_D3, "Non-Select Division III", "non-select"),
-        (NS_D4, "Non-Select Division IV", "non-select"),
+        (SELECT_D1, "Select Division I",       "select"),
+        (SELECT_D2, "Select Division II",      "select"),
+        (SELECT_D3, "Select Division III",     "select"),
+        (SELECT_D4, "Select Division IV",      "select"),
+        (NS_D1,     "Non-Select Division I",   "non-select"),
+        (NS_D2,     "Non-Select Division II",  "non-select"),
+        (NS_D3,     "Non-Select Division III", "non-select"),
+        (NS_D4,     "Non-Select Division IV",  "non-select"),
     ]
 
     for school_list, division, track in division_lists:
@@ -574,10 +615,11 @@ def build_schools():
 
     for name, info in SUPPLEMENTAL_SCHOOLS.items():
         if name not in schools:
+            override = SPECIAL_DIVISION_OVERRIDES.get(name)
             schools[name] = {
                 "name": name,
-                "division": "Unknown",
-                "track": "unknown",
+                "division": override["division"] if override else "Unknown",
+                "track": override["track"] if override else "unknown",
                 "class": info["class"],
                 "district": info["district"],
             }
@@ -586,10 +628,12 @@ def build_schools():
 
 
 SCHOOLS = build_schools()
+
 NORMALIZED_SCHOOLS = {
     normalize_school_name(name): info
     for name, info in SCHOOLS.items()
 }
+
 NORMALIZED_ALIASES = {
     normalize_school_name(alias): canonical
     for alias, canonical in SCHOOL_ALIASES.items()
@@ -665,6 +709,10 @@ if __name__ == "__main__":
         "V.B. Glencoe Charter",
         "False River",
         "New Orleans Military & Maritime",
+        "French Settlement",
+        "Midland",
+        "Rapides",
+        "Ecole Classique",
     ]
 
     for name in test_names:
@@ -672,7 +720,8 @@ if __name__ == "__main__":
         if school:
             print(
                 f"  {name}: "
-                f"{school['class']} D{school['district']} | {school['division']}"
+                f"{school['class']} D{school['district']} | "
+                f"{school['division']} | {school['track']}"
             )
         else:
             print(f"  {name}: NOT FOUND")
