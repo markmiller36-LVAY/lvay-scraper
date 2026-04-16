@@ -1,40 +1,49 @@
 """
 LVAY - Multi-Sport Power Rating Engine
 ========================================
-Official LHSAA formulas from 2025-2026 Handbook:
+Official LHSAA formulas from 2025-2026 Handbook / LVAY parity tuning
 
-FOOTBALL (14.12):
+FOOTBALL:
   Win=10, Loss=0, Tie=5, Forfeit=1
-  Div bonus: +2 per CLASS higher (both class AND division must be higher for in-state)
-  OOS: +2 per class higher (class only, no division check)
   OppQ: (Opp Wins / Opp GP) x 10
-
-BASEBALL (10.10):
-  Win=20, Loss=0, Tie=5, Double Forfeit=+1 to winner
-  Div bonus: +2 per class higher, with division also higher for in-state
-  OppQ: Opponent's Wins (raw — no multiplier)
+  Division bonus:
+    - in-state: +2 per division step up
+    - OOS: +2 per class step up
   Power Rating = Total Points / Games Played
 
-SOFTBALL (19.7.3):
+BASEBALL:
   Win=20, Loss=0, Tie=5, Double Forfeit=+1 to winner
-  Div bonus: +2 per class higher, with division also higher for in-state
   OppQ: Opponent's Wins (raw)
+  Division bonus:
+    - in-state: +2 per class step up, with division also higher
+    - OOS: +2 per class step up
   Power Rating = Total Points / Games Played
 
-BASKETBALL 1A-5A (11.6):
+SOFTBALL:
+  Win=20, Loss=0, Tie=5, Double Forfeit=+1 to winner
+  OppQ: Opponent's Wins (raw)
+  Division bonus:
+    - in-state: +2 per class step up, with division also higher
+    - OOS: +2 per class step up
+  Power Rating = Total Points / Games Played
+
+BASKETBALL 1A-5A:
   Win=25, Loss=0
-  Div bonus: +2 per class higher, with division also higher for in-state
-  Play-up bonus: +2
   OppQ: (Opp Wins / Opp GP) x 34
+  Division bonus:
+    - in-state: +2 per class step up, with division also higher
+    - OOS: +2 per class step up
   Power Rating = Total Points / Games Played
 
-BASKETBALL Class B&C (11.6):
+BASKETBALL Class B&C:
   Win=8, Loss=0
-  Div bonus: +2 per class higher, with division also higher for in-state
   OppQ: (Opp Wins / Opp GP) x 44
+  Division bonus:
+    - in-state: +2 per class step up, with division also higher
+    - OOS: +2 per class step up
   Power Rating = Total Points / Games Played
 
-SOCCER (18.5.5):
+SOCCER:
   Win=5 + Opp Wins (100%)
   Loss=0 + Opp Wins (50%)
   Tie=2.5 + Opp Wins (75%)
@@ -45,32 +54,30 @@ SOCCER (18.5.5):
 from dataclasses import dataclass, field
 from typing import Optional
 
-# Division rank is only used as a gate / ordering concept for "playing up".
-# Class B and Class C are intentionally below Division IV so bonus logic can
-# still compare them cleanly against 1A-5A divisions.
+
 DIVISION_RANK = {
     # Generic / legacy labels
-    "Division I":              4,
-    "Division II":             3,
-    "Division III":            2,
-    "Division IV":             1,
-    "Division I (Play Up)":    4,
+    "Division I": 4,
+    "Division II": 3,
+    "Division III": 2,
+    "Division IV": 1,
+    "Division I (Play Up)": 4,
 
     # Non-select
-    "Non-Select Division I":   4,
-    "Non-Select Division II":  3,
+    "Non-Select Division I": 4,
+    "Non-Select Division II": 3,
     "Non-Select Division III": 2,
-    "Non-Select Division IV":  1,
+    "Non-Select Division IV": 1,
 
     # Select
-    "Select Division I":       4,
-    "Select Division II":      3,
-    "Select Division III":     2,
-    "Select Division IV":      1,
+    "Select Division I": 4,
+    "Select Division II": 3,
+    "Select Division III": 2,
+    "Select Division IV": 1,
 
     # Small schools
-    "Class B":                 0,
-    "Class C":                -1,
+    "Class B": 0,
+    "Class C": -1,
 }
 
 CLASS_RANK = {
@@ -79,72 +86,77 @@ CLASS_RANK = {
     "3A": 3,
     "2A": 2,
     "1A": 1,
-    "B":  0,
+    "B": 0,
     "C": -1,
 }
 
 PLAYOFF_SIZES = {
     "non-select": 28,
-    "select":     24,
-    "soccer":     24,
+    "select": 24,
+    "soccer": 24,
     "small-school": 24,
 }
 
 SPORT_CONFIGS = {
     "football": {
-        "win_points":        10,
-        "loss_points":       0,
-        "tie_points":        5,
-        "forfeit_bonus":     1,
-        "div_bonus_per_div": 2,
-        "has_div_bonus":     True,
-        "opp_quality":       "win_pct_x10",
+        "win_points": 10,
+        "loss_points": 0,
+        "tie_points": 5,
+        "forfeit_bonus": 1,
+        "div_bonus_per_step": 2,
+        "has_div_bonus": True,
+        "opp_quality": "win_pct_x10",
+        "bonus_mode": "football_division_steps",
     },
     "baseball": {
-        "win_points":        20,
-        "loss_points":       0,
-        "tie_points":        5,
-        "forfeit_bonus":     1,
-        "div_bonus_per_div": 2,
-        "has_div_bonus":     True,
-        "opp_quality":       "raw_wins",
+        "win_points": 20,
+        "loss_points": 0,
+        "tie_points": 5,
+        "forfeit_bonus": 1,
+        "div_bonus_per_step": 2,
+        "has_div_bonus": True,
+        "opp_quality": "raw_wins",
+        "bonus_mode": "class_steps_with_division_gate",
     },
     "softball": {
-        "win_points":        20,
-        "loss_points":       0,
-        "tie_points":        5,
-        "forfeit_bonus":     1,
-        "div_bonus_per_div": 2,
-        "has_div_bonus":     True,
-        "opp_quality":       "raw_wins",
+        "win_points": 20,
+        "loss_points": 0,
+        "tie_points": 5,
+        "forfeit_bonus": 1,
+        "div_bonus_per_step": 2,
+        "has_div_bonus": True,
+        "opp_quality": "raw_wins",
+        "bonus_mode": "class_steps_with_division_gate",
     },
     "basketball_1a5a": {
-        "win_points":        25,
-        "loss_points":       0,
-        "tie_points":        0,
-        "forfeit_bonus":     0,
-        "div_bonus_per_div": 2,
-        "play_up_bonus":     2,
-        "has_div_bonus":     True,
-        "opp_quality":       "win_pct_x34",
+        "win_points": 25,
+        "loss_points": 0,
+        "tie_points": 0,
+        "forfeit_bonus": 0,
+        "div_bonus_per_step": 2,
+        "has_div_bonus": True,
+        "opp_quality": "win_pct_x34",
+        "bonus_mode": "class_steps_with_division_gate",
     },
     "basketball_bc": {
-        "win_points":        8,
-        "loss_points":       0,
-        "tie_points":        0,
-        "forfeit_bonus":     0,
-        "div_bonus_per_div": 2,
-        "has_div_bonus":     True,
-        "opp_quality":       "win_pct_x44",
+        "win_points": 8,
+        "loss_points": 0,
+        "tie_points": 0,
+        "forfeit_bonus": 0,
+        "div_bonus_per_step": 2,
+        "has_div_bonus": True,
+        "opp_quality": "win_pct_x44",
+        "bonus_mode": "class_steps_with_division_gate",
     },
     "soccer": {
-        "win_points":        5,
-        "loss_points":       0,
-        "tie_points":        2.5,
-        "forfeit_bonus":     0,
-        "div_bonus_per_div": 0,
-        "has_div_bonus":     False,
-        "opp_quality":       "soccer_weighted",
+        "win_points": 5,
+        "loss_points": 0,
+        "tie_points": 2.5,
+        "forfeit_bonus": 0,
+        "div_bonus_per_step": 0,
+        "has_div_bonus": False,
+        "opp_quality": "soccer_weighted",
+        "bonus_mode": "none",
     },
 }
 
@@ -159,17 +171,17 @@ def get_sport_config(sport: str, classification: str = "") -> dict:
 
 @dataclass
 class GameResult:
-    team:                  str
-    opponent:              str
-    result:                str
-    sport:                 str
-    opponent_wins:         int  = 0
-    opponent_losses:       int  = 0
-    opponent_division:     str  = ""
-    opponent_class:        str  = ""
+    team: str
+    opponent: str
+    result: str
+    sport: str
+    opponent_wins: int = 0
+    opponent_losses: int = 0
+    opponent_division: str = ""
+    opponent_class: str = ""
     opponent_out_of_state: bool = False
-    playing_up:            bool = False
-    week:                  int  = 0
+    playing_up: bool = False
+    week: int = 0
 
     @property
     def opponent_gp(self) -> int:
@@ -186,11 +198,11 @@ class GameResult:
 
 @dataclass
 class Team:
-    name:           str
-    division:       str
+    name: str
+    division: str
     classification: str
-    sport:          str
-    playing_up:     bool = False
+    sport: str
+    playing_up: bool = False
 
     @property
     def div_rank(self) -> int:
@@ -199,9 +211,9 @@ class Team:
 
 @dataclass
 class GamePoints:
-    game:        GameResult
-    base:        float = 0.0
-    div_bonus:   float = 0.0
+    game: GameResult
+    base: float = 0.0
+    div_bonus: float = 0.0
     opp_quality: float = 0.0
 
     @property
@@ -211,16 +223,16 @@ class GamePoints:
 
 @dataclass
 class TeamRating:
-    name:         str
-    sport:        str
+    name: str
+    sport: str
     power_rating: float
-    wins:         int
-    losses:       int
-    ties:         int
+    wins: int
+    losses: int
+    ties: int
     games_played: int
-    division:     str  = ""
-    rank:         int  = 0
-    breakdown:    list = field(default_factory=list)
+    division: str = ""
+    rank: int = 0
+    breakdown: list = field(default_factory=list)
 
     @property
     def record(self) -> str:
@@ -264,7 +276,7 @@ class PowerRatingEngine:
         elif game.result == "DF":
             gp.base = config.get("forfeit_bonus", 0)
 
-        # Division / play-up bonus
+        # Bonus logic
         if config["has_div_bonus"]:
             opp_class_rank = CLASS_RANK.get(game.opponent_class, 0)
             team_class_rank = CLASS_RANK.get(team.classification, 0)
@@ -272,17 +284,32 @@ class PowerRatingEngine:
 
             opp_div_rank = game.opponent_div_rank
             team_div_rank = team.div_rank
-            div_diff = opp_div_rank - team_div_rank
+            div_steps_up = opp_div_rank - team_div_rank
 
-            if oos:
-                # OOS: class only
-                if class_diff > 0:
-                    gp.div_bonus = class_diff * config["div_bonus_per_div"]
-            else:
-                # In-state: opponent must be both a higher class and higher division
-                # Bonus amount is driven by CLASS difference
-                if class_diff > 0 and div_diff > 0:
-                    gp.div_bonus = class_diff * config["div_bonus_per_div"]
+            bonus_mode = config.get("bonus_mode", "none")
+            bonus_per_step = config.get("div_bonus_per_step", 2)
+
+            if bonus_mode == "football_division_steps":
+                # Football parity fix:
+                # In-state bonus is based on DIVISION STEPS UP at +2 per step.
+                # OOS remains class-based at +2 per class up.
+                if oos:
+                    if class_diff > 0:
+                        gp.div_bonus = class_diff * bonus_per_step
+                else:
+                    if div_steps_up > 0:
+                        gp.div_bonus = div_steps_up * bonus_per_step
+
+            elif bonus_mode == "class_steps_with_division_gate":
+                # Used for baseball / softball / basketball:
+                # Amount is based on CLASS steps up, but in-state only triggers if
+                # opponent is also in a higher division.
+                if oos:
+                    if class_diff > 0:
+                        gp.div_bonus = class_diff * bonus_per_step
+                else:
+                    if class_diff > 0 and div_steps_up > 0:
+                        gp.div_bonus = class_diff * bonus_per_step
 
             if game.playing_up and config.get("play_up_bonus"):
                 gp.div_bonus += config["play_up_bonus"]
@@ -336,13 +363,13 @@ class PowerRatingEngine:
                 ties += 1
 
             breakdown.append({
-                "week":     game.week,
+                "week": game.week,
                 "opponent": game.opponent,
-                "result":   game.result,
-                "base":     round(gp.base, 4),
-                "div":      round(gp.div_bonus, 4),
-                "oppq":     round(gp.opp_quality, 4),
-                "total":    round(gp.total, 4),
+                "result": game.result,
+                "base": round(gp.base, 4),
+                "div": round(gp.div_bonus, 4),
+                "oppq": round(gp.opp_quality, 4),
+                "total": round(gp.total, 4),
             })
 
         if counted == 0:
@@ -415,21 +442,21 @@ class PlayoffPredictor:
 
 
 if __name__ == "__main__":
-    print("=== FOOTBALL bonus fix test ===")
+    print("=== FOOTBALL division-bonus parity test ===")
     eng = PowerRatingEngine()
 
-    # Haynesville (1A, NS4) beats North Webster (3A, NS3)
-    # class_diff = 3A - 1A = 2, division is higher too, so bonus should be +4
-    eng.add_team(Team("Haynesville", "Non-Select Division IV", "1A", "football"))
+    # Lafayette Christian (Select Division III) vs Select Division I opponent
+    # Correct LHSAA-style bonus should be +4, not +6.
+    eng.add_team(Team("Lafayette Christian", "Select Division III", "2A", "football"))
     eng.add_game(GameResult(
-        "Haynesville",
-        "North Webster",
+        "Lafayette Christian",
+        "Archbishop Rummel",
         "W",
         "football",
-        opponent_wins=4,
-        opponent_losses=6,
-        opponent_division="Non-Select Division III",
-        opponent_class="3A",
+        opponent_wins=6,
+        opponent_losses=4,
+        opponent_division="Select Division I",
+        opponent_class="5A",
         week=1,
     ))
 
