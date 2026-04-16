@@ -16,7 +16,7 @@ BASEBALL:
   OppQ: Opponent's Wins (raw)
   Division bonus:
     - in-state: +2 per class step up, with division also higher
-    - OOS: +2 per class step up
+    - OOS: NO bonus (10.10.2 — all OOS opponents weighted equally)
   Power Rating = Total Points / Games Played
 
 SOFTBALL:
@@ -24,7 +24,7 @@ SOFTBALL:
   OppQ: Opponent's Wins (raw)
   Division bonus:
     - in-state: +2 per class step up, with division also higher
-    - OOS: +2 per class step up
+    - OOS: NO bonus (10.10.2 — all OOS opponents weighted equally)
   Power Rating = Total Points / Games Played
 
 BASKETBALL 1A-5A:
@@ -107,6 +107,7 @@ SPORT_CONFIGS = {
         "has_div_bonus": True,
         "opp_quality": "win_pct_x10",
         "bonus_mode": "football_division_steps",
+        "oos_bonus": True,
     },
     "baseball": {
         "win_points": 20,
@@ -117,6 +118,7 @@ SPORT_CONFIGS = {
         "has_div_bonus": True,
         "opp_quality": "raw_wins",
         "bonus_mode": "class_steps_with_division_gate",
+        "oos_bonus": False,  # 10.10.2 — OOS weighted equally, no class bonus
     },
     "softball": {
         "win_points": 20,
@@ -127,6 +129,7 @@ SPORT_CONFIGS = {
         "has_div_bonus": True,
         "opp_quality": "raw_wins",
         "bonus_mode": "class_steps_with_division_gate",
+        "oos_bonus": False,  # 10.10.2 — OOS weighted equally, no class bonus
     },
     "basketball_1a5a": {
         "win_points": 25,
@@ -137,6 +140,7 @@ SPORT_CONFIGS = {
         "has_div_bonus": True,
         "opp_quality": "win_pct_x34",
         "bonus_mode": "class_steps_with_division_gate",
+        "oos_bonus": True,
     },
     "basketball_bc": {
         "win_points": 8,
@@ -147,6 +151,7 @@ SPORT_CONFIGS = {
         "has_div_bonus": True,
         "opp_quality": "win_pct_x44",
         "bonus_mode": "class_steps_with_division_gate",
+        "oos_bonus": True,
     },
     "soccer": {
         "win_points": 5,
@@ -157,6 +162,7 @@ SPORT_CONFIGS = {
         "has_div_bonus": False,
         "opp_quality": "soccer_weighted",
         "bonus_mode": "none",
+        "oos_bonus": False,
     },
 }
 
@@ -288,24 +294,22 @@ class PowerRatingEngine:
 
             bonus_mode = config.get("bonus_mode", "none")
             bonus_per_step = config.get("div_bonus_per_step", 2)
+            oos_bonus_allowed = config.get("oos_bonus", True)
 
             if bonus_mode == "football_division_steps":
-                # Football parity fix:
-                # In-state bonus is based on DIVISION STEPS UP at +2 per step.
-                # OOS remains class-based at +2 per class up.
+                # Football: in-state uses division steps, OOS uses class steps
                 if oos:
-                    if class_diff > 0:
+                    if oos_bonus_allowed and class_diff > 0:
                         gp.div_bonus = class_diff * bonus_per_step
                 else:
                     if div_steps_up > 0:
                         gp.div_bonus = div_steps_up * bonus_per_step
 
             elif bonus_mode == "class_steps_with_division_gate":
-                # Used for baseball / softball / basketball:
-                # Amount is based on CLASS steps up, but in-state only triggers if
-                # opponent is also in a higher division.
+                # Baseball/softball: OOS gets no bonus per 10.10.2
+                # Basketball: OOS gets class-based bonus
                 if oos:
-                    if class_diff > 0:
+                    if oos_bonus_allowed and class_diff > 0:
                         gp.div_bonus = class_diff * bonus_per_step
                 else:
                     if class_diff > 0 and div_steps_up > 0:
@@ -442,21 +446,21 @@ class PlayoffPredictor:
 
 
 if __name__ == "__main__":
-    print("=== FOOTBALL division-bonus parity test ===")
+    print("=== BASEBALL OOS no-bonus test ===")
     eng = PowerRatingEngine()
 
-    # Lafayette Christian (Select Division III) vs Select Division I opponent
-    # Correct LHSAA-style bonus should be +4, not +6.
-    eng.add_team(Team("Lafayette Christian", "Select Division III", "2A", "football"))
+    # Ruston (5A NS1) vs OOS opponent — should get NO div bonus
+    eng.add_team(Team("Ruston", "Non-Select Division I", "5A", "baseball"))
     eng.add_game(GameResult(
-        "Lafayette Christian",
-        "Archbishop Rummel",
+        "Ruston",
+        "Rockwall Heath - TX",
         "W",
-        "football",
-        opponent_wins=6,
-        opponent_losses=4,
-        opponent_division="Select Division I",
+        "baseball",
+        opponent_wins=25,
+        opponent_losses=5,
+        opponent_division="Unknown",
         opponent_class="5A",
+        opponent_out_of_state=True,
         week=1,
     ))
 
@@ -467,4 +471,4 @@ if __name__ == "__main__":
                 f"    Wk{g['week']}: "
                 f"Base={g['base']} Div={g['div']} OppQ={g['oppq']} Total={g['total']}"
             )
-        print("  Expected div bonus: 4.0")
+        print("  Expected: Base=20, Div=0, OppQ=25, Total=45")
