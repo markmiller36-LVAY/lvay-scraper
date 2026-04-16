@@ -255,6 +255,41 @@ def apply_override_to_row(row, sport: str, season: str, overrides: dict) -> dict
     return row_data
 
 
+def print_football_division_dump(ratings):
+    division_order = [
+        "Non-Select Division I",
+        "Non-Select Division II",
+        "Non-Select Division III",
+        "Non-Select Division IV",
+        "Select Division I",
+        "Select Division II",
+        "Select Division III",
+        "Select Division IV",
+    ]
+
+    print("\n" + "=" * 54)
+    print("FULL DIVISION DUMP (FOR AUDIT)")
+    print("=" * 54)
+
+    for division in division_order:
+        print(f"\n{division.upper()}")
+        print("-" * 54)
+
+        div_list = [r for r in ratings if getattr(r, "division", "") == division]
+        div_list = sorted(
+            div_list,
+            key=lambda x: getattr(x, "power_rating", 0),
+            reverse=True
+        )
+
+        if not div_list:
+            print("  (no teams)")
+            continue
+
+        for i, r in enumerate(div_list, 1):
+            print(f"{i:2}. {r.name:<30} PR={round(r.power_rating, 2):>6} | {r.record}")
+
+
 def run_power_rankings(season=SEASON, sport=SPORT):
     print(f"\n{'='*54}")
     print("LVAY Power Rankings Calculator")
@@ -465,6 +500,10 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     print("  Top 5:")
     for r in ratings[:5]:
         print(f"    #{r.rank} {r.name} | PR={r.power_rating} | {r.record} | {r.division}")
+
+    if sport.lower() == "football":
+        print_football_division_dump(ratings)
+
     print(f"{'='*54}\n")
 
     return ratings
