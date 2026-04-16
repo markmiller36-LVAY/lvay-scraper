@@ -531,4 +531,4 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     return ratings
 
 
-if __name__ == "__main_
+if __name__ == "__main__":
