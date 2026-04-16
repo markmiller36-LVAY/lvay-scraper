@@ -331,15 +331,17 @@ def import_oos_2025():
 
 @app.route("/api/rankings/calculate")
 def calculate_rankings():
+    sport = request.args.get("sport", "football")
+    season = request.args.get("season", "2025")
     def run():
         try:
             from run_power_rankings import run_power_rankings
-            run_power_rankings()
+            run_power_rankings(season=season, sport=sport)
         except Exception as e:
             print(f"Rankings calc error: {e}")
     threading.Thread(target=run, daemon=True).start()
-    return jsonify({"status": "started", "message": "Power rankings calculating — check logs"})
-
+    return jsonify({"status": "started", "sport": sport, "season": season,
+                    "message": f"{sport} rankings calculating — check logs"})
 
 # ────────────────────────────────────────────────────────────
 
