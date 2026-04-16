@@ -19,6 +19,19 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+# ADD THIS RIGHT HERE
+def resolve_season(sport="baseball"):
+    now = datetime.now()
+    if sport == "football":
+        return str(now.year)
+    return str(now.year if now.month >= 8 else now.year - 1)
+
 
 def init_db():
     conn = get_db()
@@ -669,7 +682,7 @@ def get_sport_schedules(sport):
     conn = get_db()
     c = conn.cursor()
     school_filter = request.args.get("school")
-    season = os.environ.get("SEASON_YEAR", "2026")
+    season = os.environ.get("SEASON_YEAR") or resolve_season(sport)
 
     if school_filter:
         c.execute("""
@@ -713,6 +726,14 @@ def get_sport_schedules(sport):
             "ties":    ties,
             "games":   games,
         })
+
+    conn.close()
+    return jsonify({
+        "sport":   sport,
+        "season":  season,
+        "count":   len(schools),
+        "schools": schools
+    })
 
     conn.close()
     return jsonify({
