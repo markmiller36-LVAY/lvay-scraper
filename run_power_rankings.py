@@ -23,7 +23,7 @@ from school_database import get_school
 DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 
 SPORT = os.environ.get("RANKINGS_SPORT", "football")
-SEASON = os.environ.get("RANKINGS_SEASON", "2025")
+SEASON = os.environ.get("RANKINGS_SEASON", "2026")
 
 GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID", "")
 GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
