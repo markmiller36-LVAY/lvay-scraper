@@ -153,7 +153,7 @@ def resolve_season_year(sport_key: str, dt: Optional[datetime] = None) -> str:
         return str(dt.year)
 
     if mode == "school_year":
-        return str(dt.year if dt.month >= 8 else dt.year - 1)
+        return str(dt.year if dt.month >= 8 else dt.year)
 
     raise ValueError(f"Unknown season_mode for {sport_key}: {mode}")
 
