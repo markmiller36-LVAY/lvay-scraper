@@ -30,7 +30,7 @@ def resolve_season(sport="baseball"):
     now = datetime.now()
     if sport == "football":
         return str(now.year)
-    return str(now.year if now.month >= 8 else now.year - 1)
+    return str(now.year if now.month >= 8 else now.year)
 
 
 def init_db():
