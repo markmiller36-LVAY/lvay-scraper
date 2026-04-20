@@ -19,18 +19,12 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
 
-
-# ADD THIS RIGHT HERE
 def resolve_season(sport="baseball"):
     now = datetime.now()
     if sport == "football":
         return str(now.year)
-    return str(now.year if now.month >= 8 else now.year)
+    return str(now.year + 1 if now.month >= 8 else now.year + 1)
 
 
 def init_db():
@@ -355,7 +349,6 @@ def schedules_football():
     conn = get_db()
     c = conn.cursor()
     try:
-        # Get all schools from power_rankings
         c.execute("""
             SELECT pr.school, pr.division, pr.track, pr.class_, pr.district,
                    pr.power_rating, pr.wins, pr.losses, pr.ties, pr.games_played
@@ -366,7 +359,6 @@ def schedules_football():
         schools = [dict(r) for r in c.fetchall()]
 
         for s in schools:
-            # Get game breakdown for each school
             c.execute("""
                 SELECT gpp.week, gpp.opponent, gpp.result, gpp.score,
                        gpp.opp_wins, gpp.opp_losses, gpp.opp_division,
@@ -432,6 +424,8 @@ def rankings_football():
         return jsonify({"error": str(e)}), 500
     conn.close()
     return jsonify({"sport": "football", "season": "2025", "count": len(rows), "rankings": rows})
+
+
 @app.route("/control-panel")
 def control_panel():
     html = """<!DOCTYPE html>
@@ -728,14 +722,6 @@ def get_sport_schedules(sport):
             "ties":    ties,
             "games":   games,
         })
-
-    conn.close()
-    return jsonify({
-        "sport":   sport,
-        "season":  season,
-        "count":   len(schools),
-        "schools": schools
-    })
 
     conn.close()
     return jsonify({
