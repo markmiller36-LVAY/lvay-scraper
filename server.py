@@ -51,15 +51,13 @@ def init_db():
     c.execute("""
         CREATE TABLE IF NOT EXISTS oos_opponents (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
-            sport      TEXT NOT NULL DEFAULT 'football',
-            season     TEXT NOT NULL DEFAULT '2025',
+            sport      TEXT NOT NULL,
+            season     TEXT NOT NULL,
             school     TEXT NOT NULL,
-            week       INTEGER NOT NULL,
             opponent   TEXT NOT NULL,
-            division   TEXT NOT NULL,
-            class_     TEXT DEFAULT '',
             opp_wins   INTEGER DEFAULT 0,
-            opp_losses INTEGER DEFAULT 0
+            opp_losses INTEGER DEFAULT 0,
+            UNIQUE(sport, season, school, opponent)
         )
     """)
     c.execute("""
