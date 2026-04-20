@@ -76,7 +76,7 @@ SPORTS = {
         "active_start": "01-15",
         "active_end": "05-31",
         "payload_template": {
-            "y": "{season}",
+            "y": "1",
             "resultdate": "",
             "n": "",
             "h": "",
@@ -88,7 +88,7 @@ SPORTS = {
             "paging": "",
             "n1": "",
             "d1": "{classification}",
-            "y1": "{season}",
+            "y1": "1",
         },
         "query_params": {"p": "1", "bb": "1"},
     },
@@ -102,7 +102,7 @@ SPORTS = {
         "active_start": "01-15",
         "active_end": "05-31",
         "payload_template": {
-            "y": "{season}",
+            "y": "1",
             "resultdate": "",
             "n": "",
             "h": "",
@@ -114,7 +114,7 @@ SPORTS = {
             "paging": "",
             "n1": "",
             "d1": "{classification}",
-            "y1": "{season}",
+            "y1": "1",
         },
         "query_params": {"p": "1", "sb": "1"},
     },
@@ -153,13 +153,13 @@ def resolve_season_year(sport_key: str, dt: Optional[datetime] = None) -> str:
         return str(dt.year)
 
     if mode == "school_year":
-        # Baseball/softball use "YYYY-YYYY" format (e.g. "2025-2026")
-        # Aug-Dec: current year is start year (e.g. Aug 2025 → "2025-2026")
-        # Jan-Jul: previous year is start year (e.g. Apr 2026 → "2025-2026")
+        # Store as end year of school year (e.g. "2026" for 2025-2026)
+        # Aug-Dec: current year + 1 (e.g. Aug 2025 → "2026")
+        # Jan-Jul: current year (e.g. Apr 2026 → "2026")
         if dt.month >= 8:
-            return f"{dt.year}-{dt.year + 1}"
+            return str(dt.year + 1)
         else:
-            return f"{dt.year - 1}-{dt.year}"
+            return str(dt.year)
 
     raise ValueError(f"Unknown season_mode for {sport_key}: {mode}")
 
