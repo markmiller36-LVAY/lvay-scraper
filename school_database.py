@@ -499,6 +499,7 @@ SUPPLEMENTAL_SCHOOLS = {
     "Pitkin": {"class": "B", "district": 4},
     "Plainview": {"class": "C", "district": 4},
     "Pleasant Hill": {"class": "C", "district": 3},
+    "Providence Classical Academy": {"class": "B", "district": 1},
     "Quitman": {"class": "B", "district": 1},
     "Rapides": {"class": "2A", "district": 5},
     "Reeves": {"class": "C", "district": 6},
@@ -566,9 +567,9 @@ def normalize_school_name(name: str) -> str:
         return ""
 
     s = str(name).strip()
-    s = s.replace("’", "'").replace("‘", "'")
-    s = s.replace("“", '"').replace("”", '"')
-    s = s.replace("–", "-").replace("—", "-")
+    s = s.replace("\u2019", "'").replace("\u2018", "'")
+    s = s.replace("\u201c", '"').replace("\u201d", '"')
+    s = s.replace("\u2013", "-").replace("\u2014", "-")
     s = s.replace("&", "and")
     s = re.sub(r"\s+", " ", s).strip()
     return s
@@ -729,6 +730,7 @@ if __name__ == "__main__":
         "Ecole Classique",
         "Anacoco",
         "Calvin",
+        "Providence Classical Academy",
     ]
 
     for name in test_names:
