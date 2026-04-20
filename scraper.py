@@ -153,7 +153,13 @@ def resolve_season_year(sport_key: str, dt: Optional[datetime] = None) -> str:
         return str(dt.year)
 
     if mode == "school_year":
-        return str(dt.year if dt.month >= 8 else dt.year)
+        # Baseball/softball use "YYYY-YYYY" format (e.g. "2025-2026")
+        # Aug-Dec: current year is start year (e.g. Aug 2025 → "2025-2026")
+        # Jan-Jul: previous year is start year (e.g. Apr 2026 → "2025-2026")
+        if dt.month >= 8:
+            return f"{dt.year}-{dt.year + 1}"
+        else:
+            return f"{dt.year - 1}-{dt.year}"
 
     raise ValueError(f"Unknown season_mode for {sport_key}: {mode}")
 
