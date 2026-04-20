@@ -200,25 +200,56 @@ def load_scores(conn, season=SEASON, sport=SPORT):
 
 
 def load_oos_opponents(conn, season=SEASON, sport=SPORT):
+    """
+    For football: keyed by (school, week) — legacy behavior
+    For baseball/softball: keyed by (school, opponent) — opponent name match
+    """
     c = conn.cursor()
     try:
         c.execute("""
-            SELECT school, week, opponent, division, class_, opp_wins, opp_losses
+            SELECT school, opponent, opp_wins, opp_losses
             FROM oos_opponents
             WHERE sport=? AND season=?
         """, (sport, season))
         oos = {}
         for r in c.fetchall():
-            oos[(r["school"], int(r["week"]))] = {
+            # Key by (school, opponent) for baseball/softball
+            # Also store a normalized version for fuzzy matching
+            key = (r["school"], r["opponent"])
+            oos[key] = {
                 "opponent": r["opponent"],
-                "division": r["division"],
-                "class_": r["class_"] if r["class_"] else "",
+                "division": "Unknown",
+                "class_": "",
                 "opp_wins": r["opp_wins"],
                 "opp_losses": r["opp_losses"],
             }
         return oos
-    except Exception:
+    except Exception as e:
+        print(f"  OOS load error: {e}")
         return {}
+
+
+def find_oos_record(oos_lookup, school, opponent):
+    """
+    Look up OOS record by school + opponent name.
+    Tries exact match first, then partial match on the base school name
+    (stripping state suffixes like '- TX - UIL').
+    """
+    # Exact match
+    if (school, opponent) in oos_lookup:
+        return oos_lookup[(school, opponent)]
+
+    # Partial match — strip state/association suffixes from DB opponent name
+    # DB has e.g. "Pine Tree - TX - UIL", sheet has "Pine Tree TX"
+    opponent_base = opponent.split(" - ")[0].strip().lower()
+    for (s, o), data in oos_lookup.items():
+        if s != school:
+            continue
+        o_base = o.split(" - ")[0].strip().lower()
+        if opponent_base == o_base or o_base in opponent_base or opponent_base in o_base:
+            return data
+
+    return None
 
 
 def build_school_records(rows):
@@ -389,19 +420,21 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         # Use game_date as secondary key for baseball/softball (no week numbers)
         game_key = (school, week_num) if week_num else (school, game_date)
 
-        oos_key = (school, week_num)
-        if oos_key in oos_lookup:
-            oos_data = oos_lookup[oos_key]
+        # OOS record lookup — for baseball/softball use opponent name match
+        oos_data = None
+        if oos and sport.lower() in ("baseball", "softball"):
+            oos_data = find_oos_record(oos_lookup, school, opponent)
+
+        if oos_data:
             opp_wins = oos_data["opp_wins"]
             opp_losses = oos_data["opp_losses"]
-            opp_division = oos_data["division"]
+            opp_division = oos_data.get("division", "Unknown")
             opp_class = strip_district_prefix(oos_data.get("class_", ""))
             oos = True
         elif oos:
             opp_wins = 0
             opp_losses = 0
             opp_division = "Unknown"
-            # Try to get class from opponent_class field in games table
             raw_opp_class = r.get("opponent_class") or ""
             opp_class = strip_district_prefix(raw_opp_class)
             oos_missing.append(f"{school} vs {opponent} ({game_date})")
@@ -532,3 +565,4 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
 
 if __name__ == "__main__":
+    pass
