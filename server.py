@@ -95,9 +95,21 @@ with app.app_context():
     try:
         from import_oos_2025 import run as import_oos
         import_oos()
-        print("OOS opponents imported on startup")
+        print("OOS football opponents imported on startup")
     except Exception as e:
-        print(f"OOS import on startup error: {e}")
+        print(f"OOS football import on startup error: {e}")
+    try:
+        from import_oos_baseball_2026 import run as import_oos_baseball
+        import_oos_baseball()
+        print("OOS baseball opponents imported on startup")
+    except Exception as e:
+        print(f"OOS baseball import on startup error: {e}")
+    try:
+        from import_oos_softball_2026 import run as import_oos_softball
+        import_oos_softball()
+        print("OOS softball opponents imported on startup")
+    except Exception as e:
+        print(f"OOS softball import on startup error: {e}")
 
 
 # ── STATUS ──────────────────────────────────────────────────
