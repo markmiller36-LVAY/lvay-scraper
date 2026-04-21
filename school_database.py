@@ -4,6 +4,7 @@ LHSAA School Database
 
 Division assignments built from official LHSAA 2025 final power rankings.
 Alignment (class + district) from Football.pdf 2025-2026 alignment document.
+Softball-only schools added from Softball.pdf 2025-2026 alignment document.
 
 Current cycle: 2024-2026
 Next update: Before 2026 season when new reclassification is released.
@@ -38,6 +39,8 @@ SELECT_D1 = [
     "Pineville", "Comeaux", "Woodlawn - B.R.", "Warren Easton", "John Ehret",
     "Huntington", "Southwood", "L. W. Higgins", "C.E. Byrd", "Scotlandville",
     "Ponchatoula", "West Jefferson", "East Jefferson", "Ben Franklin",
+    # Softball-only additions
+    "Mt. Carmel", "Archbishop Chapelle", "Dominican", "St. Joseph's Academy",
 ]
 
 SELECT_D2 = [
@@ -52,6 +55,9 @@ SELECT_D2 = [
     "Washington-Marion", "Eleanor McMain", "McKinley", "Sophie B. Wright",
     "Booker T. Washington - N.O.", "Tara", "Bolton Academy",
     "Young Audiences Charter", "The Willow School",
+    # Softball-only additions
+    "Caddo Magnet", "N.O. Charter Science and Math", "St. Scholastica",
+    "Academy of Our Lady",
 ]
 
 SELECT_D3 = [
@@ -65,6 +71,8 @@ SELECT_D3 = [
     "Rosepine", "Sarah T. Reed", "Houma Christian", "North Caddo",
     "St. Thomas Aquinas", "Jefferson Rise Charter", "Collegiate Baton Rouge",
     "Fisher", "Capitol", "Magnolia School of Excellence",
+    # Softball-only additions
+    "Cabrini", "Ursuline Academy", "St. Mary's Academy",
 ]
 
 SELECT_D4 = [
@@ -78,6 +86,8 @@ SELECT_D4 = [
     "Lincoln Preparatory School", "Central Private", "Delhi Charter",
     "Glenbrook", "Hanson Memorial", "Berchmans Academy", "Northwood - Lena",
     "Crescent City", "Thrive Academy", "Block", "Highland Baptist", "Pickering",
+    # Softball-only additions
+    "Louise McGehee",
 ]
 
 NS_D1 = [
@@ -125,6 +135,7 @@ NS_D4 = [
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 2025-2026 ALIGNMENT (Class + District from Football.pdf)
+# Softball-only schools added from Softball.pdf
 # ──────────────────────────────────────────────────────────────────────────────
 
 ALIGNMENT = {
@@ -156,6 +167,7 @@ ALIGNMENT = {
     "Central - B.R.": {"class": "5A", "district": 4},
     "Liberty": {"class": "5A", "district": 4},
     "Scotlandville": {"class": "5A", "district": 4},
+    "St. Joseph's Academy": {"class": "5A", "district": 4},
     "Woodlawn - B.R.": {"class": "5A", "district": 4},
     "Zachary": {"class": "5A", "district": 4},
     "Denham Springs": {"class": "5A", "district": 5},
@@ -182,12 +194,15 @@ ALIGNMENT = {
     "Hahnville": {"class": "5A", "district": 8},
     "Terrebonne": {"class": "5A", "district": 8},
     "Thibodaux": {"class": "5A", "district": 8},
+    "Archbishop Chapelle": {"class": "5A", "district": 9},
     "Archbishop Rummel": {"class": "5A", "district": 9},
     "Brother Martin": {"class": "5A", "district": 9},
+    "Dominican": {"class": "5A", "district": 9},
     "Edna Karr": {"class": "5A", "district": 9},
     "Holy Cross": {"class": "5A", "district": 9},
     "Jesuit": {"class": "5A", "district": 9},
     "John Curtis Christian": {"class": "5A", "district": 9},
+    "Mt. Carmel": {"class": "5A", "district": 9},
     "St. Augustine": {"class": "5A", "district": 9},
     "Warren Easton": {"class": "5A", "district": 9},
     "Ben Franklin": {"class": "5A", "district": 10},
@@ -201,6 +216,7 @@ ALIGNMENT = {
     # 4A
     "Booker T. Washington - Shr.": {"class": "4A", "district": 1},
     "Bossier": {"class": "4A", "district": 1},
+    "Caddo Magnet": {"class": "4A", "district": 1},
     "Loyola Prep": {"class": "4A", "district": 1},
     "Minden": {"class": "4A", "district": 1},
     "North DeSoto": {"class": "4A", "district": 1},
@@ -245,6 +261,7 @@ ALIGNMENT = {
     "Lakeshore": {"class": "4A", "district": 7},
     "Loranger": {"class": "4A", "district": 7},
     "Pearl River": {"class": "4A", "district": 7},
+    "St. Scholastica": {"class": "4A", "district": 7},
     "A.J. Ellender": {"class": "4A", "district": 8},
     "Assumption": {"class": "4A", "district": 8},
     "E.D. White": {"class": "4A", "district": 8},
@@ -253,6 +270,7 @@ ALIGNMENT = {
     "South Lafourche": {"class": "4A", "district": 8},
     "South Terrebonne": {"class": "4A", "district": 8},
     "Vandebilt Catholic": {"class": "4A", "district": 8},
+    "Academy of Our Lady": {"class": "4A", "district": 9},
     "Archbishop Shaw": {"class": "4A", "district": 9},
     "Belle Chasse": {"class": "4A", "district": 9},
     "Kenner Discovery Health Science": {"class": "4A", "district": 9},
@@ -263,6 +281,7 @@ ALIGNMENT = {
     "Frederick A Douglass": {"class": "4A", "district": 10},
     "George Washington Carver": {"class": "4A", "district": 10},
     "McDonogh #35": {"class": "4A", "district": 10},
+    "N.O. Charter Science and Math": {"class": "4A", "district": 10},
 
     # 3A
     "Bastrop": {"class": "3A", "district": 1},
@@ -317,11 +336,13 @@ ALIGNMENT = {
     "Young Audiences Charter": {"class": "3A", "district": 9},
     "Bolton Academy": {"class": "3A", "district": 10},
     "Booker T. Washington - N.O.": {"class": "3A", "district": 10},
+    "Cabrini": {"class": "3A", "district": 10},
     "De La Salle": {"class": "3A", "district": 10},
     "John F. Kennedy": {"class": "3A", "district": 10},
     "Livingston Collegiate": {"class": "3A", "district": 10},
     "Lord Beaconsfield Landry": {"class": "3A", "district": 10},
     "Sophie B. Wright": {"class": "3A", "district": 10},
+    "Ursuline Academy": {"class": "3A", "district": 10},
 
     # 2A
     "Calvary Baptist": {"class": "2A", "district": 1},
@@ -381,6 +402,7 @@ ALIGNMENT = {
     "Metairie Park Country Day": {"class": "2A", "district": 10},
     "Sarah T. Reed": {"class": "2A", "district": 10},
     "South Plaquemines": {"class": "2A", "district": 10},
+    "St. Mary's Academy": {"class": "2A", "district": 10},
     "Walter L. Cohen": {"class": "2A", "district": 10},
 
     # 1A
@@ -437,6 +459,7 @@ ALIGNMENT = {
     "Southern Lab": {"class": "1A", "district": 9},
     "Thrive Academy": {"class": "1A", "district": 9},
     "Crescent City": {"class": "1A", "district": 10},
+    "Louise McGehee": {"class": "1A", "district": 10},
     "Riverside Academy": {"class": "1A", "district": 10},
     "St. Martin's Episcopal": {"class": "1A", "district": 10},
     "Varnado": {"class": "1A", "district": 10},
@@ -480,6 +503,7 @@ SUPPLEMENTAL_SCHOOLS = {
     "Forest": {"class": "B", "district": 2},
     "French Settlement": {"class": "2A", "district": 9},
     "Georgetown": {"class": "C", "district": 2},
+    "Gibsland-Coleman": {"class": "C", "district": 1},
     "Glenmora": {"class": "B", "district": 5},
     "Grace Christian": {"class": "B", "district": 5},
     "Hackberry": {"class": "C", "district": 5},
@@ -488,6 +512,7 @@ SUPPLEMENTAL_SCHOOLS = {
     "Hicks": {"class": "B", "district": 4},
     "Holden": {"class": "B", "district": 7},
     "Hornbeck": {"class": "C", "district": 3},
+    "Johnson Bayou": {"class": "C", "district": 5},
     "Lacassine": {"class": "B", "district": 6},
     "Maurepas": {"class": "C", "district": 7},
     "Midland": {"class": "2A", "district": 6},
@@ -496,6 +521,7 @@ SUPPLEMENTAL_SCHOOLS = {
     "Negreet": {"class": "B", "district": 3},
     "Northside Christian": {"class": "C", "district": 6},
     "Oak Hill": {"class": "B", "district": 5},
+    "Phoenix": {"class": "C", "district": 8},
     "Pitkin": {"class": "B", "district": 4},
     "Plainview": {"class": "C", "district": 4},
     "Pleasant Hill": {"class": "C", "district": 3},
@@ -731,6 +757,22 @@ if __name__ == "__main__":
         "Anacoco",
         "Calvin",
         "Providence Classical Academy",
+        # Softball-only schools
+        "Mt. Carmel",
+        "Archbishop Chapelle",
+        "Dominican",
+        "St. Joseph's Academy",
+        "Caddo Magnet",
+        "N.O. Charter Science and Math",
+        "St. Scholastica",
+        "Academy of Our Lady",
+        "Cabrini",
+        "Ursuline Academy",
+        "St. Mary's Academy",
+        "Louise McGehee",
+        "Gibsland-Coleman",
+        "Johnson Bayou",
+        "Phoenix",
     ]
 
     for name in test_names:
