@@ -779,3 +779,26 @@ def get_sport_schedules(sport):
         "count":   len(schools),
         "schools": schools
     })
+
+@app.route("/api/build/baseball-sheets")
+def build_baseball_sheets():
+    def run():
+        try:
+            from sheets_exporter import export_baseball_to_sheets
+            export_baseball_to_sheets()
+        except Exception as e:
+            print(f"Baseball sheets build error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({"status": "started", "message": "Baseball sheets building — check Google Sheet in 3-5 min"})
+
+
+@app.route("/api/build/softball-sheets")
+def build_softball_sheets():
+    def run():
+        try:
+            from sheets_exporter import export_softball_to_sheets
+            export_softball_to_sheets()
+        except Exception as e:
+            print(f"Softball sheets build error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({"status": "started", "message": "Softball sheets building — check Google Sheet in 3-5 min"})
