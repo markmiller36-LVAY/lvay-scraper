@@ -766,3 +766,160 @@ def export_division_and_class_tabs(season=SEASON):
     print(f"Sheet: https://docs.google.com/spreadsheets/d/{SHEET_ID}")
     print(f"{'='*54}\n")
     return True
+
+# ─── BASEBALL / SOFTBALL SHARED ───────────────────────────────────────────────
+
+BASEBALL_SOFTBALL_DIVISION_ORDER = [
+    "Non-Select Division I",
+    "Non-Select Division II",
+    "Non-Select Division III",
+    "Non-Select Division IV",
+    "Select Division I",
+    "Select Division II",
+    "Select Division III",
+    "Select Division IV",
+    "Class B",
+    "Class C",
+]
+
+
+def load_sport_rankings(sport, season):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT school, division, track, class_, district,
+                   wins, losses, ties, games_played, power_rating, rank
+            FROM power_rankings
+            WHERE sport=? AND season=?
+            ORDER BY rank ASC
+        """, (sport, str(season)))
+        rows = [dict(r) for r in c.fetchall()]
+    except Exception as e:
+        print(f"    ERROR loading {sport} rankings: {e}")
+        rows = []
+    conn.close()
+    return rows
+
+
+def build_sport_power_rankings(sheet, sport, season):
+    tab_name = f"{sport.title()} Power Rankings ({season})"
+    print(f"  Building {tab_name}...")
+
+    all_schools = load_sport_rankings(sport, season)
+    if not all_schools:
+        print(f"    No data — run /api/rankings/calculate?sport={sport}&season={season} first")
+        return 0
+
+    by_division = {div: [] for div in BASEBALL_SOFTBALL_DIVISION_ORDER}
+    unmatched = []
+    for s in all_schools:
+        div = s.get("division") or ""
+        if div in by_division:
+            by_division[div].append(s)
+        else:
+            unmatched.append(s)
+
+    for div in BASEBALL_SOFTBALL_DIVISION_ORDER:
+        by_division[div].sort(key=lambda x: float(x.get("power_rating") or 0), reverse=True)
+
+    now_str     = datetime.now().strftime("%m/%d/%Y %I:%M %p")
+    col_headers = ["Div Rank", "School", "Division", "Class", "District",
+                   "W", "L", "Games", "Power Rating"]
+
+    ws = get_or_create_tab(sheet, tab_name)
+
+    all_rows = []
+    all_rows.append([f"LVAY {sport.title()} Power Rankings {season} — Updated {now_str}"] + [""] * 8)
+    all_rows.append(col_headers)
+
+    total = 0
+    for division in BASEBALL_SOFTBALL_DIVISION_ORDER:
+        schools = by_division[division]
+        if not schools:
+            continue
+        all_rows.append([f"=== {division.upper()} ==="] + [""] * 8)
+        for rank, s in enumerate(schools, 1):
+            all_rows.append([
+                rank,
+                s.get("school") or "",
+                DIVISION_LABELS.get(s.get("division", ""), s.get("division") or ""),
+                s.get("class_") or "",
+                s.get("district") or "",
+                s.get("wins") or 0,
+                s.get("losses") or 0,
+                s.get("games_played") or 0,
+                round(float(s.get("power_rating") or 0), 2),
+            ])
+            total += 1
+        all_rows.append([""] * 9)
+
+    if unmatched:
+        unmatched.sort(key=lambda x: float(x.get("power_rating") or 0), reverse=True)
+        all_rows.append(["=== UNMATCHED / NO DIVISION ==="] + [""] * 8)
+        for rank, s in enumerate(unmatched, 1):
+            all_rows.append([
+                rank,
+                s.get("school") or "",
+                s.get("division") or "Unknown",
+                s.get("class_") or "",
+                s.get("district") or "",
+                s.get("wins") or 0,
+                s.get("losses") or 0,
+                s.get("games_played") or 0,
+                round(float(s.get("power_rating") or 0), 2),
+            ])
+            total += 1
+
+    batch_write(ws, 1, all_rows)
+    print(f"    Written {total} school rankings")
+    return total
+
+
+def export_baseball_to_sheets(season=2026):
+    print(f"\n{'='*54}")
+    print(f"LVAY Baseball Sheets Export — Season {season}")
+    print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"{'='*54}")
+    try:
+        client = get_client()
+        sheet  = client.open_by_key(SHEET_ID)
+        print(f"Connected: {sheet.title}")
+    except Exception as e:
+        print(f"ERROR connecting: {e}")
+        return False
+    try:
+        total = build_sport_power_rankings(sheet, "baseball", season)
+    except Exception as e:
+        print(f"  ERROR: {e}")
+        total = 0
+    print(f"\n{'='*54}")
+    print(f"DONE! Baseball {season} Sheets complete — {total} schools")
+    print(f"Sheet: https://docs.google.com/spreadsheets/d/{SHEET_ID}")
+    print(f"{'='*54}\n")
+    return True
+
+
+def export_softball_to_sheets(season=2026):
+    print(f"\n{'='*54}")
+    print(f"LVAY Softball Sheets Export — Season {season}")
+    print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"{'='*54}")
+    try:
+        client = get_client()
+        sheet  = client.open_by_key(SHEET_ID)
+        print(f"Connected: {sheet.title}")
+    except Exception as e:
+        print(f"ERROR connecting: {e}")
+        return False
+    try:
+        total = build_sport_power_rankings(sheet, "softball", season)
+    except Exception as e:
+        print(f"  ERROR: {e}")
+        total = 0
+    print(f"\n{'='*54}")
+    print(f"DONE! Softball {season} Sheets complete — {total} schools")
+    print(f"Sheet: https://docs.google.com/spreadsheets/d/{SHEET_ID}")
+    print(f"{'='*54}\n")
+    return True
