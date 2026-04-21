@@ -34,12 +34,12 @@ SELECT_D1 = [
     "Edna Karr", "Teurlings Catholic", "St. Augustine", "Catholic - B.R.",
     "Alexandria", "Tioga", "John Curtis Christian", "Evangel Christian",
     "St. Paul's", "St. Thomas More", "Archbishop Rummel", "Brother Martin",
-    "Hammond", "Acadiana", "Riverdale", "McDonogh #35", "Jesuit", "Bonnabel",
+    "Hammond", "Acadiana", "Riverdale", "Jesuit", "Bonnabel",
     "Carencro", "Captain Shreve", "Liberty", "Holy Cross", "Lafayette",
     "Pineville", "Comeaux", "Woodlawn - B.R.", "Warren Easton", "John Ehret",
     "Huntington", "Southwood", "L. W. Higgins", "C.E. Byrd", "Scotlandville",
     "Ponchatoula", "West Jefferson", "East Jefferson", "Ben Franklin",
-    # Softball-only additions
+    # Softball/baseball-only additions
     "Mt. Carmel", "Archbishop Chapelle", "Dominican", "St. Joseph's Academy",
 ]
 
@@ -55,6 +55,8 @@ SELECT_D2 = [
     "Washington-Marion", "Eleanor McMain", "McKinley", "Sophie B. Wright",
     "Booker T. Washington - N.O.", "Tara", "Bolton Academy",
     "Young Audiences Charter", "The Willow School",
+    # Moved from D1 — confirmed Select D2 for all sports per 2024-2026 designations PDF
+    "McDonogh #35",
     # Softball-only additions
     "Caddo Magnet", "N.O. Charter Science and Math", "St. Scholastica",
     "Academy of Our Lady",
@@ -555,7 +557,7 @@ SPECIAL_DIVISION_OVERRIDES = {
         "track": "select",
     },
     "Acadiana Renaissance Charter Academy": {
-        "division": "Select Division III",
+        "division": "Select Division II",
         "track": "select",
     },
     "Morris Jeff Community School": {
