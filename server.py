@@ -474,45 +474,6 @@ def rankings_softball():
     conn.close()
     return jsonify({"sport": "softball", "season": "2026", "count": len(rows), "rankings": rows})
 
-@app.route("/api/rankings/baseball")
-def rankings_baseball():
-    conn = get_db()
-    c = conn.cursor()
-    try:
-        c.execute("""
-            SELECT school, division, track, class_, district,
-                   rank, power_rating, wins, losses, ties, games_played
-            FROM power_rankings
-            WHERE sport='baseball' AND season='2026'
-            ORDER BY rank ASC
-        """)
-        rows = [dict(r) for r in c.fetchall()]
-    except Exception as e:
-        conn.close()
-        return jsonify({"error": str(e)}), 500
-    conn.close()
-    return jsonify({"sport": "baseball", "season": "2026", "count": len(rows), "rankings": rows})
-
-
-@app.route("/api/rankings/softball")
-def rankings_softball():
-    conn = get_db()
-    c = conn.cursor()
-    try:
-        c.execute("""
-            SELECT school, division, track, class_, district,
-                   rank, power_rating, wins, losses, ties, games_played
-            FROM power_rankings
-            WHERE sport='softball' AND season='2026'
-            ORDER BY rank ASC
-        """)
-        rows = [dict(r) for r in c.fetchall()]
-    except Exception as e:
-        conn.close()
-        return jsonify({"error": str(e)}), 500
-    conn.close()
-    return jsonify({"sport": "softball", "season": "2026", "count": len(rows), "rankings": rows})
-
 
 @app.route("/control-panel")
 def control_panel():
