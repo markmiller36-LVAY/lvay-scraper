@@ -24,7 +24,9 @@ def resolve_season(sport="baseball"):
     now = datetime.now()
     if sport == "football":
         return str(now.year)
-    return str(now.year + 1 if now.month >= 8 else now.year + 1)
+    # Baseball/softball: current school year ends in spring
+    # If Aug or later, next year's season; otherwise current year
+    return str(now.year + 1 if now.month >= 8 else now.year)
 
 
 def init_db():
