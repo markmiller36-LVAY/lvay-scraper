@@ -391,8 +391,8 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             print(f" - {name}")
 
     game_meta = {}
+    date_counters = {}
 
-  date_counters = {}
     for r in rows:
         school = r["school"]
         opponent = r["opponent"]
@@ -400,7 +400,6 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         week_str = r["week"] or ""
         game_date = r["game_date"] or ""
 
-        # OOS detection: explicit flag OR opponent not in school_database
         oos_flag = str(r.get("out_of_state") or "").strip().upper() in ("Y", "YES", "1", "TRUE")
         opp_in_db = get_school(opponent) is not None
         oos = oos_flag or (not opp_in_db)
@@ -414,14 +413,13 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
         # Week number
         if sport.lower() in ("baseball", "softball"):
-    try:
-        date_key = int(game_date.replace("-", "").replace("/", "").strip()[:8])
-        # Handle doubleheaders — add a counter for same-date games
-        date_count = date_counters.get((school, date_key), 0)
-        date_counters[(school, date_key)] = date_count + 1
-        week_num = date_key * 10 + date_count
-    except Exception:
-        week_num = 0
+            try:
+                date_key = int(game_date.replace("-", "").replace("/", "").strip()[:8])
+                date_count = date_counters.get((school, date_key), 0)
+                date_counters[(school, date_key)] = date_count + 1
+                week_num = date_key * 10 + date_count
+            except Exception:
+                week_num = 0
         else:
             try:
                 week_num = int(str(week_str).replace("Week ", "").strip())
