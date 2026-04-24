@@ -816,11 +816,11 @@ def get_sport_schedules(sport):
         AND g.opponent=gpp.opponent
         AND CAST(REPLACE(REPLACE(
             SUBSTR(g.game_date,1,INSTR(g.game_date,' ')-1),
-            '/',''), '-','') AS INTEGER) = gpp.week
+            '/',''), '-','') AS INTEGER) = gpp.week / 10
     )
     WHERE gpp.sport=? AND gpp.season=? AND gpp.school=?
     GROUP BY gpp.rowid
-    ORDER BY game_date ASC, gpp.opponent ASC
+    ORDER BY gpp.week ASC
 """, (sport, season, school))
         
         games = [dict(r) for r in c.fetchall()]
