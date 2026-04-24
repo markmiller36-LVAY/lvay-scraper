@@ -180,7 +180,10 @@ def load_games(conn, season=SEASON, sport=SPORT):
         FROM games
         WHERE sport=? AND season=?
           AND win_loss IN ('W', 'L', 'Tie', 'T')
-        ORDER BY school, game_date
+        ORDER BY school, 
+            SUBSTR(game_date, INSTR(game_date,'/')+INSTR(SUBSTR(game_date,INSTR(game_date,'/')+1),'/')+1, 4),
+            SUBSTR(game_date, 1, INSTR(game_date,'/')-1)*1,
+            SUBSTR(game_date, INSTR(game_date,'/')+1, INSTR(SUBSTR(game_date,INSTR(game_date,'/')+1),'/')-1)*1
     """, (sport, season))
     return c.fetchall()
 
