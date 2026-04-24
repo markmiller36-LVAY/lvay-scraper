@@ -348,14 +348,12 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     overrides = load_sheet_overrides(sport, season)
     rows = [apply_override_to_row(r, sport, season, overrides) for r in raw_rows]
         if sport.lower() in ("baseball", "softball"):
-            from datetime import datetime as dt
-            def parse_date(r):
+            def _sort_key(r):
                 try:
-                    d = r.get("game_date") or ""
-                    return dt.strptime(d.split(" ")[0], "%m/%d/%Y")
+                    return (r.get("school",""), datetime.strptime((r.get("game_date") or "").split(" ")[0], "%m/%d/%Y"))
                 except:
-                    return dt.min
-            rows.sort(key=lambda r: (r.get("school",""), parse_date(r)))
+                    return (r.get("school",""), datetime.min)
+            rows.sort(key=_sort_key)
     oos_lookup = load_oos_opponents(conn, season, sport)
     print(f"  OOS lookup: {len(oos_lookup)} games loaded")
     print(f"  Loaded {len(rows)} games after applying overrides")
