@@ -417,6 +417,51 @@ def breakdown_football(school):
     conn.close()
     return jsonify({"school": school, "calculated_pr": pr, "games": rows})
 
+@app.route("/api/breakdown/baseball/<school>")
+def breakdown_baseball(school):
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT week, opponent, result, score,
+                   opp_wins, opp_losses, opp_division,
+                   base_pts, div_bonus, opp_quality, total_pts, is_district
+            FROM game_power_points
+            WHERE sport='baseball' AND season='2026' AND school=?
+            ORDER BY week ASC
+        """, (school,))
+        rows = [dict(r) for r in c.fetchall()]
+        total = sum(r["total_pts"] for r in rows)
+        pr = round(total / len(rows), 2) if rows else 0
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
+    conn.close()
+    return jsonify({"school": school, "calculated_pr": pr, "games": rows})
+
+
+@app.route("/api/breakdown/softball/<school>")
+def breakdown_softball(school):
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT week, opponent, result, score,
+                   opp_wins, opp_losses, opp_division,
+                   base_pts, div_bonus, opp_quality, total_pts, is_district
+            FROM game_power_points
+            WHERE sport='softball' AND season='2026' AND school=?
+            ORDER BY week ASC
+        """, (school,))
+        rows = [dict(r) for r in c.fetchall()]
+        total = sum(r["total_pts"] for r in rows)
+        pr = round(total / len(rows), 2) if rows else 0
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
+    conn.close()
+    return jsonify({"school": school, "calculated_pr": pr, "games": rows})
+
 
 @app.route("/api/rankings/football")
 def rankings_football():
