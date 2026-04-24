@@ -577,7 +577,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     print(f"{'='*54}\n")
 
-    return ratings
+        return ratings
 
 
 if __name__ == "__main__":
