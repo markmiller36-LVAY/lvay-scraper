@@ -392,6 +392,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     game_meta = {}
 
+  date_counters = {}
     for r in rows:
         school = r["school"]
         opponent = r["opponent"]
@@ -413,11 +414,14 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
         # Week number
         if sport.lower() in ("baseball", "softball"):
-            # Use game_date as integer key e.g. "2026-03-15" -> 20260315
-            try:
-                week_num = int(game_date.replace("-", "").replace("/", "").strip()[:8])
-            except Exception:
-                week_num = 0
+    try:
+        date_key = int(game_date.replace("-", "").replace("/", "").strip()[:8])
+        # Handle doubleheaders — add a counter for same-date games
+        date_count = date_counters.get((school, date_key), 0)
+        date_counters[(school, date_key)] = date_count + 1
+        week_num = date_key * 10 + date_count
+    except Exception:
+        week_num = 0
         else:
             try:
                 week_num = int(str(week_str).replace("Week ", "").strip())
