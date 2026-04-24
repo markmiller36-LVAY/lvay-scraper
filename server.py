@@ -803,13 +803,13 @@ def get_sport_schedules(sport):
 
         # Get game power points joined with game_date and home_away from games table
         c.execute("""
-    c.execute("""
-    SELECT gpp.week, gpp.opponent, gpp.result, gpp.score,
+    SELECT DISTINCT
+           gpp.opponent, gpp.result, gpp.score,
            gpp.opp_wins, gpp.opp_losses, gpp.opp_division,
            gpp.base_pts, gpp.div_bonus, gpp.opp_quality,
            gpp.total_pts, gpp.is_district,
-           MIN(g.home_away) as home_away,
-           SUBSTR(MIN(g.game_date), 1, INSTR(MIN(g.game_date), ' ')-1) as game_date
+           SUBSTR(g.game_date, 1, INSTR(g.game_date, ' ')-1) as game_date,
+           g.home_away
     FROM game_power_points gpp
     LEFT JOIN games g ON (
         g.sport=gpp.sport AND g.season=gpp.season
@@ -820,10 +820,9 @@ def get_sport_schedules(sport):
             '/',''), '-','') AS INTEGER) = gpp.week
     )
     WHERE gpp.sport=? AND gpp.season=? AND gpp.school=?
-    GROUP BY gpp.week, gpp.opponent, gpp.result
-    ORDER BY gpp.week ASC
+    GROUP BY gpp.opponent, gpp.result, gpp.score, gpp.base_pts, gpp.div_bonus, gpp.opp_quality
+    ORDER BY game_date ASC, gpp.opponent ASC
 """, (sport, season, school))
-
         
         games = [dict(r) for r in c.fetchall()]
 
