@@ -411,13 +411,19 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         else:
             continue
 
-        # Week number — baseball/softball use game_date ordering, week may be blank
-        try:
-            week_num = int(str(week_str).replace("Week ", "").strip())
-        except Exception:
-            week_num = 0
+        # Week number
+        if sport.lower() in ("baseball", "softball"):
+            # Use game_date as integer key e.g. "2026-03-15" -> 20260315
+            try:
+                week_num = int(game_date.replace("-", "").replace("/", "").strip()[:8])
+            except Exception:
+                week_num = 0
+        else:
+            try:
+                week_num = int(str(week_str).replace("Week ", "").strip())
+            except Exception:
+                week_num = 0
 
-        # Use game_date as secondary key for baseball/softball (no week numbers)
         game_key = (school, week_num) if week_num else (school, game_date)
 
         # OOS record lookup — for baseball/softball use opponent name match
