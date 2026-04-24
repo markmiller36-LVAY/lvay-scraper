@@ -776,47 +776,67 @@ def get_sport_schedules(sport):
     school_filter = request.args.get("school")
     season = os.environ.get("SEASON_YEAR") or resolve_season(sport)
 
+    # Get school list from power_rankings so we have division/class/district/PR
     if school_filter:
         c.execute("""
-            SELECT DISTINCT school FROM games
-            WHERE sport=? AND season=?
-            AND LOWER(school) LIKE LOWER(?)
-            ORDER BY school ASC
+            SELECT pr.school, pr.division, pr.track, pr.class_, pr.district,
+                   pr.power_rating, pr.wins, pr.losses, pr.ties, pr.games_played, pr.rank
+            FROM power_rankings pr
+            WHERE pr.sport=? AND pr.season=?
+            AND LOWER(pr.school) LIKE LOWER(?)
+            ORDER BY pr.class_ DESC, pr.district ASC, pr.school ASC
         """, (sport, season, f"%{school_filter}%"))
     else:
         c.execute("""
-            SELECT DISTINCT school FROM games
-            WHERE sport=? AND season=?
-            ORDER BY school ASC
+            SELECT pr.school, pr.division, pr.track, pr.class_, pr.district,
+                   pr.power_rating, pr.wins, pr.losses, pr.ties, pr.games_played, pr.rank
+            FROM power_rankings pr
+            WHERE pr.sport=? AND pr.season=?
+            ORDER BY pr.class_ DESC, pr.district ASC, pr.school ASC
         """, (sport, season))
 
-    school_rows = c.fetchall()
+    school_rows = [dict(r) for r in c.fetchall()]
     schools = []
 
-    for row in school_rows:
-        school = row[0]
-        c.execute("""
-            SELECT game_date, opponent, home_away, win_loss, score,
-                   class_, district, opponent_class, out_of_state
-            FROM games
-            WHERE school=? AND sport=? AND season=?
-            ORDER BY game_date ASC
-        """, (school, sport, season))
+    for s in school_rows:
+        school = s['school']
 
-        games = [dict(zip([d[0] for d in c.description], r)) for r in c.fetchall()]
-        wins   = sum(1 for g in games if (g["win_loss"] or "").upper() in ("W","WIN"))
-        losses = sum(1 for g in games if (g["win_loss"] or "").upper() in ("L","LOSS"))
-        ties   = sum(1 for g in games if (g["win_loss"] or "").upper() in ("T","TIE"))
+        # Get game power points joined with game_date and home_away from games table
+        c.execute("""
+            SELECT gpp.week, gpp.opponent, gpp.result, gpp.score,
+                   gpp.opp_wins, gpp.opp_losses, gpp.opp_division,
+                   gpp.base_pts, gpp.div_bonus, gpp.opp_quality,
+                   gpp.total_pts, gpp.is_district,
+                   g.home_away, g.game_date
+            FROM game_power_points gpp
+            LEFT JOIN games g ON (
+                g.sport=gpp.sport AND g.season=gpp.season
+                AND g.school=gpp.school
+                AND g.game_date IS NOT NULL
+                AND g.opponent=gpp.opponent
+            )
+            WHERE gpp.sport=? AND gpp.season=? AND gpp.school=?
+            ORDER BY g.game_date ASC
+        """, (sport, season, school))
+
+        games = [dict(r) for r in c.fetchall()]
 
         schools.append({
-            "school":  school,
-            "sport":   sport,
-            "season":  season,
-            "record":  f"{wins}-{losses}-{ties}" if ties else f"{wins}-{losses}",
-            "wins":    wins,
-            "losses":  losses,
-            "ties":    ties,
-            "games":   games,
+            "school":       school,
+            "sport":        sport,
+            "season":       season,
+            "division":     s.get('division', ''),
+            "track":        s.get('track', ''),
+            "class_":       s.get('class_', ''),
+            "district":     s.get('district', ''),
+            "power_rating": s.get('power_rating', 0),
+            "rank":         s.get('rank', 0),
+            "wins":         s.get('wins', 0),
+            "losses":       s.get('losses', 0),
+            "ties":         s.get('ties', 0),
+            "games_played": s.get('games_played', 0),
+            "record":       f"{s.get('wins',0)}-{s.get('losses',0)}",
+            "games":        games,
         })
 
     conn.close()
