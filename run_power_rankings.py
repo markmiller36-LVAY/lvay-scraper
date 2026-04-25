@@ -78,10 +78,21 @@ def init_tables(conn):
             opp_quality    REAL,
             total_pts      REAL,
             is_district    INTEGER DEFAULT 0,
+            game_date      TEXT,
+            home_away      TEXT,
             calculated_at  TEXT,
             UNIQUE(sport, season, school, week)
         )
     """)
+    # Add game_date and home_away columns if they don't exist (for existing DBs)
+    try:
+        conn.execute("ALTER TABLE game_power_points ADD COLUMN game_date TEXT")
+    except Exception:
+        pass
+    try:
+        conn.execute("ALTER TABLE game_power_points ADD COLUMN home_away TEXT")
+    except Exception:
+        pass
     conn.commit()
 
 
@@ -424,6 +435,8 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             "opp_wins": opp_wins,
             "opp_losses": opp_losses,
             "opp_division": opp_division,
+            "game_date": game_date.split(" ")[0] if game_date else "",
+            "home_away": r.get("home_away") or "",
         }
 
         engine.add_game(GameResult(
@@ -493,8 +506,9 @@ def run_power_rankings(season=SEASON, sport=SPORT):
                 INSERT OR REPLACE INTO game_power_points
                 (sport, season, school, week, opponent, result, score,
                  opp_wins, opp_losses, opp_division,
-                 base_pts, div_bonus, opp_quality, total_pts, is_district, calculated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 base_pts, div_bonus, opp_quality, total_pts, is_district,
+                 game_date, home_away, calculated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 sport, season, r.name, week_num,
                 meta.get("opponent", g["opponent"]),
@@ -508,6 +522,8 @@ def run_power_rankings(season=SEASON, sport=SPORT):
                 g["oppq"],
                 g["total"],
                 is_district,
+                meta.get("game_date", ""),
+                meta.get("home_away", ""),
                 now_str
             ))
 
