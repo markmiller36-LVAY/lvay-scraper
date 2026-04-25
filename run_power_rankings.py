@@ -30,11 +30,6 @@ GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
 
 
 def strip_district_prefix(class_str: str) -> str:
-    """
-    Convert LHSAA baseball/softball class format to plain class.
-    e.g. '1-5A' -> '5A', '2-4A' -> '4A', '3-2A' -> '2A'
-    Plain values like '5A', 'B', 'C' pass through unchanged.
-    """
     if not class_str:
         return ""
     s = str(class_str).strip()
@@ -98,11 +93,8 @@ def get_gspread_client():
     if not GOOGLE_SERVICE_ACCOUNT_JSON:
         print("  No GOOGLE_SERVICE_ACCOUNT_JSON found; skipping overrides")
         return None
-
     creds_dict = json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-    ]
+    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
     return gspread.authorize(creds)
 
@@ -120,17 +112,10 @@ def normalize_key_text(value) -> str:
 
 
 def load_sheet_overrides(sport: str, season: str) -> dict:
-    """
-    Expected sheet headers:
-      sport, season, school, game_date, opponent,
-      override_win_loss, override_score, override_home_away, notes, active
-    """
     client = get_gspread_client()
     if not client:
         return {}
-
     tab_name = get_override_tab_name(sport, season)
-
     try:
         if not GOOGLE_SHEET_ID:
             print("  No GOOGLE_SHEET_ID found; skipping overrides")
@@ -140,10 +125,8 @@ def load_sheet_overrides(sport: str, season: str) -> dict:
     except Exception as e:
         print(f"  Override tab not found or unreadable: {tab_name} ({e})")
         return {}
-
     rows = ws.get_all_records()
     overrides = {}
-
     for row in rows:
         row_sport = normalize_text(row.get("sport"))
         row_season = normalize_text(row.get("season"))
@@ -151,14 +134,12 @@ def load_sheet_overrides(sport: str, season: str) -> dict:
         game_date = normalize_text(row.get("game_date"))
         opponent = normalize_key_text(row.get("opponent"))
         active = normalize_bool(row.get("active"))
-
         if not active:
             continue
         if row_sport != sport or row_season != season:
             continue
         if not school or not game_date or not opponent:
             continue
-
         key = (row_sport, row_season, school, game_date, opponent)
         overrides[key] = {
             "override_win_loss": normalize_text(row.get("override_win_loss")),
@@ -166,7 +147,6 @@ def load_sheet_overrides(sport: str, season: str) -> dict:
             "override_home_away": normalize_text(row.get("override_home_away")),
             "notes": normalize_text(row.get("notes")),
         }
-
     print(f"  Loaded {len(overrides)} active overrides from '{tab_name}'")
     return overrides
 
@@ -200,10 +180,6 @@ def load_scores(conn, season=SEASON, sport=SPORT):
 
 
 def load_oos_opponents(conn, season=SEASON, sport=SPORT):
-    """
-    For football: keyed by (school, week) — legacy behavior
-    For baseball/softball: keyed by (school, opponent) — opponent name match
-    """
     c = conn.cursor()
     try:
         c.execute("""
@@ -213,8 +189,6 @@ def load_oos_opponents(conn, season=SEASON, sport=SPORT):
         """, (sport, season))
         oos = {}
         for r in c.fetchall():
-            # Key by (school, opponent) for baseball/softball
-            # Also store a normalized version for fuzzy matching
             key = (r["school"], r["opponent"])
             oos[key] = {
                 "opponent": r["opponent"],
@@ -230,17 +204,8 @@ def load_oos_opponents(conn, season=SEASON, sport=SPORT):
 
 
 def find_oos_record(oos_lookup, school, opponent):
-    """
-    Look up OOS record by school + opponent name.
-    Tries exact match first, then partial match on the base school name
-    (stripping state suffixes like '- TX - UIL').
-    """
-    # Exact match
     if (school, opponent) in oos_lookup:
         return oos_lookup[(school, opponent)]
-
-    # Partial match — strip state/association suffixes from DB opponent name
-    # DB has e.g. "Pine Tree - TX - UIL", sheet has "Pine Tree TX"
     opponent_base = opponent.split(" - ")[0].strip().lower()
     for (s, o), data in oos_lookup.items():
         if s != school:
@@ -248,7 +213,6 @@ def find_oos_record(oos_lookup, school, opponent):
         o_base = o.split(" - ")[0].strip().lower()
         if opponent_base == o_base or o_base in opponent_base or opponent_base in o_base:
             return data
-
     return None
 
 
@@ -270,7 +234,6 @@ def build_school_records(rows):
 
 def apply_override_to_row(row, sport: str, season: str, overrides: dict) -> dict:
     row_data = dict(row)
-
     key = (
         sport,
         season,
@@ -278,18 +241,15 @@ def apply_override_to_row(row, sport: str, season: str, overrides: dict) -> dict
         normalize_text(row_data.get("game_date")),
         normalize_key_text(row_data.get("opponent")),
     )
-
     override = overrides.get(key)
     if not override:
         return row_data
-
     if override.get("override_win_loss"):
         row_data["win_loss"] = override["override_win_loss"]
     if override.get("override_score"):
         row_data["score"] = override["override_score"]
     if override.get("override_home_away"):
         row_data["home_away"] = override["override_home_away"]
-
     return row_data
 
 
@@ -304,26 +264,17 @@ def print_football_division_dump(ratings):
         "Select Division III",
         "Select Division IV",
     ]
-
     print("\n" + "=" * 54)
     print("FULL DIVISION DUMP (FOR AUDIT)")
     print("=" * 54)
-
     for division in division_order:
         print(f"\n{division.upper()}")
         print("-" * 54)
-
         div_list = [r for r in ratings if getattr(r, "division", "") == division]
-        div_list = sorted(
-            div_list,
-            key=lambda x: getattr(x, "power_rating", 0),
-            reverse=True
-        )
-
+        div_list = sorted(div_list, key=lambda x: getattr(x, "power_rating", 0), reverse=True)
         if not div_list:
             print("  (no teams)")
             continue
-
         for i, r in enumerate(div_list, 1):
             print(f"{i:2}. {r.name:<30} PR={round(r.power_rating, 2):>6} | {r.record}")
 
@@ -347,13 +298,16 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     overrides = load_sheet_overrides(sport, season)
     rows = [apply_override_to_row(r, sport, season, overrides) for r in raw_rows]
-        if sport.lower() in ("baseball", "softball"):
-            def _sort_key(r):
-                try:
-                    return (r.get("school",""), datetime.strptime((r.get("game_date") or "").split(" ")[0], "%m/%d/%Y"))
-                except:
-                    return (r.get("school",""), datetime.min)
-            rows.sort(key=_sort_key)
+
+    # Sort by actual date for baseball/softball (dates stored as M/D/YYYY strings)
+    if sport.lower() in ("baseball", "softball"):
+        def _sort_key(r):
+            try:
+                return (r.get("school", ""), datetime.strptime((r.get("game_date") or "").split(" ")[0], "%m/%d/%Y"))
+            except Exception:
+                return (r.get("school", ""), datetime.min)
+        rows.sort(key=_sort_key)
+
     oos_lookup = load_oos_opponents(conn, season, sport)
     print(f"  OOS lookup: {len(oos_lookup)} games loaded")
     print(f"  Loaded {len(rows)} games after applying overrides")
@@ -434,7 +388,6 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
         game_key = (school, week_num) if week_num else (school, game_date)
 
-        # OOS record lookup — for baseball/softball use opponent name match
         oos_data = None
         if oos and sport.lower() in ("baseball", "softball"):
             oos_data = find_oos_record(oos_lookup, school, opponent)
@@ -575,7 +528,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     print(f"{'='*54}\n")
 
-        return ratings
+    return ratings
 
 
 if __name__ == "__main__":
