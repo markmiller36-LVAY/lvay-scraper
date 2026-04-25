@@ -372,14 +372,14 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             continue
 
         if sport.lower() in ("baseball", "softball"):
-    try:
-        parsed = datetime.strptime(game_date.split(" ")[0], "%m/%d/%Y")
-        date_key = int(parsed.strftime("%Y%m%d"))
-        date_count = date_counters.get((school, date_key), 0)
-        date_counters[(school, date_key)] = date_count + 1
-        week_num = date_key * 10 + date_count
-    except Exception:
-        week_num = 0
+            try:
+                parsed = datetime.strptime(game_date.split(" ")[0], "%m/%d/%Y")
+                date_key = int(parsed.strftime("%Y%m%d"))
+                date_count = date_counters.get((school, date_key), 0)
+                date_counters[(school, date_key)] = date_count + 1
+                week_num = date_key * 10 + date_count
+            except Exception:
+                week_num = 0
 
         game_key = (school, week_num) if week_num else (school, game_date)
 
