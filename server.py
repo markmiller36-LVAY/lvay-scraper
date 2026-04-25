@@ -803,25 +803,15 @@ def get_sport_schedules(sport):
 
         # Get game power points joined with game_date and home_away from games table
         c.execute("""
-    SELECT gpp.opponent, gpp.result, gpp.score,
-           gpp.opp_wins, gpp.opp_losses, gpp.opp_division,
-           gpp.base_pts, gpp.div_bonus, gpp.opp_quality,
-           gpp.total_pts, gpp.is_district,
-           SUBSTR(MIN(g.game_date), 1, INSTR(MIN(g.game_date),' ')-1) as game_date,
-           MIN(g.home_away) as home_away
-    FROM game_power_points gpp
-    LEFT JOIN games g ON (
-        g.sport=gpp.sport AND g.season=gpp.season
-        AND g.school=gpp.school
-        AND g.opponent=gpp.opponent
-        AND CAST(REPLACE(REPLACE(
-            SUBSTR(g.game_date,1,INSTR(g.game_date,' ')-1),
-            '/',''), '-','') AS INTEGER) = gpp.week / 10
-    )
-    WHERE gpp.sport=? AND gpp.season=? AND gpp.school=?
-    GROUP BY gpp.rowid
-    ORDER BY gpp.week ASC
-""", (sport, season, school))
+            SELECT gpp.opponent, gpp.result, gpp.score,
+                   gpp.opp_wins, gpp.opp_losses, gpp.opp_division,
+                   gpp.base_pts, gpp.div_bonus, gpp.opp_quality,
+                   gpp.total_pts, gpp.is_district,
+                   gpp.game_date, gpp.home_away
+            FROM game_power_points gpp
+            WHERE gpp.sport=? AND gpp.season=? AND gpp.school=?
+            ORDER BY gpp.week ASC
+        """, (sport, season, school))
         
         games = [dict(r) for r in c.fetchall()]
 
