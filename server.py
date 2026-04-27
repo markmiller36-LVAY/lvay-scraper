@@ -24,8 +24,6 @@ def resolve_season(sport="baseball"):
     now = datetime.now()
     if sport == "football":
         return str(now.year)
-    # Baseball/softball: current school year ends in spring
-    # If Aug or later, next year's season; otherwise current year
     return str(now.year + 1 if now.month >= 8 else now.year)
 
 
@@ -93,7 +91,6 @@ def init_db():
 
 with app.app_context():
     init_db()
-    # Auto-import OOS opponent records on startup
     try:
         from import_oos_2025 import run as import_oos
         import_oos()
@@ -254,7 +251,6 @@ def fix_stfrederick_oos():
 
 @app.route("/api/fix/new-oos-games")
 def fix_new_oos_games():
-    """Insert missing OOS games that scraper dropped from games table."""
     conn = get_db()
     c = conn.cursor()
     missing_games = [
@@ -283,7 +279,6 @@ def fix_new_oos_games():
 
 @app.route("/api/fix/haynesville-oos")
 def fix_haynesville_oos():
-    """Insert Haynesville WK2 Harmony Grove AR game (missed by scraper)."""
     conn = get_db()
     c = conn.cursor()
     try:
@@ -304,7 +299,6 @@ def fix_haynesville_oos():
 
 @app.route("/api/fix/stedmund-oos")
 def fix_stedmund_oos():
-    """Insert St. Edmund WK2 Muenster Sacred Heart TX game (missed by scraper)."""
     conn = get_db()
     c = conn.cursor()
     try:
@@ -417,6 +411,7 @@ def breakdown_football(school):
     conn.close()
     return jsonify({"school": school, "calculated_pr": pr, "games": rows})
 
+
 @app.route("/api/breakdown/baseball/<school>")
 def breakdown_baseball(school):
     conn = get_db()
@@ -470,7 +465,8 @@ def rankings_football():
     try:
         c.execute("""
             SELECT school, division, track, class_, district,
-                   rank, power_rating, wins, losses, ties, games_played
+                   rank, power_rating, wins, losses, ties, games_played,
+                   COALESCE(strength_factor, 0) as strength_factor
             FROM power_rankings
             WHERE sport='football' AND season='2025'
             ORDER BY rank ASC
@@ -482,6 +478,7 @@ def rankings_football():
     conn.close()
     return jsonify({"sport": "football", "season": "2025", "count": len(rows), "rankings": rows})
 
+
 @app.route("/api/rankings/baseball")
 def rankings_baseball():
     conn = get_db()
@@ -489,7 +486,8 @@ def rankings_baseball():
     try:
         c.execute("""
             SELECT school, division, track, class_, district,
-                   rank, power_rating, wins, losses, ties, games_played
+                   rank, power_rating, wins, losses, ties, games_played,
+                   COALESCE(strength_factor, 0) as strength_factor
             FROM power_rankings
             WHERE sport='baseball' AND season='2026'
             ORDER BY rank ASC
@@ -509,7 +507,8 @@ def rankings_softball():
     try:
         c.execute("""
             SELECT school, division, track, class_, district,
-                   rank, power_rating, wins, losses, ties, games_played
+                   rank, power_rating, wins, losses, ties, games_played,
+                   COALESCE(strength_factor, 0) as strength_factor
             FROM power_rankings
             WHERE sport='softball' AND season='2026'
             ORDER BY rank ASC
@@ -581,18 +580,16 @@ def control_panel():
 </head>
 <body>
 <h1>LVAY — Football Control Panel</h1>
-
 <div class="section">
   <div class="section-title">Formula reference — LHSAA 14.12</div>
   <div class="formula-row"><span class="formula-label">Win base points</span><span class="formula-val">10</span><span class="formula-note">per game</span></div>
   <div class="formula-row"><span class="formula-label">Loss base points</span><span class="formula-val">0</span></div>
   <div class="formula-row"><span class="formula-label">Tie base points</span><span class="formula-val">5</span></div>
-  <div class="formula-row"><span class="formula-label">In-state div bonus</span><span class="formula-val">+2</span><span class="formula-note">per div higher — requires both class AND div higher</span></div>
-  <div class="formula-row"><span class="formula-label">OOS class bonus</span><span class="formula-val">+2</span><span class="formula-note">per class higher — class only, no div requirement</span></div>
-  <div class="formula-row"><span class="formula-label">Opponent quality (OppQ)</span><span class="formula-val">×10</span><span class="formula-note">(opp wins ÷ opp games) × 10, added every game</span></div>
-  <div class="formula-row"><span class="formula-label">Final power rating</span><span class="formula-val">÷ GP</span><span class="formula-note">total points ÷ games played, rounded to 2dp</span></div>
+  <div class="formula-row"><span class="formula-label">In-state div bonus</span><span class="formula-val">+2</span><span class="formula-note">per div higher</span></div>
+  <div class="formula-row"><span class="formula-label">OOS class bonus</span><span class="formula-val">+2</span><span class="formula-note">per class higher</span></div>
+  <div class="formula-row"><span class="formula-label">Opponent quality (OppQ)</span><span class="formula-val">×10</span><span class="formula-note">(opp wins ÷ opp games) × 10</span></div>
+  <div class="formula-row"><span class="formula-label">Final power rating</span><span class="formula-val">÷ GP</span><span class="formula-note">total points ÷ games played</span></div>
 </div>
-
 <div class="section">
   <div class="section-title">Live rankings by division</div>
   <div class="divtabs">
@@ -608,12 +605,11 @@ def control_panel():
   <div id="rank-status" class="status">Loading rankings...</div>
   <div class="rank-wrap" id="rank-wrap" style="display:none">
     <table>
-      <thead><tr><th>#</th><th>School</th><th>Class</th><th>Record</th><th>GP</th><th>PR</th></tr></thead>
+      <thead><tr><th>#</th><th>School</th><th>Class</th><th>Record</th><th>GP</th><th>PR</th><th>SF</th></tr></thead>
       <tbody id="rank-body"></tbody>
     </table>
   </div>
 </div>
-
 <div class="section">
   <div class="section-title">School lookup — game-by-game breakdown</div>
   <div class="search-row">
@@ -646,19 +642,17 @@ def control_panel():
     </div>
   </div>
 </div>
-
 <div class="section">
   <div class="section-title">Pipeline status</div>
   <div class="checklist-item"><div class="dot done"></div><span>Scraper — LHSAA schedule pages → SQLite</span></div>
   <div class="checklist-item"><div class="dot done"></div><span>OOS import — out-of-state opponent records</span></div>
   <div class="checklist-item"><div class="dot done"></div><span>Power rating engine (power_rating_engine.py)</span></div>
   <div class="checklist-item"><div class="dot done"></div><span>Rankings calculate endpoint</span></div>
-  <div class="checklist-item"><div class="dot done"></div><span>Google Sheets exporter — all 8 division tabs</span></div>
-  <div class="checklist-item"><div class="dot done"></div><span>WordPress display via HTML iframe endpoints</span></div>
+  <div class="checklist-item"><div class="dot done"></div><span>Google Sheets exporter</span></div>
+  <div class="checklist-item"><div class="dot done"></div><span>WordPress display via shortcodes</span></div>
   <div class="checklist-item"><div class="dot done"></div><span>99.3% accuracy vs LHSAA (301/303 exact)</span></div>
-  <div class="checklist-item"><div class="dot todo"></div><span style="color:#999">Add OppQ as visible column in rankings display</span></div>
+  <div class="checklist-item"><div class="dot done"></div><span>Strength Factor (SF) tiebreaker column added</span></div>
 </div>
-
 <script>
   let allRankings = [];
   let currentDiv = 'Non-Select Division I';
@@ -705,10 +699,11 @@ def control_panel():
       tr.className = 'clickable';
       const cls = s.class_ || s.class || '';
       const rec = (s.wins||0) + '-' + (s.losses||0);
+      const sf = (+(s.strength_factor||0)).toFixed(2);
       const badge = s.division.startsWith('Select')
         ? '<span class="badge badge-s">S</span>'
         : '<span class="badge badge-ns">NS</span>';
-      tr.innerHTML = `<td>${i+1}</td><td>${s.school}${badge}</td><td>${cls}</td><td>${rec}</td><td>${s.games_played||'—'}</td><td><strong>${(+s.power_rating).toFixed(2)}</strong></td>`;
+      tr.innerHTML = `<td>${i+1}</td><td>${s.school}${badge}</td><td>${cls}</td><td>${rec}</td><td>${s.games_played||'—'}</td><td><strong>${(+s.power_rating).toFixed(2)}</strong></td><td>${sf}</td>`;
       tr.onclick = () => { document.getElementById('school-input').value = s.school; lookupSchool(); };
       tbody.appendChild(tr);
     });
@@ -726,17 +721,11 @@ def control_panel():
     ss.textContent = 'Loading ' + name + '...';
     sr.style.display = 'none';
     try {
-      const r = await fetch('/api/gamepoints/' + encodeURIComponent(name));
+      const r = await fetch('/api/breakdown/football/' + encodeURIComponent(name));
       if (!r.ok) throw new Error('not found');
       const d = await r.json();
       document.getElementById('s-name').textContent = d.school;
-      document.getElementById('s-meta').textContent = (d.division||'') + ' · District ' + (d.district||'—');
-      document.getElementById('s-pr').textContent = (+(d.power_rating||0)).toFixed(2);
-      document.getElementById('s-rank').textContent = 'Rank #' + (d.rank||'—');
-      document.getElementById('s-record').textContent = d.record||'—';
-      document.getElementById('s-gp').textContent = d.total_games||'—';
-      document.getElementById('s-class').textContent = d.class||d.class_||'—';
-      document.getElementById('s-district').textContent = d.district||'—';
+      document.getElementById('s-pr').textContent = (+(d.calculated_pr||0)).toFixed(2);
       const tbody = document.getElementById('s-games');
       tbody.innerHTML = '';
       (d.games||[]).forEach(g => {
@@ -776,7 +765,6 @@ def get_sport_schedules(sport):
     school_filter = request.args.get("school")
     season = os.environ.get("SEASON_YEAR") or resolve_season(sport)
 
-    # Get school list from power_rankings so we have division/class/district/PR
     if school_filter:
         c.execute("""
             SELECT pr.school, pr.division, pr.track, pr.class_, pr.district,
@@ -800,8 +788,6 @@ def get_sport_schedules(sport):
 
     for s in school_rows:
         school = s['school']
-
-        # Get game power points joined with game_date and home_away from games table
         c.execute("""
             SELECT gpp.opponent, gpp.result, gpp.score,
                    gpp.opp_wins, gpp.opp_losses, gpp.opp_division,
@@ -812,7 +798,7 @@ def get_sport_schedules(sport):
             WHERE gpp.sport=? AND gpp.season=? AND gpp.school=?
             ORDER BY gpp.week ASC
         """, (sport, season, school))
-        
+
         games = [dict(r) for r in c.fetchall()]
 
         schools.append({
@@ -840,6 +826,7 @@ def get_sport_schedules(sport):
         "count":   len(schools),
         "schools": schools
     })
+
 
 @app.route("/api/build/baseball-sheets")
 def build_baseball_sheets():
