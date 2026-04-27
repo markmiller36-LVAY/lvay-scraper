@@ -42,24 +42,32 @@ def strip_district_prefix(class_str: str) -> str:
 def init_tables(conn):
     conn.execute("""
         CREATE TABLE IF NOT EXISTS power_rankings (
-            id            INTEGER PRIMARY KEY AUTOINCREMENT,
-            sport         TEXT,
-            season        TEXT,
-            school        TEXT,
-            division      TEXT,
-            track         TEXT,
-            class_        TEXT,
-            district      INTEGER,
-            rank          INTEGER,
-            power_rating  REAL,
-            wins          INTEGER,
-            losses        INTEGER,
-            ties          INTEGER,
-            games_played  INTEGER,
-            calculated_at TEXT,
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            sport           TEXT,
+            season          TEXT,
+            school          TEXT,
+            division        TEXT,
+            track           TEXT,
+            class_          TEXT,
+            district        INTEGER,
+            rank            INTEGER,
+            power_rating    REAL,
+            wins            INTEGER,
+            losses          INTEGER,
+            ties            INTEGER,
+            games_played    INTEGER,
+            strength_factor REAL,
+            calculated_at   TEXT,
             UNIQUE(sport, season, school)
         )
     """)
+    # Add columns for existing DBs
+    for col in ["strength_factor REAL", "ties INTEGER", "games_played INTEGER", "rank INTEGER", "track TEXT"]:
+        try:
+            conn.execute(f"ALTER TABLE power_rankings ADD COLUMN {col}")
+        except Exception:
+            pass
+
     conn.execute("""
         CREATE TABLE IF NOT EXISTS game_power_points (
             id             INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -84,15 +92,12 @@ def init_tables(conn):
             UNIQUE(sport, season, school, week)
         )
     """)
-    # Add game_date and home_away columns if they don't exist (for existing DBs)
-    try:
-        conn.execute("ALTER TABLE game_power_points ADD COLUMN game_date TEXT")
-    except Exception:
-        pass
-    try:
-        conn.execute("ALTER TABLE game_power_points ADD COLUMN home_away TEXT")
-    except Exception:
-        pass
+    for col in ["game_date TEXT", "home_away TEXT"]:
+        try:
+            conn.execute(f"ALTER TABLE game_power_points ADD COLUMN {col}")
+        except Exception:
+            pass
+
     conn.commit()
 
 
@@ -266,14 +271,10 @@ def apply_override_to_row(row, sport: str, season: str, overrides: dict) -> dict
 
 def print_football_division_dump(ratings):
     division_order = [
-        "Non-Select Division I",
-        "Non-Select Division II",
-        "Non-Select Division III",
-        "Non-Select Division IV",
-        "Select Division I",
-        "Select Division II",
-        "Select Division III",
-        "Select Division IV",
+        "Non-Select Division I", "Non-Select Division II",
+        "Non-Select Division III", "Non-Select Division IV",
+        "Select Division I", "Select Division II",
+        "Select Division III", "Select Division IV",
     ]
     print("\n" + "=" * 54)
     print("FULL DIVISION DUMP (FOR AUDIT)")
@@ -310,7 +311,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     overrides = load_sheet_overrides(sport, season)
     rows = [apply_override_to_row(r, sport, season, overrides) for r in raw_rows]
 
-    # Sort by actual date for baseball/softball (dates stored as M/D/YYYY strings)
+    # Sort by actual date for baseball/softball
     if sport.lower() in ("baseball", "softball"):
         def _sort_key(r):
             try:
@@ -476,15 +477,20 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         class_ = db_info["class"] if db_info else ""
         district = db_info["district"] if db_info else None
 
+        # Calculate strength factor = average OppQ across all games
+        opp_qualities = [g["oppq"] for g in r.breakdown if g.get("oppq") is not None]
+        strength_factor = round(sum(opp_qualities) / len(opp_qualities), 2) if opp_qualities else 0.0
+
         c.execute("""
             INSERT OR REPLACE INTO power_rankings
             (sport, season, school, division, track, class_, district,
-             rank, power_rating, wins, losses, ties, games_played, calculated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             rank, power_rating, wins, losses, ties, games_played,
+             strength_factor, calculated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             sport, season, r.name, division, track, class_, district,
             r.rank, r.power_rating, r.wins, r.losses, r.ties,
-            r.games_played, now_str
+            r.games_played, strength_factor, now_str
         ))
 
         for g in r.breakdown:
