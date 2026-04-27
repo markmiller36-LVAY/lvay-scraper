@@ -11,6 +11,7 @@ and writes results to:
 
 import json
 import os
+import re
 import sqlite3
 from datetime import datetime
 
@@ -39,6 +40,18 @@ def strip_district_prefix(class_str: str) -> str:
     return s
 
 
+def parse_game_date(game_date: str) -> datetime:
+    """Parse LHSAA game dates robustly. Handles both:
+      '2/28/2026 6:00:00 PMSat'  (space before day name suffix)
+      '2/28/2026Sat'             (no space — tournament format)
+    """
+    if not game_date:
+        raise ValueError("Empty game_date")
+    date_part = re.split(r'\s', game_date)[0]        # grab up to first whitespace
+    date_part = re.sub(r'[A-Za-z]+$', '', date_part)  # strip trailing day name (Mon, Tue, etc.)
+    return datetime.strptime(date_part, "%m/%d/%Y")
+
+
 def init_tables(conn):
     conn.execute("""
         CREATE TABLE IF NOT EXISTS power_rankings (
@@ -61,7 +74,6 @@ def init_tables(conn):
             UNIQUE(sport, season, school)
         )
     """)
-    # Add columns for existing DBs
     for col in ["strength_factor REAL", "ties INTEGER", "games_played INTEGER", "rank INTEGER", "track TEXT"]:
         try:
             conn.execute(f"ALTER TABLE power_rankings ADD COLUMN {col}")
@@ -80,6 +92,7 @@ def init_tables(conn):
             score          TEXT,
             opp_wins       INTEGER,
             opp_losses     INTEGER,
+            opp_ties       INTEGER DEFAULT 0,
             opp_division   TEXT,
             base_pts       REAL,
             div_bonus      REAL,
@@ -92,7 +105,7 @@ def init_tables(conn):
             UNIQUE(sport, season, school, week)
         )
     """)
-    for col in ["game_date TEXT", "home_away TEXT"]:
+    for col in ["game_date TEXT", "home_away TEXT", "opp_ties INTEGER DEFAULT 0"]:
         try:
             conn.execute(f"ALTER TABLE game_power_points ADD COLUMN {col}")
         except Exception:
@@ -212,6 +225,7 @@ def load_oos_opponents(conn, season=SEASON, sport=SPORT):
                 "class_": "",
                 "opp_wins": r["opp_wins"],
                 "opp_losses": r["opp_losses"],
+                "opp_ties": 0,
             }
         return oos
     except Exception as e:
@@ -315,7 +329,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     if sport.lower() in ("baseball", "softball"):
         def _sort_key(r):
             try:
-                return (r.get("school", ""), datetime.strptime((r.get("game_date") or "").split(" ")[0], "%m/%d/%Y"))
+                return (r.get("school", ""), parse_game_date(r.get("game_date") or ""))
             except Exception:
                 return (r.get("school", ""), datetime.min)
         rows.sort(key=_sort_key)
@@ -386,7 +400,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         # Week number
         if sport.lower() in ("baseball", "softball"):
             try:
-                parsed = datetime.strptime(game_date.split(" ")[0], "%m/%d/%Y")
+                parsed = parse_game_date(game_date)
                 date_key = int(parsed.strftime("%Y%m%d"))
                 date_count = date_counters.get((school, date_key), 0)
                 date_counters[(school, date_key)] = date_count + 1
@@ -408,12 +422,14 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         if oos_data:
             opp_wins = oos_data["opp_wins"]
             opp_losses = oos_data["opp_losses"]
+            opp_ties = oos_data.get("opp_ties", 0)
             opp_division = oos_data.get("division", "Unknown")
             opp_class = strip_district_prefix(oos_data.get("class_", ""))
             oos = True
         elif oos:
             opp_wins = 0
             opp_losses = 0
+            opp_ties = 0
             opp_division = "Unknown"
             raw_opp_class = r.get("opponent_class") or ""
             opp_class = strip_district_prefix(raw_opp_class)
@@ -422,6 +438,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             opp_record = school_records.get(opponent, {"wins": 0, "losses": 0, "ties": 0})
             opp_wins = opp_record["wins"]
             opp_losses = opp_record["losses"]
+            opp_ties = opp_record["ties"]
             opp_info = get_school(opponent)
             opp_division = opp_info["division"] if opp_info else "Unknown"
             raw_opp_class = r.get("opponent_class") or ""
@@ -430,14 +447,15 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         score = r.get("score") or scores_lookup.get((school, str(week_num)), "")
 
         game_meta[game_key] = {
-            "opponent": opponent,
-            "result": result,
-            "score": score,
-            "opp_wins": opp_wins,
-            "opp_losses": opp_losses,
+            "opponent":    opponent,
+            "result":      result,
+            "score":       score,
+            "opp_wins":    opp_wins,
+            "opp_losses":  opp_losses,
+            "opp_ties":    opp_ties,
             "opp_division": opp_division,
-            "game_date": game_date.split(" ")[0] if game_date else "",
-            "home_away": r.get("home_away") or "",
+            "game_date":   game_date.split(" ")[0] if game_date else "",
+            "home_away":   r.get("home_away") or "",
         }
 
         engine.add_game(GameResult(
@@ -477,7 +495,6 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         class_ = db_info["class"] if db_info else ""
         district = db_info["district"] if db_info else None
 
-        # Calculate strength factor = average OppQ across all games
         opp_qualities = [g["oppq"] for g in r.breakdown if g.get("oppq") is not None]
         strength_factor = round(sum(opp_qualities) / len(opp_qualities), 2) if opp_qualities else 0.0
 
@@ -511,10 +528,10 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             c.execute("""
                 INSERT OR REPLACE INTO game_power_points
                 (sport, season, school, week, opponent, result, score,
-                 opp_wins, opp_losses, opp_division,
+                 opp_wins, opp_losses, opp_ties, opp_division,
                  base_pts, div_bonus, opp_quality, total_pts, is_district,
                  game_date, home_away, calculated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 sport, season, r.name, week_num,
                 meta.get("opponent", g["opponent"]),
@@ -522,6 +539,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
                 meta.get("score", ""),
                 meta.get("opp_wins", 0),
                 meta.get("opp_losses", 0),
+                meta.get("opp_ties", 0),
                 meta.get("opp_division", ""),
                 g["base"],
                 g["div"],
