@@ -790,7 +790,7 @@ def get_sport_schedules(sport):
         school = s['school']
         c.execute("""
             SELECT gpp.opponent, gpp.result, gpp.score,
-                   gpp.opp_wins, gpp.opp_losses, gpp.opp_division,
+                   gpp.opp_wins, gpp.opp_losses, gpp.opp_ties, gpp.opp_division,
                    gpp.base_pts, gpp.div_bonus, gpp.opp_quality,
                    gpp.total_pts, gpp.is_district,
                    gpp.game_date, gpp.home_away
@@ -826,7 +826,6 @@ def get_sport_schedules(sport):
         "count":   len(schools),
         "schools": schools
     })
-
 
 @app.route("/api/build/baseball-sheets")
 def build_baseball_sheets():
