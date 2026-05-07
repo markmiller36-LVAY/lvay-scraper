@@ -465,6 +465,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             sport=sport,
             opponent_wins=opp_wins,
             opponent_losses=opp_losses,
+            opponent_ties=opp_ties, 
             opponent_division=opp_division,
             opponent_class=opp_class or "",
             opponent_out_of_state=oos,
