@@ -13,7 +13,7 @@ FOOTBALL:
 
 BASEBALL:
   Win=20, Loss=0, Tie=5, Double Forfeit=+1 to winner
-  OppQ: Opponent's Wins (raw)
+  OppQ: Opponent's Wins + (Opponent's Ties x 0.5)
   Division bonus:
     - in-state: +2 per class step up, with division also higher
     - OOS: NO bonus (10.10.2 — all OOS opponents weighted equally)
@@ -21,7 +21,7 @@ BASEBALL:
 
 SOFTBALL:
   Win=20, Loss=0, Tie=5, Double Forfeit=+1 to winner
-  OppQ: Opponent's Wins (raw)
+  OppQ: Opponent's Wins + (Opponent's Ties x 0.5)
   Division bonus:
     - in-state: +2 per class step up, with division also higher
     - OOS: NO bonus (10.10.2 — all OOS opponents weighted equally)
@@ -183,6 +183,7 @@ class GameResult:
     sport: str
     opponent_wins: int = 0
     opponent_losses: int = 0
+    opponent_ties: int = 0
     opponent_division: str = ""
     opponent_class: str = ""
     opponent_out_of_state: bool = False
@@ -191,7 +192,8 @@ class GameResult:
 
     @property
     def opponent_gp(self) -> int:
-        return self.opponent_wins + self.opponent_losses
+        # Include ties in GP denominator for win% sports (football, basketball, soccer)
+        return self.opponent_wins + self.opponent_losses + self.opponent_ties
 
     @property
     def opponent_win_pct(self) -> float:
@@ -327,7 +329,8 @@ class PowerRatingEngine:
         elif style == "win_pct_x44":
             gp.opp_quality = game.opponent_win_pct * 44
         elif style == "raw_wins":
-            gp.opp_quality = float(game.opponent_wins)
+            # Per LHSAA 10.10.1: OppQ = opponent wins + (opponent ties x 0.5)
+            gp.opp_quality = float(game.opponent_wins) + (float(game.opponent_ties) * 0.5)
         elif style == "soccer_weighted":
             if game.result == "W":
                 gp.opp_quality = game.opponent_win_pct * 1.0
@@ -446,18 +449,20 @@ class PlayoffPredictor:
 
 
 if __name__ == "__main__":
-    print("=== BASEBALL OOS no-bonus test ===")
+    print("=== BASEBALL OOS tie bonus test ===")
     eng = PowerRatingEngine()
 
-    # Ruston (5A NS1) vs OOS opponent — should get NO div bonus
-    eng.add_team(Team("Ruston", "Non-Select Division I", "5A", "baseball"))
+    # Airline (5A NS1) lost to Pine Tree TX (8-11-3)
+    # Expected OppQ = 8 + (3 x 0.5) = 9.5
+    eng.add_team(Team("Airline", "Non-Select Division I", "5A", "baseball"))
     eng.add_game(GameResult(
-        "Ruston",
-        "Rockwall Heath - TX",
-        "W",
-        "baseball",
-        opponent_wins=25,
-        opponent_losses=5,
+        team="Airline",
+        opponent="Pine Tree - TX - UIL",
+        result="L",
+        sport="baseball",
+        opponent_wins=8,
+        opponent_losses=11,
+        opponent_ties=3,
         opponent_division="Unknown",
         opponent_class="5A",
         opponent_out_of_state=True,
@@ -471,4 +476,4 @@ if __name__ == "__main__":
                 f"    Wk{g['week']}: "
                 f"Base={g['base']} Div={g['div']} OppQ={g['oppq']} Total={g['total']}"
             )
-        print("  Expected: Base=20, Div=0, OppQ=25, Total=45")
+        print("  Expected: Base=0, Div=0, OppQ=9.5, Total=9.5")
