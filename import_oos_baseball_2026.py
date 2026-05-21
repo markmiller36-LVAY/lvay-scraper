@@ -1,18 +1,17 @@
 """
 import_oos_baseball_2026.py
 ============================
-Pulls OOS opponent win/loss records from the Google Sheet tab
+Pulls OOS opponent win/loss/tie records from the Google Sheet tab
 "Baseball OOS Opponents (2026)" and stores them in the oos_opponents
 table for use by the power rating engine.
 
-Sheet columns: school | opponent | opp_wins | opp_losses
+Sheet columns: school | opponent | opp_wins | opp_losses | opp_ties
 
 Run order:
   1. scraper (already done)
   2. THIS script
   3. run_power_rankings.py (sport=baseball, season=2026)
 """
-
 import os
 import sqlite3
 import gspread
@@ -63,9 +62,17 @@ def run():
             opponent   TEXT NOT NULL,
             opp_wins   INTEGER DEFAULT 0,
             opp_losses INTEGER DEFAULT 0,
+            opp_ties   INTEGER DEFAULT 0,
             UNIQUE(sport, season, school, opponent)
         )
     """)
+
+    # Safe migration: add opp_ties column if it doesn't exist yet
+    try:
+        c.execute("ALTER TABLE oos_opponents ADD COLUMN opp_ties INTEGER DEFAULT 0")
+        print("  opp_ties column added to oos_opponents")
+    except sqlite3.OperationalError:
+        pass  # Column already exists — safe to ignore
 
     inserted = 0
     updated  = 0
@@ -76,6 +83,7 @@ def run():
         opponent   = str(row.get("opponent", "")).strip()
         opp_wins   = row.get("opp_wins", "")
         opp_losses = row.get("opp_losses", "")
+        opp_ties   = row.get("opp_ties", 0)
 
         # Skip blank or incomplete rows
         if not school or not opponent:
@@ -88,19 +96,21 @@ def run():
         try:
             opp_wins   = int(opp_wins)
             opp_losses = int(opp_losses)
+            opp_ties   = int(opp_ties) if opp_ties not in ("", None) else 0
         except (ValueError, TypeError):
-            print(f"  Skipping bad record: {school} | {opponent} | {opp_wins} | {opp_losses}")
+            print(f"  Skipping bad record: {school} | {opponent} | {opp_wins} | {opp_losses} | {opp_ties}")
             skipped += 1
             continue
 
         c.execute("""
-            INSERT INTO oos_opponents (sport, season, school, opponent, opp_wins, opp_losses)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO oos_opponents (sport, season, school, opponent, opp_wins, opp_losses, opp_ties)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(sport, season, school, opponent)
             DO UPDATE SET
                 opp_wins   = excluded.opp_wins,
-                opp_losses = excluded.opp_losses
-        """, (SPORT, SEASON, school, opponent, opp_wins, opp_losses))
+                opp_losses = excluded.opp_losses,
+                opp_ties   = excluded.opp_ties
+        """, (SPORT, SEASON, school, opponent, opp_wins, opp_losses, opp_ties))
 
         if c.rowcount == 1:
             inserted += 1
@@ -109,7 +119,6 @@ def run():
 
     conn.commit()
     conn.close()
-
     print(f"  Inserted: {inserted} | Updated: {updated} | Skipped: {skipped}")
     print(f"  Done.")
 
