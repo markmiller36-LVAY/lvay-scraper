@@ -211,11 +211,22 @@ def load_scores(conn, season=SEASON, sport=SPORT):
 def load_oos_opponents(conn, season=SEASON, sport=SPORT):
     c = conn.cursor()
     try:
-        c.execute("""
-            SELECT school, opponent, opp_wins, opp_losses
-            FROM oos_opponents
-            WHERE sport=? AND season=?
-        """, (sport, season))
+        # Try to read opp_ties; fall back gracefully if column doesn't exist yet
+        try:
+            c.execute("""
+                SELECT school, opponent, opp_wins, opp_losses, opp_ties
+                FROM oos_opponents
+                WHERE sport=? AND season=?
+            """, (sport, season))
+            has_ties = True
+        except sqlite3.OperationalError:
+            c.execute("""
+                SELECT school, opponent, opp_wins, opp_losses
+                FROM oos_opponents
+                WHERE sport=? AND season=?
+            """, (sport, season))
+            has_ties = False
+
         oos = {}
         for r in c.fetchall():
             key = (r["school"], r["opponent"])
@@ -225,7 +236,7 @@ def load_oos_opponents(conn, season=SEASON, sport=SPORT):
                 "class_": "",
                 "opp_wins": r["opp_wins"],
                 "opp_losses": r["opp_losses"],
-                "opp_ties": 0,
+                "opp_ties": r["opp_ties"] if has_ties else 0,
             }
         return oos
     except Exception as e:
@@ -465,7 +476,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             sport=sport,
             opponent_wins=opp_wins,
             opponent_losses=opp_losses,
-            opponent_ties=opp_ties, 
+            opponent_ties=opp_ties,
             opponent_division=opp_division,
             opponent_class=opp_class or "",
             opponent_out_of_state=oos,
