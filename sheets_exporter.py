@@ -464,6 +464,9 @@ DIVISION_TAB_NAMES = {
 
 CLASS_ORDER = ["5A", "4A", "3A", "2A", "1A"]
 
+# Baseball/softball include Class B and C (football does not)
+BASEBALL_SOFTBALL_CLASS_ORDER = ["5A", "4A", "3A", "2A", "1A", "B", "C"]
+
 
 def load_power_rankings(season=SEASON):
     """Load all schools from power_rankings table."""
@@ -620,6 +623,8 @@ def build_class_tabs(sheet, season=SEASON):
     conn.close()
 
     now_str     = datetime.now().strftime("%m/%d/%Y %I:%M %p")
+    col_headers = ["Rank", "School", "Division", "Class", "District",
+                   "W", "L", "Games", "Power Rating"]
     game_headers = ["Week", "Date", "H/A", "Opponent", "Opp Record",
                     "Opp Division", "W/L", "Score",
                     "Base Pts", "Div Bonus", "Opp Quality", "Game Total"]
@@ -877,6 +882,66 @@ def build_sport_power_rankings(sheet, sport, season):
     return total
 
 
+def build_sport_division_tabs(sheet, sport, season):
+    """Build individual per-division tabs for a sport (NS-I through S-IV,
+    plus Class B and Class C as their own division-track tabs).
+    Tab names look like: "Baseball NS Division I (2026)".
+    Class B / Class C divisions fall through to their own names."""
+    print(f"  Building {sport} division tabs...")
+    all_schools = load_sport_rankings(sport, season)
+    if not all_schools:
+        print(f"    No data — run /api/rankings/calculate?sport={sport}&season={season} first")
+        return 0
+
+    total = 0
+    for division in BASEBALL_SOFTBALL_DIVISION_ORDER:
+        # Short label, e.g. "NS Division I"; Class B/C use their own name
+        short = DIVISION_TAB_NAMES.get(division, division)
+        tab_name = f"{sport.title()} {short} ({season})"
+
+        schools = [s for s in all_schools if (s.get("division") or "") == division]
+        schools.sort(key=lambda x: float(x.get("power_rating") or 0), reverse=True)
+
+        if schools:
+            write_rankings_tab(
+                sheet, tab_name, schools,
+                group_label=f"LVAY {sport.title()} {season} — {short}"
+            )
+            total += len(schools)
+        time.sleep(1)  # respect Sheets write quota
+
+    return total
+
+
+def build_sport_class_tabs(sheet, sport, season):
+    """Build per-class tabs (5A, 4A, 3A, 2A, 1A, B, C) for a sport.
+    Each tab ranks every school in that class by power rating regardless
+    of select/non-select track — a cross-track 'class' view.
+    Tab names look like: "Baseball Class 5A (2026)"."""
+    print(f"  Building {sport} class tabs...")
+    all_schools = load_sport_rankings(sport, season)
+    if not all_schools:
+        print(f"    No data — run /api/rankings/calculate?sport={sport}&season={season} first")
+        return 0
+
+    total = 0
+    for cls in BASEBALL_SOFTBALL_CLASS_ORDER:
+        tab_name = f"{sport.title()} Class {cls} ({season})"
+
+        schools = [s for s in all_schools if str(s.get("class_") or "").strip() == cls]
+        schools.sort(key=lambda x: float(x.get("power_rating") or 0), reverse=True)
+
+        if schools:
+            write_rankings_tab(
+                sheet, tab_name, schools,
+                group_label=f"LVAY {sport.title()} {season} — Class {cls}"
+            )
+            total += len(schools)
+        time.sleep(1)  # respect Sheets write quota
+
+    return total
+
+
 def export_baseball_to_sheets(season=2026):
     print(f"\n{'='*54}")
     print(f"LVAY Baseball Sheets Export — Season {season}")
@@ -889,13 +954,28 @@ def export_baseball_to_sheets(season=2026):
     except Exception as e:
         print(f"ERROR connecting: {e}")
         return False
+
     try:
         total = build_sport_power_rankings(sheet, "baseball", season)
     except Exception as e:
-        print(f"  ERROR: {e}")
+        print(f"  ERROR (master): {e}")
         total = 0
+
+    try:
+        div_total = build_sport_division_tabs(sheet, "baseball", season)
+    except Exception as e:
+        print(f"  ERROR (divisions): {e}")
+        div_total = 0
+
+    try:
+        cls_total = build_sport_class_tabs(sheet, "baseball", season)
+    except Exception as e:
+        print(f"  ERROR (classes): {e}")
+        cls_total = 0
+
     print(f"\n{'='*54}")
-    print(f"DONE! Baseball {season} Sheets complete — {total} schools")
+    print(f"DONE! Baseball {season} Sheets complete")
+    print(f"  Master: {total} schools | Division tabs: {div_total} | Class tabs: {cls_total}")
     print(f"Sheet: https://docs.google.com/spreadsheets/d/{SHEET_ID}")
     print(f"{'='*54}\n")
     return True
@@ -913,13 +993,28 @@ def export_softball_to_sheets(season=2026):
     except Exception as e:
         print(f"ERROR connecting: {e}")
         return False
+
     try:
         total = build_sport_power_rankings(sheet, "softball", season)
     except Exception as e:
-        print(f"  ERROR: {e}")
+        print(f"  ERROR (master): {e}")
         total = 0
+
+    try:
+        div_total = build_sport_division_tabs(sheet, "softball", season)
+    except Exception as e:
+        print(f"  ERROR (divisions): {e}")
+        div_total = 0
+
+    try:
+        cls_total = build_sport_class_tabs(sheet, "softball", season)
+    except Exception as e:
+        print(f"  ERROR (classes): {e}")
+        cls_total = 0
+
     print(f"\n{'='*54}")
-    print(f"DONE! Softball {season} Sheets complete — {total} schools")
+    print(f"DONE! Softball {season} Sheets complete")
+    print(f"  Master: {total} schools | Division tabs: {div_total} | Class tabs: {cls_total}")
     print(f"Sheet: https://docs.google.com/spreadsheets/d/{SHEET_ID}")
     print(f"{'='*54}\n")
     return True
