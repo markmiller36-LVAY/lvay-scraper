@@ -7,6 +7,11 @@ and writes results to:
 
   power_rankings      — one row per school
   game_power_points   — one row per counted game
+
+Forfeit handling:
+  W(f) is normalized to W and L(f) is normalized to L before scoring.
+  Per LHSAA practice (confirmed via GeauxPreps audit), a forfeit counts
+  exactly like a regular win or loss for power-point purposes.
 """
 
 import json
@@ -28,6 +33,21 @@ SEASON = os.environ.get("RANKINGS_SEASON", "2026")
 
 GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID", "")
 GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
+
+
+def normalize_result(wl):
+    """Collapse forfeits into regular W/L and ties into T.
+    Returns one of: 'W', 'L', 'T', or '' for anything unrecognized."""
+    if wl is None:
+        return ""
+    s = str(wl).strip()
+    if s in ("W", "W(f)"):
+        return "W"
+    if s in ("L", "L(f)"):
+        return "L"
+    if s in ("T", "Tie"):
+        return "T"
+    return ""
 
 
 def strip_district_prefix(class_str: str) -> str:
@@ -188,7 +208,7 @@ def load_games(conn, season=SEASON, sport=SPORT):
                opponent_class
         FROM games
         WHERE sport=? AND season=?
-          AND win_loss IN ('W', 'L', 'Tie', 'T')
+          AND win_loss IN ('W', 'L', 'Tie', 'T', 'W(f)', 'L(f)')
         ORDER BY school, game_date
     """, (sport, season))
     return c.fetchall()
@@ -261,14 +281,14 @@ def build_school_records(rows):
     records = {}
     for r in rows:
         school = r["school"]
-        wl = r["win_loss"]
+        wl = normalize_result(r["win_loss"])
         if school not in records:
             records[school] = {"wins": 0, "losses": 0, "ties": 0}
         if wl == "W":
             records[school]["wins"] += 1
         elif wl == "L":
             records[school]["losses"] += 1
-        elif wl in ("T", "Tie"):
+        elif wl == "T":
             records[school]["ties"] += 1
     return records
 
@@ -349,6 +369,11 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     print(f"  OOS lookup: {len(oos_lookup)} games loaded")
     print(f"  Loaded {len(rows)} games after applying overrides")
 
+    # Count forfeits for visibility in the run log
+    forfeit_count = sum(1 for r in rows if str(r.get("win_loss") or "").strip() in ("W(f)", "L(f)"))
+    if forfeit_count:
+        print(f"  Forfeits normalized: {forfeit_count} W(f)/L(f) games treated as W/L")
+
     scores_lookup = load_scores(conn, season, sport)
     school_records = build_school_records(rows)
     print(f"  {len(school_records)} school profiles loaded")
@@ -401,11 +426,10 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         opp_in_db = get_school(opponent) is not None
         oos = oos_flag or (not opp_in_db)
 
-        if wl == "Tie":
-            result = "T"
-        elif wl in ("W", "L", "T"):
-            result = wl
-        else:
+        # Normalize forfeits (W(f) -> W, L(f) -> L) and ties (Tie -> T) here.
+        # Anything that doesn't map to W/L/T is skipped.
+        result = normalize_result(wl)
+        if result not in ("W", "L", "T"):
             continue
 
         # Week number
