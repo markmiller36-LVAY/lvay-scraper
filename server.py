@@ -180,6 +180,18 @@ def scrape_softball():
     return jsonify({"status": "started", "sport": "softball", "message": "Softball scrape running — check /api/status in 2-3 min"})
 
 
+@app.route("/api/scrape/volleyball")
+def scrape_volleyball():
+    def run():
+        try:
+            from scraper_volleyball import run_volleyball_scraper
+            run_volleyball_scraper()
+        except Exception as e:
+            print(f"Volleyball scrape error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({"status": "started", "sport": "volleyball", "message": "Volleyball scrape running — check logs in 2-3 min"})
+
+
 # ── GOOGLE SHEETS BUILD ──────────────────────────────────────
 
 @app.route("/api/build/football-sheets")
@@ -192,6 +204,30 @@ def build_football_sheets():
             print(f"Sheets build error: {e}")
     threading.Thread(target=run, daemon=True).start()
     return jsonify({"status": "started", "message": "Football sheets building — check Google Sheet in 3-5 min"})
+
+
+@app.route("/api/build/baseball-sheets")
+def build_baseball_sheets():
+    def run():
+        try:
+            from sheets_exporter import export_baseball_to_sheets
+            export_baseball_to_sheets()
+        except Exception as e:
+            print(f"Baseball sheets build error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({"status": "started", "message": "Baseball sheets building — check Google Sheet in 3-5 min"})
+
+
+@app.route("/api/build/softball-sheets")
+def build_softball_sheets():
+    def run():
+        try:
+            from sheets_exporter import export_softball_to_sheets
+            export_softball_to_sheets()
+        except Exception as e:
+            print(f"Softball sheets build error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({"status": "started", "message": "Softball sheets building — check Google Sheet in 3-5 min"})
 
 
 # ── DATA FIX ENDPOINTS ───────────────────────────────────────
@@ -329,26 +365,115 @@ def import_oos_2025():
     return jsonify({"status": "started", "message": "Importing OOS opponent records — check logs"})
 
 
+# ── RANKINGS CALCULATE ───────────────────────────────────────
+
 @app.route("/api/rankings/calculate")
 def calculate_rankings():
-    sport = request.args.get("sport", "football")
+    sport  = request.args.get("sport", "football")
     season = request.args.get("season", "2025")
+
     def run():
         try:
-            from run_power_rankings import run_power_rankings
-            run_power_rankings(season=season, sport=sport)
+            if sport == "volleyball":
+                from run_power_rankings_volleyball import run_volleyball_rankings
+                run_volleyball_rankings()
+            else:
+                from run_power_rankings import run_power_rankings
+                run_power_rankings(season=season, sport=sport)
         except Exception as e:
             print(f"Rankings calc error: {e}")
+
     threading.Thread(target=run, daemon=True).start()
     return jsonify({"status": "started", "sport": sport, "season": season,
                     "message": f"{sport} rankings calculating — check logs"})
 
-# ────────────────────────────────────────────────────────────
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+# ── RANKINGS ENDPOINTS ───────────────────────────────────────
 
+@app.route("/api/rankings/football")
+def rankings_football():
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT school, division, track, class_, district,
+                   rank, power_rating, wins, losses, ties, games_played,
+                   COALESCE(strength_factor, 0) as strength_factor
+            FROM power_rankings
+            WHERE sport='football' AND season='2025'
+            ORDER BY rank ASC
+        """)
+        rows = [dict(r) for r in c.fetchall()]
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
+    conn.close()
+    return jsonify({"sport": "football", "season": "2025", "count": len(rows), "rankings": rows})
+
+
+@app.route("/api/rankings/baseball")
+def rankings_baseball():
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT school, division, track, class_, district,
+                   rank, power_rating, wins, losses, ties, games_played,
+                   COALESCE(strength_factor, 0) as strength_factor
+            FROM power_rankings
+            WHERE sport='baseball' AND season='2026'
+            ORDER BY rank ASC
+        """)
+        rows = [dict(r) for r in c.fetchall()]
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
+    conn.close()
+    return jsonify({"sport": "baseball", "season": "2026", "count": len(rows), "rankings": rows})
+
+
+@app.route("/api/rankings/softball")
+def rankings_softball():
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT school, division, track, class_, district,
+                   rank, power_rating, wins, losses, ties, games_played,
+                   COALESCE(strength_factor, 0) as strength_factor
+            FROM power_rankings
+            WHERE sport='softball' AND season='2026'
+            ORDER BY rank ASC
+        """)
+        rows = [dict(r) for r in c.fetchall()]
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
+    conn.close()
+    return jsonify({"sport": "softball", "season": "2026", "count": len(rows), "rankings": rows})
+
+
+@app.route("/api/rankings/volleyball")
+def rankings_volleyball():
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        c.execute("""
+            SELECT school, division, class_, district,
+                   rank, div_rank, power_rating, wins, losses, games_played
+            FROM volleyball_rankings
+            WHERE sport='volleyball' AND season='2025'
+            ORDER BY rank ASC
+        """)
+        rows = [dict(r) for r in c.fetchall()]
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
+    conn.close()
+    return jsonify({"sport": "volleyball", "season": "2025", "count": len(rows), "rankings": rows})
+
+
+# ── SCHEDULES ENDPOINTS ──────────────────────────────────────
 
 @app.route("/api/schedules/football")
 def schedules_football():
@@ -388,6 +513,143 @@ def schedules_football():
     conn.close()
     return jsonify({"sport": "football", "season": "2025", "count": len(schools), "schools": schools})
 
+
+@app.route("/api/schedules/baseball")
+def schedules_baseball():
+    return get_sport_schedules("baseball")
+
+
+@app.route("/api/schedules/softball")
+def schedules_softball():
+    return get_sport_schedules("softball")
+
+
+@app.route("/api/schedules/volleyball")
+def schedules_volleyball():
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        # Get all schools with their ranking info
+        c.execute("""
+            SELECT vr.school, vr.division, vr.class_, vr.district,
+                   vr.power_rating, vr.wins, vr.losses, vr.games_played, vr.rank, vr.div_rank
+            FROM volleyball_rankings vr
+            WHERE vr.sport='volleyball' AND vr.season='2025'
+            ORDER BY vr.division ASC, vr.district ASC, vr.school ASC
+        """)
+        school_rows = [dict(r) for r in c.fetchall()]
+        schools = []
+
+        for s in school_rows:
+            c.execute("""
+                SELECT game_date, opponent, opp_division, opp_district,
+                       is_district, is_tournament, tournament_name,
+                       match_num, home_away, result, score, counts_for_pr
+                FROM volleyball_games
+                WHERE sport='volleyball' AND season='2025' AND school=?
+                ORDER BY game_date ASC, match_num ASC
+            """, (s["school"],))
+            games = [dict(r) for r in c.fetchall()]
+
+            schools.append({
+                "school":       s["school"],
+                "sport":        "volleyball",
+                "season":       "2025",
+                "division":     s.get("division", ""),
+                "class_":       s.get("class_", ""),
+                "district":     s.get("district"),
+                "power_rating": s.get("power_rating", 0),
+                "rank":         s.get("rank", 0),
+                "div_rank":     s.get("div_rank", 0),
+                "wins":         s.get("wins", 0),
+                "losses":       s.get("losses", 0),
+                "games_played": s.get("games_played", 0),
+                "games":        games,
+            })
+
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
+
+    conn.close()
+    return jsonify({
+        "sport":   "volleyball",
+        "season":  "2025",
+        "count":   len(schools),
+        "schools": schools,
+    })
+
+
+def get_sport_schedules(sport):
+    conn = get_db()
+    c = conn.cursor()
+    school_filter = request.args.get("school")
+    season = os.environ.get("SEASON_YEAR") or resolve_season(sport)
+
+    if school_filter:
+        c.execute("""
+            SELECT pr.school, pr.division, pr.track, pr.class_, pr.district,
+                   pr.power_rating, pr.wins, pr.losses, pr.ties, pr.games_played, pr.rank
+            FROM power_rankings pr
+            WHERE pr.sport=? AND pr.season=?
+            AND LOWER(pr.school) LIKE LOWER(?)
+            ORDER BY pr.class_ DESC, pr.district ASC, pr.school ASC
+        """, (sport, season, f"%{school_filter}%"))
+    else:
+        c.execute("""
+            SELECT pr.school, pr.division, pr.track, pr.class_, pr.district,
+                   pr.power_rating, pr.wins, pr.losses, pr.ties, pr.games_played, pr.rank
+            FROM power_rankings pr
+            WHERE pr.sport=? AND pr.season=?
+            ORDER BY pr.class_ DESC, pr.district ASC, pr.school ASC
+        """, (sport, season))
+
+    school_rows = [dict(r) for r in c.fetchall()]
+    schools = []
+
+    for s in school_rows:
+        school = s['school']
+        c.execute("""
+            SELECT gpp.opponent, gpp.result, gpp.score,
+                   gpp.opp_wins, gpp.opp_losses, gpp.opp_ties, gpp.opp_division,
+                   gpp.base_pts, gpp.div_bonus, gpp.opp_quality,
+                   gpp.total_pts, gpp.is_district,
+                   gpp.game_date, gpp.home_away
+            FROM game_power_points gpp
+            WHERE gpp.sport=? AND gpp.season=? AND gpp.school=?
+            ORDER BY gpp.week ASC
+        """, (sport, season, school))
+
+        games = [dict(r) for r in c.fetchall()]
+
+        schools.append({
+            "school":       school,
+            "sport":        sport,
+            "season":       season,
+            "division":     s.get('division', ''),
+            "track":        s.get('track', ''),
+            "class_":       s.get('class_', ''),
+            "district":     s.get('district', ''),
+            "power_rating": s.get('power_rating', 0),
+            "rank":         s.get('rank', 0),
+            "wins":         s.get('wins', 0),
+            "losses":       s.get('losses', 0),
+            "ties":         s.get('ties', 0),
+            "games_played": s.get('games_played', 0),
+            "record":       f"{s.get('wins',0)}-{s.get('losses',0)}",
+            "games":        games,
+        })
+
+    conn.close()
+    return jsonify({
+        "sport":   sport,
+        "season":  season,
+        "count":   len(schools),
+        "schools": schools
+    })
+
+
+# ── BREAKDOWN ENDPOINTS ──────────────────────────────────────
 
 @app.route("/api/breakdown/football/<school>")
 def breakdown_football(school):
@@ -458,68 +720,47 @@ def breakdown_softball(school):
     return jsonify({"school": school, "calculated_pr": pr, "games": rows})
 
 
-@app.route("/api/rankings/football")
-def rankings_football():
+@app.route("/api/breakdown/volleyball/<school>")
+def breakdown_volleyball(school):
     conn = get_db()
     c = conn.cursor()
     try:
         c.execute("""
-            SELECT school, division, track, class_, district,
-                   rank, power_rating, wins, losses, ties, games_played,
-                   COALESCE(strength_factor, 0) as strength_factor
-            FROM power_rankings
-            WHERE sport='football' AND season='2025'
-            ORDER BY rank ASC
-        """)
-        rows = [dict(r) for r in c.fetchall()]
-    except Exception as e:
-        conn.close()
-        return jsonify({"error": str(e)}), 500
-    conn.close()
-    return jsonify({"sport": "football", "season": "2025", "count": len(rows), "rankings": rows})
+            SELECT game_date, opponent, opp_division,
+                   is_district, is_tournament, tournament_name,
+                   home_away, result, score, counts_for_pr
+            FROM volleyball_games
+            WHERE sport='volleyball' AND season='2025' AND school=?
+            ORDER BY game_date ASC, match_num ASC
+        """, (school,))
+        games = [dict(r) for r in c.fetchall()]
 
-
-@app.route("/api/rankings/baseball")
-def rankings_baseball():
-    conn = get_db()
-    c = conn.cursor()
-    try:
         c.execute("""
-            SELECT school, division, track, class_, district,
-                   rank, power_rating, wins, losses, ties, games_played,
-                   COALESCE(strength_factor, 0) as strength_factor
-            FROM power_rankings
-            WHERE sport='baseball' AND season='2026'
-            ORDER BY rank ASC
-        """)
-        rows = [dict(r) for r in c.fetchall()]
+            SELECT power_rating, wins, losses, games_played, rank, div_rank, division
+            FROM volleyball_rankings
+            WHERE sport='volleyball' AND season='2025' AND school=?
+        """, (school,))
+        row = c.fetchone()
+        pr_info = dict(row) if row else {}
+
     except Exception as e:
         conn.close()
         return jsonify({"error": str(e)}), 500
     conn.close()
-    return jsonify({"sport": "baseball", "season": "2026", "count": len(rows), "rankings": rows})
+    return jsonify({
+        "school":       school,
+        "power_rating": pr_info.get("power_rating", 0),
+        "wins":         pr_info.get("wins", 0),
+        "losses":       pr_info.get("losses", 0),
+        "games_played": pr_info.get("games_played", 0),
+        "rank":         pr_info.get("rank"),
+        "div_rank":     pr_info.get("div_rank"),
+        "division":     pr_info.get("division", ""),
+        "games":        games,
+    })
 
 
-@app.route("/api/rankings/softball")
-def rankings_softball():
-    conn = get_db()
-    c = conn.cursor()
-    try:
-        c.execute("""
-            SELECT school, division, track, class_, district,
-                   rank, power_rating, wins, losses, ties, games_played,
-                   COALESCE(strength_factor, 0) as strength_factor
-            FROM power_rankings
-            WHERE sport='softball' AND season='2026'
-            ORDER BY rank ASC
-        """)
-        rows = [dict(r) for r in c.fetchall()]
-    except Exception as e:
-        conn.close()
-        return jsonify({"error": str(e)}), 500
-    conn.close()
-    return jsonify({"sport": "softball", "season": "2026", "count": len(rows), "rankings": rows})
-
+# ── CONTROL PANEL ────────────────────────────────────────────
 
 @app.route("/control-panel")
 def control_panel():
@@ -749,103 +990,8 @@ def control_panel():
     return html
 
 
-# ── BASEBALL / SOFTBALL SCHEDULES ────────────────────────────────────────────
+# ── ENTRY POINT ──────────────────────────────────────────────
 
-@app.route("/api/schedules/baseball")
-def schedules_baseball():
-    return get_sport_schedules("baseball")
-
-@app.route("/api/schedules/softball")
-def schedules_softball():
-    return get_sport_schedules("softball")
-
-def get_sport_schedules(sport):
-    conn = get_db()
-    c = conn.cursor()
-    school_filter = request.args.get("school")
-    season = os.environ.get("SEASON_YEAR") or resolve_season(sport)
-
-    if school_filter:
-        c.execute("""
-            SELECT pr.school, pr.division, pr.track, pr.class_, pr.district,
-                   pr.power_rating, pr.wins, pr.losses, pr.ties, pr.games_played, pr.rank
-            FROM power_rankings pr
-            WHERE pr.sport=? AND pr.season=?
-            AND LOWER(pr.school) LIKE LOWER(?)
-            ORDER BY pr.class_ DESC, pr.district ASC, pr.school ASC
-        """, (sport, season, f"%{school_filter}%"))
-    else:
-        c.execute("""
-            SELECT pr.school, pr.division, pr.track, pr.class_, pr.district,
-                   pr.power_rating, pr.wins, pr.losses, pr.ties, pr.games_played, pr.rank
-            FROM power_rankings pr
-            WHERE pr.sport=? AND pr.season=?
-            ORDER BY pr.class_ DESC, pr.district ASC, pr.school ASC
-        """, (sport, season))
-
-    school_rows = [dict(r) for r in c.fetchall()]
-    schools = []
-
-    for s in school_rows:
-        school = s['school']
-        c.execute("""
-            SELECT gpp.opponent, gpp.result, gpp.score,
-                   gpp.opp_wins, gpp.opp_losses, gpp.opp_ties, gpp.opp_division,
-                   gpp.base_pts, gpp.div_bonus, gpp.opp_quality,
-                   gpp.total_pts, gpp.is_district,
-                   gpp.game_date, gpp.home_away
-            FROM game_power_points gpp
-            WHERE gpp.sport=? AND gpp.season=? AND gpp.school=?
-            ORDER BY gpp.week ASC
-        """, (sport, season, school))
-
-        games = [dict(r) for r in c.fetchall()]
-
-        schools.append({
-            "school":       school,
-            "sport":        sport,
-            "season":       season,
-            "division":     s.get('division', ''),
-            "track":        s.get('track', ''),
-            "class_":       s.get('class_', ''),
-            "district":     s.get('district', ''),
-            "power_rating": s.get('power_rating', 0),
-            "rank":         s.get('rank', 0),
-            "wins":         s.get('wins', 0),
-            "losses":       s.get('losses', 0),
-            "ties":         s.get('ties', 0),
-            "games_played": s.get('games_played', 0),
-            "record":       f"{s.get('wins',0)}-{s.get('losses',0)}",
-            "games":        games,
-        })
-
-    conn.close()
-    return jsonify({
-        "sport":   sport,
-        "season":  season,
-        "count":   len(schools),
-        "schools": schools
-    })
-
-@app.route("/api/build/baseball-sheets")
-def build_baseball_sheets():
-    def run():
-        try:
-            from sheets_exporter import export_baseball_to_sheets
-            export_baseball_to_sheets()
-        except Exception as e:
-            print(f"Baseball sheets build error: {e}")
-    threading.Thread(target=run, daemon=True).start()
-    return jsonify({"status": "started", "message": "Baseball sheets building — check Google Sheet in 3-5 min"})
-
-
-@app.route("/api/build/softball-sheets")
-def build_softball_sheets():
-    def run():
-        try:
-            from sheets_exporter import export_softball_to_sheets
-            export_softball_to_sheets()
-        except Exception as e:
-            print(f"Softball sheets build error: {e}")
-    threading.Thread(target=run, daemon=True).start()
-    return jsonify({"status": "started", "message": "Softball sheets building — check Google Sheet in 3-5 min"})
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
