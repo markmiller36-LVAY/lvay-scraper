@@ -8,26 +8,18 @@ POST endpoint: https://www.lhsaaonline.org/pr/vbpr/admin/ReportSchedule.asp?p=1
 Form params:
     y      = 2025
     d      = I | II | III | IV | V
-    n      = (blank - all schools)
-    h      = (blank - all tournaments)
-    resultdate = (blank)
-    f      = (blank)
-    Submit.x = 30
-    Submit.y = 3
 
 PR Formula (Bylaw 24.6.3):
     Win:  5 base points + opponent_wins * 1.0  (100%)
     Loss: 0 base points + opponent_wins * 0.33 (33%)
     PR = total_power_points / total_matches_played
 
-Exclusions (do NOT count toward PR):
-    - Out-of-state opponents (no valid LA division in Opponent District-Division)
-    - Sub-varsity matches
-    - District playoff tiebreaker matches (District or Tournament = "D")
+Exclusions (counts_for_pr = 0):
+    - OOS opponents (no valid LA division)
+    - District playoff tiebreaker matches (dist_t = "D")
 
 Inclusions:
-    - Regular season matches
-    - Tournament matches (T flag counts)
+    - Regular season + tournament matches both count
 """
 
 import requests
@@ -41,7 +33,7 @@ from datetime import datetime
 # CONFIG
 # ──────────────────────────────────────────────────────────────────────────────
 
-SCRAPE_URL = "https://www.lhsaaonline.org/pr/vbpr/admin/ReportSchedule.asp?p=1"
+SCRAPE_URL = "https://www.lhsaaonline.org/pr/vbpr/admin/ReportSchedule.asp"
 SEASON     = "2025"
 SPORT      = "volleyball"
 DIVISIONS  = ["I", "II", "III", "IV", "V"]
@@ -49,14 +41,11 @@ DIVISIONS  = ["I", "II", "III", "IV", "V"]
 DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Referer": "https://www.lhsaaonline.org/pr/vbpr/admin/SearchVolleyballSchedule.asp",
-    "Origin":  "https://www.lhsaaonline.org",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
     "Content-Type": "application/x-www-form-urlencoded",
+    "Referer": "https://www.lhsaaonline.org/pr/vbpr/admin/SearchVolleyballSchedule.asp",
 }
 
-# Valid LA division patterns e.g. 3-I, 7-II, 4-III, 5-IV, 2-V
 LA_DIVISION_PATTERN = re.compile(r"^\d+-(I{1,3}V?|V?I{0,3}|IV|V)$")
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -119,11 +108,6 @@ def ensure_tables(conn):
 # HELPERS
 # ──────────────────────────────────────────────────────────────────────────────
 
-def clean(td):
-    """Extract clean text from a BeautifulSoup td element."""
-    return td.get_text(separator=" ", strip=True).replace("\xa0", "").strip()
-
-
 def is_oos_opponent(opp_div_raw):
     if not opp_div_raw or not opp_div_raw.strip():
         return True
@@ -152,7 +136,6 @@ def parse_school_division(div_str):
 def parse_date(date_raw):
     if not date_raw:
         return None
-    # grab first token that looks like a date
     parts = date_raw.split()
     for part in parts:
         for fmt in ("%m/%d/%Y", "%m/%d/%y"):
@@ -164,7 +147,7 @@ def parse_date(date_raw):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# SCRAPER
+# SCRAPER — mirrors baseball/softball parse pattern exactly
 # ──────────────────────────────────────────────────────────────────────────────
 
 def scrape_division(division):
@@ -181,66 +164,62 @@ def scrape_division(division):
 
     print(f"  [VB] Fetching Division {division}...")
     try:
-        resp = requests.post(SCRAPE_URL, data=payload, headers=HEADERS, timeout=30)
+        resp = requests.post(
+            SCRAPE_URL,
+            params={"p": "1"},
+            data=payload,
+            headers=HEADERS,
+            timeout=45,
+        )
         resp.raise_for_status()
     except requests.RequestException as e:
         print(f"  [VB] ERROR fetching Division {division}: {e}")
         return []
 
-    # Use html.parser — lxml may choke on nested tables
-    soup = BeautifulSoup(resp.content, "html.parser")
+    soup = BeautifulSoup(resp.text, "html.parser")
     rows = []
 
-    # Find all tr elements across the whole page
-    all_trs = soup.find_all("tr")
+    # Mirror baseball/softball: loop tables → rows → cells
+    for table in soup.find_all("table"):
+        for row in table.find_all("tr"):
+            cells = row.find_all("td")
+            if len(cells) < 11:
+                continue
 
-    for tr in all_trs:
-        tds = tr.find_all("td", recursive=False)
-        if len(tds) < 11:
-            continue
+            t = [c.get_text(strip=True) for c in cells]
 
-        # First cell should be a row number like "1." or "1"
-        first = clean(tds[0])
-        if not re.match(r"^\d+\.?$", first):
-            continue
+            # Skip header rows — first cell is "#" or empty or "School"
+            if not t[0] or t[0] in ("#", "School"):
+                continue
 
-        try:
-            school     = clean(tds[1])
-            school_dd  = clean(tds[2])
-            date_raw   = clean(tds[3])
-            opponent   = clean(tds[4])
-            opp_dd     = clean(tds[5])
-            dist_t     = clean(tds[6])
-            tournament = clean(tds[7]) if len(tds) > 7 else ""
-            match_num  = clean(tds[8]) if len(tds) > 8 else "1"
-            home_away  = clean(tds[9]) if len(tds) > 9 else ""
-            win_loss   = clean(tds[10]) if len(tds) > 10 else ""
-            score      = clean(tds[11]) if len(tds) > 11 else ""
+            # First cell must be a row number like "1." or "1"
+            if not re.match(r"^\d+\.?$", t[0]):
+                continue
 
-            # Skip if missing key fields
+            # Must have a school name and opponent
+            school   = t[1].strip() if len(t) > 1 else ""
+            opponent = t[4].strip() if len(t) > 4 else ""
             if not school or not opponent:
                 continue
 
-            # Skip rows with no result (future games)
+            win_loss = t[10].strip() if len(t) > 10 else ""
             if win_loss not in ("W", "L", "w", "l"):
                 continue
 
             rows.append({
                 "school":      school,
-                "school_dd":   school_dd,
-                "date_raw":    date_raw,
+                "school_dd":   t[2].strip() if len(t) > 2 else "",
+                "date_raw":    t[3].strip() if len(t) > 3 else "",
                 "opponent":    opponent,
-                "opp_dd":      opp_dd,
-                "dist_t":      dist_t,
-                "tournament":  tournament,
-                "match_num":   match_num,
-                "home_away":   home_away,
+                "opp_dd":      t[5].strip() if len(t) > 5 else "",
+                "dist_t":      t[6].strip() if len(t) > 6 else "",
+                "tournament":  t[7].strip() if len(t) > 7 else "",
+                "match_num":   t[8].strip() if len(t) > 8 else "1",
+                "home_away":   t[9].strip() if len(t) > 9 else "",
                 "win_loss":    win_loss.upper(),
-                "score":       score,
+                "score":       t[11].strip() if len(t) > 11 else "",
                 "division":    division,
             })
-        except (IndexError, ValueError):
-            continue
 
     print(f"  [VB] Division {division}: {len(rows)} result rows found")
     return rows
@@ -259,13 +238,12 @@ def insert_games(conn, rows):
         school_dist, school_div = parse_school_division(row["school_dd"])
         opp_dist, opp_div       = parse_school_division(row["opp_dd"])
 
-        game_date   = parse_date(row["date_raw"])
-        is_tourn    = 1 if row["dist_t"].upper() == "T" else 0
-        is_dist     = 1 if row["dist_t"].upper() == "D" else 0
-        is_oos      = is_oos_opponent(row["opp_dd"])
-        is_tbreak   = is_tiebreaker(row["dist_t"])
-
-        counts = 0 if (is_oos or is_tbreak) else 1
+        game_date = parse_date(row["date_raw"])
+        is_tourn  = 1 if row["dist_t"].upper() == "T" else 0
+        is_dist   = 1 if row["dist_t"].upper() == "D" else 0
+        is_oos    = is_oos_opponent(row["opp_dd"])
+        is_tbreak = is_tiebreaker(row["dist_t"])
+        counts    = 0 if (is_oos or is_tbreak) else 1
 
         try:
             match_num = int(row["match_num"]) if str(row["match_num"]).isdigit() else 1
@@ -282,21 +260,11 @@ def insert_games(conn, rows):
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 SPORT, SEASON,
-                row["school"],
-                row["division"],
-                school_dist,
-                game_date,
-                row["opponent"],
-                opp_div,
-                opp_dist,
-                is_dist,
-                is_tourn,
-                row["tournament"] or None,
-                match_num,
-                row["home_away"],
-                row["win_loss"],
-                row["score"] or None,
-                counts,
+                row["school"], row["division"], school_dist,
+                game_date, row["opponent"], opp_div, opp_dist,
+                is_dist, is_tourn, row["tournament"] or None,
+                match_num, row["home_away"], row["win_loss"],
+                row["score"] or None, counts,
             ))
             inserted += 1
         except sqlite3.IntegrityError:
