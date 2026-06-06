@@ -790,3 +790,32 @@ if __name__ == "__main__":
             )
         else:
             print(f"  {name}: NOT FOUND")
+
+# ── PATCH: volleyball-only schools added post-initial release ──────────────────
+# Applied after volleyball scraper shipped — these schools appear in VB data only.
+
+_VB_ONLY_ALIASES = {
+    "Acad. of Sacred Heart - G.C.": "Academy of Sacred Heart - Grand Coteau",
+    "Acad. of Sacred Heart - N.O.": "Academy of Sacred Heart - New Orleans",
+    "La. School for Deaf":          "Louisiana School for the Deaf",
+    "Lycee Francais de la Nouvelle Orleans": "Lycee Francais",
+}
+for _alias, _canonical in _VB_ONLY_ALIASES.items():
+    SCHOOL_ALIASES[_alias] = _canonical
+    NORMALIZED_ALIASES[normalize_school_name(_alias)] = _canonical
+
+_VB_ONLY_SCHOOLS = {
+    "Academy of Sacred Heart - Grand Coteau": {"class": "1A", "district": 2,  "division": "Unknown", "track": "unknown"},
+    "Academy of Sacred Heart - New Orleans":  {"class": "1A", "district": 10, "division": "Unknown", "track": "unknown"},
+    "Baton Rouge":                            {"class": "5A", "district": 4,  "division": "Unknown", "track": "unknown"},
+    "Christ Episcopal School":                {"class": "1A", "district": 7,  "division": "Unknown", "track": "unknown"},
+    "First Baptist Christian":                {"class": "1A", "district": 7,  "division": "Unknown", "track": "unknown"},
+    "GEO Next Generation":                    {"class": "3A", "district": 5,  "division": "Unknown", "track": "unknown"},
+    "Grand Isle":                             {"class": "1A", "district": 6,  "division": "Unknown", "track": "unknown"},
+    "Louisiana School for the Deaf":          {"class": "1A", "district": 5,  "division": "Unknown", "track": "unknown"},
+    "Lutheran":                               {"class": "1A", "district": 8,  "division": "Unknown", "track": "unknown"},
+    "Lycee Francais":                         {"class": "1A", "district": 9,  "division": "Unknown", "track": "unknown"},
+}
+for _name, _info in _VB_ONLY_SCHOOLS.items():
+    SCHOOLS[_name] = {"name": _name, **_info}
+    NORMALIZED_SCHOOLS[normalize_school_name(_name)] = SCHOOLS[_name]
