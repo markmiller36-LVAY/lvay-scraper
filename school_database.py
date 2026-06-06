@@ -74,7 +74,7 @@ SELECT_D3 = [
     "St. Thomas Aquinas", "Jefferson Rise Charter", "Collegiate Baton Rouge",
     "Fisher", "Capitol", "Magnolia School of Excellence",
     # Softball-only additions
-    "Cabrini", "Ursuline Academy", "St. Mary's Academy",
+    "Cabrini", "Ursuline Academy", "St. Mary's Academy", "St. Katharine Drexel",
 ]
 
 SELECT_D4 = [
@@ -404,6 +404,7 @@ ALIGNMENT = {
     "Metairie Park Country Day": {"class": "2A", "district": 10},
     "Sarah T. Reed": {"class": "2A", "district": 10},
     "South Plaquemines": {"class": "2A", "district": 10},
+    "St. Katharine Drexel": {"class": "2A", "district": 10},
     "St. Mary's Academy": {"class": "2A", "district": 10},
     "Walter L. Cohen": {"class": "2A", "district": 10},
 
@@ -775,6 +776,8 @@ if __name__ == "__main__":
         "Gibsland-Coleman",
         "Johnson Bayou",
         "Phoenix",
+        # Newly added
+        "St. Katharine Drexel",
     ]
 
     for name in test_names:
