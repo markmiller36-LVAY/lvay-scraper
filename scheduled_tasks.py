@@ -9,17 +9,23 @@ import time
 from datetime import datetime
 import os
 
+
 def get_active_sports():
     """Return list of sports currently in season based on month."""
     month = datetime.now().month
     sports = []
+
     if month in [8, 9, 10, 11]:        # Aug - Nov
         sports.append("football")
+        sports.append("volleyball")
+
     if month in [2, 3, 4, 5]:          # Feb - May
         sports.append("baseball")
         sports.append("softball")
-    # Basketball, soccer, volleyball to be added later
+
+    # Basketball, soccer to be added later
     return sports
+
 
 def scheduled_run():
     print(f"\n[SCHEDULER] Triggered at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -47,7 +53,16 @@ def scheduled_run():
             export_division_and_class_tabs()
             print("[SCHEDULER] Football pipeline complete")
 
-        # 3. BASEBALL
+        # 3. VOLLEYBALL
+        if "volleyball" in active:
+            print("[SCHEDULER] Running volleyball pipeline...")
+            from scraper_volleyball import run_volleyball_scraper
+            run_volleyball_scraper()
+            from run_power_rankings_volleyball import run_volleyball_rankings
+            run_volleyball_rankings()
+            print("[SCHEDULER] Volleyball pipeline complete")
+
+        # 4. BASEBALL
         if "baseball" in active:
             print("[SCHEDULER] Running baseball pipeline...")
             from import_oos_baseball_2026 import run as import_oos_baseball
@@ -58,7 +73,7 @@ def scheduled_run():
             export_baseball_to_sheets()
             print("[SCHEDULER] Baseball pipeline complete")
 
-        # 4. SOFTBALL
+        # 5. SOFTBALL
         if "softball" in active:
             print("[SCHEDULER] Running softball pipeline...")
             from import_oos_softball_2026 import run as import_oos_softball
@@ -74,6 +89,7 @@ def scheduled_run():
     except Exception as e:
         print(f"[SCHEDULER] ERROR: {e}")
 
+
 def run_scheduler():
     schedule.every(4).hours.do(scheduled_run)
     schedule.every().tuesday.at("06:00").do(scheduled_run)
@@ -81,6 +97,7 @@ def run_scheduler():
     while True:
         schedule.run_pending()
         time.sleep(60)
+
 
 if __name__ == "__main__":
     run_scheduler()
