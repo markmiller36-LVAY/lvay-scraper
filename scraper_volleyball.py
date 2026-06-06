@@ -23,11 +23,11 @@ PR Formula (Bylaw 24.6.3):
 Exclusions (do NOT count toward PR):
     - Out-of-state opponents (no valid LA division in Opponent District-Division)
     - Sub-varsity matches
-    - District playoff tiebreaker matches (District or Tournament = "D" tiebreaker)
-    
+    - District playoff tiebreaker matches (District or Tournament = "D")
+
 Inclusions:
     - Regular season matches
-    - Tournament matches (T flag counts — only OOS/sub-varsity/tiebreakers excluded)
+    - Tournament matches (T flag counts)
 """
 
 import requests
@@ -56,10 +56,8 @@ HEADERS = {
     "Content-Type": "application/x-www-form-urlencoded",
 }
 
-# Valid LA division patterns — used to detect OOS opponents
-LA_DIVISION_PATTERN = re.compile(
-    r"^\d+-(I{1,3}V?|V?I{0,3})$"  # e.g. 3-I, 7-II, 4-III, 5-IV, 2-V
-)
+# Valid LA division patterns e.g. 3-I, 7-II, 4-III, 5-IV, 2-V
+LA_DIVISION_PATTERN = re.compile(r"^\d+-(I{1,3}V?|V?I{0,3}|IV|V)$")
 
 # ──────────────────────────────────────────────────────────────────────────────
 # DB SETUP
@@ -72,7 +70,6 @@ def get_db():
 
 
 def ensure_tables(conn):
-    """Create volleyball tables if they don't exist."""
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS volleyball_games (
             id               INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -122,47 +119,27 @@ def ensure_tables(conn):
 # HELPERS
 # ──────────────────────────────────────────────────────────────────────────────
 
-def normalize_name(name):
-    """Strip whitespace and normalize school name."""
-    if not name:
-        return ""
-    name = name.strip()
-    name = re.sub(r"\s+", " ", name)
-    # Strip trailing * or + markers from alignment doc
-    name = name.rstrip("*+").strip()
-    return name
+def clean(td):
+    """Extract clean text from a BeautifulSoup td element."""
+    return td.get_text(separator=" ", strip=True).replace("\xa0", "").strip()
 
 
 def is_oos_opponent(opp_div_raw):
-    """
-    Returns True if the opponent is out of state or has no valid LA division.
-    Valid LA divisions look like: 3-I, 7-II, 4-III, 5-IV, 2-V, 8-II, etc.
-    """
     if not opp_div_raw or not opp_div_raw.strip():
-        return True  # blank = OOS or unknown
+        return True
     raw = opp_div_raw.strip()
     if LA_DIVISION_PATTERN.match(raw):
         return False
-    return True  # doesn't match LA pattern = OOS
+    return True
 
 
 def is_tiebreaker(dist_or_tourn_raw):
-    """
-    District playoff tiebreaker matches are marked 'D' in District or Tournament column.
-    Regular district games are blank. Tournament games are 'T'.
-    Tiebreakers don't count toward PR.
-    NOTE: 'D' = tiebreaker (exclude), 'T' = tournament (include), blank = regular (include)
-    """
     if not dist_or_tourn_raw:
         return False
     return dist_or_tourn_raw.strip().upper() == "D"
 
 
 def parse_school_division(div_str):
-    """
-    Parse '3-III' into district=3, division='III'.
-    Returns (district, division) tuple.
-    """
     if not div_str:
         return None, None
     div_str = div_str.strip()
@@ -172,15 +149,25 @@ def parse_school_division(div_str):
     return None, div_str
 
 
+def parse_date(date_raw):
+    if not date_raw:
+        return None
+    # grab first token that looks like a date
+    parts = date_raw.split()
+    for part in parts:
+        for fmt in ("%m/%d/%Y", "%m/%d/%y"):
+            try:
+                return datetime.strptime(part, fmt).strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+    return date_raw
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # SCRAPER
 # ──────────────────────────────────────────────────────────────────────────────
 
 def scrape_division(division):
-    """
-    POST to LHSAA and fetch volleyball schedule for one division.
-    Returns list of raw row dicts.
-    """
     payload = {
         "y":          SEASON,
         "resultdate": "",
@@ -200,94 +187,70 @@ def scrape_division(division):
         print(f"  [VB] ERROR fetching Division {division}: {e}")
         return []
 
-    soup = BeautifulSoup(resp.text, "html.parser")
+    # Use html.parser — lxml may choke on nested tables
+    soup = BeautifulSoup(resp.content, "html.parser")
     rows = []
 
-    # Find all tables — each school section is its own table or section
-    # The report groups by school with a header row per school block
-    # Rows: # | School | District-Division | Date | Opponent | Opp D-D | Dist/Tourn | Tournament | Match# | H/A | W/L | Score
+    # Find all tr elements across the whole page
+    all_trs = soup.find_all("tr")
 
-    tables = soup.find_all("table")
-    current_school = None
-    current_school_div = None
+    for tr in all_trs:
+        tds = tr.find_all("td", recursive=False)
+        if len(tds) < 11:
+            continue
 
-    for table in tables:
-        trs = table.find_all("tr")
-        for tr in trs:
-            tds = tr.find_all("td")
-            if not tds:
+        # First cell should be a row number like "1." or "1"
+        first = clean(tds[0])
+        if not re.match(r"^\d+\.?$", first):
+            continue
+
+        try:
+            school     = clean(tds[1])
+            school_dd  = clean(tds[2])
+            date_raw   = clean(tds[3])
+            opponent   = clean(tds[4])
+            opp_dd     = clean(tds[5])
+            dist_t     = clean(tds[6])
+            tournament = clean(tds[7]) if len(tds) > 7 else ""
+            match_num  = clean(tds[8]) if len(tds) > 8 else "1"
+            home_away  = clean(tds[9]) if len(tds) > 9 else ""
+            win_loss   = clean(tds[10]) if len(tds) > 10 else ""
+            score      = clean(tds[11]) if len(tds) > 11 else ""
+
+            # Skip if missing key fields
+            if not school or not opponent:
                 continue
 
-            # Skip header rows (color headers)
-            td_text = [td.get_text(strip=True) for td in tds]
-
-            # Detect school data rows — first cell is a number (#)
-            if not td_text[0].isdigit():
+            # Skip rows with no result (future games)
+            if win_loss not in ("W", "L", "w", "l"):
                 continue
 
-            # Expect at least 10 columns: # school dist date opp opp_div dist_t tourn match# h/a w/l [score]
-            if len(tds) < 10:
-                continue
-
-            try:
-                row_num    = td_text[0]
-                school     = normalize_name(td_text[1]) if len(td_text) > 1 else ""
-                school_dd  = td_text[2].strip() if len(td_text) > 2 else ""
-                date_raw   = td_text[3].strip() if len(td_text) > 3 else ""
-                opponent   = normalize_name(td_text[4]) if len(td_text) > 4 else ""
-                opp_dd     = td_text[5].strip() if len(td_text) > 5 else ""
-                dist_t     = td_text[6].strip() if len(td_text) > 6 else ""
-                tournament = td_text[7].strip() if len(td_text) > 7 else ""
-                match_num  = td_text[8].strip() if len(td_text) > 8 else "1"
-                home_away  = td_text[9].strip() if len(td_text) > 9 else ""
-                win_loss   = td_text[10].strip() if len(td_text) > 10 else ""
-                score      = td_text[11].strip() if len(td_text) > 11 else ""
-
-                # Skip if no school or opponent
-                if not school or not opponent:
-                    continue
-
-                # Skip blank results (future games with no outcome)
-                if not win_loss:
-                    continue
-
-                rows.append({
-                    "school":      school,
-                    "school_dd":   school_dd,
-                    "date_raw":    date_raw,
-                    "opponent":    opponent,
-                    "opp_dd":      opp_dd,
-                    "dist_t":      dist_t,
-                    "tournament":  tournament,
-                    "match_num":   match_num,
-                    "home_away":   home_away,
-                    "win_loss":    win_loss.upper(),
-                    "score":       score,
-                    "division":    division,
-                })
-            except (IndexError, ValueError):
-                continue
+            rows.append({
+                "school":      school,
+                "school_dd":   school_dd,
+                "date_raw":    date_raw,
+                "opponent":    opponent,
+                "opp_dd":      opp_dd,
+                "dist_t":      dist_t,
+                "tournament":  tournament,
+                "match_num":   match_num,
+                "home_away":   home_away,
+                "win_loss":    win_loss.upper(),
+                "score":       score,
+                "division":    division,
+            })
+        except (IndexError, ValueError):
+            continue
 
     print(f"  [VB] Division {division}: {len(rows)} result rows found")
     return rows
 
 
-def parse_date(date_raw):
-    """Parse date like '9/2/2025 Tue' or '9/2/2025' into YYYY-MM-DD."""
-    if not date_raw:
-        return None
-    # Strip day-of-week suffix
-    date_part = date_raw.split("\n")[0].strip().split(" ")[0].strip()
-    for fmt in ("%m/%d/%Y", "%m/%d/%y"):
-        try:
-            return datetime.strptime(date_part, fmt).strftime("%Y-%m-%d")
-        except ValueError:
-            continue
-    return date_raw
-
+# ──────────────────────────────────────────────────────────────────────────────
+# DB INSERT
+# ──────────────────────────────────────────────────────────────────────────────
 
 def insert_games(conn, rows):
-    """Insert scraped rows into volleyball_games table."""
     inserted = 0
     updated  = 0
     skipped  = 0
@@ -296,23 +259,16 @@ def insert_games(conn, rows):
         school_dist, school_div = parse_school_division(row["school_dd"])
         opp_dist, opp_div       = parse_school_division(row["opp_dd"])
 
-        game_date    = parse_date(row["date_raw"])
-        is_tourn     = 1 if row["dist_t"].upper() == "T" else 0
-        is_dist      = 1 if row["dist_t"].upper() == "D" else 0
-        is_tiebreak  = is_tiebreaker(row["dist_t"])
-        is_oos       = is_oos_opponent(row["opp_dd"])
+        game_date   = parse_date(row["date_raw"])
+        is_tourn    = 1 if row["dist_t"].upper() == "T" else 0
+        is_dist     = 1 if row["dist_t"].upper() == "D" else 0
+        is_oos      = is_oos_opponent(row["opp_dd"])
+        is_tbreak   = is_tiebreaker(row["dist_t"])
 
-        # Determine if this game counts toward PR
-        counts = 1
-        if is_oos:
-            counts = 0
-        elif is_tiebreak:
-            counts = 0
-        # Sub-varsity: harder to detect from this data — flag if opponent has no division
-        # and is not a known OOS situation (already handled above)
+        counts = 0 if (is_oos or is_tbreak) else 1
 
         try:
-            match_num = int(row["match_num"]) if row["match_num"].isdigit() else 1
+            match_num = int(row["match_num"]) if str(row["match_num"]).isdigit() else 1
         except (ValueError, AttributeError):
             match_num = 1
 
@@ -327,7 +283,7 @@ def insert_games(conn, rows):
             """, (
                 SPORT, SEASON,
                 row["school"],
-                row["division"],   # volleyball division (I-V)
+                row["division"],
                 school_dist,
                 game_date,
                 row["opponent"],
@@ -344,7 +300,6 @@ def insert_games(conn, rows):
             ))
             inserted += 1
         except sqlite3.IntegrityError:
-            # Already exists — update result/score in case it changed
             conn.execute("""
                 UPDATE volleyball_games
                 SET result=?, score=?, counts_for_pr=?, updated_at=datetime('now')
@@ -365,7 +320,7 @@ def insert_games(conn, rows):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# MAIN RUN FUNCTION
+# MAIN
 # ──────────────────────────────────────────────────────────────────────────────
 
 def run_volleyball_scraper():
