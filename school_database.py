@@ -39,6 +39,7 @@ SELECT_D1 = [
     "Pineville", "Comeaux", "Woodlawn - B.R.", "Warren Easton", "John Ehret",
     "Huntington", "Southwood", "L. W. Higgins", "C.E. Byrd", "Scotlandville",
     "Ponchatoula", "West Jefferson", "East Jefferson", "Ben Franklin",
+    "McDonogh #35",
     # Softball/baseball-only additions
     "Mt. Carmel", "Archbishop Chapelle", "Dominican", "St. Joseph's Academy",
 ]
@@ -55,8 +56,6 @@ SELECT_D2 = [
     "Washington-Marion", "Eleanor McMain", "McKinley", "Sophie B. Wright",
     "Booker T. Washington - N.O.", "Tara", "Bolton Academy",
     "Young Audiences Charter", "The Willow School",
-    # Moved from D1 — confirmed Select D2 for all sports per 2024-2026 designations PDF
-    "McDonogh #35",
     # Softball-only additions
     "Caddo Magnet", "N.O. Charter Science and Math", "St. Scholastica",
     "Academy of Our Lady",
