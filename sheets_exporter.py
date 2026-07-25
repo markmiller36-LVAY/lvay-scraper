@@ -97,9 +97,10 @@ def batch_write(ws, start_row, data, chunk_size=100):
         time.sleep(2)
 
 
-def ensure_football_overrides_tab(sheet, season=SEASON):
-    """Create the manual-correction tab without ever clearing existing edits."""
-    tab_name = f"Football Overrides ({season})"
+def ensure_sport_overrides_tab(sheet, sport, season):
+    """Create a sport's manual-correction tab without clearing existing edits."""
+    sport = sport.lower()
+    tab_name = f"{sport.title()} Overrides ({season})"
     headers = [
         "sport", "season", "school", "game_date", "opponent", "active",
         "override_win_loss", "override_score", "override_home_away", "notes",
@@ -121,7 +122,7 @@ def ensure_football_overrides_tab(sheet, season=SEASON):
             },
         })
         ws.update("A2", [[
-            "football", str(season), "", "", "", False, "", "", "",
+            sport, str(season), "", "", "", False, "", "", "",
             "Enter one correction per row; set active to TRUE to apply it.",
         ]])
     elif first_row[:len(headers)] != headers:
@@ -130,6 +131,39 @@ def ensure_football_overrides_tab(sheet, season=SEASON):
         )
     print(f"    Ready: {tab_name} (manual corrections preserved)")
     return ws
+
+
+def ensure_football_overrides_tab(sheet, season=SEASON):
+    return ensure_sport_overrides_tab(sheet, "football", season)
+
+
+def game_review_issues(result, score, flagged=False):
+    """Return actionable data-quality issues for a played game."""
+    result = str(result or "").strip()
+    score = str(score or "").strip()
+    issues = []
+    if not result and score:
+        issues.append("missing W/L")
+    elif result and result not in (
+        "W", "L", "T", "Tie", "W(f)", "L(f)", "PPD", "OD", "JV"
+    ):
+        issues.append("unrecognized result")
+    if result in ("W", "L", "T", "Tie", "W(f)", "L(f)") and not score:
+        issues.append("missing score")
+    if score:
+        import re
+        numbers = [int(n) for n in re.findall(r"\d+", score)]
+        if len(numbers) < 2:
+            issues.append("malformed score")
+        elif result in ("W", "W(f)") and numbers[0] <= numbers[1]:
+            issues.append("W conflicts with score")
+        elif result in ("L", "L(f)") and numbers[0] >= numbers[1]:
+            issues.append("L conflicts with score")
+        elif result in ("T", "Tie") and numbers[0] != numbers[1]:
+            issues.append("tie conflicts with score")
+    if flagged:
+        issues.append("flagged")
+    return issues
 
 
 # ─── FOOTBALL POWER RANKINGS ──────────────────────────────────────────────────
@@ -258,26 +292,7 @@ def build_needs_review(sheet, season=SEASON):
     data = []
     for r in rows:
         issues = []
-        result = str(r["win_loss"] or "").strip()
-        score = str(r["score"] or "").strip()
-        if not result and score:
-            issues.append("missing W/L")
-        elif result not in ("W", "L", "T", "Tie", "W(f)", "L(f)", "PPD", "OD", "JV"):
-            issues.append("unrecognized result")
-        if result in ("W", "L", "T", "Tie", "W(f)", "L(f)") and not score:
-            issues.append("missing score")
-        if score:
-            import re
-            numbers = [int(n) for n in re.findall(r"\d+", score)]
-            if len(numbers) < 2:
-                issues.append("malformed score")
-            elif result in ("W", "W(f)") and numbers[0] <= numbers[1]:
-                issues.append("W conflicts with score")
-            elif result in ("L", "L(f)") and numbers[0] >= numbers[1]:
-                issues.append("L conflicts with score")
-            elif result in ("T", "Tie") and numbers[0] != numbers[1]:
-                issues.append("tie conflicts with score")
-        if r["needs_review"]:  issues.append("flagged")
+        issues = game_review_issues(r["win_loss"], r["score"], r["needs_review"])
         if not issues:
             continue
         data.append([
@@ -1005,6 +1020,48 @@ def build_sport_class_tabs(sheet, sport, season):
     return total
 
 
+def build_sport_needs_review(sheet, sport, season):
+    """Publish missing, malformed, and conflicting played-game data."""
+    tab_name = f"{sport.title()} Needs Review ({season})"
+    print(f"  Building {tab_name}...")
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute("""
+        SELECT school, week, game_date, opponent, win_loss, score,
+               class_, district, district_class, needs_review
+        FROM games
+        WHERE sport=? AND season=?
+        ORDER BY school, game_date, week
+    """, (sport, str(season))).fetchall()
+    conn.close()
+
+    output = []
+    for row in rows:
+        issues = game_review_issues(
+            row["win_loss"], row["score"], row["needs_review"]
+        )
+        if not issues:
+            continue
+        output.append([
+            row["school"] or "", row["week"] or "", row["game_date"] or "",
+            row["opponent"] or "", row["win_loss"] or "", row["score"] or "",
+            row["class_"] or "", row["district"] or "",
+            row["district_class"] or "", ", ".join(issues),
+        ])
+
+    ws = get_or_create_tab(sheet, tab_name)
+    ws.update("A1", [[
+        "School", "Game", "Date", "Opponent", "W/L", "Score",
+        "Class", "District", "District/Class", "Issue",
+    ]])
+    if output:
+        batch_write(ws, 2, output)
+    else:
+        ws.update("A2", [["No issues found!"]])
+    print(f"    {len(output)} games need review")
+    return len(output)
+
+
 def export_baseball_to_sheets(season=2026):
     print(f"\n{'='*54}")
     print(f"LVAY Baseball Sheets Export — Season {season}")
@@ -1036,9 +1093,17 @@ def export_baseball_to_sheets(season=2026):
         print(f"  ERROR (classes): {e}")
         cls_total = 0
 
+    try:
+        flagged = build_sport_needs_review(sheet, "baseball", season)
+        ensure_sport_overrides_tab(sheet, "baseball", season)
+    except Exception as e:
+        print(f"  ERROR (review/corrections): {e}")
+        flagged = 0
+
     print(f"\n{'='*54}")
     print(f"DONE! Baseball {season} Sheets complete")
     print(f"  Master: {total} schools | Division tabs: {div_total} | Class tabs: {cls_total}")
+    print(f"  Needs Review: {flagged} games | Overrides tab ready")
     print(f"Sheet: https://docs.google.com/spreadsheets/d/{SHEET_ID}")
     print(f"{'='*54}\n")
     return True
@@ -1075,9 +1140,17 @@ def export_softball_to_sheets(season=2026):
         print(f"  ERROR (classes): {e}")
         cls_total = 0
 
+    try:
+        flagged = build_sport_needs_review(sheet, "softball", season)
+        ensure_sport_overrides_tab(sheet, "softball", season)
+    except Exception as e:
+        print(f"  ERROR (review/corrections): {e}")
+        flagged = 0
+
     print(f"\n{'='*54}")
     print(f"DONE! Softball {season} Sheets complete")
     print(f"  Master: {total} schools | Division tabs: {div_total} | Class tabs: {cls_total}")
+    print(f"  Needs Review: {flagged} games | Overrides tab ready")
     print(f"Sheet: https://docs.google.com/spreadsheets/d/{SHEET_ID}")
     print(f"{'='*54}\n")
     return True

@@ -514,20 +514,22 @@ def rankings_baseball():
     conn = get_db()
     c = conn.cursor()
     try:
+        season = available_season(conn, "baseball")
         c.execute("""
             SELECT school, division, track, class_, district,
                    rank, power_rating, wins, losses, ties, games_played,
-                   COALESCE(strength_factor, 0) as strength_factor
+                   COALESCE(strength_factor, 0) as strength_factor,
+                   calculated_at
             FROM power_rankings
-            WHERE sport='baseball' AND season='2026'
+            WHERE sport='baseball' AND season=?
             ORDER BY rank ASC
-        """)
+        """, (season,))
         rows = [dict(r) for r in c.fetchall()]
     except Exception as e:
         conn.close()
         return jsonify({"error": str(e)}), 500
     conn.close()
-    return jsonify({"sport": "baseball", "season": "2026", "count": len(rows), "rankings": rows})
+    return jsonify({"sport": "baseball", "season": season, "count": len(rows), "rankings": rows})
 
 
 @app.route("/api/rankings/softball")
@@ -535,20 +537,22 @@ def rankings_softball():
     conn = get_db()
     c = conn.cursor()
     try:
+        season = available_season(conn, "softball")
         c.execute("""
             SELECT school, division, track, class_, district,
                    rank, power_rating, wins, losses, ties, games_played,
-                   COALESCE(strength_factor, 0) as strength_factor
+                   COALESCE(strength_factor, 0) as strength_factor,
+                   calculated_at
             FROM power_rankings
-            WHERE sport='softball' AND season='2026'
+            WHERE sport='softball' AND season=?
             ORDER BY rank ASC
-        """)
+        """, (season,))
         rows = [dict(r) for r in c.fetchall()]
     except Exception as e:
         conn.close()
         return jsonify({"error": str(e)}), 500
     conn.close()
-    return jsonify({"sport": "softball", "season": "2026", "count": len(rows), "rankings": rows})
+    return jsonify({"sport": "softball", "season": season, "count": len(rows), "rankings": rows})
 
 
 @app.route("/api/rankings/volleyball")
@@ -683,7 +687,7 @@ def get_sport_schedules(sport):
     conn = get_db()
     c = conn.cursor()
     school_filter = request.args.get("school")
-    season = os.environ.get("SEASON_YEAR") or resolve_season(sport)
+    season = available_season(conn, sport)
 
     if school_filter:
         c.execute("""
@@ -779,14 +783,15 @@ def breakdown_baseball(school):
     conn = get_db()
     c = conn.cursor()
     try:
+        season = available_season(conn, "baseball", "game_power_points")
         c.execute("""
             SELECT week, opponent, result, score,
                    opp_wins, opp_losses, opp_division,
                    base_pts, div_bonus, opp_quality, total_pts, is_district
             FROM game_power_points
-            WHERE sport='baseball' AND season='2026' AND school=?
+            WHERE sport='baseball' AND season=? AND school=?
             ORDER BY week ASC
-        """, (school,))
+        """, (season, school))
         rows = [dict(r) for r in c.fetchall()]
         total = sum(r["total_pts"] for r in rows)
         pr = round(total / len(rows), 2) if rows else 0
@@ -794,7 +799,7 @@ def breakdown_baseball(school):
         conn.close()
         return jsonify({"error": str(e)}), 500
     conn.close()
-    return jsonify({"school": school, "calculated_pr": pr, "games": rows})
+    return jsonify({"school": school, "season": season, "calculated_pr": pr, "games": rows})
 
 
 @app.route("/api/breakdown/softball/<school>")
@@ -802,14 +807,15 @@ def breakdown_softball(school):
     conn = get_db()
     c = conn.cursor()
     try:
+        season = available_season(conn, "softball", "game_power_points")
         c.execute("""
             SELECT week, opponent, result, score,
                    opp_wins, opp_losses, opp_division,
                    base_pts, div_bonus, opp_quality, total_pts, is_district
             FROM game_power_points
-            WHERE sport='softball' AND season='2026' AND school=?
+            WHERE sport='softball' AND season=? AND school=?
             ORDER BY week ASC
-        """, (school,))
+        """, (season, school))
         rows = [dict(r) for r in c.fetchall()]
         total = sum(r["total_pts"] for r in rows)
         pr = round(total / len(rows), 2) if rows else 0
@@ -817,7 +823,7 @@ def breakdown_softball(school):
         conn.close()
         return jsonify({"error": str(e)}), 500
     conn.close()
-    return jsonify({"school": school, "calculated_pr": pr, "games": rows})
+    return jsonify({"school": school, "season": season, "calculated_pr": pr, "games": rows})
 
 
 @app.route("/api/breakdown/volleyball/<school>")
