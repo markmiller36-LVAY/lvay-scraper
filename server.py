@@ -376,7 +376,7 @@ def build_sport_review(sport):
                 if len(numbers) < 2:
                     issues.append("malformed score")
                 else:
-                    opponent_score, school_score = numbers[:2]
+                    school_score, opponent_score = numbers[:2]
                     if result in ("W", "W(f)") and school_score <= opponent_score:
                         issues.append("W conflicts with score")
                     elif result in ("L", "L(f)") and school_score >= opponent_score:
@@ -410,7 +410,7 @@ def build_sport_review(sport):
             "status": "complete",
             "sport": sport,
             "games_needing_review": flagged,
-            "validator": "opponent-score-first-v3-inline",
+            "validator": "school-score-first-v4-inline",
         })
     except Exception as e:
         return jsonify({"status": "error", "sport": sport, "error": str(e)}), 500
