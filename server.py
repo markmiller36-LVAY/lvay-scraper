@@ -687,6 +687,43 @@ def rankings_volleyball():
     return jsonify({"sport": "volleyball", "season": season, "count": len(rows), "rankings": rows})
 
 
+@app.route("/embed/volleyball-rankings")
+def embed_volleyball_rankings():
+    conn = get_db()
+    season = available_season(conn, "volleyball", "volleyball_rankings")
+    rows = conn.execute("""
+        SELECT school, division, div_rank, power_rating, wins, losses
+        FROM volleyball_rankings
+        WHERE sport='volleyball' AND season=?
+        ORDER BY division, div_rank
+    """, (season,)).fetchall()
+    conn.close()
+    groups = {}
+    for row in rows:
+        groups.setdefault(row["division"], []).append(row)
+    sections = []
+    for division in sorted(groups):
+        body = "".join(
+            f"<tr><td>{r['div_rank']}</td><td>{r['school']}</td>"
+            f"<td>{r['wins']}-{r['losses']}</td>"
+            f"<td>{float(r['power_rating']):.3f}</td></tr>"
+            for r in groups[division]
+        )
+        sections.append(
+            f"<h2>{division}</h2><table><thead><tr><th>Rank</th>"
+            f"<th>School</th><th>Record</th><th>Power Rating</th>"
+            f"</tr></thead><tbody>{body}</tbody></table>"
+        )
+    return f"""<!doctype html><html><head><meta charset="utf-8">
+    <style>body{{font-family:Arial,sans-serif;margin:0;color:#202124}}
+    h1{{font-size:24px}}h2{{margin-top:28px}}table{{width:100%;
+    border-collapse:collapse}}th,td{{padding:9px;border-bottom:1px solid
+    #ddd;text-align:left}}th{{background:#f2f4f7;position:sticky;top:0}}
+    </style></head><body><h1>{season} LHSAA Volleyball Power Rankings</h1>
+    <p>{len(rows)} teams • Updated automatically</p>
+    {''.join(sections)}</body></html>"""
+
+
 # ── SCHEDULES ENDPOINTS ──────────────────────────────────────
 
 @app.route("/api/schedules/football")
