@@ -61,6 +61,8 @@ def scheduled_run():
             run_volleyball_scraper()
             from run_power_rankings_volleyball import run_volleyball_rankings
             run_volleyball_rankings()
+            from sheets_exporter import export_volleyball_to_sheets
+            export_volleyball_to_sheets()
             print("[SCHEDULER] Volleyball pipeline complete")
 
         # 4. BASEBALL

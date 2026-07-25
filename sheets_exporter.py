@@ -20,6 +20,7 @@ from google.oauth2.service_account import Credentials
 import sqlite3
 import json
 import os
+import re
 import time
 from datetime import datetime
 
@@ -1160,3 +1161,97 @@ def export_softball_to_sheets(season=2026):
     print(f"Sheet: https://docs.google.com/spreadsheets/d/{SHEET_ID}")
     print(f"{'='*54}\n")
     return True
+
+
+def export_volleyball_to_sheets(season=None):
+    """Build Volleyball rankings, schedules, review, and correction tabs."""
+    season = str(season or os.environ.get(
+        "VOLLEYBALL_SEASON_YEAR", datetime.now().year
+    ))
+    client = get_client()
+    sheet = client.open_by_key(SHEET_ID)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+
+    rankings = conn.execute("""
+        SELECT div_rank, school, division, class_, district, wins, losses,
+               games_played, power_rating
+        FROM volleyball_rankings
+        WHERE sport='volleyball' AND season=?
+        ORDER BY division, div_rank
+    """, (season,)).fetchall()
+    games = conn.execute("""
+        SELECT school, match_num, game_date, opponent, result, score,
+               school_division, school_district, counts_for_pr
+        FROM volleyball_games
+        WHERE sport='volleyball' AND season=?
+        ORDER BY school, game_date, match_num
+    """, (season,)).fetchall()
+    conn.close()
+
+    rankings_ws = get_or_create_tab(
+        sheet, f"Volleyball Power Rankings ({season})"
+    )
+    rankings_ws.update("A1", [[
+        "Division Rank", "School", "Division", "Class", "District",
+        "W", "L", "Matches", "Power Rating",
+    ]])
+    if rankings:
+        batch_write(rankings_ws, 2, [[
+            r["div_rank"] or "", r["school"] or "", r["division"] or "",
+            r["class_"] or "", r["district"] or "", r["wins"] or 0,
+            r["losses"] or 0, r["games_played"] or 0,
+            round(float(r["power_rating"] or 0), 3),
+        ] for r in rankings])
+
+    scores_ws = get_or_create_tab(sheet, f"Volleyball Scores ({season})")
+    scores_ws.update("A1", [[
+        "School", "Match", "Date", "Opponent", "W/L", "Score",
+        "Division", "District", "Counts for PR",
+    ]])
+    if games:
+        batch_write(scores_ws, 2, [[
+            g["school"] or "", g["match_num"] or "", g["game_date"] or "",
+            g["opponent"] or "", g["result"] or "", g["score"] or "",
+            g["school_division"] or "", g["school_district"] or "",
+            bool(g["counts_for_pr"]),
+        ] for g in games])
+
+    review_ws = get_or_create_tab(
+        sheet, f"Volleyball Needs Review ({season})"
+    )
+    review_ws.update("A1", [[
+        "School", "Match", "Date", "Opponent", "W/L", "Score",
+        "Division", "District", "Issue",
+    ]])
+    review = []
+    for g in games:
+        issues = []
+        result = str(g["result"] or "").strip()
+        score = str(g["score"] or "").strip()
+        if result not in ("W", "L"):
+            issues.append("missing or unrecognized result")
+        if result in ("W", "L") and not score:
+            issues.append("missing score")
+        elif score and not re.match(
+            r"^\s*\d+\s*-\s*\d+(\s*,\s*\d+\s*-\s*\d+)*\s*$", score
+        ):
+            issues.append("malformed set scores")
+        if issues:
+            review.append([
+                g["school"] or "", g["match_num"] or "",
+                g["game_date"] or "", g["opponent"] or "", result, score,
+                g["school_division"] or "", g["school_district"] or "",
+                ", ".join(issues),
+            ])
+    if review:
+        batch_write(review_ws, 2, review)
+    else:
+        review_ws.update("A2", [["No issues found!"]])
+
+    ensure_sport_overrides_tab(sheet, "volleyball", season)
+    return {
+        "rankings": len(rankings),
+        "games": len(games),
+        "needs_review": len(review),
+    }

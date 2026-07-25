@@ -68,14 +68,26 @@ def get_db():
 # STEP 1 — BUILD OPPONENT WIN TOTALS
 # ──────────────────────────────────────────────────────────────────────────────
 
-def build_opponent_win_totals(conn):
+def apply_result_override(row, overrides):
+    key = (
+        SPORT,
+        str(SEASON),
+        str(row["school"] or "").strip().lower(),
+        str(row["game_date"] or "").strip(),
+        str(row["opponent"] or "").strip().lower(),
+    )
+    override = overrides.get(key, {})
+    return override.get("override_win_loss") or row["result"]
+
+
+def build_opponent_win_totals(conn, overrides=None):
     """
     For every school in volleyball_games, count their total wins
     across all matches that count_for_pr=1.
     Returns dict: {school_name: win_count}
     """
     rows = conn.execute("""
-        SELECT school, result
+        SELECT school, game_date, opponent, result
         FROM volleyball_games
         WHERE sport=? AND season=? AND counts_for_pr=1
     """, (SPORT, SEASON)).fetchall()
@@ -85,7 +97,7 @@ def build_opponent_win_totals(conn):
         school = row["school"]
         if school not in win_totals:
             win_totals[school] = 0
-        if row["result"] == "W":
+        if apply_result_override(row, overrides or {}) == "W":
             win_totals[school] += 1
 
     return win_totals
@@ -246,10 +258,16 @@ def run_volleyball_rankings():
     print(f"{'='*54}")
 
     conn = get_db()
+    try:
+        from run_power_rankings import load_sheet_overrides
+        overrides = load_sheet_overrides(SPORT, SEASON)
+    except Exception as e:
+        print(f"  Overrides unavailable: {e}")
+        overrides = {}
 
     # Build opponent win totals first
     print("  Building opponent win totals...")
-    opp_win_totals = build_opponent_win_totals(conn)
+    opp_win_totals = build_opponent_win_totals(conn, overrides)
     print(f"  Win totals built for {len(opp_win_totals)} schools")
 
     # Get all distinct schools and their volleyball division
@@ -272,12 +290,15 @@ def run_volleyball_rankings():
 
         # Fetch this school's countable games
         games = conn.execute("""
-            SELECT result, opponent
+            SELECT school, game_date, result, opponent
             FROM volleyball_games
             WHERE sport=? AND season=? AND school=? AND counts_for_pr=1
         """, (SPORT, SEASON, school_name)).fetchall()
 
         # Calculate PR
+        games = [dict(g) for g in games]
+        for game in games:
+            game["result"] = apply_result_override(game, overrides)
         stats = calculate_school_pr(school_name, games, opp_win_totals)
 
         # Resolve metadata

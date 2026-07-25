@@ -325,6 +325,24 @@ def build_softball_sheets():
 
 # ── DATA FIX ENDPOINTS ───────────────────────────────────────
 
+@app.route("/api/build/volleyball-sheets")
+def build_volleyball_sheets():
+    try:
+        conn = get_db()
+        season = available_season(
+            conn, "volleyball", "volleyball_rankings"
+        )
+        conn.close()
+        from sheets_exporter import export_volleyball_to_sheets
+        result = export_volleyball_to_sheets(season)
+        return jsonify({
+            "status": "complete", "sport": "volleyball",
+            "season": season, **result,
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+
 @app.route("/api/build/<sport>-review")
 def build_sport_review(sport):
     if sport not in ("baseball", "softball"):
@@ -651,19 +669,20 @@ def rankings_volleyball():
     conn = get_db()
     c = conn.cursor()
     try:
+        season = available_season(conn, "volleyball", "volleyball_rankings")
         c.execute("""
             SELECT school, division, class_, district,
                    rank, div_rank, power_rating, wins, losses, games_played
             FROM volleyball_rankings
-            WHERE sport='volleyball' AND season='2025'
+            WHERE sport='volleyball' AND season=?
             ORDER BY rank ASC
-        """)
+        """, (season,))
         rows = [dict(r) for r in c.fetchall()]
     except Exception as e:
         conn.close()
         return jsonify({"error": str(e)}), 500
     conn.close()
-    return jsonify({"sport": "volleyball", "season": "2025", "count": len(rows), "rankings": rows})
+    return jsonify({"sport": "volleyball", "season": season, "count": len(rows), "rankings": rows})
 
 
 # ── SCHEDULES ENDPOINTS ──────────────────────────────────────
@@ -723,14 +742,15 @@ def schedules_volleyball():
     conn = get_db()
     c = conn.cursor()
     try:
+        season = available_season(conn, "volleyball", "volleyball_rankings")
         # Get all schools with their ranking info
         c.execute("""
             SELECT vr.school, vr.division, vr.class_, vr.district,
                    vr.power_rating, vr.wins, vr.losses, vr.games_played, vr.rank, vr.div_rank
             FROM volleyball_rankings vr
-            WHERE vr.sport='volleyball' AND vr.season='2025'
+            WHERE vr.sport='volleyball' AND vr.season=?
             ORDER BY vr.division ASC, vr.district ASC, vr.school ASC
-        """)
+        """, (season,))
         school_rows = [dict(r) for r in c.fetchall()]
         schools = []
 
@@ -740,15 +760,15 @@ def schedules_volleyball():
                        is_district, is_tournament, tournament_name,
                        match_num, home_away, result, score, counts_for_pr
                 FROM volleyball_games
-                WHERE sport='volleyball' AND season='2025' AND school=?
+                WHERE sport='volleyball' AND season=? AND school=?
                 ORDER BY game_date ASC, match_num ASC
-            """, (s["school"],))
+            """, (season, s["school"]))
             games = [dict(r) for r in c.fetchall()]
 
             schools.append({
                 "school":       s["school"],
                 "sport":        "volleyball",
-                "season":       "2025",
+                "season":       season,
                 "division":     s.get("division", ""),
                 "class_":       s.get("class_", ""),
                 "district":     s.get("district"),
@@ -768,7 +788,7 @@ def schedules_volleyball():
     conn.close()
     return jsonify({
         "sport":   "volleyball",
-        "season":  "2025",
+        "season":  season,
         "count":   len(schools),
         "schools": schools,
     })
@@ -922,21 +942,22 @@ def breakdown_volleyball(school):
     conn = get_db()
     c = conn.cursor()
     try:
+        season = available_season(conn, "volleyball", "volleyball_rankings")
         c.execute("""
             SELECT game_date, opponent, opp_division,
                    is_district, is_tournament, tournament_name,
                    home_away, result, score, counts_for_pr
             FROM volleyball_games
-            WHERE sport='volleyball' AND season='2025' AND school=?
+            WHERE sport='volleyball' AND season=? AND school=?
             ORDER BY game_date ASC, match_num ASC
-        """, (school,))
+        """, (season, school))
         games = [dict(r) for r in c.fetchall()]
 
         c.execute("""
             SELECT power_rating, wins, losses, games_played, rank, div_rank, division
             FROM volleyball_rankings
-            WHERE sport='volleyball' AND season='2025' AND school=?
-        """, (school,))
+            WHERE sport='volleyball' AND season=? AND school=?
+        """, (season, school))
         row = c.fetchone()
         pr_info = dict(row) if row else {}
 
@@ -946,6 +967,7 @@ def breakdown_volleyball(school):
     conn.close()
     return jsonify({
         "school":       school,
+        "season":       season,
         "power_rating": pr_info.get("power_rating", 0),
         "wins":         pr_info.get("wins", 0),
         "losses":       pr_info.get("losses", 0),
