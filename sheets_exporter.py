@@ -1205,6 +1205,7 @@ def export_volleyball_to_sheets(season=None):
         ] for r in rankings])
 
     scores_ws = get_or_create_tab(sheet, f"Volleyball Scores ({season})")
+    scores_ws.resize(rows=max(3000, len(games) + 2), cols=9)
     scores_ws.update("A1", [[
         "School", "Match", "Date", "Opponent", "W/L", "Score",
         "Division", "District", "Counts for PR",
@@ -1220,6 +1221,7 @@ def export_volleyball_to_sheets(season=None):
     review_ws = get_or_create_tab(
         sheet, f"Volleyball Needs Review ({season})"
     )
+    review_ws.resize(rows=max(1000, len(games) + 2), cols=9)
     review_ws.update("A1", [[
         "School", "Match", "Date", "Opponent", "W/L", "Score",
         "Division", "District", "Issue",
