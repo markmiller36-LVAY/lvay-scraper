@@ -330,30 +330,27 @@ def build_sport_review(sport):
     if sport not in ("baseball", "softball"):
         return jsonify({"error": "Review build is available for baseball and softball"}), 400
 
-    def run():
-        try:
-            from sheets_exporter import (
-                build_sport_needs_review,
-                ensure_sport_overrides_tab,
-                get_client,
+    try:
+        from sheets_exporter import (
+            build_sport_needs_review,
+            ensure_sport_overrides_tab,
+            get_client,
+        )
+        sheet = get_client().open_by_key(
+            os.environ.get(
+                "GOOGLE_SHEET_ID",
+                "1u_cJBAWTQJIAO36HZTYvPa7QfE0JoOEqx12c1U4t4mk",
             )
-            sheet = get_client().open_by_key(
-                os.environ.get(
-                    "GOOGLE_SHEET_ID",
-                    "1u_cJBAWTQJIAO36HZTYvPa7QfE0JoOEqx12c1U4t4mk",
-                )
-            )
-            build_sport_needs_review(sheet, sport, 2026)
-            ensure_sport_overrides_tab(sheet, sport, 2026)
-        except Exception as e:
-            print(f"{sport.title()} review build error: {e}")
-
-    threading.Thread(target=run, daemon=True).start()
-    return jsonify({
-        "status": "started",
-        "sport": sport,
-        "message": f"{sport.title()} review tab rebuilding",
-    })
+        )
+        flagged = build_sport_needs_review(sheet, sport, 2026)
+        ensure_sport_overrides_tab(sheet, sport, 2026)
+        return jsonify({
+            "status": "complete",
+            "sport": sport,
+            "games_needing_review": flagged,
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "sport": sport, "error": str(e)}), 500
 
 
 @app.route("/api/fix/oberlin-bolton")
