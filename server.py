@@ -332,10 +332,10 @@ def build_sport_review(sport):
 
     try:
         from sheets_exporter import (
-            build_sport_needs_review,
+            batch_write,
             ensure_sport_overrides_tab,
-            game_review_issues,
             get_client,
+            get_or_create_tab,
         )
         sheet = get_client().open_by_key(
             os.environ.get(
@@ -343,16 +343,74 @@ def build_sport_review(sport):
                 "1u_cJBAWTQJIAO36HZTYvPa7QfE0JoOEqx12c1U4t4mk",
             )
         )
-        flagged = build_sport_needs_review(sheet, sport, 2026)
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute("""
+            SELECT school, week, game_date, opponent, win_loss, score,
+                   class_, district, district_class, needs_review
+            FROM games
+            WHERE sport=? AND season='2026'
+            ORDER BY school, game_date, week
+        """, (sport,)).fetchall()
+        conn.close()
+
+        output = []
+        import re
+        for row in rows:
+            school = str(row["school"] or "").strip()
+            if school in ("", "#", "School"):
+                continue
+            result = str(row["win_loss"] or "").strip()
+            score = str(row["score"] or "").strip()
+            issues = []
+            if not result and score:
+                issues.append("missing W/L")
+            elif result and result not in (
+                "W", "L", "T", "Tie", "W(f)", "L(f)", "PPD", "OD", "JV"
+            ):
+                issues.append("unrecognized result")
+            if result in ("W", "L", "T", "Tie", "W(f)", "L(f)") and not score:
+                issues.append("missing score")
+            if score:
+                numbers = [int(n) for n in re.findall(r"\d+", score)]
+                if len(numbers) < 2:
+                    issues.append("malformed score")
+                else:
+                    opponent_score, school_score = numbers[:2]
+                    if result in ("W", "W(f)") and school_score <= opponent_score:
+                        issues.append("W conflicts with score")
+                    elif result in ("L", "L(f)") and school_score >= opponent_score:
+                        issues.append("L conflicts with score")
+                    elif result in ("T", "Tie") and school_score != opponent_score:
+                        issues.append("tie conflicts with score")
+            if row["needs_review"]:
+                issues.append("flagged")
+            if issues:
+                output.append([
+                    school, row["week"] or "", row["game_date"] or "",
+                    row["opponent"] or "", result, score, row["class_"] or "",
+                    row["district"] or "", row["district_class"] or "",
+                    ", ".join(issues),
+                ])
+
+        ws = get_or_create_tab(
+            sheet, f"{sport.title()} Needs Review (2026)"
+        )
+        ws.update("A1", [[
+            "School", "Game", "Date", "Opponent", "W/L", "Score",
+            "Class", "District", "District/Class", "Issue",
+        ]])
+        if output:
+            batch_write(ws, 2, output)
+        else:
+            ws.update("A2", [["No issues found!"]])
+        flagged = len(output)
         ensure_sport_overrides_tab(sheet, sport, 2026)
         return jsonify({
             "status": "complete",
             "sport": sport,
             "games_needing_review": flagged,
-            "validator": "opponent-score-first-v2",
-            "probe": game_review_issues(
-                "L", "14-4", school_score_second=True
-            ),
+            "validator": "opponent-score-first-v3-inline",
         })
     except Exception as e:
         return jsonify({"status": "error", "sport": sport, "error": str(e)}), 500
