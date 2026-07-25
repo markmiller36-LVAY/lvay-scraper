@@ -325,6 +325,37 @@ def build_softball_sheets():
 
 # ── DATA FIX ENDPOINTS ───────────────────────────────────────
 
+@app.route("/api/build/<sport>-review")
+def build_sport_review(sport):
+    if sport not in ("baseball", "softball"):
+        return jsonify({"error": "Review build is available for baseball and softball"}), 400
+
+    def run():
+        try:
+            from sheets_exporter import (
+                build_sport_needs_review,
+                ensure_sport_overrides_tab,
+                get_client,
+            )
+            sheet = get_client().open_by_key(
+                os.environ.get(
+                    "GOOGLE_SHEET_ID",
+                    "1u_cJBAWTQJIAO36HZTYvPa7QfE0JoOEqx12c1U4t4mk",
+                )
+            )
+            build_sport_needs_review(sheet, sport, 2026)
+            ensure_sport_overrides_tab(sheet, sport, 2026)
+        except Exception as e:
+            print(f"{sport.title()} review build error: {e}")
+
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({
+        "status": "started",
+        "sport": sport,
+        "message": f"{sport.title()} review tab rebuilding",
+    })
+
+
 @app.route("/api/fix/oberlin-bolton")
 def fix_oberlin_bolton():
     conn = get_db()
