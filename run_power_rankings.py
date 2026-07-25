@@ -31,8 +31,14 @@ DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 SPORT = os.environ.get("RANKINGS_SPORT", "football")
 SEASON = os.environ.get("RANKINGS_SEASON", "2026")
 
-GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID", "")
-GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
+GOOGLE_SHEET_ID = os.environ.get(
+    "GOOGLE_SHEET_ID",
+    "1u_cJBAWTQJIAO36HZTYvPa7QfE0JoOEqx12c1U4t4mk",
+)
+GOOGLE_SERVICE_ACCOUNT_JSON = (
+    os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
+    or os.environ.get("GOOGLE_CREDENTIALS_JSON", "")
+)
 
 
 def normalize_result(wl):

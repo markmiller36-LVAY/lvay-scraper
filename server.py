@@ -35,6 +35,27 @@ def resolve_season(sport="baseball"):
     return str(now.year + 1 if now.month >= 8 else now.year)
 
 
+def available_season(conn, sport, table="power_rankings"):
+    """Use the configured season when populated, otherwise keep latest live data."""
+    requested = request.args.get("season")
+    configured = requested or os.environ.get(
+        f"{sport.upper()}_SEASON_YEAR",
+        os.environ.get("SEASON_YEAR", resolve_season(sport)),
+    )
+    row = conn.execute(
+        f"SELECT 1 FROM {table} WHERE sport=? AND season=? LIMIT 1",
+        (sport, str(configured)),
+    ).fetchone()
+    if row:
+        return str(configured)
+    row = conn.execute(
+        f"SELECT season FROM {table} WHERE sport=? "
+        "ORDER BY CAST(season AS INTEGER) DESC LIMIT 1",
+        (sport,),
+    ).fetchone()
+    return str(row["season"]) if row else str(configured)
+
+
 def init_db():
     conn = get_db()
     c = conn.cursor()
@@ -442,7 +463,10 @@ def import_oos_2025():
 @app.route("/api/rankings/calculate")
 def calculate_rankings():
     sport  = request.args.get("sport", "football")
-    season = request.args.get("season", "2025")
+    season = request.args.get("season") or os.environ.get(
+        f"{sport.upper()}_SEASON_YEAR",
+        os.environ.get("SEASON_YEAR", resolve_season(sport)),
+    )
 
     def run():
         try:
@@ -467,20 +491,22 @@ def rankings_football():
     conn = get_db()
     c = conn.cursor()
     try:
+        season = available_season(conn, "football")
         c.execute("""
             SELECT school, division, track, class_, district,
                    rank, power_rating, wins, losses, ties, games_played,
-                   COALESCE(strength_factor, 0) as strength_factor
+                   COALESCE(strength_factor, 0) as strength_factor,
+                   calculated_at
             FROM power_rankings
-            WHERE sport='football' AND season='2025'
+            WHERE sport='football' AND season=?
             ORDER BY rank ASC
-        """)
+        """, (season,))
         rows = [dict(r) for r in c.fetchall()]
     except Exception as e:
         conn.close()
         return jsonify({"error": str(e)}), 500
     conn.close()
-    return jsonify({"sport": "football", "season": "2025", "count": len(rows), "rankings": rows})
+    return jsonify({"sport": "football", "season": season, "count": len(rows), "rankings": rows})
 
 
 @app.route("/api/rankings/baseball")
@@ -552,13 +578,14 @@ def schedules_football():
     conn = get_db()
     c = conn.cursor()
     try:
+        season = available_season(conn, "football")
         c.execute("""
             SELECT pr.school, pr.division, pr.track, pr.class_, pr.district,
                    pr.power_rating, pr.wins, pr.losses, pr.ties, pr.games_played
             FROM power_rankings pr
-            WHERE pr.sport='football' AND pr.season='2025'
+            WHERE pr.sport='football' AND pr.season=?
             ORDER BY pr.class_ DESC, pr.district ASC, pr.school ASC
-        """)
+        """, (season,))
         schools = [dict(r) for r in c.fetchall()]
 
         for s in schools:
@@ -570,20 +597,20 @@ def schedules_football():
                        g.home_away, g.game_date
                 FROM game_power_points gpp
                 LEFT JOIN games g ON (
-                    g.sport='football' AND g.season='2025'
+                    g.sport='football' AND g.season=?
                     AND g.school=gpp.school
                     AND CAST(REPLACE(g.week,'Week ','') AS INTEGER)=gpp.week
                 )
-                WHERE gpp.sport='football' AND gpp.season='2025' AND gpp.school=?
+                WHERE gpp.sport='football' AND gpp.season=? AND gpp.school=?
                 ORDER BY gpp.week ASC
-            """, (s['school'],))
+            """, (season, season, s['school']))
             s['games'] = [dict(r) for r in c.fetchall()]
 
     except Exception as e:
         conn.close()
         return jsonify({"error": str(e)}), 500
     conn.close()
-    return jsonify({"sport": "football", "season": "2025", "count": len(schools), "schools": schools})
+    return jsonify({"sport": "football", "season": season, "count": len(schools), "schools": schools})
 
 
 @app.route("/api/schedules/baseball")
@@ -728,14 +755,15 @@ def breakdown_football(school):
     conn = get_db()
     c = conn.cursor()
     try:
+        season = available_season(conn, "football", "game_power_points")
         c.execute("""
             SELECT week, opponent, result, score,
                    opp_wins, opp_losses, opp_division,
                    base_pts, div_bonus, opp_quality, total_pts
             FROM game_power_points
-            WHERE sport='football' AND season='2025' AND school=?
+            WHERE sport='football' AND season=? AND school=?
             ORDER BY week ASC
-        """, (school,))
+        """, (season, school))
         rows = [dict(r) for r in c.fetchall()]
         total = sum(r["total_pts"] for r in rows)
         pr = round(total / len(rows), 2) if rows else 0
@@ -743,7 +771,7 @@ def breakdown_football(school):
         conn.close()
         return jsonify({"error": str(e)}), 500
     conn.close()
-    return jsonify({"school": school, "calculated_pr": pr, "games": rows})
+    return jsonify({"school": school, "season": season, "calculated_pr": pr, "games": rows})
 
 
 @app.route("/api/breakdown/baseball/<school>")
