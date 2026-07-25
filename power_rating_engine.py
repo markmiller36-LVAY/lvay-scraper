@@ -6,8 +6,9 @@ Official LHSAA formulas from 2025-2026 Handbook / LVAY parity tuning
 FOOTBALL:
   Win=10, Loss=0, Tie=5, Forfeit=1
   OppQ: (Opp Wins / Opp GP) x 10
-  Division bonus:
-    - in-state: +2 per division step up
+  Class/division bonus:
+    - in-state: both class and playoff division must be higher;
+      +2 per class step up
     - OOS: +2 per class step up
   Power Rating = Total Points / Games Played
 
@@ -106,7 +107,7 @@ SPORT_CONFIGS = {
         "div_bonus_per_step": 2,
         "has_div_bonus": True,
         "opp_quality": "win_pct_x10",
-        "bonus_mode": "football_division_steps",
+        "bonus_mode": "class_steps_with_division_gate",
         "oos_bonus": True,
     },
     "baseball": {
@@ -310,8 +311,8 @@ class PowerRatingEngine:
                         gp.div_bonus = div_steps_up * bonus_per_step
 
             elif bonus_mode == "class_steps_with_division_gate":
-                # Baseball/softball: OOS gets no bonus per 10.10.2
-                # Basketball: OOS gets class-based bonus
+                # In-state: class and playoff division must both be higher.
+                # OOS: class-based bonus only when the sport permits it.
                 if oos:
                     if oos_bonus_allowed and class_diff > 0:
                         gp.div_bonus = class_diff * bonus_per_step
