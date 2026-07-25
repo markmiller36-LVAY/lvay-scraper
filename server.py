@@ -334,6 +334,7 @@ def build_sport_review(sport):
         from sheets_exporter import (
             build_sport_needs_review,
             ensure_sport_overrides_tab,
+            game_review_issues,
             get_client,
         )
         sheet = get_client().open_by_key(
@@ -348,6 +349,10 @@ def build_sport_review(sport):
             "status": "complete",
             "sport": sport,
             "games_needing_review": flagged,
+            "validator": "opponent-score-first-v2",
+            "probe": game_review_issues(
+                "L", "14-4", school_score_second=True
+            ),
         })
     except Exception as e:
         return jsonify({"status": "error", "sport": sport, "error": str(e)}), 500
