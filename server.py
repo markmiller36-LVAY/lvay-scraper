@@ -89,6 +89,16 @@ def init_db():
             UNIQUE(sport, season, school, opponent)
         )
     """)
+    for column in (
+        "week INTEGER",
+        "division TEXT",
+        "class_ TEXT",
+        "opp_ties INTEGER DEFAULT 0",
+    ):
+        try:
+            c.execute(f"ALTER TABLE oos_opponents ADD COLUMN {column}")
+        except sqlite3.OperationalError:
+            pass
     c.execute("""
         CREATE TABLE IF NOT EXISTS power_rankings (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -121,7 +131,7 @@ def init_db():
 with app.app_context():
     init_db()
     try:
-        from import_oos_2025 import run as import_oos
+        from import_football_2025 import run as import_oos
         import_oos()
         print("OOS football opponents imported on startup")
     except Exception as e:
@@ -561,7 +571,7 @@ def fix_stedmund_oos():
 def import_oos_2025():
     def run():
         try:
-            from import_oos_2025 import run as do_import
+            from import_football_2025 import run as do_import
             do_import()
         except Exception as e:
             print(f"OOS import error: {e}")

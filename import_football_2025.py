@@ -70,14 +70,31 @@ def run():
             UNIQUE(sport, season, school, week)
         )
     """)
+    for column in (
+        "week INTEGER",
+        "division TEXT",
+        "class_ TEXT",
+        "opp_ties INTEGER DEFAULT 0",
+    ):
+        try:
+            c.execute(f"ALTER TABLE oos_opponents ADD COLUMN {column}")
+        except sqlite3.OperationalError:
+            pass
 
     inserted = 0
     for r in OOS_DATA:
         division = DIV_MAP.get(r['div'], r['div'])
         c.execute("""
-            INSERT OR REPLACE INTO oos_opponents
+            INSERT INTO oos_opponents
             (sport, season, school, week, opponent, division, class_, opp_wins, opp_losses)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(sport, season, school, opponent)
+            DO UPDATE SET
+                week = excluded.week,
+                division = excluded.division,
+                class_ = excluded.class_,
+                opp_wins = excluded.opp_wins,
+                opp_losses = excluded.opp_losses
         """, ('football', '2025', r['school'], r['week'],
               r['opponent'], division, r.get('cls',''), r['opp_wins'], r['opp_losses']))
         inserted += 1

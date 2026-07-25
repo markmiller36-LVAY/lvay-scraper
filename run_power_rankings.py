@@ -288,32 +288,32 @@ def load_scores(conn, season=SEASON, sport=SPORT):
 def load_oos_opponents(conn, season=SEASON, sport=SPORT):
     c = conn.cursor()
     try:
-        # Try to read opp_ties; fall back gracefully if column doesn't exist yet
-        try:
-            c.execute("""
-                SELECT school, opponent, opp_wins, opp_losses, opp_ties
-                FROM oos_opponents
-                WHERE sport=? AND season=?
-            """, (sport, season))
-            has_ties = True
-        except sqlite3.OperationalError:
-            c.execute("""
-                SELECT school, opponent, opp_wins, opp_losses
-                FROM oos_opponents
-                WHERE sport=? AND season=?
-            """, (sport, season))
-            has_ties = False
+        columns = {
+            row["name"] for row in c.execute("PRAGMA table_info(oos_opponents)")
+        }
+        optional = [
+            name for name in ("opp_ties", "division", "class_")
+            if name in columns
+        ]
+        select_columns = ", ".join(
+            ["school", "opponent", "opp_wins", "opp_losses", *optional]
+        )
+        c.execute(
+            f"SELECT {select_columns} FROM oos_opponents "
+            "WHERE sport=? AND season=?",
+            (sport, season),
+        )
 
         oos = {}
         for r in c.fetchall():
             key = (r["school"], r["opponent"])
             oos[key] = {
                 "opponent": r["opponent"],
-                "division": "Unknown",
-                "class_": "",
+                "division": r["division"] if "division" in optional else "Unknown",
+                "class_": r["class_"] if "class_" in optional else "",
                 "opp_wins": r["opp_wins"],
                 "opp_losses": r["opp_losses"],
-                "opp_ties": r["opp_ties"] if has_ties else 0,
+                "opp_ties": r["opp_ties"] if "opp_ties" in optional else 0,
             }
         return oos
     except Exception as e:
