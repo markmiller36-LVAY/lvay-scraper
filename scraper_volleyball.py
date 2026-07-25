@@ -34,7 +34,7 @@ from datetime import datetime
 # ──────────────────────────────────────────────────────────────────────────────
 
 SCRAPE_URL = "https://www.lhsaaonline.org/pr/vbpr/admin/ReportSchedule.asp"
-SEASON     = "2025"
+SEASON     = os.environ.get("VOLLEYBALL_SEASON_YEAR", str(datetime.now().year))
 SPORT      = "volleyball"
 DIVISIONS  = ["I", "II", "III", "IV", "V"]
 

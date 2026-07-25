@@ -35,22 +35,23 @@ def scheduled_run():
     try:
         # 1. SCRAPE
         print("[SCHEDULER] Running scraper...")
-        from scraper import run_all_sports
+        from scraper import run_all_sports, resolve_season_year
         run_all_sports()
 
         # 2. FOOTBALL
         if "football" in active:
+            season = resolve_season_year("football")
             print("[SCHEDULER] Running football pipeline...")
             from run_power_rankings import run_power_rankings
-            run_power_rankings(sport="football", season="2025")
+            run_power_rankings(sport="football", season=season)
             from sheets_exporter import (
                 export_football_to_sheets,
                 export_football_scores,
                 export_division_and_class_tabs,
             )
-            export_football_to_sheets()
-            export_football_scores()
-            export_division_and_class_tabs()
+            export_football_to_sheets(season=season)
+            export_football_scores(season=season)
+            export_division_and_class_tabs(season=season)
             print("[SCHEDULER] Football pipeline complete")
 
         # 3. VOLLEYBALL
@@ -64,30 +65,33 @@ def scheduled_run():
 
         # 4. BASEBALL
         if "baseball" in active:
+            season = resolve_season_year("baseball")
             print("[SCHEDULER] Running baseball pipeline...")
             from import_oos_baseball_2026 import run as import_oos_baseball
             import_oos_baseball()
             from run_power_rankings import run_power_rankings
-            run_power_rankings(sport="baseball", season="2026")
+            run_power_rankings(sport="baseball", season=season)
             from sheets_exporter import export_baseball_to_sheets
-            export_baseball_to_sheets()
+            export_baseball_to_sheets(season=int(season))
             print("[SCHEDULER] Baseball pipeline complete")
 
         # 5. SOFTBALL
         if "softball" in active:
+            season = resolve_season_year("softball")
             print("[SCHEDULER] Running softball pipeline...")
             from import_oos_softball_2026 import run as import_oos_softball
             import_oos_softball()
             from run_power_rankings import run_power_rankings
-            run_power_rankings(sport="softball", season="2026")
+            run_power_rankings(sport="softball", season=season)
             from sheets_exporter import export_softball_to_sheets
-            export_softball_to_sheets()
+            export_softball_to_sheets(season=int(season))
             print("[SCHEDULER] Softball pipeline complete")
 
         print("[SCHEDULER] ALL COMPLETE")
 
     except Exception as e:
         print(f"[SCHEDULER] ERROR: {e}")
+        raise
 
 
 def run_scheduler():

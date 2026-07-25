@@ -34,7 +34,7 @@ from school_database import get_school
 # ──────────────────────────────────────────────────────────────────────────────
 
 SPORT  = "volleyball"
-SEASON = "2025"
+SEASON = os.environ.get("VOLLEYBALL_SEASON_YEAR", str(datetime.now().year))
 
 DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 

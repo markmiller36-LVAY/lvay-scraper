@@ -4,6 +4,7 @@ LVAY Scraper - API Server
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import hmac
 import sqlite3
 import os
 from datetime import datetime
@@ -12,6 +13,13 @@ import threading
 app = Flask(__name__)
 CORS(app)
 DB_PATH = "/data/lvay_v2.db"
+PIPELINE_LOCK = threading.Lock()
+PIPELINE_STATE = {
+    "status": "idle",
+    "started_at": None,
+    "finished_at": None,
+    "error": None,
+}
 
 
 def get_db():
@@ -140,6 +148,70 @@ def status():
         "total_records":    sum(by_sport.values()),
         "recent_scrapes":   recent,
     })
+
+
+# ── FULL PIPELINE TRIGGER ───────────────────────────────────
+
+def _pipeline_authorized():
+    configured_token = os.environ.get("PIPELINE_TOKEN", "")
+    supplied_token = request.headers.get("X-Pipeline-Token", "")
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        supplied_token = auth_header[7:]
+    return (
+        bool(configured_token)
+        and bool(supplied_token)
+        and hmac.compare_digest(configured_token, supplied_token)
+    )
+
+
+@app.route("/api/pipeline/run", methods=["POST"])
+def run_full_pipeline():
+    if not os.environ.get("PIPELINE_TOKEN"):
+        return jsonify({
+            "status": "unavailable",
+            "message": "PIPELINE_TOKEN is not configured",
+        }), 503
+    if not _pipeline_authorized():
+        return jsonify({"status": "unauthorized"}), 401
+    if not PIPELINE_LOCK.acquire(blocking=False):
+        return jsonify({
+            "status": "already_running",
+            "started_at": PIPELINE_STATE["started_at"],
+        }), 409
+
+    def run():
+        PIPELINE_STATE.update({
+            "status": "running",
+            "started_at": datetime.now().isoformat(),
+            "finished_at": None,
+            "error": None,
+        })
+        try:
+            from scheduled_tasks import scheduled_run
+            scheduled_run()
+            PIPELINE_STATE["status"] = "completed"
+        except Exception as exc:
+            PIPELINE_STATE["status"] = "failed"
+            PIPELINE_STATE["error"] = str(exc)
+            print(f"[PIPELINE] ERROR: {exc}")
+        finally:
+            PIPELINE_STATE["finished_at"] = datetime.now().isoformat()
+            PIPELINE_LOCK.release()
+
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({
+        "status": "started",
+        "started_at": datetime.now().isoformat(),
+        "message": "Full in-season pipeline started",
+    }), 202
+
+
+@app.route("/api/pipeline/status")
+def pipeline_status():
+    if not _pipeline_authorized():
+        return jsonify({"status": "unauthorized"}), 401
+    return jsonify(PIPELINE_STATE)
 
 
 # ── SCRAPE TRIGGERS ─────────────────────────────────────────

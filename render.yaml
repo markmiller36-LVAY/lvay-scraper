@@ -9,7 +9,21 @@ services:
         value: 2026
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: PIPELINE_TOKEN
+        sync: false
     disk:
       name: lvay-data
-      mountPath: /opt/render/project/src
+      mountPath: /data
       sizeGB: 1
+
+  - type: cron
+    name: lvay-pipeline-scheduler
+    env: python
+    schedule: "0 */4 * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python trigger_pipeline.py
+    envVars:
+      - key: PIPELINE_URL
+        value: https://lvay-scraper.onrender.com/api/pipeline/run
+      - key: PIPELINE_TOKEN
+        sync: false
