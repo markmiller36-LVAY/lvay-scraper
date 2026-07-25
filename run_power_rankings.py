@@ -56,6 +56,55 @@ def normalize_result(wl):
     return ""
 
 
+def football_week_number(week):
+    """Return an integer LHSAA football week, or None when it is not a week."""
+    match = re.search(r"\d+", str(week or ""))
+    return int(match.group()) if match else None
+
+
+def filter_regular_season_football_rows(rows):
+    """Keep only unique regular-season schedule games, max 10 per school."""
+    deduplicated = {}
+    for row in rows:
+        week = football_week_number(row.get("week"))
+        if week is not None and not 1 <= week <= 10:
+            continue
+        key = (
+            row.get("school", ""),
+            str(row.get("game_date") or "").split()[0],
+            row.get("opponent", ""),
+            normalize_result(row.get("win_loss")),
+            row.get("score", ""),
+        )
+        existing = deduplicated.get(key)
+        if existing is None or (
+            football_week_number(existing.get("week")) is None
+            and week is not None
+        ):
+            deduplicated[key] = row
+
+    by_school = {}
+    for row in deduplicated.values():
+        by_school.setdefault(row.get("school", ""), []).append(row)
+
+    kept = []
+    for school_rows in by_school.values():
+        def sort_key(row):
+            try:
+                return (
+                    parse_game_date(row.get("game_date") or ""),
+                    football_week_number(row.get("week")) or 0,
+                )
+            except Exception:
+                return (
+                    datetime.max,
+                    football_week_number(row.get("week")) or 0,
+                )
+
+        kept.extend(sorted(school_rows, key=sort_key)[:10])
+    return kept
+
+
 def strip_district_prefix(class_str: str) -> str:
     if not class_str:
         return ""
@@ -363,6 +412,16 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     overrides = load_sheet_overrides(sport, season)
     rows = [apply_override_to_row(r, sport, season, overrides) for r in raw_rows]
+
+    if sport.lower() == "football":
+        all_football_rows = rows
+        rows = filter_regular_season_football_rows(all_football_rows)
+        excluded_rows = len(all_football_rows) - len(rows)
+        if excluded_rows:
+            print(
+                f"  Excluded {excluded_rows} duplicate/postseason football rows "
+                "(only the first 10 regular-season games count)"
+            )
 
     # Schedule-table sports do not carry football week numbers.
     if sport.lower() != "football":
