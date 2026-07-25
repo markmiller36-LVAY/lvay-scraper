@@ -327,20 +327,22 @@ def build_softball_sheets():
 
 @app.route("/api/build/volleyball-sheets")
 def build_volleyball_sheets():
-    try:
-        conn = get_db()
-        season = available_season(
-            conn, "volleyball", "volleyball_rankings"
-        )
-        conn.close()
-        from sheets_exporter import export_volleyball_to_sheets
-        result = export_volleyball_to_sheets(season)
-        return jsonify({
-            "status": "complete", "sport": "volleyball",
-            "season": season, **result,
-        })
-    except Exception as e:
-        return jsonify({"status": "error", "error": str(e)}), 500
+    conn = get_db()
+    season = available_season(conn, "volleyball", "volleyball_rankings")
+    conn.close()
+
+    def run():
+        try:
+            from sheets_exporter import export_volleyball_to_sheets
+            print(export_volleyball_to_sheets(season))
+        except Exception as e:
+            print(f"Volleyball sheets build error: {e}")
+
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({
+        "status": "started", "sport": "volleyball", "season": season,
+        "message": "Volleyball sheets building in background",
+    })
 
 
 @app.route("/api/build/<sport>-review")
