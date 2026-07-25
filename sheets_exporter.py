@@ -24,8 +24,11 @@ import time
 from datetime import datetime
 
 DB_PATH  = os.environ.get("DB_PATH", "/data/lvay_v2.db")
-SHEET_ID = "1u_cJBAWTQJIAO36HZTYvPa7QfE0JoOEqx12c1U4t4mk"
-SEASON   = 2025
+SHEET_ID = os.environ.get(
+    "GOOGLE_SHEET_ID",
+    "1u_cJBAWTQJIAO36HZTYvPa7QfE0JoOEqx12c1U4t4mk",
+)
+SEASON = int(os.environ.get("FOOTBALL_SEASON_YEAR", datetime.now().year))
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -63,7 +66,10 @@ def get_client():
         with open(secret_path, "r") as f:
             creds_dict = json.load(f)
     else:
-        creds_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+        creds_json = (
+            os.environ.get("GOOGLE_CREDENTIALS_JSON")
+            or os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
+        )
         if not creds_json:
             raise ValueError("No Google credentials found")
         creds_dict = json.loads(creds_json)
@@ -89,6 +95,41 @@ def batch_write(ws, start_row, data, chunk_size=100):
         chunk = data[i:i + chunk_size]
         ws.update(f"A{start_row + i}", chunk)
         time.sleep(2)
+
+
+def ensure_football_overrides_tab(sheet, season=SEASON):
+    """Create the manual-correction tab without ever clearing existing edits."""
+    tab_name = f"Football Overrides ({season})"
+    headers = [
+        "sport", "season", "school", "game_date", "opponent", "active",
+        "override_win_loss", "override_score", "override_home_away", "notes",
+    ]
+    try:
+        ws = sheet.worksheet(tab_name)
+    except gspread.WorksheetNotFound:
+        ws = sheet.add_worksheet(title=tab_name, rows=1000, cols=len(headers))
+
+    first_row = ws.row_values(1)
+    if not first_row:
+        ws.update("A1", [headers])
+        ws.freeze(rows=1)
+        ws.format("A1:J1", {
+            "backgroundColor": {"red": 0.12, "green": 0.29, "blue": 0.48},
+            "textFormat": {
+                "bold": True,
+                "foregroundColor": {"red": 1, "green": 1, "blue": 1},
+            },
+        })
+        ws.update("A2", [[
+            "football", str(season), "", "", "", False, "", "", "",
+            "Enter one correction per row; set active to TRUE to apply it.",
+        ]])
+    elif first_row[:len(headers)] != headers:
+        raise ValueError(
+            f"{tab_name} has unexpected headers; manual corrections were not changed"
+        )
+    print(f"    Ready: {tab_name} (manual corrections preserved)")
+    return ws
 
 
 # ─── FOOTBALL POWER RANKINGS ──────────────────────────────────────────────────
@@ -202,9 +243,6 @@ def build_needs_review(sheet, season=SEASON):
                class_, district, district_class, needs_review
         FROM games
         WHERE sport='football' AND season=?
-          AND (win_loss IS NULL OR win_loss = ''
-               OR score IS NULL OR score = ''
-               OR needs_review = 1)
         ORDER BY school, week
     """, (str(season),))
     rows = c.fetchall()
@@ -220,9 +258,28 @@ def build_needs_review(sheet, season=SEASON):
     data = []
     for r in rows:
         issues = []
-        if not r["win_loss"]:  issues.append("missing W/L")
-        if not r["score"]:     issues.append("missing score")
+        result = str(r["win_loss"] or "").strip()
+        score = str(r["score"] or "").strip()
+        if not result and score:
+            issues.append("missing W/L")
+        elif result not in ("W", "L", "T", "Tie", "W(f)", "L(f)", "PPD", "OD", "JV"):
+            issues.append("unrecognized result")
+        if result in ("W", "L", "T", "Tie", "W(f)", "L(f)") and not score:
+            issues.append("missing score")
+        if score:
+            import re
+            numbers = [int(n) for n in re.findall(r"\d+", score)]
+            if len(numbers) < 2:
+                issues.append("malformed score")
+            elif result in ("W", "W(f)") and numbers[0] <= numbers[1]:
+                issues.append("W conflicts with score")
+            elif result in ("L", "L(f)") and numbers[0] >= numbers[1]:
+                issues.append("L conflicts with score")
+            elif result in ("T", "Tie") and numbers[0] != numbers[1]:
+                issues.append("tie conflicts with score")
         if r["needs_review"]:  issues.append("flagged")
+        if not issues:
+            continue
         data.append([
             r["school"] or "", r["week"] or "", r["game_date"] or "",
             r["opponent"] or "", r["win_loss"] or "", r["score"] or "",
@@ -298,7 +355,7 @@ def build_district_records(sheet, season=SEASON):
 
 # ─── INSTRUCTIONS ─────────────────────────────────────────────────────────────
 
-def build_instructions_tab(sheet):
+def build_instructions_tab(sheet, season=SEASON):
     tab_name = "Instructions"
     print(f"  Building {tab_name}...")
     ws = get_or_create_tab(sheet, tab_name)
@@ -310,9 +367,10 @@ def build_instructions_tab(sheet):
         ["Source:", "lhsaaonline.org — auto-scraped by lvay-scraper on Render"],
         [""],
         ["TAB", "CONTENTS"],
-        [f"Football Power Rankings ({SEASON})", "304 schools ranked by power rating, grouped NS I thru S IV"],
-        [f"Football Scores ({SEASON})", "Every game — build separately via /api/build/football-scores"],
-        ["Football Needs Review", "Games flagged for missing W/L or score"],
+        [f"Football Power Rankings ({season})", "Schools ranked by power rating, grouped NS I thru S IV"],
+        [f"Football Scores ({season})", "Every game — rebuilt automatically by the scheduled pipeline"],
+        ["Football Needs Review", "Missing, malformed, or conflicting results requiring review"],
+        [f"Football Overrides ({season})", "Enter corrections here and set active=TRUE; the engine applies them next run"],
         ["Football District Records", "W/L and power rating per school"],
         [""],
         ["POWER RATING FORMULA (LHSAA Football 14.12)"],
@@ -417,9 +475,14 @@ def export_football_to_sheets(season=SEASON):
         districts = 0
 
     try:
-        build_instructions_tab(sheet)
+        build_instructions_tab(sheet, season)
     except Exception as e:
         print(f"  ERROR instructions: {e}")
+
+    try:
+        ensure_football_overrides_tab(sheet, season)
+    except Exception as e:
+        print(f"  ERROR overrides tab: {e}")
 
     print(f"\n{'='*54}")
     print(f"DONE! Football {season} Sheets complete.")
