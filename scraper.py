@@ -36,6 +36,10 @@ CLASSIFICATIONS_BY_SPORT = {
     "football": ["1A", "2A", "3A", "4A", "5A"],
     "baseball": ["1A", "2A", "3A", "4A", "5A", "B", "C"],
     "softball": ["1A", "2A", "3A", "4A", "5A", "B", "C"],
+    "boys_basketball": ["1A", "2A", "3A", "4A", "5A", "B", "C"],
+    "girls_basketball": ["1A", "2A", "3A", "4A", "5A", "B", "C"],
+    "boys_soccer": ["1A", "2A", "3A", "4A", "5A"],
+    "girls_soccer": ["1A", "2A", "3A", "4A", "5A"],
 }
 
 SPORTS = {
@@ -117,6 +121,62 @@ SPORTS = {
             "y1": "1",
         },
         "query_params": {"p": "1", "sb": "1"},
+    },
+    "boys_basketball": {
+        "enabled": os.environ.get("ENABLE_BOYS_BASKETBALL", "true").lower() == "true",
+        "name": "Boys Basketball",
+        "base_url": "https://www.lhsaaonline.org/pr/bbpr/admin/ReportSchedule.asp",
+        "referer": "https://www.lhsaaonline.org/pr/bbpr/admin/SearchBoysBasketballSchedule.asp",
+        "loop_by_class": True, "season_mode": "school_year",
+        "active_start": "10-01", "active_end": "03-31",
+        "payload_template": {
+            "yr": "{season}", "resultdate": "", "n": "", "h": "",
+            "d": "{classification}", "f": "", "s": "", "paging": "",
+            "n1": "", "d1": "{classification}",
+        },
+        "query_params": {"p": "1", "bb": "1"},
+    },
+    "girls_basketball": {
+        "enabled": os.environ.get("ENABLE_GIRLS_BASKETBALL", "true").lower() == "true",
+        "name": "Girls Basketball",
+        "base_url": "https://www.lhsaaonline.org/pr/bbpr/admin/ReportSchedule.asp",
+        "referer": "https://www.lhsaaonline.org/pr/bbpr/admin/SearchGirlsBasketballSchedule.asp",
+        "loop_by_class": True, "season_mode": "school_year",
+        "active_start": "10-01", "active_end": "03-31",
+        "payload_template": {
+            "yr": "{season}", "resultdate": "", "n": "", "h": "",
+            "d": "{classification}", "f": "", "s": "", "paging": "",
+            "n1": "", "d1": "{classification}",
+        },
+        "query_params": {"p": "1", "bb": "2"},
+    },
+    "boys_soccer": {
+        "enabled": os.environ.get("ENABLE_BOYS_SOCCER", "true").lower() == "true",
+        "name": "Boys Soccer",
+        "base_url": "https://www.lhsaaonline.org/pr/sopr/admin/ReportSchedule.asp",
+        "referer": "https://www.lhsaaonline.org/pr/sopr/admin/SearchboyssoccerSchedule.asp",
+        "loop_by_class": True, "season_mode": "school_year",
+        "active_start": "10-01", "active_end": "03-31",
+        "payload_template": {
+            "yr": "{season}", "resultdate": "", "n": "", "h": "",
+            "d": "{classification}", "f": "", "s": "", "paging": "",
+            "n1": "", "d1": "{classification}",
+        },
+        "query_params": {"p": "1", "so": "1"},
+    },
+    "girls_soccer": {
+        "enabled": os.environ.get("ENABLE_GIRLS_SOCCER", "true").lower() == "true",
+        "name": "Girls Soccer",
+        "base_url": "https://www.lhsaaonline.org/pr/sopr/admin/ReportSchedule.asp",
+        "referer": "https://www.lhsaaonline.org/pr/sopr/admin/SearchgirlssoccerSchedule.asp",
+        "loop_by_class": True, "season_mode": "school_year",
+        "active_start": "10-01", "active_end": "03-31",
+        "payload_template": {
+            "yr": "{season}", "resultdate": "", "n": "", "h": "",
+            "d": "{classification}", "f": "", "s": "", "paging": "",
+            "n1": "", "d1": "{classification}",
+        },
+        "query_params": {"p": "1", "so": "2"},
     },
 }
 
@@ -314,7 +374,7 @@ def parse_football(html, season):
     return games
 
 
-def parse_baseball_softball(html, sport, season):
+def parse_schedule_table(html, sport, season):
     soup = BeautifulSoup(html, "html.parser")
     games = []
 
@@ -327,7 +387,11 @@ def parse_baseball_softball(html, sport, season):
             t = [c.get_text(strip=True) for c in cells]
             if len(t) < 2:
                 continue
-            if t[0] in ("#", "") or not t[1] or t[1] == "School":
+            if (
+                t[0] in ("#", "")
+                or not t[1]
+                or t[1] in ("#", "School")
+            ):
                 continue
 
             games.append({
@@ -341,7 +405,7 @@ def parse_baseball_softball(html, sport, season):
                 "tournament_host": t[7] if len(t) > 7 else "",
                 "home_away": t[9] if len(t) > 9 else "",
                 "win_loss": t[10] if len(t) > 10 else "",
-                "score": t[11] if len(t) > 11 else "",
+                "score": t[12] if len(t) > 12 else (t[11] if len(t) > 11 else ""),
                 "week": "",
                 "district": "",
                 "class_": "",
@@ -413,13 +477,21 @@ def scrape_class_loop_sport(sport_key: str):
         if not html:
             continue
 
-        games = parse_baseball_softball(html, sport_key, season)
+        games = parse_schedule_table(html, sport_key, season)
         print(f"    Parsed {len(games)} games")
         total += save_games(games)
         time.sleep(2)
 
     log_scrape(sport_key, total, "success", f"season={season}")
     return total
+
+
+def scrape_baseball():
+    return scrape_class_loop_sport("baseball")
+
+
+def scrape_softball():
+    return scrape_class_loop_sport("softball")
 
 
 def scrape_sport(sport_key: str):

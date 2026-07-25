@@ -23,7 +23,11 @@ def get_active_sports():
         sports.append("baseball")
         sports.append("softball")
 
-    # Basketball, soccer to be added later
+    if month in [10, 11, 12, 1, 2, 3]:
+        sports.extend([
+            "boys_basketball", "girls_basketball",
+            "boys_soccer", "girls_soccer",
+        ])
     return sports
 
 
@@ -88,6 +92,23 @@ def scheduled_run():
             from sheets_exporter import export_softball_to_sheets
             export_softball_to_sheets(season=int(season))
             print("[SCHEDULER] Softball pipeline complete")
+
+        # 6. BASKETBALL AND SOCCER
+        for sport in (
+            "boys_basketball", "girls_basketball",
+            "boys_soccer", "girls_soccer",
+        ):
+            if sport not in active:
+                continue
+            season = resolve_season_year(sport)
+            print(f"[SCHEDULER] Running {sport} pipeline...")
+            from scraper import scrape_sport
+            scrape_sport(sport)
+            from run_power_rankings import run_power_rankings
+            run_power_rankings(sport=sport, season=season)
+            from sheets_exporter import export_winter_sport_to_sheets
+            export_winter_sport_to_sheets(sport, season)
+            print(f"[SCHEDULER] {sport} pipeline complete")
 
         print("[SCHEDULER] ALL COMPLETE")
 

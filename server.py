@@ -1020,6 +1020,140 @@ def breakdown_volleyball(school):
 
 # ── CONTROL PANEL ────────────────────────────────────────────
 
+WINTER_SPORTS = {
+    "boys_basketball", "girls_basketball",
+    "boys_soccer", "girls_soccer",
+}
+
+
+@app.route("/api/pipeline/winter", methods=["POST"])
+def run_winter_pipeline():
+    if not PIPELINE_LOCK.acquire(blocking=False):
+        return jsonify({
+            "status": "already_running",
+            "started_at": PIPELINE_STATE["started_at"],
+        }), 409
+    season = request.args.get("season") or resolve_season("boys_basketball")
+
+    def run():
+        PIPELINE_STATE.update({
+            "status": "running_winter",
+            "started_at": datetime.now().isoformat(),
+            "finished_at": None,
+            "error": None,
+        })
+        try:
+            from scraper import scrape_sport
+            from run_power_rankings import run_power_rankings
+            from sheets_exporter import export_winter_sport_to_sheets
+            for sport in sorted(WINTER_SPORTS):
+                os.environ[f"{sport.upper()}_SEASON_YEAR"] = str(season)
+                scrape_sport(sport)
+                run_power_rankings(sport=sport, season=str(season))
+                export_winter_sport_to_sheets(sport, str(season))
+            PIPELINE_STATE["status"] = "completed"
+        except Exception as exc:
+            PIPELINE_STATE["status"] = "failed"
+            PIPELINE_STATE["error"] = str(exc)
+            print(f"Winter pipeline error: {exc}")
+        finally:
+            PIPELINE_STATE["finished_at"] = datetime.now().isoformat()
+            PIPELINE_LOCK.release()
+
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({
+        "status": "started", "season": str(season),
+        "sports": sorted(WINTER_SPORTS),
+    }), 202
+
+
+@app.route("/api/scrape/winter/<sport>")
+def scrape_winter_sport(sport):
+    if sport not in WINTER_SPORTS:
+        return jsonify({"error": "Unsupported sport"}), 404
+
+    def run():
+        try:
+            from scraper import scrape_sport
+            scrape_sport(sport)
+        except Exception as exc:
+            print(f"{sport} scrape error: {exc}")
+
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({"status": "started", "sport": sport})
+
+
+@app.route("/api/build/winter/<sport>")
+def build_winter_sport_sheets(sport):
+    if sport not in WINTER_SPORTS:
+        return jsonify({"error": "Unsupported sport"}), 404
+    conn = get_db()
+    season = available_season(conn, sport)
+    conn.close()
+
+    def run():
+        try:
+            from sheets_exporter import export_winter_sport_to_sheets
+            print(export_winter_sport_to_sheets(sport, season))
+        except Exception as exc:
+            print(f"{sport} sheets error: {exc}")
+
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({"status": "started", "sport": sport, "season": season})
+
+
+@app.route("/api/rankings/winter/<sport>")
+def rankings_winter_sport(sport):
+    if sport not in WINTER_SPORTS:
+        return jsonify({"error": "Unsupported sport"}), 404
+    conn = get_db()
+    season = available_season(conn, sport)
+    rows = conn.execute("""
+        SELECT school, division, track, class_, district, rank, power_rating,
+               wins, losses, ties, games_played, strength_factor, calculated_at
+        FROM power_rankings
+        WHERE sport=? AND season=?
+        ORDER BY rank
+    """, (sport, season)).fetchall()
+    result = [dict(row) for row in rows]
+    conn.close()
+    return jsonify({
+        "sport": sport, "season": season, "count": len(result),
+        "rankings": result,
+    })
+
+
+@app.route("/api/schedules/winter/<sport>")
+def schedules_winter_sport(sport):
+    if sport not in WINTER_SPORTS:
+        return jsonify({"error": "Unsupported sport"}), 404
+    return get_sport_schedules(sport)
+
+
+@app.route("/api/breakdown/winter/<sport>/<school>")
+def breakdown_winter_sport(sport, school):
+    if sport not in WINTER_SPORTS:
+        return jsonify({"error": "Unsupported sport"}), 404
+    conn = get_db()
+    season = available_season(conn, sport, "game_power_points")
+    rows = conn.execute("""
+        SELECT week, game_date, opponent, result, score, opp_wins, opp_losses,
+               opp_ties, opp_division, base_pts, div_bonus, opp_quality,
+               total_pts, is_district
+        FROM game_power_points
+        WHERE sport=? AND season=? AND school=?
+        ORDER BY week
+    """, (sport, season, school)).fetchall()
+    games = [dict(row) for row in rows]
+    conn.close()
+    total = sum(float(row["total_pts"] or 0) for row in games)
+    return jsonify({
+        "sport": sport, "school": school, "season": season,
+        "calculated_pr": round(total / len(games), 2) if games else 0,
+        "games": games,
+    })
+
+
 @app.route("/control-panel")
 def control_panel():
     html = """<!DOCTYPE html>

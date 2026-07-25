@@ -36,7 +36,7 @@ BASKETBALL 1A-5A:
   Power Rating = Total Points / Games Played
 
 BASKETBALL Class B&C:
-  Win=8, Loss=0
+  Win=30, Loss=0
   OppQ: (Opp Wins / Opp GP) x 44
   Division bonus:
     - in-state: +2 per class step up, with division also higher
@@ -143,7 +143,7 @@ SPORT_CONFIGS = {
         "oos_bonus": True,
     },
     "basketball_bc": {
-        "win_points": 8,
+        "win_points": 30,
         "loss_points": 0,
         "tie_points": 0,
         "forfeit_bonus": 0,
@@ -168,10 +168,12 @@ SPORT_CONFIGS = {
 
 
 def get_sport_config(sport: str, classification: str = "") -> dict:
-    if sport == "basketball":
+    if sport == "basketball" or sport.endswith("_basketball"):
         if classification.upper() in ("B", "C"):
             return SPORT_CONFIGS["basketball_bc"]
         return SPORT_CONFIGS["basketball_1a5a"]
+    if sport == "soccer" or sport.endswith("_soccer"):
+        return SPORT_CONFIGS["soccer"]
     return SPORT_CONFIGS.get(sport, SPORT_CONFIGS["football"])
 
 
@@ -332,12 +334,15 @@ class PowerRatingEngine:
             # Per LHSAA 10.10.1: OppQ = opponent wins + (opponent ties x 0.5)
             gp.opp_quality = float(game.opponent_wins) + (float(game.opponent_ties) * 0.5)
         elif style == "soccer_weighted":
+            opponent_value = float(game.opponent_wins) + (
+                float(game.opponent_ties) * 0.5
+            )
             if game.result == "W":
-                gp.opp_quality = game.opponent_win_pct * 1.0
+                gp.opp_quality = opponent_value
             elif game.result == "L":
-                gp.opp_quality = game.opponent_win_pct * 0.5
+                gp.opp_quality = opponent_value * 0.5
             elif game.result == "T":
-                gp.opp_quality = game.opponent_win_pct * 0.75
+                gp.opp_quality = opponent_value * 0.75
 
         return gp
 

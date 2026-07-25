@@ -101,7 +101,7 @@ def batch_write(ws, start_row, data, chunk_size=100):
 def ensure_sport_overrides_tab(sheet, sport, season):
     """Create a sport's manual-correction tab without clearing existing edits."""
     sport = sport.lower()
-    tab_name = f"{sport.title()} Overrides ({season})"
+    tab_name = f"{sport.replace('_', ' ').title()} Overrides ({season})"
     headers = [
         "sport", "season", "school", "game_date", "opponent", "active",
         "override_win_loss", "override_score", "override_home_away", "notes",
@@ -512,6 +512,106 @@ def export_football_to_sheets(season=SEASON):
     print(f"Sheet: https://docs.google.com/spreadsheets/d/{SHEET_ID}")
     print(f"{'='*54}\n")
     return True
+
+
+def export_winter_sport_to_sheets(sport, season):
+    """Export rankings, every schedule row, review flags, and overrides."""
+    sport = str(sport).lower()
+    season = str(season)
+    allowed = {
+        "boys_basketball", "girls_basketball",
+        "boys_soccer", "girls_soccer",
+    }
+    if sport not in allowed:
+        raise ValueError(f"Unsupported winter sport: {sport}")
+
+    label = sport.replace("_", " ").title()
+    client = get_client()
+    sheet = client.open_by_key(SHEET_ID)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    rankings = conn.execute("""
+        SELECT rank, school, division, class_, district, wins, losses, ties,
+               games_played, power_rating, strength_factor
+        FROM power_rankings
+        WHERE sport=? AND season=?
+        ORDER BY rank
+    """, (sport, season)).fetchall()
+    games = conn.execute("""
+        SELECT school, game_date, opponent, district_class, opponent_class,
+               tournament, tournament_host, home_away, win_loss, score
+        FROM games
+        WHERE sport=? AND season=?
+        ORDER BY school, game_date, opponent
+    """, (sport, season)).fetchall()
+    conn.close()
+
+    rankings_ws = get_or_create_tab(
+        sheet, f"{label} Power Rankings ({season})",
+        rows=max(1000, len(rankings) + 2), cols=11,
+    )
+    rankings_ws.update("A1", [[
+        "Rank", "School", "Division", "Class", "District", "W", "L", "T",
+        "Games", "Power Rating", "Strength Factor",
+    ]])
+    if rankings:
+        batch_write(rankings_ws, 2, [[
+            r["rank"], r["school"], r["division"], r["class_"], r["district"],
+            r["wins"], r["losses"], r["ties"], r["games_played"],
+            r["power_rating"], r["strength_factor"],
+        ] for r in rankings])
+    rankings_ws.freeze(rows=1)
+
+    scores_ws = get_or_create_tab(
+        sheet, f"{label} Scores ({season})",
+        rows=max(3000, len(games) + 2), cols=10,
+    )
+    scores_ws.update("A1", [[
+        "School", "Date", "Opponent", "District/Class", "Opponent District/Class",
+        "Tournament", "Tournament Host", "Home/Away", "W/L", "Score",
+    ]])
+    if games:
+        batch_write(scores_ws, 2, [[
+            g["school"], g["game_date"], g["opponent"], g["district_class"],
+            g["opponent_class"], g["tournament"], g["tournament_host"],
+            g["home_away"], g["win_loss"], g["score"],
+        ] for g in games])
+    scores_ws.freeze(rows=1)
+
+    review_ws = get_or_create_tab(
+        sheet, f"{label} Needs Review ({season})",
+        rows=max(1000, len(games) + 2), cols=7,
+    )
+    review_ws.update("A1", [[
+        "School", "Date", "Opponent", "W/L", "Score", "Issue", "Resolution",
+    ]])
+    review_rows = []
+    for g in games:
+        issues = []
+        result = str(g["win_loss"] or "").strip()
+        score = str(g["score"] or "").strip()
+        if result not in ("W", "L", "T", "W(f)", "L(f)"):
+            issues.append("Missing/unrecognized result")
+        if result and not score:
+            issues.append("Missing score")
+        if score and not re.match(r"^\d+\s*-\s*\d+$", score):
+            issues.append("Malformed score")
+        if issues:
+            review_rows.append([
+                g["school"], g["game_date"], g["opponent"], result, score,
+                ", ".join(issues), "",
+            ])
+    if review_rows:
+        batch_write(review_ws, 2, review_rows)
+    else:
+        review_ws.update("A2", [["No issues found!"]])
+    review_ws.freeze(rows=1)
+    ensure_sport_overrides_tab(sheet, sport, season)
+
+    return {
+        "sport": sport, "season": season, "rankings": len(rankings),
+        "games": len(games), "needs_review": len(review_rows),
+    }
 
 
 def export_football_scores(season=SEASON):

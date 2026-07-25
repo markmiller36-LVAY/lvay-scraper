@@ -141,7 +141,7 @@ def init_tables(conn):
 
 
 def get_override_tab_name(sport: str, season: str) -> str:
-    return f"{sport.capitalize()} Overrides ({season})"
+    return f"{sport.replace('_', ' ').title()} Overrides ({season})"
 
 
 def get_gspread_client():
@@ -214,6 +214,8 @@ def load_games(conn, season=SEASON, sport=SPORT):
                opponent_class
         FROM games
         WHERE sport=? AND season=?
+          AND TRIM(COALESCE(school, '')) <> ''
+          AND TRIM(COALESCE(opponent, '')) <> ''
           AND win_loss IN ('W', 'L', 'Tie', 'T', 'W(f)', 'L(f)')
         ORDER BY school, game_date
     """, (sport, season))
@@ -362,8 +364,8 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     overrides = load_sheet_overrides(sport, season)
     rows = [apply_override_to_row(r, sport, season, overrides) for r in raw_rows]
 
-    # Sort by actual date for baseball/softball
-    if sport.lower() in ("baseball", "softball"):
+    # Schedule-table sports do not carry football week numbers.
+    if sport.lower() != "football":
         def _sort_key(r):
             try:
                 return (r.get("school", ""), parse_game_date(r.get("game_date") or ""))
@@ -439,7 +441,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             continue
 
         # Week number
-        if sport.lower() in ("baseball", "softball"):
+        if sport.lower() != "football":
             try:
                 parsed = parse_game_date(game_date)
                 date_key = int(parsed.strftime("%Y%m%d"))
