@@ -335,7 +335,7 @@ ALIGNMENT = {
     "Patrick Taylor - Science/Tech.": {"class": "3A", "district": 9},
     "Thomas Jefferson": {"class": "3A", "district": 9},
     "Young Audiences Charter": {"class": "3A", "district": 9},
-    "Bolton Academy": {"class": "3A", "district": 10},
+    "Bolton Academy": {"class": "3A", "district": 2},
     "Booker T. Washington - N.O.": {"class": "3A", "district": 10},
     "Cabrini": {"class": "3A", "district": 10},
     "De La Salle": {"class": "3A", "district": 10},
