@@ -24,6 +24,10 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 from power_rating_engine import PowerRatingEngine, Team, GameResult
+from official_record_overrides import (
+    find_record_override,
+    get_record_overrides,
+)
 from school_database import get_school
 
 DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
@@ -458,6 +462,18 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     scores_lookup = load_scores(conn, season, sport)
     school_records = build_school_records(rows)
+    record_overrides = get_record_overrides(sport, season)
+    for school, (wins, losses, ties) in record_overrides.items():
+        school_records[school] = {
+            "wins": wins,
+            "losses": losses,
+            "ties": ties,
+        }
+    if record_overrides:
+        print(
+            f"  Applied {len(record_overrides)} official LHSAA "
+            f"record overrides"
+        )
     print(f"  {len(school_records)} school profiles loaded")
 
     engine = PowerRatingEngine()
@@ -552,7 +568,17 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             opp_class = strip_district_prefix(raw_opp_class)
             oos_missing.append(f"{school} vs {opponent} ({game_date})")
         else:
-            opp_record = school_records.get(opponent, {"wins": 0, "losses": 0, "ties": 0})
+            official_opp_record = find_record_override(
+                record_overrides, opponent
+            )
+            if official_opp_record:
+                ow, ol, ot = official_opp_record
+                opp_record = {"wins": ow, "losses": ol, "ties": ot}
+            else:
+                opp_record = school_records.get(
+                    opponent,
+                    {"wins": 0, "losses": 0, "ties": 0},
+                )
             opp_wins = opp_record["wins"]
             opp_losses = opp_record["losses"]
             opp_ties = opp_record["ties"]
@@ -615,6 +641,15 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
         opp_qualities = [g["oppq"] for g in r.breakdown if g.get("oppq") is not None]
         strength_factor = round(sum(opp_qualities) / len(opp_qualities), 2) if opp_qualities else 0.0
+        official_record = find_record_override(record_overrides, r.name)
+        if official_record:
+            stored_wins, stored_losses, stored_ties = official_record
+            stored_games = stored_wins + stored_losses + stored_ties
+        else:
+            stored_wins, stored_losses, stored_ties = (
+                r.wins, r.losses, r.ties
+            )
+            stored_games = r.games_played
 
         c.execute("""
             INSERT OR REPLACE INTO power_rankings
@@ -624,8 +659,8 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             sport, season, r.name, division, track, class_, district,
-            r.rank, r.power_rating, r.wins, r.losses, r.ties,
-            r.games_played, strength_factor, now_str
+            r.rank, r.power_rating, stored_wins, stored_losses, stored_ties,
+            stored_games, strength_factor, now_str
         ))
 
         for g in r.breakdown:
