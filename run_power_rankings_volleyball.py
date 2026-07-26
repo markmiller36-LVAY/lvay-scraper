@@ -154,7 +154,7 @@ def calculate_school_pr(school_name, games, opp_win_totals):
 # STEP 3 — RESOLVE SCHOOL METADATA FROM school_database.py
 # ──────────────────────────────────────────────────────────────────────────────
 
-def resolve_school_metadata(school_name, vb_division_roman):
+def resolve_school_metadata(school_name, vb_division_roman, vb_district):
     """
     Get class, district, and full division label for a school.
     Uses school_database.py as source of truth for class/district.
@@ -168,13 +168,13 @@ def resolve_school_metadata(school_name, vb_division_roman):
         return {
             "division": division_label,
             "class_":   info.get("class") or "Unknown",
-            "district": info.get("district"),
+            "district": vb_district,
         }
     else:
         return {
             "division": division_label,
             "class_":   "Unknown",
-            "district": None,
+            "district": vb_district,
         }
 
 
@@ -274,7 +274,7 @@ def run_volleyball_rankings(season=None):
 
     # Get all distinct schools and their volleyball division
     school_rows = conn.execute("""
-        SELECT DISTINCT school, school_division
+        SELECT DISTINCT school, school_division, school_district
         FROM volleyball_games
         WHERE sport=? AND season=? AND counts_for_pr=1
         ORDER BY school
@@ -289,6 +289,7 @@ def run_volleyball_rankings(season=None):
     for sr in school_rows:
         school_name  = sr["school"]
         vb_div_roman = sr["school_division"] or "Unknown"
+        vb_district  = sr["school_district"]
 
         # Fetch this school's countable games
         games = conn.execute("""
@@ -304,7 +305,7 @@ def run_volleyball_rankings(season=None):
         stats = calculate_school_pr(school_name, games, opp_win_totals)
 
         # Resolve metadata
-        meta = resolve_school_metadata(school_name, vb_div_roman)
+        meta = resolve_school_metadata(school_name, vb_div_roman, vb_district)
         if meta["class_"] == "Unknown":
             unmatched.append(school_name)
 
