@@ -265,7 +265,7 @@ def insert_games(conn, rows):
         except sqlite3.IntegrityError:
             conn.execute("""
                 UPDATE volleyball_games
-                SET result=?, score=?, counts_for_pr=?, updated_at=datetime('now')
+                SET result=?, score=?, counts_for_pr=?
                 WHERE sport=? AND season=? AND school=? AND game_date=?
                   AND opponent=? AND match_num=?
             """, (
