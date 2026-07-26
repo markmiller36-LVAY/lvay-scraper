@@ -290,9 +290,11 @@ def insert_games(conn, rows, season=SEASON):
     # rescrape repairs those rows even if the source formatting changes.
     conn.execute("""
         UPDATE volleyball_games
-        SET counts_for_pr=0
+        SET counts_for_pr = CASE
+            WHEN UPPER(TRIM(opponent))='OUT OF STATE' THEN 0
+            ELSE 1
+        END
         WHERE sport=? AND season=?
-          AND UPPER(TRIM(opponent))='OUT OF STATE'
     """, (SPORT, str(season)))
     conn.commit()
 
