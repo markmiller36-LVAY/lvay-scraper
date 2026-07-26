@@ -140,6 +140,7 @@ function lvay_football_schedule_shortcode_v5($atts) {
                                                                     <th>H/A</th>
                                                                     <th>Opponent</th>
                                                                     <th>District</th>
+                                                                    <th>Division</th>
                                                                     <th>W/L</th>
                                                                     <th>Score</th>
                                                                     <th>Power Pts</th>
@@ -156,22 +157,31 @@ function lvay_football_schedule_shortcode_v5($atts) {
                                                                         ),
                                                                         $page_url
                                                                     ) . '#school-' . sanitize_title($opponent);
+                                                                    $opponent_record = '';
+                                                                    if (isset($game['opp_wins'], $game['opp_losses'])) {
+                                                                        $opponent_record = ' (' . $game['opp_wins'] . '-' . $game['opp_losses'] . ')';
+                                                                    }
+                                                                    $display_date = $game['game_date'] ?? '';
+                                                                    if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $display_date, $date_parts)) {
+                                                                        $display_date = ((int) $date_parts[2]) . '/' . ((int) $date_parts[3]) . '/' . $date_parts[1];
+                                                                    }
                                                                     ?>
-                                                                    <tr>
-                                                                        <td><?php echo esc_html('Wk' . ($game['week'] ?? '')); ?></td>
-                                                                        <td><?php echo esc_html($game['game_date'] ?? '—'); ?></td>
+                                                                    <tr class="<?php echo !empty($game['is_district']) ? 'is-district' : 'is-nondistrict'; ?>">
+                                                                        <td><?php echo esc_html('Wk' . ($game['week'] ?? '') . (!empty($game['is_district']) ? ' D' : '')); ?></td>
+                                                                        <td><?php echo esc_html($display_date ?: '—'); ?></td>
                                                                         <td><?php echo esc_html($game['home_away'] ?? ''); ?></td>
                                                                         <td>
                                                                             <?php if ($internal && $opponent): ?>
                                                                                 <a href="<?php echo esc_url($opponent_url); ?>">
-                                                                                    <?php echo esc_html($opponent); ?>
+                                                                                    <?php echo esc_html($opponent . $opponent_record); ?>
                                                                                 </a>
                                                                             <?php else: ?>
-                                                                                <?php echo esc_html($opponent); ?>
+                                                                                <?php echo esc_html($opponent . $opponent_record); ?>
                                                                             <?php endif; ?>
                                                                         </td>
                                                                         <td><?php echo !empty($game['is_district']) ? 'D' : ''; ?></td>
-                                                                        <td><?php echo esc_html($game['result'] ?? ''); ?></td>
+                                                                        <td><?php echo esc_html($game['opp_division'] ?? $game['district_class'] ?? ''); ?></td>
+                                                                        <td class="result-<?php echo esc_attr(strtolower($game['result'] ?? '')); ?>"><?php echo esc_html($game['result'] ?? ''); ?></td>
                                                                         <td><?php echo esc_html($game['score'] ?? ''); ?></td>
                                                                         <td><?php echo isset($game['total_pts']) ? esc_html(number_format((float) $game['total_pts'], 2)) : ''; ?></td>
                                                                     </tr>
@@ -244,6 +254,12 @@ function lvay_football_schedule_shortcode_v5($atts) {
     .lvay-school td{padding:4px 7px;border-bottom:1px solid #e6e6e6}
     .lvay-school tr:nth-child(even) td{background:#f2f4f4}
     .lvay-school a{color:var(--teal);font-weight:600;text-decoration:none}
+    .lvay-school tr.is-district td{color:var(--teal);font-weight:600}
+    .lvay-school tr.is-district a{color:var(--teal);font-weight:600}
+    .lvay-school tr.is-nondistrict td{color:#111;font-weight:400}
+    .lvay-school tr.is-nondistrict a{color:#111;font-weight:400}
+    .lvay-school td.result-w{color:#00a651!important;font-weight:700!important}
+    .lvay-school td.result-l{color:#e53935!important;font-weight:700!important}
     .lvay-season-archives{align-self:start;padding:17px 26px 20px;background:#050505;color:#fff}
     .lvay-season-archives h2{margin:0 0 14px;text-align:center;text-decoration:underline;font-family:"Alfa Slab One",Rockwell,serif;font-size:25px}
     .lvay-season-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px 22px}
@@ -266,6 +282,10 @@ function lvay_football_schedule_shortcode_v5($atts) {
       const esc=value=>String(value??'')
         .replaceAll('&','&amp;').replaceAll('<','&lt;')
         .replaceAll('>','&gt;').replaceAll('"','&quot;');
+      const formatDate=value=>{
+        const match=String(value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        return match ? Number(match[2])+'/'+Number(match[3])+'/'+match[1] : (value||'—');
+      };
       async function renderSchoolBody(body){
         if(body.dataset.loaded==='1')return;
         if(body.dataset.loading==='1')return;
@@ -290,24 +310,32 @@ function lvay_football_schedule_shortcode_v5($atts) {
           }
           html+='</div><div class="lvay-table-scroll"><table><thead><tr>'
             +'<th>Week</th><th>Date</th><th>H/A</th><th>Opponent</th>'
-            +'<th>District</th><th>W/L</th><th>Score</th><th>Power Pts</th>'
+            +'<th>District</th><th>Division</th><th>W/L</th><th>Score</th><th>Power Pts</th>'
             +'</tr></thead><tbody>';
           (data.games||[]).forEach(game=>{
             const opponent=game.opponent||'';
-            let opponentHtml=esc(opponent);
+            const hasRecord=game.opp_wins!==null&&game.opp_wins!==undefined
+              &&game.opp_losses!==null&&game.opp_losses!==undefined;
+            const opponentLabel=opponent+(hasRecord?' ('+game.opp_wins+'-'+game.opp_losses+')':'');
+            let opponentHtml=esc(opponentLabel);
             if(game.opponent_internal&&opponent){
               const destination=new URL(window.location.href);
               destination.searchParams.set('season',root.dataset.season);
               destination.searchParams.set('school',opponent);
               destination.hash='school-'+normalize(opponent).replaceAll(' ','-');
-              opponentHtml='<a href="'+esc(destination.toString())+'">'+esc(opponent)+'</a>';
+              opponentHtml='<a href="'+esc(destination.toString())+'">'+esc(opponentLabel)+'</a>';
             }
             const points=game.total_pts===null||game.total_pts===undefined
               ? '' : Number(game.total_pts).toFixed(2);
-            html+='<tr><td>Wk'+esc(game.week||'')+'</td><td>'
-              +esc(game.game_date||'—')+'</td><td>'+esc(game.home_away||'')
+            const rowClass=game.is_district?'is-district':'is-nondistrict';
+            const resultClass='result-'+String(game.result||'').toLowerCase();
+            const division=game.opp_division||game.district_class||'';
+            html+='<tr class="'+rowClass+'"><td>Wk'+esc(game.week||'')
+              +(game.is_district?' D':'')+'</td><td>'
+              +esc(formatDate(game.game_date))+'</td><td>'+esc(game.home_away||'')
               +'</td><td>'+opponentHtml+'</td><td>'+(game.is_district?'D':'')
-              +'</td><td>'+esc(game.result||'')+'</td><td>'+esc(game.score||'')
+              +'</td><td>'+esc(division)+'</td><td class="'+resultClass+'">'
+              +esc(game.result||'')+'</td><td>'+esc(game.score||'')
               +'</td><td>'+esc(points)+'</td></tr>';
           });
           body.innerHTML=html+'</tbody></table></div>';
