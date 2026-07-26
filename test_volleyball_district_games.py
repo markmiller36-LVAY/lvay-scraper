@@ -90,6 +90,33 @@ def test_out_of_state_placeholder_is_excluded_even_with_numeric_division():
     assert dict(game) == {"opponent": "OUT OF STATE", "counts_for_pr": 0}
 
 
+def test_in_state_match_counts_when_report_only_supplies_roman_division():
+    conn = sqlite3.connect(":memory:")
+    conn.row_factory = sqlite3.Row
+    ensure_tables(conn)
+
+    row = {
+        "school": "Comeaux",
+        "school_dd": "3-II",
+        "date_raw": "10/14/2025",
+        "opponent": "Westgate",
+        "opp_dd": "II",
+        "dist_t": "",
+        "tournament": "",
+        "match_num": "1",
+        "home_away": "H",
+        "win_loss": "W",
+        "score": "3-0",
+        "division": "II",
+    }
+    insert_games(conn, [row])
+
+    game = conn.execute(
+        "SELECT opponent, counts_for_pr FROM volleyball_games"
+    ).fetchone()
+    assert dict(game) == {"opponent": "Westgate", "counts_for_pr": 1}
+
+
 def test_loss_uses_exact_one_third_of_opponent_wins():
     stats = calculate_school_pr(
         "Example High",
