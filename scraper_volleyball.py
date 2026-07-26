@@ -282,6 +282,18 @@ def insert_games(conn, rows, season=SEASON):
             skipped += 1
 
     conn.commit()
+
+    # Final safety pass: historical rows may have been created before OOS
+    # placeholders were excluded. Reassert the rule after every scrape so a
+    # rescrape repairs those rows even if the source formatting changes.
+    conn.execute("""
+        UPDATE volleyball_games
+        SET counts_for_pr=0
+        WHERE sport=? AND season=?
+          AND UPPER(TRIM(opponent))='OUT OF STATE'
+    """, (SPORT, str(season)))
+    conn.commit()
+
     return inserted, updated, skipped
 
 
