@@ -235,10 +235,12 @@ def insert_games(conn, rows, season=SEASON):
         game_date = parse_date(row["date_raw"])
         is_tourn  = 1 if row["dist_t"].upper() == "T" else 0
         is_dist   = 1 if row["dist_t"].upper() == "D" else 0
-        is_oos    = (
-            row["opponent"].strip().upper() == "OUT OF STATE"
-            or is_oos_opponent(row["opp_dd"])
-        )
+        # The LHSAA report sometimes omits an in-state opponent's district and
+        # supplies only its Roman postseason division (for example, "II").
+        # That incomplete metadata must not cause a Louisiana match to be
+        # discarded. The report uses the explicit OUT OF STATE placeholder for
+        # matches that should be excluded.
+        is_oos = row["opponent"].strip().upper() == "OUT OF STATE"
         # The LHSAA report's "D" flag means a normal district match.
         # These matches count toward both the official record and power rating.
         counts    = 0 if is_oos else 1
