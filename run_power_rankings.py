@@ -544,6 +544,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             division=division,
             classification=class_ or "",
             sport=sport,
+            season=season,
         ))
 
     unmatched_unique = sorted(set(unmatched))
