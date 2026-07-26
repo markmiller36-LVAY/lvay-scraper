@@ -15,9 +15,9 @@ Opponent wins = total wins by that opponent across ALL their matches
 
 Exclusions already flagged in scraper (counts_for_pr = 0):
     - OOS opponents
-    - District playoff tiebreaker matches (D flag)
 
 Inclusions:
+    - District matches (D flag)
     - Regular season matches
     - Tournament matches (T flag)
 
