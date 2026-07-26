@@ -1084,8 +1084,10 @@ def schedules_volleyball():
 def get_sport_schedules(sport):
     conn = get_db()
     c = conn.cursor()
-    school_filter = request.args.get("school")
-    season = available_season(conn, sport)
+    school_filter = (request.args.get("school") or "").strip()
+    summary_only = request.args.get("summary") == "1"
+    requested_season = (request.args.get("season") or "").strip()
+    season = requested_season if re.fullmatch(r"\d{4}", requested_season) else available_season(conn, sport)
 
     if school_filter:
         c.execute("""
@@ -1110,6 +1112,18 @@ def get_sport_schedules(sport):
 
     for s in school_rows:
         school = s['school']
+        if summary_only:
+            schools.append({
+                **s,
+                "sport": sport,
+                "season": season,
+                "record": (
+                    f"{s.get('wins', 0)}-{s.get('losses', 0)}"
+                    + (f"-{s.get('ties', 0)}" if s.get("ties") else "")
+                ),
+                "games": [],
+            })
+            continue
         c.execute("""
             SELECT gpp.opponent, gpp.result, gpp.score,
                    gpp.opp_wins, gpp.opp_losses, gpp.opp_ties, gpp.opp_division,
@@ -1145,6 +1159,7 @@ def get_sport_schedules(sport):
     return jsonify({
         "sport":   sport,
         "season":  season,
+        "status":  "final" if int(season) < int(resolve_season(sport)) else ("active" if schools else "empty"),
         "count":   len(schools),
         "schools": schools
     })
