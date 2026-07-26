@@ -713,7 +713,12 @@ def rankings_football():
     conn = get_db()
     c = conn.cursor()
     try:
-        season = available_season(conn, "football")
+        # An explicitly requested season must never fall forward or backward to
+        # another year. This keeps archive pages historically accurate and lets
+        # the upcoming-season page correctly report that rankings are not yet
+        # available.
+        requested_season = request.args.get("season", type=int)
+        season = requested_season if requested_season is not None else available_season(conn, "football")
         c.execute("""
             SELECT school, division, track, class_, district,
                    rank, power_rating, wins, losses, ties, games_played,
