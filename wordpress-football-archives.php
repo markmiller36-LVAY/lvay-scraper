@@ -129,6 +129,33 @@ function lvay_archive_rankings_output_v2($output, $tag, $attr, $match) {
 }
 add_filter('do_shortcode_tag', 'lvay_archive_rankings_output_v2', 99, 4);
 
+function lvay_archive_2025_brackets_v2() {
+    $divisions = array(
+        'Non-Select Division I'   => 'https://www.lhsaaonline.org/MainBracket32.aspx?d=I&s=1&select=0&y=2025',
+        'Non-Select Division II'  => 'https://www.lhsaaonline.org/MainBracket32.aspx?d=II&s=1&select=0&y=2025',
+        'Non-Select Division III' => 'https://www.lhsaaonline.org/MainBracket32.aspx?d=III&s=1&select=0&y=2025',
+        'Non-Select Division IV'  => 'https://www.lhsaaonline.org/MainBracket32.aspx?d=IV&s=1&select=0&y=2025',
+        'Select Division I'       => 'https://www.lhsaaonline.org/MainBracket32.aspx?d=I&s=1&select=1&y=2025',
+        'Select Division II'      => 'https://www.lhsaaonline.org/MainBracket32.aspx?d=II&s=1&select=1&y=2025',
+        'Select Division III'     => 'https://www.lhsaaonline.org/MainBracket32.aspx?d=III&s=1&select=1&y=2025',
+        'Select Division IV'      => 'https://www.lhsaaonline.org/MainBracket32.aspx?d=IV&s=1&select=1&y=2025',
+    );
+
+    $out = '<div class="lvay-brackets-heading">2025 LHSAA<br>FOOTBALL PLAYOFF BRACKETS</div>';
+    $out .= '<p class="lvay-bracket-source">Complete official brackets from the LHSAA, including every round and state championship result.</p>';
+    $index = 0;
+    foreach ($divisions as $label => $url) {
+        $out .= '<details class="lvay-official-bracket"' . ($index === 0 ? ' open' : '') . '>';
+        $out .= '<summary><span class="lvay-bracket-arrow">&rsaquo;</span>' . esc_html($label) . '</summary>';
+        $out .= '<div class="lvay-official-bracket-body">';
+        $out .= '<a class="lvay-official-link" target="_blank" rel="noopener" href="' . esc_url($url) . '">Open official completed bracket</a>';
+        $out .= '<iframe loading="lazy" title="' . esc_attr('2025 ' . $label . ' football bracket') . '" src="' . esc_url($url) . '"></iframe>';
+        $out .= '</div></details>';
+        $index++;
+    }
+    return $out;
+}
+
 function lvay_archive_brackets_content_v2($content) {
     if (!is_page(10398) || !in_the_loop() || !is_main_query()) return $content;
     $season = lvay_archive_selected_season_v2();
@@ -136,7 +163,7 @@ function lvay_archive_brackets_content_v2($content) {
 
     if ($season === 2025) {
         return '<div class="lvay-season-layout lvay-brackets-layout"><main class="lvay-season-main">'
-            . $content . '</main>' . $nav . '</div>';
+            . lvay_archive_2025_brackets_v2() . '</main>' . $nav . '</div>';
     }
 
     $current = '<main class="lvay-season-main"><div class="lvay-brackets-heading">2026 LHSAA<br>FOOTBALL PLAYOFF BRACKETS</div>';
@@ -170,8 +197,18 @@ function lvay_archive_styles_v2() {
 .lvay-preseason-card a{display:inline-block;margin-top:8px;background:#078b88;color:#fff!important;padding:10px 17px;font-weight:800;text-decoration:none!important}
 .lvay-brackets-heading{color:#078b88;font-family:"Alfa Slab One",serif;font-size:clamp(28px,3vw,42px);line-height:.95}
 .lvay-brackets-layout .elementor-element-c302248{padding:0!important}
+.lvay-bracket-source{margin:12px 0 18px;color:#555;font-size:17px}
+.lvay-official-bracket{border-bottom:1px solid #d9dddd;background:#fff}
+.lvay-official-bracket>summary{display:flex;align-items:center;gap:10px;min-height:66px;padding:12px 16px;cursor:pointer;list-style:none;color:#090909;font-family:"Alfa Slab One",serif;font-size:clamp(21px,2vw,31px)}
+.lvay-official-bracket>summary::-webkit-details-marker{display:none}
+.lvay-official-bracket[open]>summary{background:#078b88;color:#fff}
+.lvay-bracket-arrow{color:#5dc7c1;font-family:Arial,sans-serif;font-size:38px;line-height:.7;transition:transform .15s}
+.lvay-official-bracket[open] .lvay-bracket-arrow{color:#fff;transform:rotate(90deg)}
+.lvay-official-bracket-body{padding:14px 0 24px}
+.lvay-official-link{display:inline-block;margin:0 0 12px;background:#050505;color:#fff!important;padding:9px 15px;font-family:Teko,Arial,sans-serif;font-size:20px;font-weight:600;text-decoration:none!important}
+.lvay-official-bracket iframe{display:block;width:100%;height:1220px;border:1px solid #cfd5d5;background:#fff}
 @media(max-width:1200px){.lvay-season-layout{grid-template-columns:1fr}.lvay-season-archive{grid-row:1}.lvay-season-main{grid-row:2}}
-@media(max-width:600px){.lvay-season-layout{padding-top:8px}.lvay-season-archive{grid-template-columns:1fr 1fr;padding:16px 18px}.lvay-preseason-card{padding:24px 20px}}
+@media(max-width:600px){.lvay-season-layout{padding-top:8px}.lvay-season-archive{grid-template-columns:1fr 1fr;padding:16px 18px}.lvay-preseason-card{padding:24px 20px}.lvay-official-bracket iframe{height:900px}.lvay-official-bracket>summary{padding:11px 10px}}
 CSS;
     wp_register_style('lvay-football-archives', false);
     wp_enqueue_style('lvay-football-archives');
