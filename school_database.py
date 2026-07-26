@@ -26,6 +26,47 @@ SCHOOL_ALIASES = {
     "V.B. Glencoe Charter": "V. B. Glencoe Charter School",
 }
 
+# Playoff divisions are sport-specific.  The original database was seeded
+# from football divisions, which is incorrect for the schools below in the
+# official 2024-2026 LHSAA softball/baseball divisional alignment.
+SPORT_DIVISION_OVERRIDES = {
+    "softball": {
+        "Westgate": "Non-Select Division II",
+        "South Beauregard": "Non-Select Division III",
+        "Lakeside": "Non-Select Division IV",
+        "Oakdale": "Non-Select Division IV",
+        "Oak Grove": "Non-Select Division IV",
+        "French Settlement": "Non-Select Division III",
+        "McDonogh #35": "Select Division II",
+        "University Lab": "Select Division III",
+        "Slaughter Community Charter": "Select Division IV",
+        "Holy Savior Menard": "Select Division IV",
+        "Cabrini": "Select Division II",
+        "Idea Bridge": "Select Division III",
+        "Caddo Magnet": "Select Division I",
+        "St. Scholastica": "Select Division I",
+    },
+    "baseball": {
+        "West Ouachita": "Non-Select Division II",
+        "St. Martinville": "Non-Select Division III",
+        "St. Helena College & Career Acad.": "Non-Select Division IV",
+        "Westgate": "Non-Select Division II",
+        "South Beauregard": "Non-Select Division III",
+        "Oakdale": "Non-Select Division IV",
+        "Oak Grove": "Non-Select Division IV",
+        "French Settlement": "Non-Select Division III",
+        "Comeaux": "Select Division II",
+        "Sophie B. Wright": "Select Division III",
+        "Teurlings Catholic": "Select Division II",
+        "Patrick Taylor - Science/Tech.": "Select Division III",
+        "McDonogh #35": "Select Division II",
+        "University Lab": "Select Division III",
+        "Rapides": "Select Division III",
+        "Delhi Charter": "Select Division III",
+        "Pickering": "Select Division III",
+    },
+}
+
 # ──────────────────────────────────────────────────────────────────────────────
 # DIVISION ASSIGNMENTS
 # ──────────────────────────────────────────────────────────────────────────────
@@ -686,33 +727,55 @@ NORMALIZED_ALIASES = {
 # LOOKUP HELPERS
 # ──────────────────────────────────────────────────────────────────────────────
 
-def get_school(name):
+def get_school(name, sport=None):
     if not name:
         return None
 
     raw = str(name).strip()
     normalized = normalize_school_name(raw)
 
+    result = None
+
     if raw in SCHOOLS:
-        return SCHOOLS[raw]
+        result = SCHOOLS[raw]
 
-    alias = SCHOOL_ALIASES.get(raw)
-    if alias and alias in SCHOOLS:
-        return SCHOOLS[alias]
+    if result is None:
+        alias = SCHOOL_ALIASES.get(raw)
+        if alias and alias in SCHOOLS:
+            result = SCHOOLS[alias]
 
-    if normalized in NORMALIZED_SCHOOLS:
-        return NORMALIZED_SCHOOLS[normalized]
+    if result is None and normalized in NORMALIZED_SCHOOLS:
+        result = NORMALIZED_SCHOOLS[normalized]
 
-    alias = NORMALIZED_ALIASES.get(normalized)
-    if alias:
-        if alias in SCHOOLS:
-            return SCHOOLS[alias]
+    if result is None:
+        alias = NORMALIZED_ALIASES.get(normalized)
+        if alias:
+            if alias in SCHOOLS:
+                result = SCHOOLS[alias]
 
-        alias_normalized = normalize_school_name(alias)
-        if alias_normalized in NORMALIZED_SCHOOLS:
-            return NORMALIZED_SCHOOLS[alias_normalized]
+            alias_normalized = normalize_school_name(alias)
+            if alias_normalized in NORMALIZED_SCHOOLS:
+                result = NORMALIZED_SCHOOLS[alias_normalized]
 
-    return None
+    sport_key = str(sport or "").lower()
+    overrides = SPORT_DIVISION_OVERRIDES.get(sport_key, {})
+    canonical = (result or {}).get("name", raw)
+    division = overrides.get(canonical) or overrides.get(raw)
+    if division:
+        merged = dict(result or {
+            "name": canonical,
+            "class": None,
+            "district": None,
+        })
+        merged["division"] = division
+        merged["track"] = (
+            "non-select" if division.startswith("Non-Select")
+            else "select" if division.startswith("Select")
+            else "small-school"
+        )
+        return merged
+
+    return result
 
 
 def get_division(name: str) -> str:

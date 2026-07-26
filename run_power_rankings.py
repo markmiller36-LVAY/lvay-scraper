@@ -471,7 +471,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             continue
         schools_seen.add(school)
 
-        db_info = get_school(school)
+        db_info = get_school(school, sport)
         division = db_info["division"] if db_info else "Unknown"
         class_ = db_info["class"] if db_info else (r.get("class_") or "")
 
@@ -505,7 +505,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         game_date = r["game_date"] or ""
 
         oos_flag = str(r.get("out_of_state") or "").strip().upper() in ("Y", "YES", "1", "TRUE")
-        opp_in_db = get_school(opponent) is not None
+        opp_in_db = get_school(opponent, sport) is not None
         oos = oos_flag or (not opp_in_db)
 
         # Normalize forfeits (W(f) -> W, L(f) -> L) and ties (Tie -> T) here.
@@ -556,7 +556,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             opp_wins = opp_record["wins"]
             opp_losses = opp_record["losses"]
             opp_ties = opp_record["ties"]
-            opp_info = get_school(opponent)
+            opp_info = get_school(opponent, sport)
             opp_division = opp_info["division"] if opp_info else "Unknown"
             raw_opp_class = r.get("opponent_class") or ""
             opp_class = strip_district_prefix(raw_opp_class) or (opp_info["class"] if opp_info else "")
@@ -607,7 +607,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     c.execute("DELETE FROM game_power_points WHERE sport=? AND season=?", (sport, season))
 
     for r in ratings:
-        db_info = get_school(r.name)
+        db_info = get_school(r.name, sport)
         division = db_info["division"] if db_info else r.division
         track = db_info["track"] if db_info else "unknown"
         class_ = db_info["class"] if db_info else ""
@@ -632,8 +632,8 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             week_num = g["week"]
             game_key = (r.name, week_num) if week_num else (r.name, "")
             meta = game_meta.get(game_key, {})
-            school_info = get_school(r.name)
-            opp_info = get_school(meta.get("opponent", g["opponent"]))
+            school_info = get_school(r.name, sport)
+            opp_info = get_school(meta.get("opponent", g["opponent"]), sport)
 
             is_district = 0
             if school_info and opp_info:

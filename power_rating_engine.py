@@ -16,7 +16,7 @@ BASEBALL:
   Win=20, Loss=0, Tie=5, Double Forfeit=+1 to winner
   OppQ: Opponent's Wins + (Opponent's Ties x 0.5)
   Division bonus:
-    - in-state: +2 per class step up, with division also higher
+    - in-state: +2 per playoff-division step up, with class also higher
     - OOS: NO bonus (10.10.2 — all OOS opponents weighted equally)
   Power Rating = Total Points / Games Played
 
@@ -24,7 +24,7 @@ SOFTBALL:
   Win=20, Loss=0, Tie=5, Double Forfeit=+1 to winner
   OppQ: Opponent's Wins + (Opponent's Ties x 0.5)
   Division bonus:
-    - in-state: +2 per class step up, with division also higher
+    - in-state: +2 per playoff-division step up, with class also higher
     - OOS: NO bonus (10.10.2 — all OOS opponents weighted equally)
   Power Rating = Total Points / Games Played
 
@@ -77,8 +77,10 @@ DIVISION_RANK = {
     "Select Division IV": 1,
 
     # Small schools
+    # B and C are separate classifications, but they occupy the same
+    # small-school playoff tier for the higher-division bonus test.
     "Class B": 0,
-    "Class C": -1,
+    "Class C": 0,
 }
 
 CLASS_RANK = {
@@ -118,7 +120,7 @@ SPORT_CONFIGS = {
         "div_bonus_per_step": 2,
         "has_div_bonus": True,
         "opp_quality": "raw_wins",
-        "bonus_mode": "class_steps_with_division_gate",
+        "bonus_mode": "division_steps_with_class_gate",
         "oos_bonus": False,  # 10.10.2 — OOS weighted equally, no class bonus
     },
     "softball": {
@@ -129,7 +131,7 @@ SPORT_CONFIGS = {
         "div_bonus_per_step": 2,
         "has_div_bonus": True,
         "opp_quality": "raw_wins",
-        "bonus_mode": "class_steps_with_division_gate",
+        "bonus_mode": "division_steps_with_class_gate",
         "oos_bonus": False,  # 10.10.2 — OOS weighted equally, no class bonus
     },
     "basketball_1a5a": {
