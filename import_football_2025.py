@@ -67,7 +67,7 @@ def run():
             class_       TEXT,
             opp_wins     INTEGER,
             opp_losses   INTEGER,
-            UNIQUE(sport, season, school, week)
+            UNIQUE(sport, season, school, opponent)
         )
     """)
     for column in (

@@ -107,7 +107,7 @@ SPORT_CONFIGS = {
         "div_bonus_per_step": 2,
         "has_div_bonus": True,
         "opp_quality": "win_pct_x10",
-        "bonus_mode": "class_steps_with_division_gate",
+        "bonus_mode": "division_steps_with_class_gate",
         "oos_bonus": True,
     },
     "baseball": {
@@ -308,6 +308,18 @@ class PowerRatingEngine:
                         gp.div_bonus = class_diff * bonus_per_step
                 else:
                     if div_steps_up > 0:
+                        gp.div_bonus = div_steps_up * bonus_per_step
+
+            elif bonus_mode == "division_steps_with_class_gate":
+                # Football: an in-state opponent must be both a higher class
+                # and a higher playoff division. Award 2 points for each
+                # division step up. OOS opponents use class steps because
+                # they do not have an LHSAA playoff division.
+                if oos:
+                    if oos_bonus_allowed and class_diff > 0:
+                        gp.div_bonus = class_diff * bonus_per_step
+                else:
+                    if class_diff > 0 and div_steps_up > 0:
                         gp.div_bonus = div_steps_up * bonus_per_step
 
             elif bonus_mode == "class_steps_with_division_gate":

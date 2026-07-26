@@ -518,7 +518,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         game_key = (school, week_num) if week_num else (school, game_date)
 
         oos_data = None
-        if oos and sport.lower() in ("baseball", "softball"):
+        if oos and sport.lower() in ("football", "baseball", "softball"):
             oos_data = find_oos_record(oos_lookup, school, opponent)
 
         if oos_data:
