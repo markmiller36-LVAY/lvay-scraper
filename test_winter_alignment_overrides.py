@@ -1,5 +1,6 @@
 import unittest
 
+from official_record_overrides import get_record_overrides
 from school_database import WINTER_ALIGNMENT_OVERRIDES, get_school
 
 
@@ -40,6 +41,12 @@ class WinterAlignmentOverrideTests(unittest.TestCase):
         mt_carmel = get_school("Mt. Carmel", "girls_soccer", 2026)
         self.assertEqual(mt_carmel["division"], "Division I")
         self.assertEqual(mt_carmel["district"], 8)
+
+    def test_final_reports_supply_official_winter_records(self):
+        boys = get_record_overrides("boys_basketball", 2026)
+        girls_soccer = get_record_overrides("girls_soccer", 2026)
+        self.assertEqual(boys["Gibsland-Coleman"], (25, 3, 0))
+        self.assertEqual(girls_soccer["Mt. Carmel"], (17, 2, 3))
 
 
 if __name__ == "__main__":

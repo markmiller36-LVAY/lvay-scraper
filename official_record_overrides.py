@@ -5,7 +5,9 @@ strength calculations. Game exclusions preserve the scraped result for audit
 purposes while preventing a contest that LHSAA omitted from being rated.
 """
 
+import json
 import re
+from pathlib import Path
 
 
 OFFICIAL_RECORD_OVERRIDES = {
@@ -73,10 +75,36 @@ def _normalize(name):
 
 
 def get_record_overrides(sport, season):
-    return OFFICIAL_RECORD_OVERRIDES.get(
+    overrides = dict(OFFICIAL_RECORD_OVERRIDES.get(
         (str(sport).lower(), str(season)),
         {},
-    )
+    ))
+    sport_key = str(sport).lower()
+    if str(season) == "2026" and sport_key in {
+        "boys_basketball",
+        "girls_basketball",
+        "boys_soccer",
+        "girls_soccer",
+    }:
+        path = Path(__file__).with_name("winter_alignment_2026.json")
+        if path.exists():
+            try:
+                official = json.loads(path.read_text(encoding="utf-8"))
+                for school, info in official.get(sport_key, {}).items():
+                    parts = [
+                        int(part)
+                        for part in str(
+                            info.get("official_record") or ""
+                        ).split("-")
+                        if part.strip().isdigit()
+                    ]
+                    if len(parts) == 2:
+                        overrides[school] = (parts[0], parts[1], 0)
+                    elif len(parts) == 3:
+                        overrides[school] = tuple(parts)
+            except (OSError, ValueError):
+                pass
+    return overrides
 
 
 def find_record_override(overrides, school):
