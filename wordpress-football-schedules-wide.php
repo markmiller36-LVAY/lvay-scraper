@@ -46,6 +46,22 @@ function lvay_football_schedules_wide_styles() {
     padding:11px 20px!important;
     font-size:25px!important;
 }
+.lvay-school-toggle:hover,
+.lvay-school-toggle:focus-visible{
+    background:#050505!important;
+    color:#fff!important;
+}
+.lvay-school-toggle:hover small,
+.lvay-school-toggle:focus-visible small{
+    color:#fff!important;
+}
+.lvay-school-toggle[aria-expanded="true"]{
+    background:#333!important;
+    color:#fff!important;
+}
+.lvay-school-toggle[aria-expanded="true"] small{
+    color:#fff!important;
+}
 .lvay-school-toggle small{
     font-size:19px!important;
 }
