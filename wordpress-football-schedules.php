@@ -10,13 +10,13 @@
  * Paste into Code Snippets without this opening PHP tag.
  */
 
-function lvay_football_schedule_api_url($path) {
+function lvay_football_schedule_api_url_v3($path) {
     return 'https://lvay-scraper.onrender.com' . $path;
 }
 
-function lvay_football_schedule_fetch($path) {
+function lvay_football_schedule_fetch_v3($path) {
     $response = wp_remote_get(
-        lvay_football_schedule_api_url($path),
+        lvay_football_schedule_api_url_v3($path),
         array('timeout' => 25)
     );
     if (is_wp_error($response)) {
@@ -26,17 +26,17 @@ function lvay_football_schedule_fetch($path) {
     return is_array($body) ? $body : null;
 }
 
-function lvay_football_schedule_shortcode($atts) {
+function lvay_football_schedule_shortcode_v3($atts) {
     $atts = shortcode_atts(array('season' => ''), $atts);
     $requested = isset($_GET['season'])
         ? sanitize_text_field(wp_unslash($_GET['season']))
         : $atts['season'];
     $season = preg_match('/^\d{4}$/', $requested) ? $requested : '2026';
 
-    $schedule = lvay_football_schedule_fetch(
+    $schedule = lvay_football_schedule_fetch_v3(
         '/api/schedules/football?season=' . rawurlencode($season)
     );
-    $seasons_data = lvay_football_schedule_fetch('/api/seasons/football');
+    $seasons_data = lvay_football_schedule_fetch_v3('/api/seasons/football');
     if (!$schedule || !isset($schedule['schools'])) {
         return '<p class="lvay-schedule-error">Schedules are temporarily unavailable.</p>';
     }
@@ -120,6 +120,7 @@ function lvay_football_schedule_shortcode($atts) {
                                                     <?php endif; ?>
                                                 </button>
                                                 <div class="lvay-school-body" hidden>
+                                                    <template class="lvay-school-template">
                                                     <div class="lvay-school-meta">
                                                         <strong><?php echo esc_html($district . '-' . $class_name); ?></strong>
                                                         <span><?php echo esc_html($school['source_division'] ?? $school['division'] ?? ''); ?></span>
@@ -178,6 +179,7 @@ function lvay_football_schedule_shortcode($atts) {
                                                             </tbody>
                                                         </table>
                                                     </div>
+                                                    </template>
                                                 </div>
                                             </article>
                                         <?php endforeach; ?>
@@ -261,6 +263,12 @@ function lvay_football_schedule_shortcode($atts) {
       const status=root.querySelector('#lvay-search-status');
       const schoolParam=new URLSearchParams(window.location.search).get('school');
       const normalize=v=>(v||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+      function renderSchoolBody(body){
+        const template=body.querySelector('.lvay-school-template');
+        if(!template)return;
+        body.appendChild(template.content.cloneNode(true));
+        template.remove();
+      }
       function openSchool(article){
         root.querySelectorAll('.lvay-school-body').forEach(body=>body.hidden=true);
         root.querySelectorAll('.lvay-school-toggle').forEach(button=>button.setAttribute('aria-expanded','false'));
@@ -268,12 +276,14 @@ function lvay_football_schedule_shortcode($atts) {
         while(parent&&parent!==root){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement}
         const body=article.querySelector('.lvay-school-body');
         const button=article.querySelector('.lvay-school-toggle');
+        renderSchoolBody(body);
         body.hidden=false;button.setAttribute('aria-expanded','true');
         article.scrollIntoView({behavior:'smooth',block:'start'});
       }
       root.querySelectorAll('.lvay-school-toggle').forEach(button=>{
         button.addEventListener('click',()=>{
           const body=button.nextElementSibling;
+          if(body.hidden)renderSchoolBody(body);
           body.hidden=!body.hidden;
           button.setAttribute('aria-expanded',String(!body.hidden));
         });
@@ -299,4 +309,4 @@ function lvay_football_schedule_shortcode($atts) {
     <?php
     return ob_get_clean();
 }
-add_shortcode('lvay_football_schedules', 'lvay_football_schedule_shortcode');
+add_shortcode('lvay_football_schedules', 'lvay_football_schedule_shortcode_v3');
