@@ -10,7 +10,9 @@ Current cycle: 2024-2026
 Next update: Before 2026 season when new reclassification is released.
 """
 
+import json
 import re
+from pathlib import Path
 
 # ──────────────────────────────────────────────────────────────────────────────
 # SCHOOL NAME NORMALIZATION / ALIASES
@@ -66,6 +68,20 @@ SPORT_DIVISION_OVERRIDES = {
         "Pickering": "Select Division III",
     },
 }
+
+
+def _load_winter_alignment_overrides():
+    """Load official 2025-26 winter postseason alignment/report data."""
+    path = Path(__file__).with_name("winter_alignment_2026.json")
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+WINTER_ALIGNMENT_OVERRIDES = _load_winter_alignment_overrides()
 
 # ──────────────────────────────────────────────────────────────────────────────
 # DIVISION ASSIGNMENTS
@@ -727,7 +743,7 @@ NORMALIZED_ALIASES = {
 # LOOKUP HELPERS
 # ──────────────────────────────────────────────────────────────────────────────
 
-def get_school(name, sport=None):
+def get_school(name, sport=None, season=None):
     if not name:
         return None
 
@@ -758,6 +774,35 @@ def get_school(name, sport=None):
                 result = NORMALIZED_SCHOOLS[alias_normalized]
 
     sport_key = str(sport or "").lower()
+    try:
+        season_key = int(season) if season is not None else None
+    except (TypeError, ValueError):
+        season_key = None
+
+    # These reports are the official final 2025-26 LHSAA postseason
+    # groupings. Keep them season-scoped so the 2026-27 reclassification
+    # cannot silently inherit last year's basketball divisions.
+    if season_key == 2026:
+        winter = WINTER_ALIGNMENT_OVERRIDES.get(sport_key, {})
+        winter_info = winter.get(raw) or winter.get(normalized)
+        if winter_info:
+            merged = dict(result or {"name": raw})
+            merged.update(
+                {
+                    "division": winter_info["division"],
+                    "track": (
+                        "non-select"
+                        if winter_info["division"].startswith("Non-Select")
+                        else "select"
+                        if winter_info["division"].startswith("Select")
+                        else "small-school"
+                    ),
+                    "class": winter_info.get("class") or merged.get("class"),
+                    "district": winter_info.get("district"),
+                }
+            )
+            return merged
+
     overrides = SPORT_DIVISION_OVERRIDES.get(sport_key, {})
     canonical = (result or {}).get("name", raw)
     division = overrides.get(canonical) or overrides.get(raw)
