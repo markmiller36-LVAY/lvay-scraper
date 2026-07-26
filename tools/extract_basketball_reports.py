@@ -12,6 +12,7 @@ import pdfplumber
 ROOT = Path(__file__).resolve().parents[1]
 PDF_DIR = ROOT / "tmp" / "pdfs" / "basketball"
 OUTPUT = ROOT / "winter_alignment_2026.json"
+SOCCER_PDF_DIR = ROOT / "tmp" / "pdfs" / "soccer"
 
 REPORTS = {
     "boys_basketball": {
@@ -83,6 +84,49 @@ def extract_report(path: Path, division: str) -> dict[str, dict]:
     return schools
 
 
+def extract_soccer_report(path: Path) -> dict[str, dict]:
+    schools: dict[str, dict] = {}
+    with pdfplumber.open(path) as pdf:
+        for page in pdf.pages:
+            for table in page.extract_tables():
+                division = ""
+                for row in table:
+                    first = clean(row[0]) if row else ""
+                    match = re.fullmatch(r"Division\s+(I|II|III|IV)", first)
+                    if match:
+                        division = f"Division {match.group(1)}"
+                        continue
+                    if len(row) < 12 or not division:
+                        continue
+                    rank = clean(row[0])
+                    school = clean(row[1])
+                    district_text = clean(row[2])
+                    rating = clean(row[3])
+                    record = clean(row[9])
+                    district_match = re.match(
+                        r"(\d+)\s*-\s*(I|II|III|IV)$", district_text
+                    )
+                    if (
+                        not rank.isdigit()
+                        or not school
+                        or not district_match
+                    ):
+                        continue
+                    try:
+                        power_rating = float(rating)
+                    except ValueError:
+                        continue
+                    schools[school] = {
+                        "division": division,
+                        "class": "",
+                        "district": int(district_match.group(1)),
+                        "official_power_rating": power_rating,
+                        "official_record": record,
+                        "official_rank": int(rank),
+                    }
+    return schools
+
+
 def main() -> None:
     payload: dict[str, dict[str, dict]] = {}
     for sport, reports in REPORTS.items():
@@ -97,6 +141,21 @@ def main() -> None:
                 raise ValueError(f"Duplicate schools in {sport}: {sorted(overlap)}")
             schools.update(report_schools)
         payload[sport] = dict(sorted(schools.items()))
+
+    payload["boys_soccer"] = dict(
+        sorted(
+            extract_soccer_report(
+                SOCCER_PDF_DIR / "boys_soccer_seeds.pdf"
+            ).items()
+        )
+    )
+    payload["girls_soccer"] = dict(
+        sorted(
+            extract_soccer_report(
+                SOCCER_PDF_DIR / "girls_soccer_seeds.pdf"
+            ).items()
+        )
+    )
 
     OUTPUT.write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n",

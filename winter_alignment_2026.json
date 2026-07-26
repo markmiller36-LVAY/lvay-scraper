@@ -3041,6 +3041,1448 @@
       "official_record": "26-7"
     }
   },
+  "boys_soccer": {
+    "A.J. Ellender": {
+      "class": "",
+      "district": 8,
+      "division": "Division II",
+      "official_power_rating": 7.94,
+      "official_rank": 28,
+      "official_record": "5-12-2"
+    },
+    "Acadiana": {
+      "class": "",
+      "district": 3,
+      "division": "Division I",
+      "official_power_rating": 12.71,
+      "official_rank": 15,
+      "official_record": "9-8-4"
+    },
+    "Acadiana Renaissance Charter": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 9.14,
+      "official_rank": 16,
+      "official_record": "9-9-3"
+    },
+    "Airline": {
+      "class": "",
+      "district": 1,
+      "division": "Division I",
+      "official_power_rating": 8.54,
+      "official_rank": 37,
+      "official_record": "8-5-2"
+    },
+    "Alexandria": {
+      "class": "",
+      "district": 2,
+      "division": "Division I",
+      "official_power_rating": 12.32,
+      "official_rank": 17,
+      "official_record": "11-7-2"
+    },
+    "Archbishop Hannan": {
+      "class": "",
+      "district": 6,
+      "division": "Division III",
+      "official_power_rating": 12.64,
+      "official_rank": 4,
+      "official_record": "12-6-2"
+    },
+    "Archbishop Rummel": {
+      "class": "",
+      "district": 9,
+      "division": "Division II",
+      "official_power_rating": 13.51,
+      "official_rank": 8,
+      "official_record": "16-6-5"
+    },
+    "Archbishop Shaw": {
+      "class": "",
+      "district": 8,
+      "division": "Division III",
+      "official_power_rating": 8.83,
+      "official_rank": 18,
+      "official_record": "10-9-1"
+    },
+    "Ascension Episcopal": {
+      "class": "",
+      "district": 5,
+      "division": "Division IV",
+      "official_power_rating": 11.32,
+      "official_rank": 4,
+      "official_record": "9-8-0"
+    },
+    "Assumption": {
+      "class": "",
+      "district": 8,
+      "division": "Division II",
+      "official_power_rating": 4.88,
+      "official_rank": 46,
+      "official_record": "0-14-0"
+    },
+    "Baker": {
+      "class": "",
+      "district": 6,
+      "division": "Division IV",
+      "official_power_rating": 0.0,
+      "official_rank": 41,
+      "official_record": "0-0-0"
+    },
+    "Barbe": {
+      "class": "",
+      "district": 3,
+      "division": "Division I",
+      "official_power_rating": 12.82,
+      "official_rank": 14,
+      "official_record": "14-7-4"
+    },
+    "Baton Rouge": {
+      "class": "",
+      "district": 4,
+      "division": "Division I",
+      "official_power_rating": 15.48,
+      "official_rank": 5,
+      "official_record": "13-3-0"
+    },
+    "Beau Chene": {
+      "class": "",
+      "district": 4,
+      "division": "Division II",
+      "official_power_rating": 12.54,
+      "official_rank": 12,
+      "official_record": "13-5-1"
+    },
+    "Belaire": {
+      "class": "",
+      "district": 5,
+      "division": "Division III",
+      "official_power_rating": 6.34,
+      "official_rank": 3,
+      "official_record": "5-12-0"
+    },
+    "Belle Chasse": {
+      "class": "",
+      "district": 10,
+      "division": "Division II",
+      "official_power_rating": 7.55,
+      "official_rank": 32,
+      "official_record": "10-17-4"
+    },
+    "Ben Franklin": {
+      "class": "",
+      "district": 9,
+      "division": "Division II",
+      "official_power_rating": 13.54,
+      "official_rank": 7,
+      "official_record": "11-6-2"
+    },
+    "Benton": {
+      "class": "",
+      "district": 1,
+      "division": "Division I",
+      "official_power_rating": 10.83,
+      "official_rank": 24,
+      "official_record": "12-6-3"
+    },
+    "Bolton Academy": {
+      "class": "",
+      "district": 2,
+      "division": "Division III",
+      "official_power_rating": 4.36,
+      "official_rank": 36,
+      "official_record": "3-11-1"
+    },
+    "Bonnabel": {
+      "class": "",
+      "district": 8,
+      "division": "Division I",
+      "official_power_rating": 10.1,
+      "official_rank": 29,
+      "official_record": "9-11-1"
+    },
+    "Bossier": {
+      "class": "",
+      "district": 1,
+      "division": "Division III",
+      "official_power_rating": 12.18,
+      "official_rank": 8,
+      "official_record": "9-7-3"
+    },
+    "Broadmoor": {
+      "class": "",
+      "district": 6,
+      "division": "Division II",
+      "official_power_rating": 6.78,
+      "official_rank": 38,
+      "official_record": "4-5-2"
+    },
+    "Brother Martin": {
+      "class": "",
+      "district": 8,
+      "division": "Division I",
+      "official_power_rating": 16.6,
+      "official_rank": 2,
+      "official_record": "18-3-1"
+    },
+    "Buckeye": {
+      "class": "",
+      "district": 2,
+      "division": "Division III",
+      "official_power_rating": 8.48,
+      "official_rank": 19,
+      "official_record": "11-7-2"
+    },
+    "C.E. Byrd": {
+      "class": "",
+      "district": 1,
+      "division": "Division I",
+      "official_power_rating": 11.15,
+      "official_rank": 21,
+      "official_record": "9-6-7"
+    },
+    "Caddo Magnet": {
+      "class": "",
+      "district": 1,
+      "division": "Division II",
+      "official_power_rating": 11.14,
+      "official_rank": 13,
+      "official_record": "12-6-2"
+    },
+    "Calvary Baptist": {
+      "class": "",
+      "district": 1,
+      "division": "Division IV",
+      "official_power_rating": 8.88,
+      "official_rank": 15,
+      "official_record": "10-8-3"
+    },
+    "Captain Shreve": {
+      "class": "",
+      "district": 1,
+      "division": "Division I",
+      "official_power_rating": 10.4,
+      "official_rank": 25,
+      "official_record": "10-10-4"
+    },
+    "Carencro": {
+      "class": "",
+      "district": 4,
+      "division": "Division II",
+      "official_power_rating": 7.55,
+      "official_rank": 31,
+      "official_record": "7-8-2"
+    },
+    "Catholic - B.R.": {
+      "class": "",
+      "district": 4,
+      "division": "Division I",
+      "official_power_rating": 14.36,
+      "official_rank": 6,
+      "official_record": "14-6-2"
+    },
+    "Catholic - N.I.": {
+      "class": "",
+      "district": 5,
+      "division": "Division IV",
+      "official_power_rating": 8.72,
+      "official_rank": 18,
+      "official_record": "7-7-3"
+    },
+    "Cecilia": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 8.35,
+      "official_rank": 20,
+      "official_record": "8-6-2"
+    },
+    "Central - B.R.": {
+      "class": "",
+      "district": 4,
+      "division": "Division I",
+      "official_power_rating": 10.22,
+      "official_rank": 27,
+      "official_record": "9-4-5"
+    },
+    "Central Lafourche": {
+      "class": "",
+      "district": 8,
+      "division": "Division II",
+      "official_power_rating": 13.83,
+      "official_rank": 6,
+      "official_record": "20-6-1"
+    },
+    "Chalmette": {
+      "class": "",
+      "district": 8,
+      "division": "Division I",
+      "official_power_rating": 6.17,
+      "official_rank": 42,
+      "official_record": "2-15-1"
+    },
+    "Christ Episcopal School": {
+      "class": "",
+      "district": 7,
+      "division": "Division IV",
+      "official_power_rating": 5.4,
+      "official_rank": 34,
+      "official_record": "1-7-2"
+    },
+    "Comeaux": {
+      "class": "",
+      "district": 5,
+      "division": "Division II",
+      "official_power_rating": 7.39,
+      "official_rank": 33,
+      "official_record": "4-11-4"
+    },
+    "Covenant Christian": {
+      "class": "",
+      "district": 8,
+      "division": "Division IV",
+      "official_power_rating": 10.59,
+      "official_rank": 7,
+      "official_record": "10-6-3"
+    },
+    "Covington": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 10.94,
+      "official_rank": 22,
+      "official_record": "8-6-5"
+    },
+    "Crescent City": {
+      "class": "",
+      "district": 10,
+      "division": "Division IV",
+      "official_power_rating": 4.85,
+      "official_rank": 3,
+      "official_record": "1-4-1"
+    },
+    "D'Arbonne Woods Charter": {
+      "class": "",
+      "district": 2,
+      "division": "Division IV",
+      "official_power_rating": 6.25,
+      "official_rank": 28,
+      "official_record": "7-11-1"
+    },
+    "David Thibodaux": {
+      "class": "",
+      "district": 4,
+      "division": "Division II",
+      "official_power_rating": 12.93,
+      "official_rank": 11,
+      "official_record": "13-5-1"
+    },
+    "De La Salle": {
+      "class": "",
+      "district": 8,
+      "division": "Division III",
+      "official_power_rating": 7.95,
+      "official_rank": 23,
+      "official_record": "9-9-3"
+    },
+    "DeRidder": {
+      "class": "",
+      "district": 3,
+      "division": "Division III",
+      "official_power_rating": 7.74,
+      "official_rank": 25,
+      "official_record": "3-12-3"
+    },
+    "Delta Charter": {
+      "class": "",
+      "district": 3,
+      "division": "Division IV",
+      "official_power_rating": 5.68,
+      "official_rank": 32,
+      "official_record": "6-17-2"
+    },
+    "Denham Springs": {
+      "class": "",
+      "district": 5,
+      "division": "Division I",
+      "official_power_rating": 16.44,
+      "official_rank": 3,
+      "official_record": "17-2-1"
+    },
+    "Destrehan": {
+      "class": "",
+      "district": 7,
+      "division": "Division I",
+      "official_power_rating": 11.55,
+      "official_rank": 19,
+      "official_record": "12-6-5"
+    },
+    "Dunham": {
+      "class": "",
+      "district": 6,
+      "division": "Division IV",
+      "official_power_rating": 6.51,
+      "official_rank": 27,
+      "official_record": "8-8-1"
+    },
+    "Dutchtown": {
+      "class": "",
+      "district": 5,
+      "division": "Division I",
+      "official_power_rating": 12.56,
+      "official_rank": 16,
+      "official_record": "10-9-4"
+    },
+    "E.D. White": {
+      "class": "",
+      "district": 7,
+      "division": "Division III",
+      "official_power_rating": 12.32,
+      "official_rank": 6,
+      "official_record": "11-8-2"
+    },
+    "East Ascension": {
+      "class": "",
+      "district": 5,
+      "division": "Division I",
+      "official_power_rating": 13.31,
+      "official_rank": 9,
+      "official_record": "12-4-5"
+    },
+    "East Jefferson": {
+      "class": "",
+      "district": 8,
+      "division": "Division I",
+      "official_power_rating": 10.04,
+      "official_rank": 30,
+      "official_record": "8-6-2"
+    },
+    "East St. John": {
+      "class": "",
+      "district": 9,
+      "division": "Division II",
+      "official_power_rating": 6.91,
+      "official_rank": 36,
+      "official_record": "3-12-2"
+    },
+    "Ecole Classique": {
+      "class": "",
+      "district": 10,
+      "division": "Division IV",
+      "official_power_rating": 0.0,
+      "official_rank": 1,
+      "official_record": "0-0-0"
+    },
+    "Edna Karr": {
+      "class": "",
+      "district": 10,
+      "division": "Division II",
+      "official_power_rating": 5.21,
+      "official_rank": 44,
+      "official_record": "2-10-2"
+    },
+    "Episcopal": {
+      "class": "",
+      "district": 6,
+      "division": "Division IV",
+      "official_power_rating": 9.79,
+      "official_rank": 10,
+      "official_record": "6-5-5"
+    },
+    "Episcopal of Acadiana": {
+      "class": "",
+      "district": 5,
+      "division": "Division IV",
+      "official_power_rating": 9.0,
+      "official_rank": 14,
+      "official_record": "9-8-0"
+    },
+    "Erath": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 9.03,
+      "official_rank": 17,
+      "official_record": "10-6-2"
+    },
+    "Evangel Christian": {
+      "class": "",
+      "district": 1,
+      "division": "Division IV",
+      "official_power_rating": 6.8,
+      "official_rank": 25,
+      "official_record": "7-7-2"
+    },
+    "Fisher": {
+      "class": "",
+      "district": 9,
+      "division": "Division IV",
+      "official_power_rating": 3.82,
+      "official_rank": 38,
+      "official_record": "0-19-0"
+    },
+    "Fontainebleau": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 12.91,
+      "official_rank": 12,
+      "official_record": "15-3-4"
+    },
+    "Franklinton": {
+      "class": "",
+      "district": 6,
+      "division": "Division III",
+      "official_power_rating": 4.3,
+      "official_rank": 38,
+      "official_record": "1-14-1"
+    },
+    "Glenmora": {
+      "class": "",
+      "district": 3,
+      "division": "Division IV",
+      "official_power_rating": 9.3,
+      "official_rank": 13,
+      "official_record": "9-8-2"
+    },
+    "Grace Christian": {
+      "class": "",
+      "district": 3,
+      "division": "Division IV",
+      "official_power_rating": 10.55,
+      "official_rank": 8,
+      "official_record": "13-5-3"
+    },
+    "Grant": {
+      "class": "",
+      "district": 2,
+      "division": "Division III",
+      "official_power_rating": 6.71,
+      "official_rank": 29,
+      "official_record": "6-10-1"
+    },
+    "H.L. Bourgeois": {
+      "class": "",
+      "district": 7,
+      "division": "Division I",
+      "official_power_rating": 13.3,
+      "official_rank": 10,
+      "official_record": "12-1-10"
+    },
+    "Hahnville": {
+      "class": "",
+      "district": 7,
+      "division": "Division I",
+      "official_power_rating": 10.2,
+      "official_rank": 28,
+      "official_record": "9-9-3"
+    },
+    "Hammond": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 8.53,
+      "official_rank": 38,
+      "official_record": "6-16-2"
+    },
+    "Haughton": {
+      "class": "",
+      "district": 1,
+      "division": "Division I",
+      "official_power_rating": 6.76,
+      "official_rank": 41,
+      "official_record": "6-14-1"
+    },
+    "Haynes Academy": {
+      "class": "",
+      "district": 9,
+      "division": "Division III",
+      "official_power_rating": 8.17,
+      "official_rank": 21,
+      "official_record": "5-12-2"
+    },
+    "Highland Baptist": {
+      "class": "",
+      "district": 5,
+      "division": "Division IV",
+      "official_power_rating": 5.1,
+      "official_rank": 35,
+      "official_record": "2-17-2"
+    },
+    "Holy Cross": {
+      "class": "",
+      "district": 9,
+      "division": "Division II",
+      "official_power_rating": 15.61,
+      "official_rank": 1,
+      "official_record": "16-2-2"
+    },
+    "Holy Savior Menard": {
+      "class": "",
+      "district": 3,
+      "division": "Division IV",
+      "official_power_rating": 9.88,
+      "official_rank": 9,
+      "official_record": "11-8-2"
+    },
+    "Houma Christian": {
+      "class": "",
+      "district": 8,
+      "division": "Division IV",
+      "official_power_rating": 6.88,
+      "official_rank": 24,
+      "official_record": "9-6-1"
+    },
+    "Huntington": {
+      "class": "",
+      "district": 1,
+      "division": "Division I",
+      "official_power_rating": 4.92,
+      "official_rank": 44,
+      "official_record": "0-12-1"
+    },
+    "Isidore Newman": {
+      "class": "",
+      "district": 9,
+      "division": "Division IV",
+      "official_power_rating": 13.02,
+      "official_rank": 1,
+      "official_record": "10-3-4"
+    },
+    "Jefferson Rise Charter": {
+      "class": "",
+      "district": 9,
+      "division": "Division IV",
+      "official_power_rating": 7.81,
+      "official_rank": 23,
+      "official_record": "9-8-2"
+    },
+    "Jesuit": {
+      "class": "",
+      "district": 8,
+      "division": "Division I",
+      "official_power_rating": 17.84,
+      "official_rank": 1,
+      "official_record": "16-0-1"
+    },
+    "John Ehret": {
+      "class": "",
+      "district": 8,
+      "division": "Division I",
+      "official_power_rating": 10.22,
+      "official_rank": 26,
+      "official_record": "16-5-2"
+    },
+    "Kaplan": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 7.56,
+      "official_rank": 26,
+      "official_record": "7-7-4"
+    },
+    "Kenner Discovery Health Science": {
+      "class": "",
+      "district": 9,
+      "division": "Division II",
+      "official_power_rating": 9.06,
+      "official_rank": 22,
+      "official_record": "8-11-1"
+    },
+    "L. W. Higgins": {
+      "class": "",
+      "district": 10,
+      "division": "Division II",
+      "official_power_rating": 8.2,
+      "official_rank": 24,
+      "official_record": "12-7-0"
+    },
+    "LaGrange": {
+      "class": "",
+      "district": 4,
+      "division": "Division II",
+      "official_power_rating": 5.19,
+      "official_rank": 1,
+      "official_record": "0-4-0"
+    },
+    "Lafayette": {
+      "class": "",
+      "district": 3,
+      "division": "Division I",
+      "official_power_rating": 12.26,
+      "official_rank": 18,
+      "official_record": "11-10-2"
+    },
+    "Lafayette Christian": {
+      "class": "",
+      "district": 4,
+      "division": "Division IV",
+      "official_power_rating": 8.46,
+      "official_rank": 19,
+      "official_record": "11-12-2"
+    },
+    "Lafayette Renaissance Charter Academy": {
+      "class": "",
+      "district": 4,
+      "division": "Division IV",
+      "official_power_rating": 4.24,
+      "official_rank": 36,
+      "official_record": "1-18-2"
+    },
+    "Lakeshore": {
+      "class": "",
+      "district": 7,
+      "division": "Division II",
+      "official_power_rating": 9.14,
+      "official_rank": 20,
+      "official_record": "6-11-2"
+    },
+    "Leesville": {
+      "class": "",
+      "district": 2,
+      "division": "Division III",
+      "official_power_rating": 7.99,
+      "official_rank": 22,
+      "official_record": "9-8-2"
+    },
+    "Liberty": {
+      "class": "",
+      "district": 6,
+      "division": "Division II",
+      "official_power_rating": 5.99,
+      "official_rank": 40,
+      "official_record": "5-11-2"
+    },
+    "Live Oak": {
+      "class": "",
+      "district": 5,
+      "division": "Division I",
+      "official_power_rating": 10.02,
+      "official_rank": 31,
+      "official_record": "8-8-5"
+    },
+    "Livingston Collegiate": {
+      "class": "",
+      "district": 9,
+      "division": "Division III",
+      "official_power_rating": 9.48,
+      "official_rank": 14,
+      "official_record": "8-10-2"
+    },
+    "Livonia": {
+      "class": "",
+      "district": 6,
+      "division": "Division II",
+      "official_power_rating": 9.11,
+      "official_rank": 21,
+      "official_record": "8-7-6"
+    },
+    "Lord Beaconsfield Landry": {
+      "class": "",
+      "district": 8,
+      "division": "Division III",
+      "official_power_rating": 4.33,
+      "official_rank": 37,
+      "official_record": "3-11-1"
+    },
+    "Loyola Prep": {
+      "class": "",
+      "district": 1,
+      "division": "Division III",
+      "official_power_rating": 13.56,
+      "official_rank": 2,
+      "official_record": "12-5-2"
+    },
+    "Lutcher": {
+      "class": "",
+      "district": 7,
+      "division": "Division III",
+      "official_power_rating": 9.48,
+      "official_rank": 15,
+      "official_record": "5-8-9"
+    },
+    "Lycee Francais de la Nouvelle Orleans": {
+      "class": "",
+      "district": 10,
+      "division": "Division IV",
+      "official_power_rating": 9.55,
+      "official_rank": 12,
+      "official_record": "7-9-0"
+    },
+    "Mandeville": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 13.01,
+      "official_rank": 11,
+      "official_record": "14-8-6"
+    },
+    "McKinley": {
+      "class": "",
+      "district": 5,
+      "division": "Division III",
+      "official_power_rating": 6.77,
+      "official_rank": 33,
+      "official_record": "7-7-0"
+    },
+    "Metairie Park Country Day": {
+      "class": "",
+      "district": 10,
+      "division": "Division IV",
+      "official_power_rating": 11.09,
+      "official_rank": 5,
+      "official_record": "12-5-1"
+    },
+    "Minden": {
+      "class": "",
+      "district": 1,
+      "division": "Division III",
+      "official_power_rating": 6.98,
+      "official_rank": 28,
+      "official_record": "6-11-1"
+    },
+    "Morgan City": {
+      "class": "",
+      "district": 7,
+      "division": "Division III",
+      "official_power_rating": 11.36,
+      "official_rank": 9,
+      "official_record": "12-5-2"
+    },
+    "Morris Jeff": {
+      "class": "",
+      "district": 9,
+      "division": "Division III",
+      "official_power_rating": 9.57,
+      "official_rank": 13,
+      "official_record": "8-5-2"
+    },
+    "N.O. Charter Science and Math": {
+      "class": "",
+      "district": 8,
+      "division": "Division III",
+      "official_power_rating": 9.69,
+      "official_rank": 2,
+      "official_record": "3-1-0"
+    },
+    "Natchitoches Central": {
+      "class": "",
+      "district": 3,
+      "division": "Division II",
+      "official_power_rating": 7.57,
+      "official_rank": 30,
+      "official_record": "6-10-2"
+    },
+    "Neville": {
+      "class": "",
+      "district": 2,
+      "division": "Division II",
+      "official_power_rating": 13.25,
+      "official_rank": 10,
+      "official_record": "12-3-0"
+    },
+    "New Iberia": {
+      "class": "",
+      "district": 5,
+      "division": "Division II",
+      "official_power_rating": 9.97,
+      "official_rank": 18,
+      "official_record": "10-10-2"
+    },
+    "New Orleans Military & Maritime": {
+      "class": "",
+      "district": 10,
+      "division": "Division II",
+      "official_power_rating": 6.89,
+      "official_rank": 37,
+      "official_record": "3-13-0"
+    },
+    "North Caddo": {
+      "class": "",
+      "district": 1,
+      "division": "Division IV",
+      "official_power_rating": 3.78,
+      "official_rank": 39,
+      "official_record": "0-13-1"
+    },
+    "North DeSoto": {
+      "class": "",
+      "district": 1,
+      "division": "Division II",
+      "official_power_rating": 5.79,
+      "official_rank": 41,
+      "official_record": "2-11-1"
+    },
+    "North Vermilion": {
+      "class": "",
+      "district": 5,
+      "division": "Division II",
+      "official_power_rating": 11.14,
+      "official_rank": 14,
+      "official_record": "10-9-2"
+    },
+    "Northeast": {
+      "class": "",
+      "district": 6,
+      "division": "Division IV",
+      "official_power_rating": 3.53,
+      "official_rank": 40,
+      "official_record": "0-13-2"
+    },
+    "Northlake Christian": {
+      "class": "",
+      "district": 7,
+      "division": "Division IV",
+      "official_power_rating": 12.35,
+      "official_rank": 2,
+      "official_record": "15-4-3"
+    },
+    "Northshore": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 12.86,
+      "official_rank": 13,
+      "official_record": "13-5-1"
+    },
+    "Northside": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 0.0,
+      "official_rank": 1,
+      "official_record": "0-0-0"
+    },
+    "Northwood - Shrev.": {
+      "class": "",
+      "district": 1,
+      "division": "Division II",
+      "official_power_rating": 8.02,
+      "official_rank": 25,
+      "official_record": "7-7-3"
+    },
+    "Opelousas": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 5.22,
+      "official_rank": 31,
+      "official_record": "3-15-1"
+    },
+    "Ouachita Christian": {
+      "class": "",
+      "district": 2,
+      "division": "Division IV",
+      "official_power_rating": 8.74,
+      "official_rank": 17,
+      "official_record": "7-5-2"
+    },
+    "Ouachita Parish": {
+      "class": "",
+      "district": 2,
+      "division": "Division II",
+      "official_power_rating": 8.01,
+      "official_rank": 26,
+      "official_record": "4-12-2"
+    },
+    "Parkview Baptist": {
+      "class": "",
+      "district": 5,
+      "division": "Division III",
+      "official_power_rating": 10.07,
+      "official_rank": 12,
+      "official_record": "12-4-4"
+    },
+    "Parkway": {
+      "class": "",
+      "district": 1,
+      "division": "Division II",
+      "official_power_rating": 7.38,
+      "official_rank": 34,
+      "official_record": "5-6-3"
+    },
+    "Patrick Taylor - Science/Tech.": {
+      "class": "",
+      "district": 8,
+      "division": "Division III",
+      "official_power_rating": 5.81,
+      "official_rank": 30,
+      "official_record": "4-14-1"
+    },
+    "Peabody": {
+      "class": "",
+      "district": 2,
+      "division": "Division III",
+      "official_power_rating": 4.4,
+      "official_rank": 35,
+      "official_record": "0-22-0"
+    },
+    "Pearl River": {
+      "class": "",
+      "district": 7,
+      "division": "Division II",
+      "official_power_rating": 5.58,
+      "official_rank": 43,
+      "official_record": "8-10-0"
+    },
+    "Pineville": {
+      "class": "",
+      "district": 3,
+      "division": "Division II",
+      "official_power_rating": 13.38,
+      "official_rank": 9,
+      "official_record": "16-2-1"
+    },
+    "Ponchatoula": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 9.58,
+      "official_rank": 35,
+      "official_record": "8-14-1"
+    },
+    "Pope John Paul II": {
+      "class": "",
+      "district": 7,
+      "division": "Division IV",
+      "official_power_rating": 10.91,
+      "official_rank": 6,
+      "official_record": "12-8-4"
+    },
+    "Port Allen": {
+      "class": "",
+      "district": 5,
+      "division": "Division III",
+      "official_power_rating": 7.18,
+      "official_rank": 27,
+      "official_record": "6-13-0"
+    },
+    "Prairieville": {
+      "class": "",
+      "district": 6,
+      "division": "Division II",
+      "official_power_rating": 14.56,
+      "official_rank": 4,
+      "official_record": "21-3-0"
+    },
+    "Providence Classical Academy": {
+      "class": "",
+      "district": 1,
+      "division": "Division IV",
+      "official_power_rating": 7.64,
+      "official_rank": 2,
+      "official_record": "7-6-2"
+    },
+    "Rapides": {
+      "class": "",
+      "district": 3,
+      "division": "Division IV",
+      "official_power_rating": 8.79,
+      "official_rank": 16,
+      "official_record": "9-9-0"
+    },
+    "Riverdale": {
+      "class": "",
+      "district": 9,
+      "division": "Division II",
+      "official_power_rating": 9.72,
+      "official_rank": 19,
+      "official_record": "11-8-2"
+    },
+    "Riverside Academy": {
+      "class": "",
+      "district": 8,
+      "division": "Division IV",
+      "official_power_rating": 4.18,
+      "official_rank": 37,
+      "official_record": "1-13-0"
+    },
+    "Ruston": {
+      "class": "",
+      "district": 2,
+      "division": "Division II",
+      "official_power_rating": 10.5,
+      "official_rank": 16,
+      "official_record": "10-6-0"
+    },
+    "Salmen": {
+      "class": "",
+      "district": 7,
+      "division": "Division II",
+      "official_power_rating": 5.7,
+      "official_rank": 42,
+      "official_record": "4-12-0"
+    },
+    "Sam Houston": {
+      "class": "",
+      "district": 4,
+      "division": "Division II",
+      "official_power_rating": 7.91,
+      "official_rank": 29,
+      "official_record": "6-11-3"
+    },
+    "Sarah T. Reed": {
+      "class": "",
+      "district": 10,
+      "division": "Division IV",
+      "official_power_rating": 8.31,
+      "official_rank": 20,
+      "official_record": "9-10-2"
+    },
+    "Slidell": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 7.69,
+      "official_rank": 39,
+      "official_record": "6-11-1"
+    },
+    "Sophie B. Wright": {
+      "class": "",
+      "district": 8,
+      "division": "Division III",
+      "official_power_rating": 4.03,
+      "official_rank": 39,
+      "official_record": "4-7-1"
+    },
+    "South Beauregard": {
+      "class": "",
+      "district": 3,
+      "division": "Division III",
+      "official_power_rating": 7.85,
+      "official_rank": 24,
+      "official_record": "7-11-1"
+    },
+    "South Lafourche": {
+      "class": "",
+      "district": 8,
+      "division": "Division II",
+      "official_power_rating": 8.92,
+      "official_rank": 23,
+      "official_record": "8-6-4"
+    },
+    "South Terrebonne": {
+      "class": "",
+      "district": 8,
+      "division": "Division II",
+      "official_power_rating": 7.98,
+      "official_rank": 27,
+      "official_record": "5-8-3"
+    },
+    "Southside": {
+      "class": "",
+      "district": 3,
+      "division": "Division I",
+      "official_power_rating": 13.33,
+      "official_rank": 8,
+      "official_record": "9-5-4"
+    },
+    "Southwood": {
+      "class": "",
+      "district": 1,
+      "division": "Division II",
+      "official_power_rating": 3.56,
+      "official_rank": 47,
+      "official_record": "1-3-0"
+    },
+    "St. Amant": {
+      "class": "",
+      "district": 5,
+      "division": "Division I",
+      "official_power_rating": 7.29,
+      "official_rank": 40,
+      "official_record": "3-19-2"
+    },
+    "St. Augustine": {
+      "class": "",
+      "district": 10,
+      "division": "Division II",
+      "official_power_rating": 4.03,
+      "official_rank": 2,
+      "official_record": "1-7-0"
+    },
+    "St. Charles": {
+      "class": "",
+      "district": 9,
+      "division": "Division III",
+      "official_power_rating": 12.49,
+      "official_rank": 5,
+      "official_record": "14-4-3"
+    },
+    "St. Frederick": {
+      "class": "",
+      "district": 2,
+      "division": "Division IV",
+      "official_power_rating": 6.02,
+      "official_rank": 29,
+      "official_record": "3-11-2"
+    },
+    "St. Louis Catholic": {
+      "class": "",
+      "district": 3,
+      "division": "Division III",
+      "official_power_rating": 13.09,
+      "official_rank": 3,
+      "official_record": "15-5-0"
+    },
+    "St. Martin's Episcopal": {
+      "class": "",
+      "district": 10,
+      "division": "Division IV",
+      "official_power_rating": 7.81,
+      "official_rank": 33,
+      "official_record": "4-3-1"
+    },
+    "St. Martinville": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 4.61,
+      "official_rank": 34,
+      "official_record": "3-11-2"
+    },
+    "St. Michael the Archangel": {
+      "class": "",
+      "district": 5,
+      "division": "Division III",
+      "official_power_rating": 10.22,
+      "official_rank": 11,
+      "official_record": "10-10-4"
+    },
+    "St. Paul's": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 15.56,
+      "official_rank": 4,
+      "official_record": "14-4-2"
+    },
+    "St. Thomas Aquinas": {
+      "class": "",
+      "district": 7,
+      "division": "Division IV",
+      "official_power_rating": 9.55,
+      "official_rank": 11,
+      "official_record": "6-6-5"
+    },
+    "St. Thomas More": {
+      "class": "",
+      "district": 5,
+      "division": "Division II",
+      "official_power_rating": 14.9,
+      "official_rank": 2,
+      "official_record": "15-2-4"
+    },
+    "Sterlington": {
+      "class": "",
+      "district": 1,
+      "division": "Division III",
+      "official_power_rating": 11.15,
+      "official_rank": 10,
+      "official_record": "12-6-0"
+    },
+    "Sulphur": {
+      "class": "",
+      "district": 3,
+      "division": "Division I",
+      "official_power_rating": 9.95,
+      "official_rank": 32,
+      "official_record": "8-12-2"
+    },
+    "Tara": {
+      "class": "",
+      "district": 6,
+      "division": "Division II",
+      "official_power_rating": 10.32,
+      "official_rank": 17,
+      "official_record": "12-3-2"
+    },
+    "Terrebonne": {
+      "class": "",
+      "district": 7,
+      "division": "Division I",
+      "official_power_rating": 11.42,
+      "official_rank": 20,
+      "official_record": "10-5-6"
+    },
+    "Teurlings Catholic": {
+      "class": "",
+      "district": 4,
+      "division": "Division II",
+      "official_power_rating": 14.71,
+      "official_rank": 3,
+      "official_record": "17-7-1"
+    },
+    "The Willow School": {
+      "class": "",
+      "district": 9,
+      "division": "Division II",
+      "official_power_rating": 13.95,
+      "official_rank": 5,
+      "official_record": "19-3-4"
+    },
+    "Thibodaux": {
+      "class": "",
+      "district": 7,
+      "division": "Division I",
+      "official_power_rating": 6.16,
+      "official_rank": 43,
+      "official_record": "4-13-1"
+    },
+    "Thomas Jefferson": {
+      "class": "",
+      "district": 9,
+      "division": "Division IV",
+      "official_power_rating": 5.73,
+      "official_rank": 30,
+      "official_record": "4-15-1"
+    },
+    "Tioga": {
+      "class": "",
+      "district": 3,
+      "division": "Division II",
+      "official_power_rating": 10.74,
+      "official_rank": 15,
+      "official_record": "13-4-2"
+    },
+    "Union Parish": {
+      "class": "",
+      "district": 2,
+      "division": "Division IV",
+      "official_power_rating": 8.08,
+      "official_rank": 21,
+      "official_record": "10-4-2"
+    },
+    "University Lab": {
+      "class": "",
+      "district": 5,
+      "division": "Division III",
+      "official_power_rating": 14.54,
+      "official_rank": 1,
+      "official_record": "15-3-2"
+    },
+    "Vandebilt Catholic": {
+      "class": "",
+      "district": 7,
+      "division": "Division III",
+      "official_power_rating": 12.2,
+      "official_rank": 7,
+      "official_record": "12-7-6"
+    },
+    "Vermilion Catholic": {
+      "class": "",
+      "district": 5,
+      "division": "Division IV",
+      "official_power_rating": 11.78,
+      "official_rank": 3,
+      "official_record": "15-2-1"
+    },
+    "Walker": {
+      "class": "",
+      "district": 5,
+      "division": "Division I",
+      "official_power_rating": 9.88,
+      "official_rank": 34,
+      "official_record": "9-9-5"
+    },
+    "Walter L. Cohen": {
+      "class": "",
+      "district": 9,
+      "division": "Division IV",
+      "official_power_rating": 8.08,
+      "official_rank": 22,
+      "official_record": "9-9-3"
+    },
+    "Washington-Marion": {
+      "class": "",
+      "district": 3,
+      "division": "Division III",
+      "official_power_rating": 4.88,
+      "official_rank": 32,
+      "official_record": "4-12-1"
+    },
+    "West Feliciana": {
+      "class": "",
+      "district": 6,
+      "division": "Division II",
+      "official_power_rating": 5.13,
+      "official_rank": 45,
+      "official_record": "0-17-2"
+    },
+    "West Jefferson": {
+      "class": "",
+      "district": 8,
+      "division": "Division I",
+      "official_power_rating": 9.89,
+      "official_rank": 33,
+      "official_record": "8-11-2"
+    },
+    "West Monroe": {
+      "class": "",
+      "district": 2,
+      "division": "Division I",
+      "official_power_rating": 13.83,
+      "official_rank": 7,
+      "official_record": "13-3-2"
+    },
+    "West Ouachita": {
+      "class": "",
+      "district": 2,
+      "division": "Division II",
+      "official_power_rating": 7.12,
+      "official_rank": 35,
+      "official_record": "6-10-2"
+    },
+    "Westgate": {
+      "class": "",
+      "district": 5,
+      "division": "Division II",
+      "official_power_rating": 6.51,
+      "official_rank": 39,
+      "official_record": "6-12-0"
+    },
+    "Westminster Christian": {
+      "class": "",
+      "district": 4,
+      "division": "Division IV",
+      "official_power_rating": 6.68,
+      "official_rank": 26,
+      "official_record": "7-10-0"
+    },
+    "Westminster Christian - Lafayette": {
+      "class": "",
+      "district": 4,
+      "division": "Division IV",
+      "official_power_rating": 5.69,
+      "official_rank": 31,
+      "official_record": "1-12-2"
+    },
+    "Woodlawn - B.R.": {
+      "class": "",
+      "district": 4,
+      "division": "Division I",
+      "official_power_rating": 9.32,
+      "official_rank": 36,
+      "official_record": "7-11-3"
+    },
+    "Young Audiences Charter": {
+      "class": "",
+      "district": 8,
+      "division": "Division III",
+      "official_power_rating": 6.18,
+      "official_rank": 4,
+      "official_record": "4-7-0"
+    },
+    "Zachary": {
+      "class": "",
+      "district": 4,
+      "division": "Division I",
+      "official_power_rating": 10.93,
+      "official_rank": 23,
+      "official_record": "10-7-3"
+    }
+  },
   "girls_basketball": {
     "A.J. Ellender": {
       "class": "4A",
@@ -6033,6 +7475,1424 @@
       "official_power_rating": 48.49,
       "official_rank": 5,
       "official_record": "26-8"
+    }
+  },
+  "girls_soccer": {
+    "A.J. Ellender": {
+      "class": "",
+      "district": 8,
+      "division": "Division II",
+      "official_power_rating": 7.55,
+      "official_rank": 31,
+      "official_record": "10-11-1"
+    },
+    "Acad. of Sacred Heart - G.C.": {
+      "class": "",
+      "district": 4,
+      "division": "Division IV",
+      "official_power_rating": 4.33,
+      "official_rank": 37,
+      "official_record": "0-9-0"
+    },
+    "Acad. of Sacred Heart - N.O.": {
+      "class": "",
+      "district": 8,
+      "division": "Division III",
+      "official_power_rating": 15.09,
+      "official_rank": 2,
+      "official_record": "15-2-5"
+    },
+    "Academy of Our Lady": {
+      "class": "",
+      "district": 9,
+      "division": "Division II",
+      "official_power_rating": 9.13,
+      "official_rank": 23,
+      "official_record": "12-3-1"
+    },
+    "Acadiana": {
+      "class": "",
+      "district": 3,
+      "division": "Division I",
+      "official_power_rating": 10.47,
+      "official_rank": 23,
+      "official_record": "11-8-2"
+    },
+    "Acadiana Renaissance Charter": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 12.44,
+      "official_rank": 6,
+      "official_record": "12-4-3"
+    },
+    "Airline": {
+      "class": "",
+      "district": 1,
+      "division": "Division I",
+      "official_power_rating": 8.58,
+      "official_rank": 33,
+      "official_record": "5-11-0"
+    },
+    "Alexandria": {
+      "class": "",
+      "district": 2,
+      "division": "Division I",
+      "official_power_rating": 10.83,
+      "official_rank": 22,
+      "official_record": "9-10-2"
+    },
+    "Archbishop Chapelle": {
+      "class": "",
+      "district": 10,
+      "division": "Division II",
+      "official_power_rating": 9.47,
+      "official_rank": 19,
+      "official_record": "11-11-3"
+    },
+    "Archbishop Hannan": {
+      "class": "",
+      "district": 6,
+      "division": "Division III",
+      "official_power_rating": 17.78,
+      "official_rank": 1,
+      "official_record": "15-1-1"
+    },
+    "Ascension Episcopal": {
+      "class": "",
+      "district": 5,
+      "division": "Division IV",
+      "official_power_rating": 10.85,
+      "official_rank": 10,
+      "official_record": "11-5-1"
+    },
+    "Assumption": {
+      "class": "",
+      "district": 8,
+      "division": "Division II",
+      "official_power_rating": 5.03,
+      "official_rank": 42,
+      "official_record": "0-16-0"
+    },
+    "Baker": {
+      "class": "",
+      "district": 6,
+      "division": "Division IV",
+      "official_power_rating": 0.0,
+      "official_rank": 40,
+      "official_record": "0-0-0"
+    },
+    "Barbe": {
+      "class": "",
+      "district": 3,
+      "division": "Division I",
+      "official_power_rating": 13.61,
+      "official_rank": 11,
+      "official_record": "15-5-4"
+    },
+    "Baton Rouge": {
+      "class": "",
+      "district": 4,
+      "division": "Division I",
+      "official_power_rating": 9.93,
+      "official_rank": 27,
+      "official_record": "8-11-1"
+    },
+    "Beau Chene": {
+      "class": "",
+      "district": 4,
+      "division": "Division II",
+      "official_power_rating": 6.28,
+      "official_rank": 37,
+      "official_record": "5-11-1"
+    },
+    "Belle Chasse": {
+      "class": "",
+      "district": 9,
+      "division": "Division II",
+      "official_power_rating": 7.4,
+      "official_rank": 32,
+      "official_record": "4-11-3"
+    },
+    "Ben Franklin": {
+      "class": "",
+      "district": 10,
+      "division": "Division II",
+      "official_power_rating": 13.76,
+      "official_rank": 1,
+      "official_record": "9-7-3"
+    },
+    "Benton": {
+      "class": "",
+      "district": 1,
+      "division": "Division I",
+      "official_power_rating": 14.67,
+      "official_rank": 5,
+      "official_record": "18-4-0"
+    },
+    "Bolton Academy": {
+      "class": "",
+      "district": 2,
+      "division": "Division III",
+      "official_power_rating": 4.56,
+      "official_rank": 36,
+      "official_record": "2-10-0"
+    },
+    "Bonnabel": {
+      "class": "",
+      "district": 8,
+      "division": "Division I",
+      "official_power_rating": 6.4,
+      "official_rank": 40,
+      "official_record": "3-11-2"
+    },
+    "Bossier": {
+      "class": "",
+      "district": 1,
+      "division": "Division III",
+      "official_power_rating": 5.98,
+      "official_rank": 29,
+      "official_record": "5-11-0"
+    },
+    "Broadmoor": {
+      "class": "",
+      "district": 6,
+      "division": "Division II",
+      "official_power_rating": 0.0,
+      "official_rank": 1,
+      "official_record": "0-0-0"
+    },
+    "Buckeye": {
+      "class": "",
+      "district": 2,
+      "division": "Division III",
+      "official_power_rating": 7.05,
+      "official_rank": 22,
+      "official_record": "8-11-0"
+    },
+    "C.E. Byrd": {
+      "class": "",
+      "district": 1,
+      "division": "Division I",
+      "official_power_rating": 14.14,
+      "official_rank": 7,
+      "official_record": "14-4-3"
+    },
+    "Cabrini": {
+      "class": "",
+      "district": 9,
+      "division": "Division III",
+      "official_power_rating": 9.23,
+      "official_rank": 12,
+      "official_record": "8-5-2"
+    },
+    "Caddo Magnet": {
+      "class": "",
+      "district": 1,
+      "division": "Division II",
+      "official_power_rating": 13.17,
+      "official_rank": 3,
+      "official_record": "12-4-0"
+    },
+    "Calvary Baptist": {
+      "class": "",
+      "district": 1,
+      "division": "Division IV",
+      "official_power_rating": 10.98,
+      "official_rank": 9,
+      "official_record": "15-6-2"
+    },
+    "Captain Shreve": {
+      "class": "",
+      "district": 1,
+      "division": "Division I",
+      "official_power_rating": 13.61,
+      "official_rank": 10,
+      "official_record": "16-3-1"
+    },
+    "Carencro": {
+      "class": "",
+      "district": 4,
+      "division": "Division II",
+      "official_power_rating": 5.01,
+      "official_rank": 43,
+      "official_record": "3-14-1"
+    },
+    "Catholic - N.I.": {
+      "class": "",
+      "district": 5,
+      "division": "Division IV",
+      "official_power_rating": 11.81,
+      "official_rank": 5,
+      "official_record": "15-6-0"
+    },
+    "Catholic - P.C.": {
+      "class": "",
+      "district": 6,
+      "division": "Division IV",
+      "official_power_rating": 6.78,
+      "official_rank": 28,
+      "official_record": "6-9-0"
+    },
+    "Cecilia": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 8.28,
+      "official_rank": 17,
+      "official_record": "9-7-2"
+    },
+    "Central - B.R.": {
+      "class": "",
+      "district": 4,
+      "division": "Division I",
+      "official_power_rating": 8.55,
+      "official_rank": 34,
+      "official_record": "10-12-3"
+    },
+    "Central Lafourche": {
+      "class": "",
+      "district": 8,
+      "division": "Division II",
+      "official_power_rating": 13.07,
+      "official_rank": 4,
+      "official_record": "14-6-4"
+    },
+    "Chalmette": {
+      "class": "",
+      "district": 8,
+      "division": "Division I",
+      "official_power_rating": 7.69,
+      "official_rank": 37,
+      "official_record": "4-10-3"
+    },
+    "Christ Episcopal School": {
+      "class": "",
+      "district": 7,
+      "division": "Division IV",
+      "official_power_rating": 5.3,
+      "official_rank": 34,
+      "official_record": "0-5-0"
+    },
+    "Comeaux": {
+      "class": "",
+      "district": 5,
+      "division": "Division II",
+      "official_power_rating": 6.04,
+      "official_rank": 38,
+      "official_record": "6-13-1"
+    },
+    "Covenant Christian": {
+      "class": "",
+      "district": 8,
+      "division": "Division IV",
+      "official_power_rating": 10.25,
+      "official_rank": 13,
+      "official_record": "14-8-0"
+    },
+    "Covington": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 8.39,
+      "official_rank": 35,
+      "official_record": "5-11-4"
+    },
+    "David Thibodaux": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 10.45,
+      "official_rank": 9,
+      "official_record": "13-5-1"
+    },
+    "De La Salle": {
+      "class": "",
+      "district": 8,
+      "division": "Division III",
+      "official_power_rating": 6.54,
+      "official_rank": 23,
+      "official_record": "7-15-1"
+    },
+    "DeRidder": {
+      "class": "",
+      "district": 3,
+      "division": "Division III",
+      "official_power_rating": 6.21,
+      "official_rank": 25,
+      "official_record": "5-13-0"
+    },
+    "Delta Charter": {
+      "class": "",
+      "district": 3,
+      "division": "Division IV",
+      "official_power_rating": 7.6,
+      "official_rank": 25,
+      "official_record": "14-8-1"
+    },
+    "Denham Springs": {
+      "class": "",
+      "district": 5,
+      "division": "Division I",
+      "official_power_rating": 15.07,
+      "official_rank": 4,
+      "official_record": "15-3-0"
+    },
+    "Destrehan": {
+      "class": "",
+      "district": 7,
+      "division": "Division I",
+      "official_power_rating": 9.97,
+      "official_rank": 26,
+      "official_record": "6-11-1"
+    },
+    "Dominican": {
+      "class": "",
+      "district": 8,
+      "division": "Division I",
+      "official_power_rating": 15.26,
+      "official_rank": 3,
+      "official_record": "19-0-5"
+    },
+    "Dunham": {
+      "class": "",
+      "district": 6,
+      "division": "Division IV",
+      "official_power_rating": 8.01,
+      "official_rank": 23,
+      "official_record": "6-8-2"
+    },
+    "Dutchtown": {
+      "class": "",
+      "district": 5,
+      "division": "Division I",
+      "official_power_rating": 11.9,
+      "official_rank": 20,
+      "official_record": "10-14-2"
+    },
+    "E.D. White": {
+      "class": "",
+      "district": 7,
+      "division": "Division III",
+      "official_power_rating": 13.26,
+      "official_rank": 5,
+      "official_record": "11-6-5"
+    },
+    "East Ascension": {
+      "class": "",
+      "district": 5,
+      "division": "Division I",
+      "official_power_rating": 8.63,
+      "official_rank": 32,
+      "official_record": "9-11-1"
+    },
+    "East Jefferson": {
+      "class": "",
+      "district": 8,
+      "division": "Division I",
+      "official_power_rating": 8.89,
+      "official_rank": 31,
+      "official_record": "8-10-1"
+    },
+    "East St. John": {
+      "class": "",
+      "district": 8,
+      "division": "Division II",
+      "official_power_rating": 5.49,
+      "official_rank": 40,
+      "official_record": "1-9-2"
+    },
+    "Ecole Classique": {
+      "class": "",
+      "district": 9,
+      "division": "Division IV",
+      "official_power_rating": 0.0,
+      "official_rank": 2,
+      "official_record": "0-0-0"
+    },
+    "Edna Karr": {
+      "class": "",
+      "district": 9,
+      "division": "Division II",
+      "official_power_rating": 3.55,
+      "official_rank": 46,
+      "official_record": "1-14-0"
+    },
+    "Eleanor McMain": {
+      "class": "",
+      "district": 9,
+      "division": "Division III",
+      "official_power_rating": 0.0,
+      "official_rank": 38,
+      "official_record": "0-0-0"
+    },
+    "Episcopal": {
+      "class": "",
+      "district": 6,
+      "division": "Division IV",
+      "official_power_rating": 14.12,
+      "official_rank": 2,
+      "official_record": "16-3-0"
+    },
+    "Episcopal of Acadiana": {
+      "class": "",
+      "district": 5,
+      "division": "Division IV",
+      "official_power_rating": 9.02,
+      "official_rank": 18,
+      "official_record": "8-6-2"
+    },
+    "Erath": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 7.06,
+      "official_rank": 21,
+      "official_record": "5-12-0"
+    },
+    "Evangel Christian": {
+      "class": "",
+      "district": 1,
+      "division": "Division IV",
+      "official_power_rating": 5.02,
+      "official_rank": 35,
+      "official_record": "0-11-0"
+    },
+    "Fisher": {
+      "class": "",
+      "district": 8,
+      "division": "Division IV",
+      "official_power_rating": 5.62,
+      "official_rank": 30,
+      "official_record": "7-11-2"
+    },
+    "Fontainebleau": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 12.91,
+      "official_rank": 14,
+      "official_record": "10-5-5"
+    },
+    "Franklin Parish": {
+      "class": "",
+      "district": 1,
+      "division": "Division III",
+      "official_power_rating": 4.58,
+      "official_rank": 32,
+      "official_record": "0-18-0"
+    },
+    "Franklinton": {
+      "class": "",
+      "district": 6,
+      "division": "Division III",
+      "official_power_rating": 6.13,
+      "official_rank": 27,
+      "official_record": "3-12-1"
+    },
+    "Grace Christian": {
+      "class": "",
+      "district": 3,
+      "division": "Division IV",
+      "official_power_rating": 11.17,
+      "official_rank": 8,
+      "official_record": "13-4-2"
+    },
+    "Grant": {
+      "class": "",
+      "district": 2,
+      "division": "Division III",
+      "official_power_rating": 6.13,
+      "official_rank": 26,
+      "official_record": "4-10-1"
+    },
+    "H.L. Bourgeois": {
+      "class": "",
+      "district": 7,
+      "division": "Division I",
+      "official_power_rating": 12.09,
+      "official_rank": 17,
+      "official_record": "13-6-4"
+    },
+    "Hahnville": {
+      "class": "",
+      "district": 7,
+      "division": "Division I",
+      "official_power_rating": 12.57,
+      "official_rank": 15,
+      "official_record": "9-9-4"
+    },
+    "Hammond": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 7.06,
+      "official_rank": 39,
+      "official_record": "8-9-0"
+    },
+    "Haughton": {
+      "class": "",
+      "district": 1,
+      "division": "Division I",
+      "official_power_rating": 9.14,
+      "official_rank": 29,
+      "official_record": "8-8-1"
+    },
+    "Haynes Academy": {
+      "class": "",
+      "district": 9,
+      "division": "Division III",
+      "official_power_rating": 10.07,
+      "official_rank": 10,
+      "official_record": "9-2-4"
+    },
+    "Highland Baptist": {
+      "class": "",
+      "district": 5,
+      "division": "Division IV",
+      "official_power_rating": 8.14,
+      "official_rank": 21,
+      "official_record": "9-8-2"
+    },
+    "Holy Savior Menard": {
+      "class": "",
+      "district": 3,
+      "division": "Division IV",
+      "official_power_rating": 9.63,
+      "official_rank": 16,
+      "official_record": "7-7-2"
+    },
+    "Houma Christian": {
+      "class": "",
+      "district": 8,
+      "division": "Division IV",
+      "official_power_rating": 9.4,
+      "official_rank": 17,
+      "official_record": "10-8-0"
+    },
+    "Huntington": {
+      "class": "",
+      "district": 1,
+      "division": "Division I",
+      "official_power_rating": 5.56,
+      "official_rank": 42,
+      "official_record": "5-12-1"
+    },
+    "Isidore Newman": {
+      "class": "",
+      "district": 9,
+      "division": "Division IV",
+      "official_power_rating": 11.78,
+      "official_rank": 6,
+      "official_record": "9-7-3"
+    },
+    "Jefferson Rise Charter": {
+      "class": "",
+      "district": 8,
+      "division": "Division IV",
+      "official_power_rating": 4.47,
+      "official_rank": 32,
+      "official_record": "0-16-0"
+    },
+    "John Ehret": {
+      "class": "",
+      "district": 8,
+      "division": "Division I",
+      "official_power_rating": 8.09,
+      "official_rank": 36,
+      "official_record": "8-9-5"
+    },
+    "Kaplan": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 6.44,
+      "official_rank": 24,
+      "official_record": "3-12-2"
+    },
+    "Kenner Discovery Health Science": {
+      "class": "",
+      "district": 10,
+      "division": "Division II",
+      "official_power_rating": 10.3,
+      "official_rank": 14,
+      "official_record": "17-6-3"
+    },
+    "L. W. Higgins": {
+      "class": "",
+      "district": 9,
+      "division": "Division II",
+      "official_power_rating": 6.59,
+      "official_rank": 35,
+      "official_record": "6-9-4"
+    },
+    "Lafayette": {
+      "class": "",
+      "district": 3,
+      "division": "Division I",
+      "official_power_rating": 12.03,
+      "official_rank": 18,
+      "official_record": "11-10-2"
+    },
+    "Lafayette Christian": {
+      "class": "",
+      "district": 4,
+      "division": "Division IV",
+      "official_power_rating": 7.88,
+      "official_rank": 24,
+      "official_record": "12-7-0"
+    },
+    "Lafayette Renaissance Charter Academy": {
+      "class": "",
+      "district": 4,
+      "division": "Division IV",
+      "official_power_rating": 4.31,
+      "official_rank": 38,
+      "official_record": "0-4-0"
+    },
+    "Lake Charles College Prep": {
+      "class": "",
+      "district": 3,
+      "division": "Division III",
+      "official_power_rating": 0.0,
+      "official_rank": 39,
+      "official_record": "0-0-0"
+    },
+    "Lakeshore": {
+      "class": "",
+      "district": 7,
+      "division": "Division II",
+      "official_power_rating": 9.86,
+      "official_rank": 17,
+      "official_record": "5-10-3"
+    },
+    "Leesville": {
+      "class": "",
+      "district": 2,
+      "division": "Division III",
+      "official_power_rating": 8.6,
+      "official_rank": 15,
+      "official_record": "11-7-0"
+    },
+    "Liberty": {
+      "class": "",
+      "district": 6,
+      "division": "Division II",
+      "official_power_rating": 5.04,
+      "official_rank": 41,
+      "official_record": "0-18-3"
+    },
+    "Live Oak": {
+      "class": "",
+      "district": 5,
+      "division": "Division I",
+      "official_power_rating": 10.98,
+      "official_rank": 21,
+      "official_record": "15-7-3"
+    },
+    "Livonia": {
+      "class": "",
+      "district": 6,
+      "division": "Division II",
+      "official_power_rating": 9.15,
+      "official_rank": 21,
+      "official_record": "12-7-3"
+    },
+    "Lord Beaconsfield Landry": {
+      "class": "",
+      "district": 8,
+      "division": "Division III",
+      "official_power_rating": 5.63,
+      "official_rank": 35,
+      "official_record": "2-7-1"
+    },
+    "Louise McGehee": {
+      "class": "",
+      "district": 8,
+      "division": "Division IV",
+      "official_power_rating": 8.46,
+      "official_rank": 20,
+      "official_record": "5-9-2"
+    },
+    "Loyola Prep": {
+      "class": "",
+      "district": 1,
+      "division": "Division IV",
+      "official_power_rating": 12.4,
+      "official_rank": 3,
+      "official_record": "11-4-3"
+    },
+    "Lutcher": {
+      "class": "",
+      "district": 8,
+      "division": "Division II",
+      "official_power_rating": 10.5,
+      "official_rank": 13,
+      "official_record": "12-8-3"
+    },
+    "Lycee Francais de la Nouvelle Orleans": {
+      "class": "",
+      "district": 9,
+      "division": "Division IV",
+      "official_power_rating": 5.54,
+      "official_rank": 33,
+      "official_record": "2-5-0"
+    },
+    "Mandeville": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 14.58,
+      "official_rank": 6,
+      "official_record": "24-5-2"
+    },
+    "Metairie Park Country Day": {
+      "class": "",
+      "district": 9,
+      "division": "Division IV",
+      "official_power_rating": 11.27,
+      "official_rank": 7,
+      "official_record": "10-4-2"
+    },
+    "Minden": {
+      "class": "",
+      "district": 1,
+      "division": "Division III",
+      "official_power_rating": 7.28,
+      "official_rank": 18,
+      "official_record": "10-9-2"
+    },
+    "Morgan City": {
+      "class": "",
+      "district": 7,
+      "division": "Division III",
+      "official_power_rating": 7.21,
+      "official_rank": 19,
+      "official_record": "6-13-1"
+    },
+    "Morris Jeff": {
+      "class": "",
+      "district": 9,
+      "division": "Division III",
+      "official_power_rating": 5.75,
+      "official_rank": 34,
+      "official_record": "4-7-1"
+    },
+    "Mt. Carmel": {
+      "class": "",
+      "district": 8,
+      "division": "Division I",
+      "official_power_rating": 15.87,
+      "official_rank": 1,
+      "official_record": "17-2-3"
+    },
+    "Natchitoches Central": {
+      "class": "",
+      "district": 3,
+      "division": "Division II",
+      "official_power_rating": 6.59,
+      "official_rank": 36,
+      "official_record": "4-13-0"
+    },
+    "Neville": {
+      "class": "",
+      "district": 2,
+      "division": "Division II",
+      "official_power_rating": 10.84,
+      "official_rank": 10,
+      "official_record": "8-7-1"
+    },
+    "New Iberia": {
+      "class": "",
+      "district": 5,
+      "division": "Division II",
+      "official_power_rating": 9.15,
+      "official_rank": 22,
+      "official_record": "9-8-0"
+    },
+    "New Orleans Military & Maritime": {
+      "class": "",
+      "district": 9,
+      "division": "Division II",
+      "official_power_rating": 8.38,
+      "official_rank": 27,
+      "official_record": "9-11-1"
+    },
+    "North Caddo": {
+      "class": "",
+      "district": 1,
+      "division": "Division IV",
+      "official_power_rating": 6.95,
+      "official_rank": 27,
+      "official_record": "7-7-1"
+    },
+    "North DeSoto": {
+      "class": "",
+      "district": 1,
+      "division": "Division II",
+      "official_power_rating": 8.48,
+      "official_rank": 26,
+      "official_record": "9-13-1"
+    },
+    "North Vermilion": {
+      "class": "",
+      "district": 5,
+      "division": "Division II",
+      "official_power_rating": 10.68,
+      "official_rank": 12,
+      "official_record": "11-8-2"
+    },
+    "Northeast": {
+      "class": "",
+      "district": 6,
+      "division": "Division IV",
+      "official_power_rating": 0.0,
+      "official_rank": 1,
+      "official_record": "0-0-0"
+    },
+    "Northlake Christian": {
+      "class": "",
+      "district": 7,
+      "division": "Division IV",
+      "official_power_rating": 10.63,
+      "official_rank": 11,
+      "official_record": "9-6-3"
+    },
+    "Northshore": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 12.99,
+      "official_rank": 13,
+      "official_record": "14-6-4"
+    },
+    "Northside": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 0.0,
+      "official_rank": 1,
+      "official_record": "0-0-0"
+    },
+    "Northwood - Shrev.": {
+      "class": "",
+      "district": 1,
+      "division": "Division II",
+      "official_power_rating": 8.17,
+      "official_rank": 29,
+      "official_record": "7-12-0"
+    },
+    "Opelousas": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 4.68,
+      "official_rank": 31,
+      "official_record": "3-17-0"
+    },
+    "Opelousas Catholic": {
+      "class": "",
+      "district": 4,
+      "division": "Division IV",
+      "official_power_rating": 5.17,
+      "official_rank": 31,
+      "official_record": "7-11-1"
+    },
+    "Ouachita Christian": {
+      "class": "",
+      "district": 2,
+      "division": "Division IV",
+      "official_power_rating": 8.61,
+      "official_rank": 19,
+      "official_record": "7-7-2"
+    },
+    "Ouachita Parish": {
+      "class": "",
+      "district": 2,
+      "division": "Division II",
+      "official_power_rating": 6.79,
+      "official_rank": 34,
+      "official_record": "3-17-1"
+    },
+    "Parkview Baptist": {
+      "class": "",
+      "district": 5,
+      "division": "Division III",
+      "official_power_rating": 14.53,
+      "official_rank": 3,
+      "official_record": "12-3-1"
+    },
+    "Parkway": {
+      "class": "",
+      "district": 1,
+      "division": "Division II",
+      "official_power_rating": 9.91,
+      "official_rank": 16,
+      "official_record": "11-7-1"
+    },
+    "Patrick Taylor - Science/Tech.": {
+      "class": "",
+      "district": 8,
+      "division": "Division III",
+      "official_power_rating": 9.15,
+      "official_rank": 13,
+      "official_record": "8-6-4"
+    },
+    "Peabody": {
+      "class": "",
+      "district": 2,
+      "division": "Division III",
+      "official_power_rating": 4.37,
+      "official_rank": 2,
+      "official_record": "4-19-1"
+    },
+    "Pearl River": {
+      "class": "",
+      "district": 7,
+      "division": "Division II",
+      "official_power_rating": 8.36,
+      "official_rank": 28,
+      "official_record": "11-5-0"
+    },
+    "Pineville": {
+      "class": "",
+      "district": 3,
+      "division": "Division II",
+      "official_power_rating": 11.49,
+      "official_rank": 8,
+      "official_record": "14-3-2"
+    },
+    "Plaquemine": {
+      "class": "",
+      "district": 5,
+      "division": "Division III",
+      "official_power_rating": 5.09,
+      "official_rank": 30,
+      "official_record": "4-13-1"
+    },
+    "Ponchatoula": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 9.59,
+      "official_rank": 28,
+      "official_record": "3-10-3"
+    },
+    "Pope John Paul II": {
+      "class": "",
+      "district": 7,
+      "division": "Division IV",
+      "official_power_rating": 12.15,
+      "official_rank": 4,
+      "official_record": "14-2-1"
+    },
+    "Prairieville": {
+      "class": "",
+      "district": 6,
+      "division": "Division II",
+      "official_power_rating": 11.59,
+      "official_rank": 7,
+      "official_record": "14-5-1"
+    },
+    "Providence Classical Academy": {
+      "class": "",
+      "district": 1,
+      "division": "Division IV",
+      "official_power_rating": 8.63,
+      "official_rank": 3,
+      "official_record": "6-7-2"
+    },
+    "Rapides": {
+      "class": "",
+      "district": 3,
+      "division": "Division IV",
+      "official_power_rating": 6.37,
+      "official_rank": 29,
+      "official_record": "2-13-0"
+    },
+    "Riverdale": {
+      "class": "",
+      "district": 10,
+      "division": "Division II",
+      "official_power_rating": 7.13,
+      "official_rank": 33,
+      "official_record": "8-13-0"
+    },
+    "Ruston": {
+      "class": "",
+      "district": 2,
+      "division": "Division II",
+      "official_power_rating": 10.11,
+      "official_rank": 15,
+      "official_record": "12-2-1"
+    },
+    "Salmen": {
+      "class": "",
+      "district": 7,
+      "division": "Division II",
+      "official_power_rating": 5.9,
+      "official_rank": 39,
+      "official_record": "3-10-4"
+    },
+    "Sam Houston": {
+      "class": "",
+      "district": 4,
+      "division": "Division II",
+      "official_power_rating": 9.18,
+      "official_rank": 20,
+      "official_record": "7-11-2"
+    },
+    "Sarah T. Reed": {
+      "class": "",
+      "district": 9,
+      "division": "Division IV",
+      "official_power_rating": 4.92,
+      "official_rank": 36,
+      "official_record": "2-7-2"
+    },
+    "Slidell": {
+      "class": "",
+      "district": 6,
+      "division": "Division I",
+      "official_power_rating": 8.99,
+      "official_rank": 30,
+      "official_record": "5-9-3"
+    },
+    "South Beauregard": {
+      "class": "",
+      "district": 3,
+      "division": "Division III",
+      "official_power_rating": 9.43,
+      "official_rank": 11,
+      "official_record": "12-7-1"
+    },
+    "South Lafourche": {
+      "class": "",
+      "district": 8,
+      "division": "Division II",
+      "official_power_rating": 7.83,
+      "official_rank": 30,
+      "official_record": "9-10-1"
+    },
+    "South Terrebonne": {
+      "class": "",
+      "district": 8,
+      "division": "Division II",
+      "official_power_rating": 10.72,
+      "official_rank": 11,
+      "official_record": "8-7-3"
+    },
+    "Southside": {
+      "class": "",
+      "district": 3,
+      "division": "Division I",
+      "official_power_rating": 13.81,
+      "official_rank": 8,
+      "official_record": "17-6-2"
+    },
+    "Southwood": {
+      "class": "",
+      "district": 1,
+      "division": "Division II",
+      "official_power_rating": 3.71,
+      "official_rank": 45,
+      "official_record": "0-6-0"
+    },
+    "St. Amant": {
+      "class": "",
+      "district": 5,
+      "division": "Division I",
+      "official_power_rating": 13.06,
+      "official_rank": 12,
+      "official_record": "13-4-3"
+    },
+    "St. Charles": {
+      "class": "",
+      "district": 9,
+      "division": "Division IV",
+      "official_power_rating": 10.51,
+      "official_rank": 12,
+      "official_record": "10-9-2"
+    },
+    "St. Frederick": {
+      "class": "",
+      "district": 2,
+      "division": "Division IV",
+      "official_power_rating": 10.0,
+      "official_rank": 15,
+      "official_record": "11-5-1"
+    },
+    "St. Joseph's Academy": {
+      "class": "",
+      "district": 4,
+      "division": "Division I",
+      "official_power_rating": 15.81,
+      "official_rank": 2,
+      "official_record": "16-2-2"
+    },
+    "St. Louis Catholic": {
+      "class": "",
+      "district": 3,
+      "division": "Division III",
+      "official_power_rating": 12.35,
+      "official_rank": 8,
+      "official_record": "12-8-3"
+    },
+    "St. Martin's Episcopal": {
+      "class": "",
+      "district": 9,
+      "division": "Division IV",
+      "official_power_rating": 3.19,
+      "official_rank": 39,
+      "official_record": "0-4-0"
+    },
+    "St. Martinville": {
+      "class": "",
+      "district": 4,
+      "division": "Division III",
+      "official_power_rating": 6.09,
+      "official_rank": 28,
+      "official_record": "5-14-1"
+    },
+    "St. Mary's Academy": {
+      "class": "",
+      "district": 8,
+      "division": "Division IV",
+      "official_power_rating": 3.2,
+      "official_rank": 4,
+      "official_record": "0-11-0"
+    },
+    "St. Michael the Archangel": {
+      "class": "",
+      "district": 5,
+      "division": "Division III",
+      "official_power_rating": 8.37,
+      "official_rank": 16,
+      "official_record": "5-13-1"
+    },
+    "St. Scholastica": {
+      "class": "",
+      "district": 7,
+      "division": "Division II",
+      "official_power_rating": 13.66,
+      "official_rank": 2,
+      "official_record": "11-5-6"
+    },
+    "St. Thomas Aquinas": {
+      "class": "",
+      "district": 7,
+      "division": "Division IV",
+      "official_power_rating": 14.35,
+      "official_rank": 1,
+      "official_record": "16-2-1"
+    },
+    "St. Thomas More": {
+      "class": "",
+      "district": 5,
+      "division": "Division II",
+      "official_power_rating": 12.27,
+      "official_rank": 6,
+      "official_record": "10-6-5"
+    },
+    "Sterlington": {
+      "class": "",
+      "district": 1,
+      "division": "Division III",
+      "official_power_rating": 9.09,
+      "official_rank": 14,
+      "official_record": "8-9-2"
+    },
+    "Sulphur": {
+      "class": "",
+      "district": 3,
+      "division": "Division I",
+      "official_power_rating": 10.39,
+      "official_rank": 24,
+      "official_record": "6-11-2"
+    },
+    "Tara": {
+      "class": "",
+      "district": 6,
+      "division": "Division II",
+      "official_power_rating": 6.13,
+      "official_rank": 2,
+      "official_record": "2-4-1"
+    },
+    "Terrebonne": {
+      "class": "",
+      "district": 7,
+      "division": "Division I",
+      "official_power_rating": 10.28,
+      "official_rank": 25,
+      "official_record": "10-8-2"
+    },
+    "Teurlings Catholic": {
+      "class": "",
+      "district": 4,
+      "division": "Division II",
+      "official_power_rating": 12.28,
+      "official_rank": 5,
+      "official_record": "11-6-3"
+    },
+    "The Willow School": {
+      "class": "",
+      "district": 10,
+      "division": "Division II",
+      "official_power_rating": 11.15,
+      "official_rank": 9,
+      "official_record": "11-12-1"
+    },
+    "Thibodaux": {
+      "class": "",
+      "district": 7,
+      "division": "Division I",
+      "official_power_rating": 11.96,
+      "official_rank": 19,
+      "official_record": "9-8-2"
+    },
+    "Thomas Jefferson": {
+      "class": "",
+      "district": 8,
+      "division": "Division IV",
+      "official_power_rating": 10.05,
+      "official_rank": 14,
+      "official_record": "14-3-2"
+    },
+    "Tioga": {
+      "class": "",
+      "district": 3,
+      "division": "Division II",
+      "official_power_rating": 9.09,
+      "official_rank": 24,
+      "official_record": "12-7-1"
+    },
+    "University Lab": {
+      "class": "",
+      "district": 5,
+      "division": "Division III",
+      "official_power_rating": 13.76,
+      "official_rank": 4,
+      "official_record": "11-2-4"
+    },
+    "Ursuline Academy": {
+      "class": "",
+      "district": 9,
+      "division": "Division III",
+      "official_power_rating": 7.07,
+      "official_rank": 20,
+      "official_record": "7-8-0"
+    },
+    "Vandebilt Catholic": {
+      "class": "",
+      "district": 7,
+      "division": "Division III",
+      "official_power_rating": 12.44,
+      "official_rank": 7,
+      "official_record": "10-8-4"
+    },
+    "Vermilion Catholic": {
+      "class": "",
+      "district": 5,
+      "division": "Division IV",
+      "official_power_rating": 8.1,
+      "official_rank": 22,
+      "official_record": "9-8-0"
+    },
+    "Walker": {
+      "class": "",
+      "district": 5,
+      "division": "Division I",
+      "official_power_rating": 7.45,
+      "official_rank": 38,
+      "official_record": "4-11-1"
+    },
+    "Washington-Marion": {
+      "class": "",
+      "district": 3,
+      "division": "Division III",
+      "official_power_rating": 3.42,
+      "official_rank": 37,
+      "official_record": "0-16-0"
+    },
+    "West Feliciana": {
+      "class": "",
+      "district": 6,
+      "division": "Division II",
+      "official_power_rating": 9.69,
+      "official_rank": 18,
+      "official_record": "13-9-0"
+    },
+    "West Jefferson": {
+      "class": "",
+      "district": 8,
+      "division": "Division I",
+      "official_power_rating": 5.32,
+      "official_rank": 43,
+      "official_record": "4-15-0"
+    },
+    "West Monroe": {
+      "class": "",
+      "district": 2,
+      "division": "Division I",
+      "official_power_rating": 13.62,
+      "official_rank": 9,
+      "official_record": "16-5-2"
+    },
+    "West Ouachita": {
+      "class": "",
+      "district": 2,
+      "division": "Division II",
+      "official_power_rating": 9.09,
+      "official_rank": 25,
+      "official_record": "10-10-2"
+    },
+    "Westgate": {
+      "class": "",
+      "district": 5,
+      "division": "Division II",
+      "official_power_rating": 4.78,
+      "official_rank": 44,
+      "official_record": "1-16-0"
+    },
+    "Westminster Christian": {
+      "class": "",
+      "district": 4,
+      "division": "Division IV",
+      "official_power_rating": 7.54,
+      "official_rank": 26,
+      "official_record": "6-9-2"
+    },
+    "Woodlawn - B.R.": {
+      "class": "",
+      "district": 4,
+      "division": "Division I",
+      "official_power_rating": 5.88,
+      "official_rank": 41,
+      "official_record": "2-12-0"
+    },
+    "Wossman": {
+      "class": "",
+      "district": 1,
+      "division": "Division III",
+      "official_power_rating": 5.86,
+      "official_rank": 33,
+      "official_record": "5-4-1"
+    },
+    "Young Audiences Charter": {
+      "class": "",
+      "district": 8,
+      "division": "Division III",
+      "official_power_rating": 4.21,
+      "official_rank": 3,
+      "official_record": "2-12-0"
+    },
+    "Zachary": {
+      "class": "",
+      "district": 4,
+      "division": "Division I",
+      "official_power_rating": 12.43,
+      "official_rank": 16,
+      "official_record": "15-4-3"
     }
   }
 }
