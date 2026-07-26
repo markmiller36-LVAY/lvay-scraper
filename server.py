@@ -386,10 +386,14 @@ def scrape_softball():
 
 @app.route("/api/scrape/volleyball")
 def scrape_volleyball():
+    season = request.args.get("season") or os.environ.get(
+        "VOLLEYBALL_SEASON_YEAR", resolve_season("volleyball")
+    )
+
     def run():
         try:
             from scraper_volleyball import run_volleyball_scraper
-            run_volleyball_scraper()
+            run_volleyball_scraper(season)
         except Exception as e:
             print(f"Volleyball scrape error: {e}")
     threading.Thread(target=run, daemon=True).start()
@@ -694,7 +698,7 @@ def calculate_rankings():
         try:
             if sport == "volleyball":
                 from run_power_rankings_volleyball import run_volleyball_rankings
-                run_volleyball_rankings()
+                run_volleyball_rankings(season)
             else:
                 from run_power_rankings import run_power_rankings
                 run_power_rankings(season=season, sport=sport)
