@@ -16,6 +16,22 @@ to write to a locked sport/season.
 ## Rollover checklist
 
 1. Validate the final schedules, scores, ratings and brackets.
+
+## LVAY presentation standard
+
+Football schedules, power rankings and playoff brackets use one shared visual
+system. Carry these rules forward when adding a sport or rolling into a season:
+
+- Use Alfa Slab One for primary page and section headings.
+- Use Teko for tables, supporting text and Season Archives navigation.
+- Allow the desktop content canvas to expand to 1,600px with 24px gutters.
+- Use a right-hand archive panel on wide screens and a full-width stacked
+  layout on narrower screens.
+- Keep schedule and ranking controls large enough to scan comfortably:
+  18px search fields, 20px tables and 25px school controls.
+- Start ranking divisions collapsed and make the complete header clickable.
+- Preserve archive links, school lookup and cross-school schedule links within
+  the selected season.
 2. Set the completed season to `final`/locked in `season_registry`.
 3. Export an off-database snapshot for disaster recovery.
 4. Create the new `season_registry` row as `preseason`/unlocked.
@@ -45,4 +61,3 @@ to write to a locked sport/season.
 4. Change Football 2026 from `preseason` to `active`.
 5. Deploy and run one supervised pipeline.
 6. Validate the website and Google Sheets before resuming the four-hour job.
-
