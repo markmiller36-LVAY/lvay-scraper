@@ -23,7 +23,7 @@ from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 
-from power_rating_engine import PowerRatingEngine, Team, GameResult
+from power_rating_engine import CLASS_RANK, PowerRatingEngine, Team, GameResult
 from official_record_overrides import (
     find_game_exclusion,
     find_record_override,
@@ -66,6 +66,29 @@ def football_week_number(week):
     """Return an integer LHSAA football week, or None when it is not a week."""
     match = re.search(r"\d+", str(week or ""))
     return int(match.group()) if match else None
+
+
+def football_strength_factor(team_name, breakdown, game_meta):
+    """Return the LHSAA football strength factor.
+
+    Handbook 14.13: add the sum of every opponent's classification value
+    to the sum of every opponent's wins, then divide by games played.
+    """
+    total = 0.0
+    counted = 0
+
+    for game in breakdown:
+        week = game.get("week")
+        game_key = (team_name, week) if week else (team_name, "")
+        meta = game_meta.get(game_key, {})
+        opponent_class = strip_district_prefix(meta.get("opp_class", ""))
+        class_value = CLASS_RANK.get(opponent_class, 0)
+        opponent_wins = int(meta.get("opp_wins", 0) or 0)
+
+        total += class_value + opponent_wins
+        counted += 1
+
+    return round(total / counted, 2) if counted else 0.0
 
 
 FOOTBALL_EXCLUDED_GAMES = {
@@ -619,6 +642,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             "opp_losses":  opp_losses,
             "opp_ties":    opp_ties,
             "opp_division": opp_division,
+            "opp_class":    opp_class,
             "game_date":   game_date.split(" ")[0] if game_date else "",
             "home_away":   r.get("home_away") or "",
         }
@@ -648,6 +672,24 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     ratings = engine.rate_all()
     print(f"  Power ratings calculated for {len(ratings)} schools")
 
+    strength_factors = {}
+    if sport.lower() == "football":
+        strength_factors = {
+            rating.name: football_strength_factor(
+                rating.name, rating.breakdown, game_meta
+            )
+            for rating in ratings
+        }
+        ratings.sort(
+            key=lambda rating: (
+                rating.power_rating,
+                strength_factors[rating.name],
+            ),
+            reverse=True,
+        )
+        for rank, rating in enumerate(ratings, start=1):
+            rating.rank = rank
+
     now_str = datetime.now().isoformat()
     c = conn.cursor()
 
@@ -661,8 +703,17 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         class_ = db_info["class"] if db_info else ""
         district = db_info["district"] if db_info else None
 
-        opp_qualities = [g["oppq"] for g in r.breakdown if g.get("oppq") is not None]
-        strength_factor = round(sum(opp_qualities) / len(opp_qualities), 2) if opp_qualities else 0.0
+        if sport.lower() == "football":
+            strength_factor = strength_factors[r.name]
+        else:
+            opp_qualities = [
+                g["oppq"] for g in r.breakdown if g.get("oppq") is not None
+            ]
+            strength_factor = (
+                round(sum(opp_qualities) / len(opp_qualities), 2)
+                if opp_qualities
+                else 0.0
+            )
         official_record = find_record_override(record_overrides, r.name)
         if official_record:
             stored_wins, stored_losses, stored_ties = official_record
