@@ -10,13 +10,13 @@
  * Paste into Code Snippets without this opening PHP tag.
  */
 
-function lvay_football_schedule_api_url_v3($path) {
+function lvay_football_schedule_api_url_v4($path) {
     return 'https://lvay-scraper.onrender.com' . $path;
 }
 
-function lvay_football_schedule_fetch_v3($path) {
+function lvay_football_schedule_fetch_v4($path) {
     $response = wp_remote_get(
-        lvay_football_schedule_api_url_v3($path),
+        lvay_football_schedule_api_url_v4($path),
         array('timeout' => 25)
     );
     if (is_wp_error($response)) {
@@ -26,17 +26,17 @@ function lvay_football_schedule_fetch_v3($path) {
     return is_array($body) ? $body : null;
 }
 
-function lvay_football_schedule_shortcode_v3($atts) {
+function lvay_football_schedule_shortcode_v4($atts) {
     $atts = shortcode_atts(array('season' => ''), $atts);
     $requested = isset($_GET['season'])
         ? sanitize_text_field(wp_unslash($_GET['season']))
         : $atts['season'];
     $season = preg_match('/^\d{4}$/', $requested) ? $requested : '2026';
 
-    $schedule = lvay_football_schedule_fetch_v3(
+    $schedule = lvay_football_schedule_fetch_v4(
         '/api/schedules/football?season=' . rawurlencode($season)
     );
-    $seasons_data = lvay_football_schedule_fetch_v3('/api/seasons/football');
+    $seasons_data = lvay_football_schedule_fetch_v4('/api/seasons/football');
     if (!$schedule || !isset($schedule['schools'])) {
         return '<p class="lvay-schedule-error">Schedules are temporarily unavailable.</p>';
     }
@@ -155,7 +155,7 @@ function lvay_football_schedule_shortcode_v3($atts) {
                                                                             'school' => $opponent,
                                                                         ),
                                                                         $page_url
-                                                                    ) . '#lvay-football-schedules';
+                                                                    ) . '#school-' . sanitize_title($opponent);
                                                                     ?>
                                                                     <tr>
                                                                         <td><?php echo esc_html('Wk' . ($game['week'] ?? '')); ?></td>
@@ -278,7 +278,7 @@ function lvay_football_schedule_shortcode_v3($atts) {
         const button=article.querySelector('.lvay-school-toggle');
         renderSchoolBody(body);
         body.hidden=false;button.setAttribute('aria-expanded','true');
-        article.scrollIntoView({behavior:'smooth',block:'start'});
+        window.setTimeout(()=>article.scrollIntoView({behavior:'smooth',block:'center'}),50);
       }
       root.querySelectorAll('.lvay-school-toggle').forEach(button=>{
         button.addEventListener('click',()=>{
@@ -287,6 +287,20 @@ function lvay_football_schedule_shortcode_v3($atts) {
           body.hidden=!body.hidden;
           button.setAttribute('aria-expanded',String(!body.hidden));
         });
+      });
+      root.addEventListener('click',event=>{
+        const link=event.target.closest('.lvay-school td a');
+        if(!link)return;
+        const destination=new URL(link.href,window.location.href);
+        const opponent=destination.searchParams.get('school');
+        if(!opponent)return;
+        const target=Array.from(root.querySelectorAll('.lvay-school')).find(
+          article=>normalize(article.dataset.school)===normalize(opponent)
+        );
+        if(!target)return;
+        event.preventDefault();
+        openSchool(target);
+        history.replaceState(null,'',destination.pathname+destination.search+destination.hash);
       });
       search.addEventListener('input',()=>{
         const query=normalize(search.value);
@@ -309,4 +323,4 @@ function lvay_football_schedule_shortcode_v3($atts) {
     <?php
     return ob_get_clean();
 }
-add_shortcode('lvay_football_schedules', 'lvay_football_schedule_shortcode_v3');
+add_shortcode('lvay_football_schedules', 'lvay_football_schedule_shortcode_v4');
