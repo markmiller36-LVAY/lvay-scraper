@@ -144,9 +144,9 @@ def parse_date(date_raw):
 # SCRAPER — mirrors baseball/softball parse pattern exactly
 # ──────────────────────────────────────────────────────────────────────────────
 
-def scrape_division(division):
+def scrape_division(division, season=SEASON):
     payload = {
-        "y":          SEASON,
+        "y":          str(season),
         "resultdate": "",
         "n":          "",
         "h":          "",
@@ -223,7 +223,7 @@ def scrape_division(division):
 # DB INSERT
 # ──────────────────────────────────────────────────────────────────────────────
 
-def insert_games(conn, rows):
+def insert_games(conn, rows, season=SEASON):
     inserted = 0
     updated  = 0
     skipped  = 0
@@ -254,7 +254,7 @@ def insert_games(conn, rows):
                      match_num, home_away, result, score, counts_for_pr)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-                SPORT, SEASON,
+                SPORT, str(season),
                 row["school"], row["division"], school_dist,
                 game_date, row["opponent"], opp_div, opp_dist,
                 is_dist, is_tourn, row["tournament"] or None,
@@ -270,7 +270,7 @@ def insert_games(conn, rows):
                   AND opponent=? AND match_num=?
             """, (
                 row["win_loss"], row["score"] or None, counts,
-                SPORT, SEASON, row["school"], game_date,
+                SPORT, str(season), row["school"], game_date,
                 row["opponent"], match_num,
             ))
             updated += 1
@@ -286,9 +286,10 @@ def insert_games(conn, rows):
 # MAIN
 # ──────────────────────────────────────────────────────────────────────────────
 
-def run_volleyball_scraper():
+def run_volleyball_scraper(season=None):
+    season = str(season or SEASON)
     print(f"\n{'='*54}")
-    print(f"LVAY Volleyball Scraper — Season {SEASON}")
+    print(f"LVAY Volleyball Scraper — Season {season}")
     print(f"{'='*54}")
 
     conn = get_db()
@@ -300,10 +301,10 @@ def run_volleyball_scraper():
     total_rows     = 0
 
     for div in DIVISIONS:
-        rows = scrape_division(div)
+        rows = scrape_division(div, season)
         total_rows += len(rows)
         if rows:
-            ins, upd, skp = insert_games(conn, rows)
+            ins, upd, skp = insert_games(conn, rows, season)
             total_inserted += ins
             total_updated  += upd
             total_skipped  += skp

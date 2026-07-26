@@ -250,7 +250,9 @@ def update_division_ranks(conn):
 # MAIN
 # ──────────────────────────────────────────────────────────────────────────────
 
-def run_volleyball_rankings():
+def run_volleyball_rankings(season=None):
+    global SEASON
+    SEASON = str(season or SEASON)
     print(f"\n{'='*54}")
     print(f"LVAY Volleyball Power Rankings")
     print(f"Sport: {SPORT.upper()}  Season: {SEASON}")
