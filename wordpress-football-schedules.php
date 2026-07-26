@@ -286,6 +286,9 @@ function lvay_football_schedule_shortcode_v5($atts) {
         const match=String(value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
         return match ? Number(match[2])+'/'+Number(match[3])+'/'+match[1] : (value||'—');
       };
+      const formatDivision=value=>String(value||'')
+        .replace(/^Non-Select Division\s+/i,'NS')
+        .replace(/^Select Division\s+/i,'S');
       async function renderSchoolBody(body){
         if(body.dataset.loaded==='1')return;
         if(body.dataset.loading==='1')return;
@@ -329,7 +332,7 @@ function lvay_football_schedule_shortcode_v5($atts) {
               ? '' : Number(game.total_pts).toFixed(2);
             const rowClass=game.is_district?'is-district':'is-nondistrict';
             const resultClass='result-'+String(game.result||'').toLowerCase();
-            const division=game.opp_division||game.district_class||'';
+            const division=formatDivision(game.opp_division||game.district_class||'');
             html+='<tr class="'+rowClass+'"><td>Wk'+esc(game.week||'')
               +(game.is_district?' D':'')+'</td><td>'
               +esc(formatDate(game.game_date))+'</td><td>'+esc(game.home_away||'')
