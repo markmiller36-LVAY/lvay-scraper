@@ -1379,6 +1379,45 @@ def build_winter_sport_sheets(sport):
     return jsonify({"status": "started", "sport": sport, "season": season})
 
 
+@app.route("/api/recalculate/winter/<sport>", methods=["POST"])
+def recalculate_winter_sport(sport):
+    """Rebuild one winter sport from the schedules already stored in the database."""
+    if sport not in WINTER_SPORTS:
+        return jsonify({"error": "Unsupported sport"}), 404
+    if not PIPELINE_LOCK.acquire(blocking=False):
+        return jsonify({
+            "status": "already_running",
+            "started_at": PIPELINE_STATE["started_at"],
+        }), 409
+    season = request.args.get("season") or resolve_season(sport)
+
+    def run():
+        PIPELINE_STATE.update({
+            "status": f"recalculating_{sport}",
+            "started_at": datetime.now().isoformat(),
+            "finished_at": None,
+            "error": None,
+        })
+        try:
+            from run_power_rankings import run_power_rankings
+            run_power_rankings(sport=sport, season=str(season))
+            PIPELINE_STATE["status"] = "completed"
+        except Exception as exc:
+            PIPELINE_STATE["status"] = "failed"
+            PIPELINE_STATE["error"] = str(exc)
+            print(f"{sport} recalculation error: {exc}")
+        finally:
+            PIPELINE_STATE["finished_at"] = datetime.now().isoformat()
+            PIPELINE_LOCK.release()
+
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({
+        "status": "started",
+        "sport": sport,
+        "season": str(season),
+    }), 202
+
+
 @app.route("/api/rankings/winter/<sport>")
 def rankings_winter_sport(sport):
     if sport not in WINTER_SPORTS:
