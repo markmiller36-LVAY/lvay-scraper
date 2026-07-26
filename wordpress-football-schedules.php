@@ -15,11 +15,6 @@ function lvay_football_schedule_api_url_v5($path) {
 }
 
 function lvay_football_schedule_fetch_v5($path) {
-    $cache_key = 'lvay_football_schedule_' . md5($path);
-    $cached = get_transient($cache_key);
-    if (is_array($cached)) {
-        return $cached;
-    }
     $response = wp_remote_get(
         lvay_football_schedule_api_url_v5($path),
         array('timeout' => 25)
@@ -28,11 +23,7 @@ function lvay_football_schedule_fetch_v5($path) {
         return null;
     }
     $body = json_decode(wp_remote_retrieve_body($response), true);
-    if (is_array($body)) {
-        set_transient($cache_key, $body, 10 * MINUTE_IN_SECONDS);
-        return $body;
-    }
-    return null;
+    return is_array($body) ? $body : null;
 }
 
 function lvay_football_schedule_shortcode_v5($atts) {
