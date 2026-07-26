@@ -6,12 +6,12 @@
  * legacy "latest available season" output with an explicitly selected season.
  */
 
-function lvay_archive_selected_season() {
+function lvay_archive_selected_season_v2() {
     $season = isset($_GET['season']) ? absint($_GET['season']) : 2026;
     return in_array($season, array(2025, 2026), true) ? $season : 2026;
 }
 
-function lvay_archive_nav($page_url, $selected) {
+function lvay_archive_nav_v2($page_url, $selected) {
     $years = array(2026, 2025);
     $out = '<aside class="lvay-season-archive"><h3>SEASON ARCHIVES</h3>';
     foreach ($years as $year) {
@@ -23,7 +23,7 @@ function lvay_archive_nav($page_url, $selected) {
     return $out;
 }
 
-function lvay_archive_rankings_payload($season) {
+function lvay_archive_rankings_payload_v2($season) {
     $response = wp_remote_get(
         'https://lvay-scraper.onrender.com/api/rankings/football?season=' . absint($season),
         array('timeout' => 25)
@@ -33,7 +33,7 @@ function lvay_archive_rankings_payload($season) {
     return is_array($data) ? $data : array();
 }
 
-function lvay_archive_rankings_table($rankings, $season) {
+function lvay_archive_rankings_table_v2($rankings, $season) {
     $groups = array();
     foreach ($rankings as $school) {
         $division = isset($school['division']) ? $school['division'] : 'Unknown';
@@ -86,11 +86,11 @@ function lvay_archive_rankings_table($rankings, $season) {
     return $out . '</div>';
 }
 
-function lvay_archive_rankings_output($output, $tag, $attr, $match) {
+function lvay_archive_rankings_output_v2($output, $tag, $attr, $match) {
     if ($tag !== 'lvay_power_rankings') return $output;
 
-    $season = lvay_archive_selected_season();
-    $data = lvay_archive_rankings_payload($season);
+    $season = lvay_archive_selected_season_v2();
+    $data = lvay_archive_rankings_payload_v2($season);
     $rankings = (
         !empty($data['rankings'])
         && isset($data['season'])
@@ -113,7 +113,7 @@ function lvay_archive_rankings_output($output, $tag, $attr, $match) {
             }
         }
         if ($updated) $main .= '<div class="lvay-updated">Final update: ' . esc_html($updated) . '</div>';
-        $main .= lvay_archive_rankings_table($rankings, $season);
+        $main .= lvay_archive_rankings_table_v2($rankings, $season);
     } else {
         $main .= '<section class="lvay-preseason-card"><span>PRESEASON</span>';
         $main .= '<h2>Power rankings begin after games are played.</h2>';
@@ -124,15 +124,15 @@ function lvay_archive_rankings_output($output, $tag, $attr, $match) {
 
     return '<section class="lvay-rankings-design lvay-season-layout">'
         . $main
-        . lvay_archive_nav('https://louisianavsallyall.com/power-rankings/', $season)
+        . lvay_archive_nav_v2('https://louisianavsallyall.com/power-rankings/', $season)
         . '</section><script>if(typeof lvayToggle!=="function"){function lvayToggle(el){el.classList.toggle("open");el.nextElementSibling.classList.toggle("open");}}</script>';
 }
-add_filter('do_shortcode_tag', 'lvay_archive_rankings_output', 99, 4);
+add_filter('do_shortcode_tag', 'lvay_archive_rankings_output_v2', 99, 4);
 
-function lvay_archive_brackets_content($content) {
+function lvay_archive_brackets_content_v2($content) {
     if (!is_page(10398) || !in_the_loop() || !is_main_query()) return $content;
-    $season = lvay_archive_selected_season();
-    $nav = lvay_archive_nav('https://louisianavsallyall.com/playoff-brackets/', $season);
+    $season = lvay_archive_selected_season_v2();
+    $nav = lvay_archive_nav_v2('https://louisianavsallyall.com/playoff-brackets/', $season);
 
     if ($season === 2025) {
         return '<div class="lvay-season-layout lvay-brackets-layout"><main class="lvay-season-main">'
@@ -146,19 +146,23 @@ function lvay_archive_brackets_content($content) {
     $current .= '<a href="' . esc_url(add_query_arg('season', 2025, 'https://louisianavsallyall.com/playoff-brackets/')) . '">View the 2025 playoff brackets</a></section></main>';
     return '<div class="lvay-season-layout lvay-brackets-layout">' . $current . $nav . '</div>';
 }
-add_filter('the_content', 'lvay_archive_brackets_content', 999);
+add_filter('the_content', 'lvay_archive_brackets_content_v2', 999);
 
-function lvay_archive_styles() {
+function lvay_archive_styles_v2() {
     $css = <<<'CSS'
-.lvay-season-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;max-width:1240px;margin:0 auto;padding:18px 0 34px}
+.lvay-season-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:24px;width:min(1600px,calc(100vw - 48px));max-width:none;margin:0;position:relative;left:50%;transform:translateX(-50%);padding:18px 0 34px}
 .lvay-season-main{min-width:0}
 .lvay-rankings-design .lvay-acc-body{display:none!important}
 .lvay-rankings-design .lvay-acc-body.open{display:block!important}
 .lvay-season-archive{align-self:start;background:#050505;color:#fff;padding:20px 24px 24px;display:grid;grid-template-columns:1fr 1fr;gap:7px 18px}
-.lvay-season-archive h3{grid-column:1/-1;margin:0 0 10px;color:#fff;font-family:"Alfa Slab One",serif;font-size:25px;text-decoration:underline;text-underline-offset:5px}
-.lvay-season-archive a{color:#555!important;font-family:"Alfa Slab One",serif;font-size:21px;text-decoration:none!important}
+.lvay-season-archive h3{grid-column:1/-1;margin:0 0 8px;color:#fff;font-family:Teko,Arial,sans-serif;font-size:34px;font-weight:500;line-height:1;letter-spacing:.8px;text-decoration:underline;text-underline-offset:5px}
+.lvay-season-archive a{color:#666!important;font-family:Teko,Arial,sans-serif;font-size:27px;font-weight:500;line-height:1.05;text-decoration:none!important}
 .lvay-season-archive a:hover,.lvay-season-archive a.active{color:#fff!important}
-.lvay-season-archive .coming{grid-column:1/-1;margin-top:12px;color:#888;font-family:Teko,Arial,sans-serif;font-size:18px;line-height:1.15}
+.lvay-season-archive .coming{grid-column:1/-1;margin-top:12px;color:#999;font-family:Teko,Arial,sans-serif;font-size:20px;font-weight:400;line-height:1.15}
+.lvay-rankings-design .lvay-acc-hdr{min-height:82px!important;font-size:clamp(27px,2.25vw,42px)!important}
+.lvay-rankings-design .lvay-rtbl{font-size:16px!important}
+.lvay-rankings-design .lvay-rtbl th{padding:11px 12px!important;font-size:15px!important}
+.lvay-rankings-design .lvay-rtbl td{padding:10px 12px!important}
 .lvay-preseason-card{border-top:8px solid #078b88;background:#f1f5f5;padding:34px 38px;margin-top:18px}
 .lvay-preseason-card span{color:#078b88;font-family:Teko,Arial,sans-serif;font-size:24px;font-weight:700;letter-spacing:2px}
 .lvay-preseason-card h2{margin:3px 0 10px;color:#080808;font-family:"Alfa Slab One",serif;font-size:clamp(27px,3vw,42px);line-height:1.05}
@@ -166,11 +170,11 @@ function lvay_archive_styles() {
 .lvay-preseason-card a{display:inline-block;margin-top:8px;background:#078b88;color:#fff!important;padding:10px 17px;font-weight:800;text-decoration:none!important}
 .lvay-brackets-heading{color:#078b88;font-family:"Alfa Slab One",serif;font-size:clamp(28px,3vw,42px);line-height:.95}
 .lvay-brackets-layout .elementor-element-c302248{padding:0!important}
-@media(max-width:900px){.lvay-season-layout{grid-template-columns:1fr}.lvay-season-archive{grid-row:1}.lvay-season-main{grid-row:2}}
+@media(max-width:1200px){.lvay-season-layout{grid-template-columns:1fr}.lvay-season-archive{grid-row:1}.lvay-season-main{grid-row:2}}
 @media(max-width:600px){.lvay-season-layout{padding-top:8px}.lvay-season-archive{grid-template-columns:1fr 1fr;padding:16px 18px}.lvay-preseason-card{padding:24px 20px}}
 CSS;
     wp_register_style('lvay-football-archives', false);
     wp_enqueue_style('lvay-football-archives');
     wp_add_inline_style('lvay-football-archives', $css);
 }
-add_action('wp_enqueue_scripts', 'lvay_archive_styles', 40);
+add_action('wp_enqueue_scripts', 'lvay_archive_styles_v2', 40);
