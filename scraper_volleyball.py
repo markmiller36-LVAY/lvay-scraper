@@ -16,9 +16,9 @@ PR Formula (Bylaw 24.6.3):
 
 Exclusions (counts_for_pr = 0):
     - OOS opponents (no valid LA division)
-    - District playoff tiebreaker matches (dist_t = "D")
 
 Inclusions:
+    - District matches (dist_t = "D")
     - Regular season + tournament matches both count
 """
 
@@ -115,12 +115,6 @@ def is_oos_opponent(opp_div_raw):
     if LA_DIVISION_PATTERN.match(raw):
         return False
     return True
-
-
-def is_tiebreaker(dist_or_tourn_raw):
-    if not dist_or_tourn_raw:
-        return False
-    return dist_or_tourn_raw.strip().upper() == "D"
 
 
 def parse_school_division(div_str):
@@ -242,8 +236,9 @@ def insert_games(conn, rows):
         is_tourn  = 1 if row["dist_t"].upper() == "T" else 0
         is_dist   = 1 if row["dist_t"].upper() == "D" else 0
         is_oos    = is_oos_opponent(row["opp_dd"])
-        is_tbreak = is_tiebreaker(row["dist_t"])
-        counts    = 0 if (is_oos or is_tbreak) else 1
+        # The LHSAA report's "D" flag means a normal district match.
+        # These matches count toward both the official record and power rating.
+        counts    = 0 if is_oos else 1
 
         try:
             match_num = int(row["match_num"]) if str(row["match_num"]).isdigit() else 1
