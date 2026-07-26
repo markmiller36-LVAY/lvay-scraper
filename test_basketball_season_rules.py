@@ -34,6 +34,18 @@ class BasketballSeasonRuleTests(unittest.TestCase):
             opponent_out_of_state=oos,
         )
 
+    def higher_division_game(self):
+        return GameResult(
+            team="Test School",
+            opponent="Opponent",
+            result="W",
+            sport="boys_basketball",
+            opponent_wins=5,
+            opponent_losses=5,
+            opponent_class="5A",
+            opponent_division="Non-Select Division I",
+        )
+
     def test_2025_26_uses_archived_34_and_44_multipliers(self):
         self.assertEqual(self.rate("3A", 2026, [self.game()]).power_rating, 42)
         self.assertEqual(self.rate("B", 2026, [self.game()]).power_rating, 52)
@@ -46,6 +58,13 @@ class BasketballSeasonRuleTests(unittest.TestCase):
         rating = self.rate("3A", 2026, [self.game(), self.game(oos=True)])
         self.assertEqual(rating.games_played, 1)
         self.assertEqual(rating.power_rating, 42)
+
+    def test_in_state_bonus_uses_division_steps_not_class_steps(self):
+        # Test School is in Division III. A 5A Division I opponent is two
+        # playoff-division steps higher, so the bonus is 4 rather than the
+        # 2-per-class-step value.
+        rating = self.rate("3A", 2026, [self.higher_division_game()])
+        self.assertEqual(rating.power_rating, 46)
 
 
 if __name__ == "__main__":

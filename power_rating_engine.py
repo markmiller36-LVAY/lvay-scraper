@@ -32,7 +32,7 @@ BASKETBALL 1A-5A:
   Win=25, Loss=0
   OppQ: (Opp Wins / Opp GP) x 34 for 2025-26; x 30 for 2026-27+
   Division bonus:
-    - in-state: +2 per class step up, with division also higher
+    - in-state: +2 per playoff-division step up, with class also higher
     - OOS: +2 per class step up
   Power Rating = Total Points / Games Played
 
@@ -40,7 +40,7 @@ BASKETBALL Class B&C:
   Win=30, Loss=0
   OppQ: (Opp Wins / Opp GP) x 44 for 2025-26; x 40 for 2026-27+
   Division bonus:
-    - in-state: +2 per class step up, with division also higher
+    - in-state: +2 per playoff-division step up, with class also higher
     - OOS: +2 per class step up
   Power Rating = Total Points / Games Played
 
@@ -142,7 +142,7 @@ SPORT_CONFIGS = {
         "div_bonus_per_step": 2,
         "has_div_bonus": True,
         "opp_quality": "win_pct_x34",
-        "bonus_mode": "class_steps_with_division_gate",
+        "bonus_mode": "division_steps_with_class_gate",
         "oos_bonus": True,
     },
     "basketball_bc": {
@@ -153,7 +153,7 @@ SPORT_CONFIGS = {
         "div_bonus_per_step": 2,
         "has_div_bonus": True,
         "opp_quality": "win_pct_x44",
-        "bonus_mode": "class_steps_with_division_gate",
+        "bonus_mode": "division_steps_with_class_gate",
         "oos_bonus": True,
     },
     "soccer": {
