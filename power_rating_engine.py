@@ -30,7 +30,7 @@ SOFTBALL:
 
 BASKETBALL 1A-5A:
   Win=25, Loss=0
-  OppQ: (Opp Wins / Opp GP) x 34
+  OppQ: (Opp Wins / Opp GP) x 30
   Division bonus:
     - in-state: +2 per class step up, with division also higher
     - OOS: +2 per class step up
@@ -38,7 +38,7 @@ BASKETBALL 1A-5A:
 
 BASKETBALL Class B&C:
   Win=30, Loss=0
-  OppQ: (Opp Wins / Opp GP) x 44
+  OppQ: (Opp Wins / Opp GP) x 40
   Division bonus:
     - in-state: +2 per class step up, with division also higher
     - OOS: +2 per class step up
@@ -141,7 +141,7 @@ SPORT_CONFIGS = {
         "forfeit_bonus": 0,
         "div_bonus_per_step": 2,
         "has_div_bonus": True,
-        "opp_quality": "win_pct_x34",
+        "opp_quality": "win_pct_x30",
         "bonus_mode": "class_steps_with_division_gate",
         "oos_bonus": True,
     },
@@ -152,7 +152,7 @@ SPORT_CONFIGS = {
         "forfeit_bonus": 0,
         "div_bonus_per_step": 2,
         "has_div_bonus": True,
-        "opp_quality": "win_pct_x44",
+        "opp_quality": "win_pct_x40",
         "bonus_mode": "class_steps_with_division_gate",
         "oos_bonus": True,
     },
@@ -175,19 +175,8 @@ def get_sport_config(
 ) -> dict:
     if sport == "basketball" or sport.endswith("_basketball"):
         if classification.upper() in ("B", "C"):
-            config = SPORT_CONFIGS["basketball_bc"]
-            current_style = "win_pct_x40"
-        else:
-            config = SPORT_CONFIGS["basketball_1a5a"]
-            current_style = "win_pct_x30"
-        try:
-            current_cycle = int(season) >= 2027
-        except (TypeError, ValueError):
-            current_cycle = False
-        if current_cycle:
-            config = dict(config)
-            config["opp_quality"] = current_style
-        return config
+            return SPORT_CONFIGS["basketball_bc"]
+        return SPORT_CONFIGS["basketball_1a5a"]
     if sport == "soccer" or sport.endswith("_soccer"):
         return SPORT_CONFIGS["soccer"]
     return SPORT_CONFIGS.get(sport, SPORT_CONFIGS["football"])
