@@ -11,6 +11,12 @@ class WinterAlignmentOverrideTests(unittest.TestCase):
         self.assertGreaterEqual(
             len(WINTER_ALIGNMENT_OVERRIDES["girls_basketball"]), 365
         )
+        self.assertGreaterEqual(
+            len(WINTER_ALIGNMENT_OVERRIDES["boys_soccer"]), 175
+        )
+        self.assertGreaterEqual(
+            len(WINTER_ALIGNMENT_OVERRIDES["girls_soccer"]), 175
+        )
 
     def test_girls_basketball_uses_official_2026_postseason_divisions(self):
         self.assertEqual(
@@ -29,6 +35,11 @@ class WinterAlignmentOverrideTests(unittest.TestCase):
             get_school("Sterlington", "girls_basketball", 2027)["division"],
             "Non-Select Division III",
         )
+
+    def test_soccer_uses_official_2026_division_and_district(self):
+        mt_carmel = get_school("Mt. Carmel", "girls_soccer", 2026)
+        self.assertEqual(mt_carmel["division"], "Division I")
+        self.assertEqual(mt_carmel["district"], 8)
 
 
 if __name__ == "__main__":
