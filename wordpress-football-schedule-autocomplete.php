@@ -1,7 +1,7 @@
 /**
  * Autocomplete school search for current and archived football schedules.
  */
-function lvay_football_schedule_autocomplete_assets() {
+function lvay_football_schedule_autocomplete_assets_v2() {
     $css = <<<'CSS'
 .lvay-schedule-main{position:relative}
 #lvay-school-search{margin-bottom:0!important}
@@ -53,9 +53,9 @@ CSS;
     wp_enqueue_style('lvay-football-schedule-autocomplete');
     wp_add_inline_style('lvay-football-schedule-autocomplete', $css);
 }
-add_action('wp_enqueue_scripts', 'lvay_football_schedule_autocomplete_assets', 70);
+add_action('wp_enqueue_scripts', 'lvay_football_schedule_autocomplete_assets_v2', 70);
 
-function lvay_football_schedule_autocomplete_script() {
+function lvay_football_schedule_autocomplete_script_v2() {
     ?>
     <script>
     (function(){
@@ -63,9 +63,15 @@ function lvay_football_schedule_autocomplete_script() {
         const root=document.getElementById('lvay-football-schedules');
         if(!root||root.dataset.autocompleteReady==='1')return;
         root.dataset.autocompleteReady='1';
-        const search=root.querySelector('#lvay-school-search');
+        const legacySearch=root.querySelector('#lvay-school-search');
         const status=root.querySelector('#lvay-search-status');
-        if(!search)return;
+        if(!legacySearch)return;
+
+        // The original schedule renderer attaches a full accordion-filtering
+        // listener to this field. Replace the element so that listener is
+        // discarded instead of running alongside autocomplete on every key.
+        const search=legacySearch.cloneNode(true);
+        legacySearch.replaceWith(search);
 
         const list=document.createElement('div');
         list.id='lvay-school-suggestions';
@@ -170,4 +176,4 @@ function lvay_football_schedule_autocomplete_script() {
     </script>
     <?php
 }
-add_action('wp_footer', 'lvay_football_schedule_autocomplete_script', 70);
+add_action('wp_footer', 'lvay_football_schedule_autocomplete_script_v2', 70);
