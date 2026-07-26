@@ -443,26 +443,15 @@ def import_payload(payload: dict, db_path: str, replace: bool = False) -> dict:
         for game in school["games"]:
             if game["is_bye"]:
                 continue
-            conn.execute(
+            existing = conn.execute(
                 """
-                INSERT INTO games
-                    (sport, season, school, week, game_date, opponent, win_loss,
-                     score, home_away, district_class, scraped_at, source,
-                     is_district, needs_review)
-                VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(sport, season, school, week) DO UPDATE SET
-                    game_date=excluded.game_date, opponent=excluded.opponent,
-                    home_away=excluded.home_away,
-                    district_class=excluded.district_class,
-                    scraped_at=excluded.scraped_at, source=excluded.source,
-                    is_district=excluded.is_district,
-                    needs_review=excluded.needs_review
+                UPDATE games SET
+                    game_date=?, opponent=?, win_loss=NULL, score=NULL,
+                    home_away=?, district_class=?, scraped_at=?, source=?,
+                    is_district=?, needs_review=?
+                WHERE sport=? AND season=? AND school=? AND week=?
                 """,
                 (
-                    sport,
-                    season,
-                    school["school"],
-                    f"Week {game['week']}",
                     game["game_date"],
                     game["opponent"],
                     game["home_away"],
@@ -471,8 +460,36 @@ def import_payload(payload: dict, db_path: str, replace: bool = False) -> dict:
                     payload["source"],
                     int(game["is_district"]),
                     int(game["needs_review"]),
+                    sport,
+                    season,
+                    school["school"],
+                    f"Week {game['week']}",
                 ),
             )
+            if existing.rowcount == 0:
+                conn.execute(
+                    """
+                    INSERT INTO games
+                        (sport, season, school, week, game_date, opponent,
+                         win_loss, score, home_away, district_class, scraped_at,
+                         source, is_district, needs_review)
+                    VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        sport,
+                        season,
+                        school["school"],
+                        f"Week {game['week']}",
+                        game["game_date"],
+                        game["opponent"],
+                        game["home_away"],
+                        school["source_division"],
+                        payload["generated_at"],
+                        payload["source"],
+                        int(game["is_district"]),
+                        int(game["needs_review"]),
+                    ),
+                )
             game_rows += 1
     conn.commit()
     conn.close()
