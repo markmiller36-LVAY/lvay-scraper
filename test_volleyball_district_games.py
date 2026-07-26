@@ -60,3 +60,30 @@ def test_district_matches_count_for_volleyball_power_rating(monkeypatch):
         "score": "2-3",
         "counts_for_pr": 1,
     }
+
+
+def test_out_of_state_placeholder_is_excluded_even_with_numeric_division():
+    conn = sqlite3.connect(":memory:")
+    conn.row_factory = sqlite3.Row
+    ensure_tables(conn)
+
+    row = {
+        "school": "Example High",
+        "school_dd": "1-I",
+        "date_raw": "09/05/2025",
+        "opponent": "OUT OF STATE",
+        "opp_dd": "0-I",
+        "dist_t": "",
+        "tournament": "",
+        "match_num": "1",
+        "home_away": "A",
+        "win_loss": "W",
+        "score": "3-0",
+        "division": "I",
+    }
+    insert_games(conn, [row])
+
+    game = conn.execute(
+        "SELECT opponent, counts_for_pr FROM volleyball_games"
+    ).fetchone()
+    assert dict(game) == {"opponent": "OUT OF STATE", "counts_for_pr": 0}
