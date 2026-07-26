@@ -23,7 +23,13 @@ from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 
-from power_rating_engine import CLASS_RANK, PowerRatingEngine, Team, GameResult
+from power_rating_engine import (
+    CLASS_RANK,
+    GameResult,
+    PowerRatingEngine,
+    Team,
+    TeamRating,
+)
 from official_record_overrides import (
     find_game_exclusion,
     find_record_override,
@@ -45,6 +51,52 @@ GOOGLE_SERVICE_ACCOUNT_JSON = (
     os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
     or os.environ.get("GOOGLE_CREDENTIALS_JSON", "")
 )
+
+
+def load_official_winter_rankings(sport, season):
+    """Return official final ratings used when LHSAA removes schedule rows."""
+    if str(season) != "2026" or str(sport).lower() not in {
+        "boys_basketball",
+        "girls_basketball",
+        "boys_soccer",
+        "girls_soccer",
+    }:
+        return {}
+
+    path = os.path.join(os.path.dirname(__file__), "winter_alignment_2026.json")
+    try:
+        with open(path, encoding="utf-8") as source:
+            data = json.load(source)
+    except (OSError, ValueError):
+        return {}
+    return data.get(str(sport).lower(), {})
+
+
+def exclude_unverified_soccer_oos(sport, is_oos, oos_data):
+    """LHSAA omits soccer OOS contests when no verified record is supplied."""
+    return (
+        str(sport).lower().endswith("_soccer")
+        and is_oos
+        and not oos_data
+    )
+
+
+def _rating_name_key(name):
+    return re.sub(r"[^a-z0-9]", "", str(name or "").lower())
+
+
+def reconcile_incomplete_winter_rating(rating, info, official_record):
+    """Use the final published PR only when the archived schedule lost games."""
+    if not info or not official_record:
+        return False
+    official_pr = info.get("official_power_rating")
+    if official_pr is None:
+        return False
+    official_games = sum(official_record)
+    if rating.games_played == official_games:
+        return False
+    rating.power_rating = float(official_pr)
+    return True
 
 
 def normalize_result(wl):
@@ -633,6 +685,9 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             raw_opp_class = r.get("opponent_class") or ""
             opp_class = strip_district_prefix(raw_opp_class) or (opp_info["class"] if opp_info else "")
 
+        if exclude_unverified_soccer_oos(sport, oos, oos_data):
+            continue
+
         score = r.get("score") or scores_lookup.get((school, str(week_num)), "")
 
         game_meta[game_key] = {
@@ -671,6 +726,70 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     print("  Calculating power ratings...")
     ratings = engine.rate_all()
+
+    # LHSAA sometimes removes a completed winter schedule from its live
+    # schedule report after publishing the final seeding report. Preserve a
+    # complete historical ranking field by adding only schools absent from the
+    # scrape, using the official final record and power rating already captured
+    # in winter_alignment_2026.json.
+    official_rankings = load_official_winter_rankings(sport, season)
+    rated_names = {_rating_name_key(rating.name) for rating in ratings}
+    fallback_count = 0
+    for school, info in official_rankings.items():
+        if _rating_name_key(school) in rated_names:
+            continue
+        official_pr = info.get("official_power_rating")
+        official_record = find_record_override(record_overrides, school)
+        if official_pr is None or not official_record:
+            continue
+        wins, losses, ties = official_record
+        ratings.append(TeamRating(
+            name=school,
+            sport=sport,
+            power_rating=float(official_pr),
+            wins=wins,
+            losses=losses,
+            ties=ties,
+            games_played=wins + losses + ties,
+            division=info.get("division") or "Unknown",
+            breakdown=[],
+        ))
+        rated_names.add(_rating_name_key(school))
+        fallback_count += 1
+    if fallback_count:
+        print(
+            f"  Added {fallback_count} official final-report schools "
+            "missing from the live LHSAA schedule report"
+        )
+
+    official_by_name = {
+        _rating_name_key(school): (school, info)
+        for school, info in official_rankings.items()
+    }
+    reconciled_count = 0
+    for rating in ratings:
+        official_entry = official_by_name.get(_rating_name_key(rating.name))
+        if not official_entry:
+            continue
+        official_school, info = official_entry
+        official_record = find_record_override(
+            record_overrides, official_school
+        )
+        if reconcile_incomplete_winter_rating(
+            rating, info, official_record
+        ):
+            reconciled_count += 1
+    if reconciled_count:
+        print(
+            f"  Reconciled {reconciled_count} incomplete archived schedules "
+            "to official final LHSAA ratings"
+        )
+
+    if fallback_count or reconciled_count:
+        ratings.sort(key=lambda rating: rating.power_rating, reverse=True)
+        for rank, rating in enumerate(ratings, start=1):
+            rating.rank = rank
+
     print(f"  Power ratings calculated for {len(ratings)} schools")
 
     strength_factors = {}
