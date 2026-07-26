@@ -15,8 +15,12 @@ def get_active_sports():
     month = datetime.now().month
     sports = []
 
-    if month in [8, 9, 10, 11]:        # Aug - Nov
+    if (
+        month in [8, 9, 10, 11]
+        and os.environ.get("ENABLE_FOOTBALL", "true").lower() == "true"
+    ):                                  # Aug - Nov
         sports.append("football")
+    if month in [8, 9, 10, 11]:
         sports.append("volleyball")
 
     if month in [2, 3, 4, 5]:          # Feb - May

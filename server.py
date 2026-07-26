@@ -7,6 +7,7 @@ from flask_cors import CORS
 import hmac
 import sqlite3
 import os
+import re
 from datetime import datetime
 import threading
 
@@ -54,6 +55,45 @@ def available_season(conn, sport, table="power_rankings"):
         (sport,),
     ).fetchone()
     return str(row["season"]) if row else str(configured)
+
+
+def available_schedule_season(conn, sport):
+    """Resolve schedules independently from power rankings.
+
+    Preseason schedules exist before a power-rating row does, so schedule
+    pages must not fall back to the prior season merely because rankings are
+    still empty.
+    """
+    requested = request.args.get("season")
+    configured = requested or os.environ.get(
+        f"{sport.upper()}_SEASON_YEAR",
+        os.environ.get("SEASON_YEAR", resolve_season(sport)),
+    )
+    for table in ("season_schools", "games"):
+        try:
+            row = conn.execute(
+                f"SELECT 1 FROM {table} WHERE sport=? AND season=? LIMIT 1",
+                (sport, str(configured)),
+            ).fetchone()
+            if row:
+                return str(configured)
+        except sqlite3.OperationalError:
+            continue
+
+    seasons = []
+    for table in ("season_schools", "games"):
+        try:
+            seasons.extend(
+                str(row["season"])
+                for row in conn.execute(
+                    f"SELECT DISTINCT season FROM {table} WHERE sport=?",
+                    (sport,),
+                ).fetchall()
+                if row["season"]
+            )
+        except sqlite3.OperationalError:
+            continue
+    return max(seasons, key=lambda value: int(value)) if seasons else str(configured)
 
 
 def init_db():
@@ -124,12 +164,73 @@ def init_db():
             status     TEXT
         )
     """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS season_schools (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            sport      TEXT NOT NULL,
+            season     TEXT NOT NULL,
+            school     TEXT NOT NULL,
+            class_     TEXT,
+            district   TEXT,
+            division   TEXT,
+            track      TEXT,
+            source     TEXT,
+            status     TEXT DEFAULT 'active',
+            updated_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(sport, season, school)
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS season_registry (
+            sport     TEXT NOT NULL,
+            season    TEXT NOT NULL,
+            status    TEXT NOT NULL DEFAULT 'active',
+            is_locked INTEGER NOT NULL DEFAULT 0,
+            source    TEXT,
+            updated_at TEXT DEFAULT (datetime('now')),
+            PRIMARY KEY(sport, season)
+        )
+    """)
+    c.execute("""
+        INSERT INTO season_registry
+            (sport, season, status, is_locked, source)
+        VALUES ('football', '2025', 'final', 1, 'LHSAA')
+        ON CONFLICT(sport, season) DO UPDATE SET
+            status='final', is_locked=1
+    """)
+    game_columns = {row[1] for row in c.execute("PRAGMA table_info(games)")}
+    for name, definition in (
+        ("source", "TEXT"),
+        ("is_district", "INTEGER DEFAULT 0"),
+        ("needs_review", "INTEGER DEFAULT 0"),
+    ):
+        if name not in game_columns:
+            c.execute(f"ALTER TABLE games ADD COLUMN {name} {definition}")
     conn.commit()
     conn.close()
 
 
 with app.app_context():
     init_db()
+    if os.environ.get("ENABLE_FOOTBALL", "true").lower() != "true":
+        try:
+            import json
+            from season_schedule_importer import import_payload
+
+            preseason_path = os.path.join(
+                os.path.dirname(__file__), "football_2026_preseason.json"
+            )
+            if os.path.exists(preseason_path):
+                with open(preseason_path, "r", encoding="utf-8") as source_file:
+                    preseason_payload = json.load(source_file)
+                imported = import_payload(
+                    preseason_payload,
+                    DB_PATH,
+                    replace=True,
+                )
+                print(f"Football preseason schedules imported: {imported}")
+        except Exception as e:
+            print(f"Football preseason schedule import error: {e}")
     try:
         from import_football_2025 import run as import_oos
         import_oos()
@@ -741,39 +842,160 @@ def schedules_football():
     conn = get_db()
     c = conn.cursor()
     try:
-        season = available_season(conn, "football")
-        c.execute("""
-            SELECT pr.school, pr.division, pr.track, pr.class_, pr.district,
-                   pr.power_rating, pr.wins, pr.losses, pr.ties, pr.games_played
-            FROM power_rankings pr
-            WHERE pr.sport='football' AND pr.season=?
-            ORDER BY pr.class_ DESC, pr.district ASC, pr.school ASC
-        """, (season,))
-        schools = [dict(r) for r in c.fetchall()]
+        season = available_schedule_season(conn, "football")
+        roster_rows = c.execute("""
+            SELECT school, division, track, class_, district, source, status
+            FROM season_schools
+            WHERE sport='football' AND season=?
+            ORDER BY CAST(SUBSTR(class_,1,1) AS INTEGER) DESC,
+                     CAST(district AS INTEGER), school
+        """, (season,)).fetchall()
 
-        for s in schools:
-            c.execute("""
-                SELECT gpp.week, gpp.opponent, gpp.result, gpp.score,
-                       gpp.opp_wins, gpp.opp_losses, gpp.opp_division,
-                       gpp.base_pts, gpp.div_bonus, gpp.opp_quality,
-                       gpp.total_pts, gpp.is_district,
-                       g.home_away, g.game_date
-                FROM game_power_points gpp
-                LEFT JOIN games g ON (
-                    g.sport='football' AND g.season=?
-                    AND g.school=gpp.school
-                    AND CAST(REPLACE(g.week,'Week ','') AS INTEGER)=gpp.week
-                )
-                WHERE gpp.sport='football' AND gpp.season=? AND gpp.school=?
-                ORDER BY gpp.week ASC
-            """, (season, season, s['school']))
-            s['games'] = [dict(r) for r in c.fetchall()]
+        if roster_rows:
+            schools = [dict(row) for row in roster_rows]
+        else:
+            # Backward-compatible archive path for seasons created before the
+            # season_schools table existed.
+            schools = [
+                dict(row)
+                for row in c.execute("""
+                    SELECT school, division, track, class_, district,
+                           'LHSAA' AS source, 'final' AS status
+                    FROM power_rankings
+                    WHERE sport='football' AND season=?
+                    ORDER BY class_ DESC, district ASC, school ASC
+                """, (season,)).fetchall()
+            ]
+
+        ranking_rows = {
+            row["school"]: dict(row)
+            for row in c.execute("""
+                SELECT school, power_rating, wins, losses, ties, games_played
+                FROM power_rankings
+                WHERE sport='football' AND season=?
+            """, (season,)).fetchall()
+        }
+
+        for school in schools:
+            ranking = ranking_rows.get(school["school"], {})
+            school.update({
+                "power_rating": ranking.get("power_rating"),
+                "wins": ranking.get("wins", 0),
+                "losses": ranking.get("losses", 0),
+                "ties": ranking.get("ties", 0),
+                "games_played": ranking.get("games_played", 0),
+            })
+            power_rows = {
+                int(row["week"]): dict(row)
+                for row in c.execute("""
+                    SELECT week, result, score, opp_wins, opp_losses,
+                           opp_division, base_pts, div_bonus, opp_quality,
+                           total_pts, is_district
+                    FROM game_power_points
+                    WHERE sport='football' AND season=? AND school=?
+                """, (season, school["school"])).fetchall()
+            }
+            games = []
+            game_rows = c.execute("""
+                SELECT week, opponent, win_loss, score, home_away, game_date,
+                       district_class, is_district, needs_review, source
+                FROM games
+                WHERE sport='football' AND season=? AND school=?
+                ORDER BY CAST(REPLACE(week,'Week ','') AS INTEGER)
+            """, (season, school["school"])).fetchall()
+            for row in game_rows:
+                game = dict(row)
+                try:
+                    week_number = int(str(game["week"]).replace("Week", "").strip())
+                except ValueError:
+                    week_number = 0
+                calculated = power_rows.get(week_number, {})
+                game.update({
+                    "week": week_number,
+                    "result": calculated.get("result") or game.pop("win_loss", None),
+                    "score": calculated.get("score") or game.get("score"),
+                    "opp_wins": calculated.get("opp_wins"),
+                    "opp_losses": calculated.get("opp_losses"),
+                    "opp_division": calculated.get("opp_division"),
+                    "base_pts": calculated.get("base_pts"),
+                    "div_bonus": calculated.get("div_bonus"),
+                    "opp_quality": calculated.get("opp_quality"),
+                    "total_pts": calculated.get("total_pts"),
+                    "is_district": bool(
+                        calculated.get("is_district", game.get("is_district"))
+                    ),
+                    "opponent_internal": not bool(
+                        re.search(r"\([A-Z]{2}\)$", game.get("opponent") or "")
+                    ),
+                })
+                games.append(game)
+            school["record"] = (
+                f"{school['wins']}-{school['losses']}"
+                + (f"-{school['ties']}" if school["ties"] else "")
+            )
+            school["games"] = games
 
     except Exception as e:
         conn.close()
         return jsonify({"error": str(e)}), 500
     conn.close()
-    return jsonify({"sport": "football", "season": season, "count": len(schools), "schools": schools})
+    return jsonify({
+        "sport": "football",
+        "season": season,
+        "status": schools[0].get("status", "active") if schools else "empty",
+        "count": len(schools),
+        "schools": schools,
+    })
+
+
+@app.route("/api/seasons/<sport>")
+def sport_seasons(sport):
+    conn = get_db()
+    rows = conn.execute("""
+        SELECT ss.season,
+               COALESCE(sr.source, MAX(ss.source), '') AS source,
+               COALESCE(sr.status, MAX(ss.status), 'active') AS status,
+               COALESCE(sr.is_locked, 0) AS is_locked,
+               COUNT(DISTINCT ss.school) AS school_count
+        FROM season_schools ss
+        LEFT JOIN season_registry sr
+          ON sr.sport=ss.sport AND sr.season=ss.season
+        WHERE ss.sport=?
+        GROUP BY ss.season, sr.source, sr.status, sr.is_locked
+    """, (sport,)).fetchall()
+    known = {str(row["season"]): dict(row) for row in rows}
+    for row in conn.execute("""
+        SELECT season, COUNT(DISTINCT school) AS school_count
+        FROM games WHERE sport=? GROUP BY season
+    """, (sport,)).fetchall():
+        season = str(row["season"])
+        known.setdefault(season, {
+            "season": season,
+            "source": "LHSAA",
+            "status": "final" if int(season) < int(resolve_season(sport)) else "active",
+            "school_count": row["school_count"],
+        })
+    for row in conn.execute("""
+        SELECT season, source, status, is_locked
+        FROM season_registry WHERE sport=?
+    """, (sport,)).fetchall():
+        season = str(row["season"])
+        known.setdefault(season, {
+            "season": season,
+            "school_count": 0,
+        })
+        known[season].update({
+            "source": row["source"],
+            "status": row["status"],
+            "is_locked": bool(row["is_locked"]),
+        })
+    conn.close()
+    seasons = sorted(known.values(), key=lambda row: int(row["season"]), reverse=True)
+    return jsonify({
+        "sport": sport,
+        "current_season": resolve_season(sport),
+        "seasons": seasons,
+    })
 
 
 @app.route("/api/schedules/baseball")

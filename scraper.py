@@ -263,6 +263,17 @@ def init_db():
             note TEXT
         )
     """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS season_registry (
+            sport TEXT NOT NULL,
+            season TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'active',
+            is_locked INTEGER NOT NULL DEFAULT 0,
+            source TEXT,
+            updated_at TEXT DEFAULT (datetime('now')),
+            PRIMARY KEY(sport, season)
+        )
+    """)
 
     conn.commit()
     conn.close()
@@ -275,6 +286,22 @@ def save_games(games):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     saved = 0
+    season_pairs = {(str(g["sport"]), str(g["season"])) for g in games}
+    locked = [
+        (sport, season)
+        for sport, season in season_pairs
+        if c.execute(
+            """
+            SELECT 1 FROM season_registry
+            WHERE sport=? AND season=? AND is_locked=1
+            """,
+            (sport, season),
+        ).fetchone()
+    ]
+    if locked:
+        conn.close()
+        print(f"  Archive lock: refusing to modify {locked}")
+        return 0
 
     for g in games:
         try:
