@@ -92,6 +92,10 @@ function lvay_winter_url($slug, $season = 2027) {
     return $season === 2027 ? $url : add_query_arg('season', $season, $url);
 }
 
+function lvay_winter_season_label($season) {
+    return $season === 2026 ? '2025-2026' : '2026-2027';
+}
+
 function lvay_winter_nav($cfg, $view, $season) {
     $slug = $cfg[$view];
     return '<aside class="lvay-w-archive"><h3>SEASON ARCHIVES</h3>'
@@ -195,7 +199,7 @@ function lvay_winter_replace($content) {
     list($sport,$cfg,$view) = $context;
     $season = lvay_winter_season();
     $body = $view === 'schedule' ? lvay_winter_schedule($sport,$cfg,$season) : ($view === 'rankings' ? lvay_winter_rankings($sport,$cfg,$season) : lvay_winter_brackets($cfg,$season));
-    $title = $season . ' LHSAA<br>' . $cfg['label'] . ' ' . strtoupper($view === 'rankings' ? 'POWER RANKINGS' : ($view === 'brackets' ? 'PLAYOFF BRACKETS' : 'SCHEDULES'));
+    $title = lvay_winter_season_label($season) . ' LHSAA<br>' . $cfg['label'] . ' ' . strtoupper($view === 'rankings' ? 'POWER RANKINGS' : ($view === 'brackets' ? 'PLAYOFF BRACKETS' : 'SCHEDULES'));
     return '<section class="lvay-w-layout" data-sport="' . esc_attr($sport) . '" data-season="' . $season . '"><main><header><h1>' . $title . '</h1></header>' . $body . '</main>' . lvay_winter_nav($cfg,$view,$season) . '</section>';
 }
 add_filter('the_content','lvay_winter_replace',999);
@@ -207,18 +211,20 @@ function lvay_winter_assets() {
     wp_register_style('lvay-winter-pages',false);
     wp_enqueue_style('lvay-winter-pages');
     wp_add_inline_style('lvay-winter-pages','
-    .lvay-w-layout{width:min(96vw,1680px);margin:28px auto;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;color:#111}
-    .lvay-w-layout *{box-sizing:border-box}.lvay-w-layout>main>header h1{font-family:"Alfa Slab One",serif;color:#078d8b;font-size:clamp(34px,4vw,62px);line-height:.95;margin:0 0 22px}
-    .lvay-w-archive{background:#050505;color:#fff;padding:24px;height:max-content}.lvay-w-archive h3{font-family:"Alfa Slab One";font-size:25px;text-decoration:underline;margin:0 0 16px;font-weight:400}.lvay-w-archive a{display:block;color:#777;font:600 25px/1.3 Teko;text-decoration:none}.lvay-w-archive a.active{color:#fff}.lvay-w-archive span{display:block;color:#888;font:italic 17px Teko;margin-top:18px}
+    .entry-title{display:none!important}
+    .lvay-w-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;width:min(1600px,calc(100vw - 48px));max-width:none;margin:0;position:relative;left:50%;transform:translateX(-50%);padding:18px 0 36px;color:#111}
+    .lvay-w-layout *{box-sizing:border-box}.lvay-w-layout>main{min-width:0}.lvay-w-layout>main>header h1{font-family:"Alfa Slab One",serif;color:#078b88;font-size:clamp(32px,3.4vw,52px);line-height:.95;margin:0 0 17px;text-transform:uppercase}
+    .lvay-w-archive{align-self:start;background:#050505;color:#fff;padding:22px 25px 26px;display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;height:max-content}.lvay-w-archive h3{grid-column:1/-1;color:#fff;font:500 36px/1 Teko;margin:0 0 9px;text-decoration:underline;text-underline-offset:5px}.lvay-w-archive a{color:#666!important;font:500 29px/1 Teko;text-decoration:none!important}.lvay-w-archive a:hover,.lvay-w-archive a.active{color:#fff!important}.lvay-w-archive span{grid-column:1/-1;color:#999;font:21px/1.15 Teko;margin-top:12px}
     .lvay-w-empty{border:2px solid #078d8b;padding:42px;background:#f7f7f7}.lvay-w-empty span{color:#078d8b;font:600 22px Teko}.lvay-w-empty h2{font:400 36px "Alfa Slab One";margin:6px 0}.lvay-w-empty p{font:24px Teko}.lvay-w-empty a{background:#050505;color:#fff;padding:10px 16px;text-decoration:none;font:600 21px Teko}
-    .lvay-w-search{position:relative;z-index:30;margin-bottom:18px}.lvay-w-search input{width:100%;border:2px solid #078d8b;padding:13px 15px;font-size:17px}.lvay-w-results{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #078d8b;max-height:360px;overflow:auto;box-shadow:0 10px 25px #0003}.lvay-w-results button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #ddd;background:#fff;padding:10px 14px;font:600 20px Teko}.lvay-w-results button:hover{background:#000;color:#fff}
-    .lvay-w-layout details{border-bottom:1px solid #ddd}.lvay-w-layout summary{cursor:pointer;list-style:none;font-family:"Alfa Slab One";padding:12px}.lvay-w-layout summary i{display:inline-block;color:#078d8b;margin-right:10px}.lvay-w-layout details[open]>summary i{transform:rotate(90deg)}.lvay-w-class>summary{font-size:25px;border-bottom:2px solid #078d8b}.lvay-w-district>summary,.lvay-w-rankings summary,.lvay-w-brackets summary{font-size:22px}
-    .lvay-w-school>button{width:100%;text-align:left;border:0;background:#fff;padding:10px 18px;font:600 21px Teko}.lvay-w-school>button:hover{background:#000;color:#fff}.lvay-w-school>button[aria-expanded=true]{background:#444;color:#fff}.lvay-w-school>div{padding:10px;overflow:auto}
+    .lvay-w-search{position:relative;z-index:30;margin-bottom:18px}.lvay-w-search input{display:block;width:100%;height:50px;border:2px solid #078b88;border-radius:4px;padding:0 15px;font-size:17px}.lvay-w-results{position:absolute;z-index:9999;top:100%;left:0;right:0;background:#fff;border:1px solid #078b88;max-height:420px;overflow:auto;box-shadow:0 10px 24px #0003}.lvay-w-results button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #ddd;background:#fff;padding:10px 14px;font:500 24px Teko}.lvay-w-results button:hover{background:#000;color:#fff}
+    .lvay-w-layout details{border-bottom:1px solid #d9dddd;background:#fff}.lvay-w-layout summary{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;font-family:"Alfa Slab One";color:#090909}.lvay-w-layout summary::-webkit-details-marker{display:none}.lvay-w-layout summary i{display:inline-block;color:#45b8b2;font:normal 34px/.7 Arial;transition:transform .15s}.lvay-w-layout details[open]>summary i{transform:rotate(90deg)}.lvay-w-class>summary{min-height:68px;padding:10px 15px;font-size:31px;border-bottom:2px solid #078b88}.lvay-w-district>summary,.lvay-w-rankings summary,.lvay-w-brackets summary{min-height:48px;padding:8px 30px;font-size:23px}
+    .lvay-w-school>button{width:100%;min-height:50px;text-align:left;border:0;border-bottom:1px solid #e7e9e9;background:#fff;padding:8px 45px;font:500 25px Teko}.lvay-w-school>button:hover{background:#000;color:#fff}.lvay-w-school>button[aria-expanded=true]{background:#333;color:#fff}.lvay-w-school>div{padding:10px;overflow:auto}
     .lvay-w-table{overflow:auto}.lvay-w-layout table{width:100%;border-collapse:collapse;font:19px Teko;min-width:680px}.lvay-w-layout th{background:#078d8b;color:#fff;text-align:left;padding:8px}.lvay-w-layout td{padding:7px 8px;border-bottom:1px solid #ddd}.lvay-w-layout tr:nth-child(even){background:#f1f1f1}.lvay-w-layout td a{color:#078d8b;font-weight:600}
+    .lvay-w-layout a.lvay-w-opponent{color:inherit!important;font-weight:inherit;text-decoration:none}.lvay-w-layout a.lvay-w-opponent:hover{text-decoration:underline}
     .lvay-w-brackets details>div{padding:12px}.lvay-w-brackets a{display:inline-block;background:#078d8b;color:#fff;padding:9px 14px;text-decoration:none;font:600 20px Teko;margin-bottom:10px}.lvay-w-brackets iframe{display:block;width:100%;height:820px;border:1px solid #bbb}.lvay-w-source{font:23px Teko}
     .lvay-w-game.w td:nth-child(4){color:#079447;font-weight:700}.lvay-w-game.l td:nth-child(4){color:#d22;font-weight:700}.lvay-w-game.district{font-weight:600;color:#078d8b}
-    @media(max-width:900px){.lvay-w-layout{grid-template-columns:1fr;width:94vw}.lvay-w-archive{order:-1;display:flex;gap:14px;align-items:center;flex-wrap:wrap}.lvay-w-archive h3{width:100%}.lvay-w-brackets iframe{height:620px}}
-    @media(max-width:560px){.lvay-w-layout{width:96vw;margin:16px auto}.lvay-w-layout>main>header h1{font-size:34px}.lvay-w-archive{padding:16px}.lvay-w-empty{padding:24px}.lvay-w-brackets iframe{height:520px}}
+    @media(max-width:1200px){.lvay-w-layout{grid-template-columns:1fr}.lvay-w-archive{grid-row:1}.lvay-w-layout>main{grid-row:2}.lvay-w-brackets iframe{height:620px}}
+    @media(max-width:700px){.lvay-w-layout{width:calc(100vw - 24px);padding-top:8px}.lvay-w-layout>main>header h1{font-size:32px}.lvay-w-archive{padding:17px 19px}.lvay-w-class>summary{font-size:26px}.lvay-w-district>summary{padding-left:18px}.lvay-w-school>button{padding-left:26px}.lvay-w-empty{padding:24px}.lvay-w-brackets iframe{height:520px}}
     ');
     wp_register_script('lvay-winter-pages',false,array(),null,true);
     wp_enqueue_script('lvay-winter-pages');
@@ -228,6 +234,12 @@ function lvay_winter_assets() {
       var sport=root.dataset.sport,season=root.dataset.season;
       var schools=[].slice.call(root.querySelectorAll(".lvay-w-school"));
       var input=root.querySelector(".lvay-w-search input"),results=root.querySelector(".lvay-w-results");
+      function esc(v){return String(v==null?"":v).replace(/[&<>"\']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","\'":"&#39;"}[c]})}
+      function schoolCard(name){var n=String(name||"").toLowerCase();return schools.find(function(c){return c.dataset.label.toLowerCase()===n})}
+      function opponentLink(name){
+        var card=schoolCard(name);if(!card)return esc(name);
+        return "<a class=\"lvay-w-opponent\" href=\"?season="+encodeURIComponent(season)+"&school="+encodeURIComponent(card.dataset.label)+"#"+card.id+"\">"+esc(name)+"</a>";
+      }
       function openSchool(card){
         card.closest(".lvay-w-district").open=true; card.closest(".lvay-w-class").open=true;
         var body=card.querySelector("div"),button=card.querySelector("button");
@@ -235,13 +247,13 @@ function lvay_winter_assets() {
         if(!body.dataset.loaded){body.innerHTML="<p>Loading schedule...</p>";fetch("https://lvay-scraper.onrender.com/api/schedules/winter/"+sport+"?season="+season+"&school="+encodeURIComponent(card.dataset.label)).then(function(r){return r.json()}).then(function(data){
           var s=(data.schools||[]).find(function(x){return x.school===card.dataset.label})||(data.schools||[])[0];if(!s){body.innerHTML="<p>Schedule unavailable.</p>";return}
           var h="<table><thead><tr><th>Date</th><th>H/A</th><th>Opponent</th><th>W/L</th><th>Score</th><th>Opp Record</th><th>Division</th><th>Power Pts</th></tr></thead><tbody>";
-          (s.games||[]).forEach(function(g){var cls="lvay-w-game "+((g.result||"").toLowerCase())+(g.is_district?" district":"");var opp=(g.opp_wins||0)+"-"+(g.opp_losses||0)+(g.opp_ties?"-"+g.opp_ties:"");h+="<tr class=\""+cls+"\"><td>"+(g.game_date||"")+"</td><td>"+(g.home_away||"")+"</td><td>"+(g.opponent||"")+"</td><td>"+(g.result||"")+"</td><td>"+(g.score||"")+"</td><td>"+opp+"</td><td>"+(g.opp_division||"")+"</td><td>"+Number(g.total_pts||0).toFixed(2)+"</td></tr>"});body.innerHTML=h+"</tbody></table>";body.dataset.loaded="1";
+          (s.games||[]).forEach(function(g){var cls="lvay-w-game "+((g.result||"").toLowerCase())+(g.is_district?" district":"");var opp=(g.opp_wins||0)+"-"+(g.opp_losses||0)+(g.opp_ties?"-"+g.opp_ties:"");h+="<tr class=\""+cls+"\"><td>"+esc(g.game_date||"")+"</td><td>"+esc(g.home_away||"")+"</td><td>"+opponentLink(g.opponent||"")+"</td><td>"+esc(g.result||"")+"</td><td>"+esc(g.score||"")+"</td><td>"+esc(opp)+"</td><td>"+esc(g.opp_division||"")+"</td><td>"+Number(g.total_pts||0).toFixed(2)+"</td></tr>"});body.innerHTML=h+"</tbody></table>";body.dataset.loaded="1";
         }).catch(function(){body.innerHTML="<p>Schedule temporarily unavailable.</p>"})}
         card.scrollIntoView({behavior:"smooth",block:"center"});
       }
       schools.forEach(function(card){card.querySelector("button").addEventListener("click",function(){var expanded=this.getAttribute("aria-expanded")==="true";if(expanded){this.setAttribute("aria-expanded","false");card.querySelector("div").hidden=true}else openSchool(card)})});
       if(input){input.addEventListener("input",function(){var q=this.value.trim().toLowerCase();if(!q){results.hidden=true;results.innerHTML="";return}var matches=schools.filter(function(c){return c.dataset.name.indexOf(q)!==-1}).slice(0,14);results.innerHTML=matches.map(function(c){return "<button type=\"button\" data-id=\""+c.id+"\">"+c.dataset.label+"</button>"}).join("");results.hidden=!matches.length});results.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;results.hidden=true;input.value=document.getElementById(b.dataset.id).dataset.label;openSchool(document.getElementById(b.dataset.id))})}
-      var params=new URLSearchParams(location.search),school=params.get("school");if(school){var card=schools.find(function(c){return c.dataset.label===school});if(card)openSchool(card)}
+      var params=new URLSearchParams(location.search),school=params.get("school");if(school){var card=schoolCard(school);if(card)openSchool(card)}
     });');
 }
 add_action('wp_enqueue_scripts','lvay_winter_assets');
