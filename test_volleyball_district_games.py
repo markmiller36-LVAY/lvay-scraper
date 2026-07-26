@@ -1,6 +1,7 @@
 import sqlite3
 
 from scraper_volleyball import ensure_tables, insert_games
+from run_power_rankings_volleyball import calculate_school_pr
 
 
 def test_district_matches_count_for_volleyball_power_rating(monkeypatch):
@@ -87,3 +88,12 @@ def test_out_of_state_placeholder_is_excluded_even_with_numeric_division():
         "SELECT opponent, counts_for_pr FROM volleyball_games"
     ).fetchone()
     assert dict(game) == {"opponent": "OUT OF STATE", "counts_for_pr": 0}
+
+
+def test_loss_uses_exact_one_third_of_opponent_wins():
+    stats = calculate_school_pr(
+        "Example High",
+        [{"result": "L", "opponent": "Opponent High"}],
+        {"Opponent High": 10},
+    )
+    assert stats["power_rating"] == 3.333
