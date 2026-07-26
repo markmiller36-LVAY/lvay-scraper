@@ -62,11 +62,26 @@ def football_week_number(week):
     return int(match.group()) if match else None
 
 
-def filter_regular_season_football_rows(rows):
+FOOTBALL_EXCLUDED_GAMES = {
+    # Crescent City closed before the Week 9 West St. John game. LHSAA's
+    # final rating uses a 0-7 record and excludes this unplayed 0-1 entry.
+    ("2025", "Crescent City", 9, "West St. John"),
+}
+
+
+def filter_regular_season_football_rows(rows, season="2025"):
     """Keep only unique regular-season schedule games, max 10 per school."""
     deduplicated = {}
     for row in rows:
         week = football_week_number(row.get("week"))
+        exclusion_key = (
+            str(season),
+            row.get("school", ""),
+            week,
+            row.get("opponent", ""),
+        )
+        if exclusion_key in FOOTBALL_EXCLUDED_GAMES:
+            continue
         if week is not None and not 1 <= week <= 10:
             continue
         key = (
@@ -415,7 +430,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     if sport.lower() == "football":
         all_football_rows = rows
-        rows = filter_regular_season_football_rows(all_football_rows)
+        rows = filter_regular_season_football_rows(all_football_rows, season)
         excluded_rows = len(all_football_rows) - len(rows)
         if excluded_rows:
             print(
