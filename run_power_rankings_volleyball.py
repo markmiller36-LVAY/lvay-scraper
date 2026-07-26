@@ -42,7 +42,7 @@ DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 WIN_BASE       = 5.0
 LOSS_BASE      = 0.0
 WIN_OPP_PCT    = 1.00   # 100% of opponent wins on a win
-LOSS_OPP_PCT   = 0.33   # 33% of opponent wins on a loss
+LOSS_OPP_PCT   = 1.0 / 3.0  # Exact one-third of opponent wins on a loss
 
 # Volleyball divisions I–V
 DIVISION_ORDER = [
