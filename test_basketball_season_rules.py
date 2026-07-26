@@ -34,9 +34,9 @@ class BasketballSeasonRuleTests(unittest.TestCase):
             opponent_out_of_state=oos,
         )
 
-    def test_2025_26_uses_official_34_and_40_multipliers(self):
+    def test_2025_26_uses_archived_34_and_44_multipliers(self):
         self.assertEqual(self.rate("3A", 2026, [self.game()]).power_rating, 42)
-        self.assertEqual(self.rate("B", 2026, [self.game()]).power_rating, 50)
+        self.assertEqual(self.rate("B", 2026, [self.game()]).power_rating, 52)
 
     def test_2026_27_uses_current_30_and_40_multipliers(self):
         self.assertEqual(self.rate("3A", 2027, [self.game()]).power_rating, 40)
