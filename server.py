@@ -13,7 +13,7 @@ import threading
 
 app = Flask(__name__)
 CORS(app)
-DB_PATH = "/data/lvay_v2.db"
+DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 PIPELINE_LOCK = threading.Lock()
 PIPELINE_STATE = {
     "status": "idle",
@@ -39,6 +39,11 @@ def resolve_season(sport="baseball"):
 def available_season(conn, sport, table="power_rankings"):
     """Use the configured season when populated, otherwise keep latest live data."""
     requested = request.args.get("season")
+    # An explicit season is an archive/current-season contract.  Returning a
+    # different populated season here makes an empty new-season page silently
+    # display last year's data.
+    if requested:
+        return str(requested)
     configured = requested or os.environ.get(
         f"{sport.upper()}_SEASON_YEAR",
         os.environ.get("SEASON_YEAR", resolve_season(sport)),
@@ -65,6 +70,8 @@ def available_schedule_season(conn, sport):
     still empty.
     """
     requested = request.args.get("season")
+    if requested:
+        return str(requested)
     configured = requested or os.environ.get(
         f"{sport.upper()}_SEASON_YEAR",
         os.environ.get("SEASON_YEAR", resolve_season(sport)),
@@ -1339,15 +1346,18 @@ def scrape_winter_sport(sport):
     if sport not in WINTER_SPORTS:
         return jsonify({"error": "Unsupported sport"}), 404
 
+    season = request.args.get("season") or resolve_season(sport)
+
     def run():
         try:
             from scraper import scrape_sport
+            os.environ[f"{sport.upper()}_SEASON_YEAR"] = str(season)
             scrape_sport(sport)
         except Exception as exc:
             print(f"{sport} scrape error: {exc}")
 
     threading.Thread(target=run, daemon=True).start()
-    return jsonify({"status": "started", "sport": sport})
+    return jsonify({"status": "started", "sport": sport, "season": str(season)})
 
 
 @app.route("/api/build/winter/<sport>")
