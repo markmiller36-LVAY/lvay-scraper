@@ -296,6 +296,37 @@ def insert_games(conn, rows, season=SEASON):
         END
         WHERE sport=? AND season=?
     """, (SPORT, str(season)))
+
+    # The 2025 LHSAA Division III report contains Livingston Collegiate's
+    # schedule a second time under the name Sarah T. Reed. Every affected
+    # opponent row is duplicated byte-for-byte (date/result/score) with a
+    # correct Livingston Collegiate row. Remove only those proven duplicates,
+    # plus the copied Division III block from Reed's own schedule. Reed's real
+    # schedule is Division IV and remains untouched.
+    if str(season) == "2025":
+        conn.execute("""
+            DELETE FROM volleyball_games
+            WHERE sport=? AND season=?
+              AND school='Sarah T. Reed'
+              AND school_division='III'
+        """, (SPORT, str(season)))
+        conn.execute("""
+            DELETE FROM volleyball_games AS duplicate
+            WHERE duplicate.sport=? AND duplicate.season=?
+              AND duplicate.opponent='Sarah T. Reed'
+              AND duplicate.opp_division='III'
+              AND EXISTS (
+                  SELECT 1
+                  FROM volleyball_games AS correct
+                  WHERE correct.sport=duplicate.sport
+                    AND correct.season=duplicate.season
+                    AND correct.school=duplicate.school
+                    AND correct.game_date=duplicate.game_date
+                    AND correct.opponent='Livingston Collegiate'
+                    AND correct.result=duplicate.result
+                    AND COALESCE(correct.score, '')=COALESCE(duplicate.score, '')
+              )
+        """, (SPORT, str(season)))
     conn.commit()
 
     return inserted, updated, skipped
