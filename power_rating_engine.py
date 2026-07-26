@@ -30,7 +30,7 @@ SOFTBALL:
 
 BASKETBALL 1A-5A:
   Win=25, Loss=0
-  OppQ: (Opp Wins / Opp GP) x 30
+  OppQ: (Opp Wins / Opp GP) x 34 for 2025-26; x 30 for 2026-27+
   Division bonus:
     - in-state: +2 per class step up, with division also higher
     - OOS: +2 per class step up
@@ -141,7 +141,7 @@ SPORT_CONFIGS = {
         "forfeit_bonus": 0,
         "div_bonus_per_step": 2,
         "has_div_bonus": True,
-        "opp_quality": "win_pct_x30",
+        "opp_quality": "win_pct_x34",
         "bonus_mode": "class_steps_with_division_gate",
         "oos_bonus": True,
     },
@@ -176,7 +176,15 @@ def get_sport_config(
     if sport == "basketball" or sport.endswith("_basketball"):
         if classification.upper() in ("B", "C"):
             return SPORT_CONFIGS["basketball_bc"]
-        return SPORT_CONFIGS["basketball_1a5a"]
+        config = SPORT_CONFIGS["basketball_1a5a"]
+        try:
+            current_cycle = int(season) >= 2027
+        except (TypeError, ValueError):
+            current_cycle = False
+        if current_cycle:
+            config = dict(config)
+            config["opp_quality"] = "win_pct_x30"
+        return config
     if sport == "soccer" or sport.endswith("_soccer"):
         return SPORT_CONFIGS["soccer"]
     return SPORT_CONFIGS.get(sport, SPORT_CONFIGS["football"])
