@@ -170,11 +170,24 @@ SPORT_CONFIGS = {
 }
 
 
-def get_sport_config(sport: str, classification: str = "") -> dict:
+def get_sport_config(
+    sport: str, classification: str = "", season: str | int | None = None
+) -> dict:
     if sport == "basketball" or sport.endswith("_basketball"):
         if classification.upper() in ("B", "C"):
-            return SPORT_CONFIGS["basketball_bc"]
-        return SPORT_CONFIGS["basketball_1a5a"]
+            config = SPORT_CONFIGS["basketball_bc"]
+            current_style = "win_pct_x40"
+        else:
+            config = SPORT_CONFIGS["basketball_1a5a"]
+            current_style = "win_pct_x30"
+        try:
+            current_cycle = int(season) >= 2027
+        except (TypeError, ValueError):
+            current_cycle = False
+        if current_cycle:
+            config = dict(config)
+            config["opp_quality"] = current_style
+        return config
     if sport == "soccer" or sport.endswith("_soccer"):
         return SPORT_CONFIGS["soccer"]
     return SPORT_CONFIGS.get(sport, SPORT_CONFIGS["football"])
@@ -216,6 +229,7 @@ class Team:
     classification: str
     sport: str
     playing_up: bool = False
+    season: str | int | None = None
 
     @property
     def div_rank(self) -> int:
@@ -272,7 +286,9 @@ class PowerRatingEngine:
 
     def score_game(self, game: GameResult, team: Team) -> GamePoints:
         gp = GamePoints(game=game)
-        config = get_sport_config(team.sport, team.classification)
+        config = get_sport_config(
+            team.sport, team.classification, team.season
+        )
 
         if game.result in ("OD", "JV", "PPD"):
             return gp
@@ -345,6 +361,10 @@ class PowerRatingEngine:
             gp.opp_quality = game.opponent_win_pct * 34
         elif style == "win_pct_x44":
             gp.opp_quality = game.opponent_win_pct * 44
+        elif style == "win_pct_x30":
+            gp.opp_quality = game.opponent_win_pct * 30
+        elif style == "win_pct_x40":
+            gp.opp_quality = game.opponent_win_pct * 40
         elif style == "raw_wins":
             # Per LHSAA 10.10.1: OppQ = opponent wins + (opponent ties x 0.5)
             gp.opp_quality = float(game.opponent_wins) + (float(game.opponent_ties) * 0.5)
@@ -376,6 +396,11 @@ class PowerRatingEngine:
 
         for game in games:
             if game.result in ("OD", "JV", "PPD"):
+                continue
+            if (
+                team.sport.endswith("_basketball")
+                and game.opponent_out_of_state
+            ):
                 continue
 
             gp = self.score_game(game, team)
