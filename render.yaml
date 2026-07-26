@@ -7,6 +7,11 @@ services:
     envVars:
       - key: SEASON_YEAR
         value: 2026
+      # Keep the LHSAA football scraper/rating pipeline paused while the
+      # official 2026 schedules are incomplete.  The preseason import remains
+      # available through the season-aware schedule API.
+      - key: ENABLE_FOOTBALL
+        value: "false"
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: PIPELINE_TOKEN
