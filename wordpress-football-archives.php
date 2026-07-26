@@ -152,6 +152,8 @@ function lvay_archive_styles() {
     $css = <<<'CSS'
 .lvay-season-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;max-width:1240px;margin:0 auto;padding:18px 0 34px}
 .lvay-season-main{min-width:0}
+.lvay-rankings-design .lvay-acc-body{display:none!important}
+.lvay-rankings-design .lvay-acc-body.open{display:block!important}
 .lvay-season-archive{align-self:start;background:#050505;color:#fff;padding:20px 24px 24px;display:grid;grid-template-columns:1fr 1fr;gap:7px 18px}
 .lvay-season-archive h3{grid-column:1/-1;margin:0 0 10px;color:#fff;font-family:"Alfa Slab One",serif;font-size:25px;text-decoration:underline;text-underline-offset:5px}
 .lvay-season-archive a{color:#555!important;font-family:"Alfa Slab One",serif;font-size:21px;text-decoration:none!important}
