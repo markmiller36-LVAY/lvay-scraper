@@ -53,6 +53,17 @@ DIVISION_ORDER = [
     "Division V",
 ]
 
+# Official 2025-26 postseason alignments that differ from the division labels
+# embedded in the LHSAA schedule report.
+DIVISION_OVERRIDES = {
+    "2025": {
+        "L. W. Higgins": "II",
+        "Sophie B. Wright": "III",
+        "Jefferson Rise Charter": "IV",
+        "Sarah T. Reed": "IV",
+    },
+}
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # DB HELPERS
@@ -162,7 +173,10 @@ def resolve_school_metadata(school_name, vb_division_roman, vb_district):
     """
     info = get_school(school_name)
 
-    division_label = f"Division {vb_division_roman}"
+    official_division = DIVISION_OVERRIDES.get(str(SEASON), {}).get(
+        school_name, vb_division_roman
+    )
+    division_label = f"Division {official_division}"
 
     if info:
         return {
