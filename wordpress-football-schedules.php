@@ -217,6 +217,7 @@ function lvay_football_schedule_shortcode($atts) {
     </section>
 
     <style>
+    .page-id-10379 .elementor-element-55d0a63{display:none!important}
     .lvay-football-schedules{--teal:#078b88;--ink:#080808;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;max-width:1240px;margin:0 auto;padding:18px 0 36px}
     .lvay-schedule-title h1{margin:0 0 8px;color:var(--teal);font-family:"Alfa Slab One",Rockwell,serif;font-size:36px;line-height:.95;letter-spacing:.2px}
     .lvay-schedule-title p{margin:0 0 12px;color:#666;font-family:"Teko",sans-serif;font-size:18px}
