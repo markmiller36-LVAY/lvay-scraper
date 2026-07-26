@@ -1,15 +1,15 @@
 /**
  * Native, nonblocking school autocomplete for football schedules.
  */
-function lvay_football_schedule_native_search_styles() {
+function lvay_football_schedule_native_search_styles_v2() {
     $css = '#lvay-school-search{font-family:Teko,Arial,sans-serif;font-size:21px!important}';
     wp_register_style('lvay-football-schedule-native-search', false);
     wp_enqueue_style('lvay-football-schedule-native-search');
     wp_add_inline_style('lvay-football-schedule-native-search', $css);
 }
-add_action('wp_enqueue_scripts', 'lvay_football_schedule_native_search_styles', 80);
+add_action('wp_enqueue_scripts', 'lvay_football_schedule_native_search_styles_v2', 80);
 
-function lvay_football_schedule_native_search_script() {
+function lvay_football_schedule_native_search_script_v2() {
     ?>
     <script>
     (function(){
@@ -47,12 +47,6 @@ function lvay_football_schedule_native_search_script() {
         root.appendChild(datalist);
         search.setAttribute('list',datalist.id);
 
-        function renderSchoolBody(body){
-          const template=body.querySelector('.lvay-school-template');
-          if(!template)return;
-          body.appendChild(template.content.cloneNode(true));
-          template.remove();
-        }
         function openSchool(item){
           root.querySelectorAll('.lvay-school-body:not([hidden])').forEach(body=>body.hidden=true);
           root.querySelectorAll('.lvay-school-toggle[aria-expanded="true"]').forEach(button=>button.setAttribute('aria-expanded','false'));
@@ -63,12 +57,19 @@ function lvay_football_schedule_native_search_script() {
           }
           const body=item.article.querySelector('.lvay-school-body');
           const button=item.article.querySelector('.lvay-school-toggle');
-          renderSchoolBody(body);
-          body.hidden=false;
-          button.setAttribute('aria-expanded','true');
+          if(body.hidden)button.click();
           search.value=item.name;
           if(status)status.textContent='';
-          window.setTimeout(()=>item.article.scrollIntoView({behavior:'smooth',block:'start'}),0);
+          let attempts=0;
+          function centerWhenReady(){
+            attempts++;
+            if(body.dataset.loaded==='1'||attempts>=40){
+              item.article.scrollIntoView({behavior:'smooth',block:'center'});
+              return;
+            }
+            window.setTimeout(centerWhenReady,50);
+          }
+          centerWhenReady();
         }
         function handleValue(){
           const key=normalize(search.value);
@@ -92,4 +93,4 @@ function lvay_football_schedule_native_search_script() {
     </script>
     <?php
 }
-add_action('wp_footer', 'lvay_football_schedule_native_search_script', 80);
+add_action('wp_footer', 'lvay_football_schedule_native_search_script_v2', 80);

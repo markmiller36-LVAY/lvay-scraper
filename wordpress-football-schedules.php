@@ -10,13 +10,13 @@
  * Paste into Code Snippets without this opening PHP tag.
  */
 
-function lvay_football_schedule_api_url_v4($path) {
+function lvay_football_schedule_api_url_v5($path) {
     return 'https://lvay-scraper.onrender.com' . $path;
 }
 
-function lvay_football_schedule_fetch_v4($path) {
+function lvay_football_schedule_fetch_v5($path) {
     $response = wp_remote_get(
-        lvay_football_schedule_api_url_v4($path),
+        lvay_football_schedule_api_url_v5($path),
         array('timeout' => 25)
     );
     if (is_wp_error($response)) {
@@ -26,17 +26,17 @@ function lvay_football_schedule_fetch_v4($path) {
     return is_array($body) ? $body : null;
 }
 
-function lvay_football_schedule_shortcode_v4($atts) {
+function lvay_football_schedule_shortcode_v5($atts) {
     $atts = shortcode_atts(array('season' => ''), $atts);
     $requested = isset($_GET['season'])
         ? sanitize_text_field(wp_unslash($_GET['season']))
         : $atts['season'];
     $season = preg_match('/^\d{4}$/', $requested) ? $requested : '2026';
 
-    $schedule = lvay_football_schedule_fetch_v4(
-        '/api/schedules/football?season=' . rawurlencode($season)
+    $schedule = lvay_football_schedule_fetch_v5(
+        '/api/schedules/football?season=' . rawurlencode($season) . '&summary=1'
     );
-    $seasons_data = lvay_football_schedule_fetch_v4('/api/seasons/football');
+    $seasons_data = lvay_football_schedule_fetch_v5('/api/seasons/football');
     if (!$schedule || !isset($schedule['schools'])) {
         return '<p class="lvay-schedule-error">Schedules are temporarily unavailable.</p>';
     }
@@ -263,32 +263,81 @@ function lvay_football_schedule_shortcode_v4($atts) {
       const status=root.querySelector('#lvay-search-status');
       const schoolParam=new URLSearchParams(window.location.search).get('school');
       const normalize=v=>(v||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
-      function renderSchoolBody(body){
-        const template=body.querySelector('.lvay-school-template');
-        if(!template)return;
-        body.appendChild(template.content.cloneNode(true));
-        template.remove();
+      const esc=value=>String(value??'')
+        .replaceAll('&','&amp;').replaceAll('<','&lt;')
+        .replaceAll('>','&gt;').replaceAll('"','&quot;');
+      async function renderSchoolBody(body){
+        if(body.dataset.loaded==='1')return;
+        if(body.dataset.loading==='1')return;
+        body.dataset.loading='1';
+        const article=body.closest('.lvay-school');
+        const school=article.dataset.school;
+        body.innerHTML='<p class="lvay-schedule-loading">Loading schedule…</p>';
+        try{
+          const url='https://lvay-scraper.onrender.com/api/schedules/football?season='
+            +encodeURIComponent(root.dataset.season)+'&school='+encodeURIComponent(school);
+          const response=await fetch(url);
+          const payload=await response.json();
+          const data=payload.schools&&payload.schools[0];
+          if(!data)throw new Error('Schedule unavailable');
+          const record=data.games_played?data.record:'';
+          const division=data.source_division||data.division||'';
+          let html='<div class="lvay-school-meta"><strong>'
+            +esc(data.district+'-'+data.class_)+'</strong><span>'+esc(division)+'</span>';
+          if(record)html+='<span>Overall: '+esc(record)+'</span>';
+          if(data.power_rating!==null&&data.power_rating!==undefined){
+            html+='<span>PR: '+Number(data.power_rating).toFixed(2)+'</span>';
+          }
+          html+='</div><div class="lvay-table-scroll"><table><thead><tr>'
+            +'<th>Week</th><th>Date</th><th>H/A</th><th>Opponent</th>'
+            +'<th>District</th><th>W/L</th><th>Score</th><th>Power Pts</th>'
+            +'</tr></thead><tbody>';
+          (data.games||[]).forEach(game=>{
+            const opponent=game.opponent||'';
+            let opponentHtml=esc(opponent);
+            if(game.opponent_internal&&opponent){
+              const destination=new URL(window.location.href);
+              destination.searchParams.set('season',root.dataset.season);
+              destination.searchParams.set('school',opponent);
+              destination.hash='school-'+normalize(opponent).replaceAll(' ','-');
+              opponentHtml='<a href="'+esc(destination.toString())+'">'+esc(opponent)+'</a>';
+            }
+            const points=game.total_pts===null||game.total_pts===undefined
+              ? '' : Number(game.total_pts).toFixed(2);
+            html+='<tr><td>Wk'+esc(game.week||'')+'</td><td>'
+              +esc(game.game_date||'—')+'</td><td>'+esc(game.home_away||'')
+              +'</td><td>'+opponentHtml+'</td><td>'+(game.is_district?'D':'')
+              +'</td><td>'+esc(game.result||'')+'</td><td>'+esc(game.score||'')
+              +'</td><td>'+esc(points)+'</td></tr>';
+          });
+          body.innerHTML=html+'</tbody></table></div>';
+          body.dataset.loaded='1';
+        }catch(error){
+          body.innerHTML='<p class="lvay-schedule-error">Schedule temporarily unavailable.</p>';
+        }finally{
+          delete body.dataset.loading;
+        }
       }
-      function openSchool(article){
+      async function openSchool(article){
         root.querySelectorAll('.lvay-school-body').forEach(body=>body.hidden=true);
         root.querySelectorAll('.lvay-school-toggle').forEach(button=>button.setAttribute('aria-expanded','false'));
         let parent=article.parentElement;
         while(parent&&parent!==root){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement}
         const body=article.querySelector('.lvay-school-body');
         const button=article.querySelector('.lvay-school-toggle');
-        renderSchoolBody(body);
+        await renderSchoolBody(body);
         body.hidden=false;button.setAttribute('aria-expanded','true');
         window.setTimeout(()=>article.scrollIntoView({behavior:'smooth',block:'center'}),50);
       }
       root.querySelectorAll('.lvay-school-toggle').forEach(button=>{
-        button.addEventListener('click',()=>{
+        button.addEventListener('click',async()=>{
           const body=button.nextElementSibling;
-          if(body.hidden)renderSchoolBody(body);
+          if(body.hidden)await renderSchoolBody(body);
           body.hidden=!body.hidden;
           button.setAttribute('aria-expanded',String(!body.hidden));
         });
       });
-      root.addEventListener('click',event=>{
+      root.addEventListener('click',async event=>{
         const link=event.target.closest('.lvay-school td a');
         if(!link)return;
         const destination=new URL(link.href,window.location.href);
@@ -299,7 +348,7 @@ function lvay_football_schedule_shortcode_v4($atts) {
         );
         if(!target)return;
         event.preventDefault();
-        openSchool(target);
+        await openSchool(target);
         history.replaceState(null,'',destination.pathname+destination.search+destination.hash);
       });
       search.addEventListener('input',()=>{
@@ -323,4 +372,4 @@ function lvay_football_schedule_shortcode_v4($atts) {
     <?php
     return ob_get_clean();
 }
-add_shortcode('lvay_football_schedules', 'lvay_football_schedule_shortcode_v4');
+add_shortcode('lvay_football_schedules', 'lvay_football_schedule_shortcode_v5');

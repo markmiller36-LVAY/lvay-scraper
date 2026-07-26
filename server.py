@@ -848,6 +848,8 @@ def schedules_football():
     c = conn.cursor()
     try:
         season = available_schedule_season(conn, "football")
+        summary_only = request.args.get("summary") == "1"
+        school_filter = (request.args.get("school") or "").strip()
         roster_rows = c.execute("""
             SELECT school, division, track, class_, district, source, status
             FROM season_schools
@@ -872,6 +874,12 @@ def schedules_football():
                 """, (season,)).fetchall()
             ]
 
+        if school_filter:
+            schools = [
+                school for school in schools
+                if school["school"].casefold() == school_filter.casefold()
+            ]
+
         ranking_rows = {
             row["school"]: dict(row)
             for row in c.execute("""
@@ -890,6 +898,13 @@ def schedules_football():
                 "ties": ranking.get("ties", 0),
                 "games_played": ranking.get("games_played", 0),
             })
+            school["record"] = (
+                f"{school['wins']}-{school['losses']}"
+                + (f"-{school['ties']}" if school["ties"] else "")
+            )
+            if summary_only:
+                school["games"] = []
+                continue
             power_rows = {
                 int(row["week"]): dict(row)
                 for row in c.execute("""
@@ -934,10 +949,6 @@ def schedules_football():
                     ),
                 })
                 games.append(game)
-            school["record"] = (
-                f"{school['wins']}-{school['losses']}"
-                + (f"-{school['ties']}" if school["ties"] else "")
-            )
             school["games"] = games
 
     except Exception as e:
