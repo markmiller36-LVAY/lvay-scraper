@@ -59,12 +59,18 @@ class BasketballSeasonRuleTests(unittest.TestCase):
         self.assertEqual(rating.games_played, 1)
         self.assertEqual(rating.power_rating, 42)
 
-    def test_in_state_bonus_uses_division_steps_not_class_steps(self):
+    def test_in_state_bonus_uses_paired_class_and_division_steps(self):
         # Test School is in Division III. A 5A Division I opponent is two
-        # playoff-division steps higher, so the bonus is 4 rather than the
-        # 2-per-class-step value.
+        # class and playoff-division steps higher, so the bonus is 4.
         rating = self.rate("3A", 2026, [self.higher_division_game()])
         self.assertEqual(rating.power_rating, 46)
+
+        # A 4A Division I opponent is only one class step higher. Even though
+        # it is two divisions higher, only one step satisfies both criteria.
+        game = self.higher_division_game()
+        game.opponent_class = "4A"
+        rating = self.rate("3A", 2026, [game])
+        self.assertEqual(rating.power_rating, 44)
 
 
 if __name__ == "__main__":
