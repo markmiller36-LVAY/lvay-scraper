@@ -25,7 +25,9 @@ from google.oauth2.service_account import Credentials
 
 from power_rating_engine import PowerRatingEngine, Team, GameResult
 from official_record_overrides import (
+    find_game_exclusion,
     find_record_override,
+    get_game_exclusions,
     get_record_overrides,
 )
 from school_database import get_school
@@ -431,6 +433,26 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     overrides = load_sheet_overrides(sport, season)
     rows = [apply_override_to_row(r, sport, season, overrides) for r in raw_rows]
+
+    game_exclusions = get_game_exclusions(sport, season)
+    excluded_games = []
+    if game_exclusions:
+        included_rows = []
+        for row in rows:
+            exclusion = find_game_exclusion(game_exclusions, row)
+            if exclusion:
+                excluded_games.append(exclusion)
+            else:
+                included_rows.append(row)
+        rows = included_rows
+        if excluded_games:
+            print(f"  Excluded {len(excluded_games)} official non-counting games:")
+            for exclusion in excluded_games:
+                print(
+                    "   - "
+                    f"{exclusion['school']} vs {exclusion['opponent']} "
+                    f"({exclusion['game_date']}): {exclusion['reason']}"
+                )
 
     if sport.lower() == "football":
         all_football_rows = rows

@@ -1,7 +1,8 @@
-"""Official LHSAA final-record overrides for the 2026 spring audit.
+"""Official LHSAA final-record and game-counting corrections.
 
 These values are authoritative for published records and for opponent-win
-strength calculations.  They do not invent or alter individual game scores.
+strength calculations. Game exclusions preserve the scraped result for audit
+purposes while preventing a contest that LHSAA omitted from being rated.
 """
 
 import re
@@ -37,6 +38,34 @@ OFFICIAL_RECORD_OVERRIDES = {
     },
 }
 
+# Each exclusion is directional because the official reports can count a
+# contest for one team but omit it for the other.
+OFFICIAL_GAME_EXCLUSIONS = {
+    ("baseball", "2026"): (
+        {
+            "school": "Huntington",
+            "opponent": "Mansfield",
+            "game_date": "4/13/2026",
+            "reason": "LHSAA final report is 8-19 and omits this win.",
+        },
+        {
+            "school": "Mansfield",
+            "opponent": "Huntington",
+            "game_date": "4/13/2026",
+            "reason": "LHSAA final report is 1-19 and omits this loss.",
+        },
+        {
+            "school": "McDonogh #35",
+            "opponent": "New Orleans Military & Maritime",
+            "game_date": "4/13/2026",
+            "reason": (
+                "LHSAA final report is 8-5-1; excluding this loss reproduces "
+                "the official 19.18 rating exactly."
+            ),
+        },
+    ),
+}
+
 
 def _normalize(name):
     value = str(name or "").lower().replace("&", "and")
@@ -57,4 +86,25 @@ def find_record_override(overrides, school):
     for name, record in overrides.items():
         if _normalize(name) == target:
             return record
+    return None
+
+
+def get_game_exclusions(sport, season):
+    return OFFICIAL_GAME_EXCLUSIONS.get(
+        (str(sport).lower(), str(season)),
+        (),
+    )
+
+
+def find_game_exclusion(exclusions, row):
+    school = _normalize(row.get("school"))
+    opponent = _normalize(row.get("opponent"))
+    game_date = str(row.get("game_date") or "").split()[0]
+    for exclusion in exclusions:
+        if (
+            _normalize(exclusion["school"]) == school
+            and _normalize(exclusion["opponent"]) == opponent
+            and exclusion["game_date"] == game_date
+        ):
+            return exclusion
     return None
