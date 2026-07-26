@@ -329,16 +329,18 @@ class PowerRatingEngine:
                         gp.div_bonus = div_steps_up * bonus_per_step
 
             elif bonus_mode == "division_steps_with_class_gate":
-                # Football: an in-state opponent must be both a higher class
-                # and a higher playoff division. Award 2 points for each
-                # division step up. OOS opponents use class steps because
-                # they do not have an LHSAA playoff division.
+                # Basketball: an in-state opponent must be both a higher
+                # class and a higher playoff division. Each bonus step must
+                # satisfy both conditions, so cap the division steps by the
+                # number of class steps.
                 if oos:
                     if oos_bonus_allowed and class_diff > 0:
                         gp.div_bonus = class_diff * bonus_per_step
                 else:
                     if class_diff > 0 and div_steps_up > 0:
-                        gp.div_bonus = div_steps_up * bonus_per_step
+                        gp.div_bonus = (
+                            min(class_diff, div_steps_up) * bonus_per_step
+                        )
 
             elif bonus_mode == "class_steps_with_division_gate":
                 # In-state: class and playoff division must both be higher.

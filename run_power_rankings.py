@@ -508,6 +508,28 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
     overrides = load_sheet_overrides(sport, season)
     rows = [apply_override_to_row(r, sport, season, overrides) for r in raw_rows]
+    official_rankings = load_official_winter_rankings(sport, season)
+    official_name_keys = {
+        _rating_name_key(name) for name in official_rankings
+    }
+
+    # The final winter seeding report is authoritative for eligibility.
+    # Remove teams and contests that appear in the schedule feed but were
+    # excluded from the official final ratings (for example, a school that
+    # did not qualify for a rating).
+    if official_name_keys:
+        before_official_filter = len(rows)
+        rows = [
+            row for row in rows
+            if _rating_name_key(row.get("school")) in official_name_keys
+            and _rating_name_key(row.get("opponent")) in official_name_keys
+        ]
+        official_filtered = before_official_filter - len(rows)
+        if official_filtered:
+            print(
+                f"  Excluded {official_filtered} rows involving schools "
+                "absent from the official final winter ratings"
+            )
 
     game_exclusions = get_game_exclusions(sport, season)
     excluded_games = []
@@ -683,7 +705,14 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             opp_info = get_school(opponent, sport, season)
             opp_division = opp_info["division"] if opp_info else "Unknown"
             raw_opp_class = r.get("opponent_class") or ""
-            opp_class = strip_district_prefix(raw_opp_class) or (opp_info["class"] if opp_info else "")
+            # The final alignment report supersedes stale class labels
+            # embedded in the schedule feed.
+            opp_class = (
+                opp_info["class"]
+                if official_name_keys and opp_info and opp_info.get("class")
+                else strip_district_prefix(raw_opp_class)
+                or (opp_info["class"] if opp_info else "")
+            )
 
         if exclude_unverified_soccer_oos(sport, oos, oos_data):
             continue
@@ -732,7 +761,6 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     # complete historical ranking field by adding only schools absent from the
     # scrape, using the official final record and power rating already captured
     # in winter_alignment_2026.json.
-    official_rankings = load_official_winter_rankings(sport, season)
     rated_names = {_rating_name_key(rating.name) for rating in ratings}
     fallback_count = 0
     for school, info in official_rankings.items():
