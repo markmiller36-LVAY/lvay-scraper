@@ -31,7 +31,10 @@ function lvay_football_schedule_shortcode_v5($atts) {
     $requested = isset($_GET['season'])
         ? sanitize_text_field(wp_unslash($_GET['season']))
         : $atts['season'];
-    $season = preg_match('/^\d{4}$/', $requested) ? $requested : '2026';
+    $season = (
+        preg_match('/^\d{4}$/', $requested)
+        && in_array((int) $requested, array(2022, 2023, 2024, 2025, 2026), true)
+    ) ? $requested : '2026';
 
     $schedule = lvay_football_schedule_fetch_v5(
         '/api/schedules/football?season=' . rawurlencode($season) . '&summary=1'
@@ -206,7 +209,8 @@ function lvay_football_schedule_shortcode_v5($atts) {
             <h2>SEASON ARCHIVES</h2>
             <div class="lvay-season-grid">
                 <?php
-                $archive_years = range(2025, 1990);
+                // Only publish seasons whose archive is actually preserved.
+                $archive_years = array(2025, 2024, 2023, 2022);
                 foreach ($archive_years as $year):
                     $enabled = isset($available[(string) $year]);
                     $selected = (string) $year === $season;
@@ -222,9 +226,7 @@ function lvay_football_schedule_shortcode_v5($atts) {
                     <?php endif;
                 endforeach; ?>
             </div>
-            <div class="lvay-decade-links">
-                <span>1989-1980</span><span>1979-1970</span><span>1969-1960</span>
-            </div>
+            <p class="lvay-archive-note">More seasons will be added as they are digitized.</p>
         </aside>
     </section>
 
@@ -262,12 +264,13 @@ function lvay_football_schedule_shortcode_v5($atts) {
     .lvay-school td.result-l{color:#e53935!important;font-weight:700!important}
     .lvay-season-archives{align-self:start;padding:17px 26px 20px;background:#050505;color:#fff}
     .lvay-season-archives h2{margin:0 0 14px;text-align:center;text-decoration:underline;font-family:"Alfa Slab One",Rockwell,serif;font-size:25px}
-    .lvay-season-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px 22px}
-    .lvay-season-grid a,.lvay-season-grid span{font-family:"Alfa Slab One",Rockwell,serif;font-size:17px;text-decoration:none}
-    .lvay-season-grid a{color:#fff}
+    .lvay-season-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px 18px}
+    .lvay-season-grid a,.lvay-season-grid span{font-family:"Teko",Arial,sans-serif;font-size:27px;font-weight:500;line-height:1.05;text-decoration:none}
+    .lvay-season-grid a{color:#999}
+    .lvay-season-grid a:hover{color:#fff}
     .lvay-season-grid a.is-current{color:#fff;text-decoration:underline}
-    .lvay-season-grid span{color:#292929}
-    .lvay-decade-links{display:flex;justify-content:space-between;margin-top:22px;color:#373737;font:italic 14px "Alfa Slab One",serif}
+    .lvay-season-grid span{color:#666}
+    .lvay-archive-note{margin:12px 0 0;color:#999;font:400 20px/1.15 "Teko",Arial,sans-serif}
     @media(max-width:900px){.lvay-football-schedules{grid-template-columns:1fr}.lvay-season-archives{order:2}.lvay-schedule-title h1{font-size:29px}}
     </style>
 
@@ -333,8 +336,10 @@ function lvay_football_schedule_shortcode_v5($atts) {
             const rowClass=game.is_district?'is-district':'is-nondistrict';
             const resultClass='result-'+String(game.result||'').toLowerCase();
             const division=formatDivision(game.opp_division||game.district_class||'');
-            html+='<tr class="'+rowClass+'"><td>Wk'+esc(game.week||'')
-              +(game.is_district?' D':'')+'</td><td>'
+            const weekLabel=game.phase&&game.phase!=='Regular Season'
+              ? game.phase
+              : 'Wk'+esc(game.week||'')+(game.is_district?' D':'');
+            html+='<tr class="'+rowClass+'"><td>'+esc(weekLabel)+'</td><td>'
               +esc(formatDate(game.game_date))+'</td><td>'+esc(game.home_away||'')
               +'</td><td>'+opponentHtml+'</td><td>'+(game.is_district?'D':'')
               +'</td><td>'+esc(division)+'</td><td class="'+resultClass+'">'

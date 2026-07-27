@@ -4,7 +4,9 @@ LVAY Scraper - API Server
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import gzip
 import hmac
+import json
 import sqlite3
 import os
 import re
@@ -21,6 +23,45 @@ PIPELINE_STATE = {
     "finished_at": None,
     "error": None,
 }
+FOOTBALL_ARCHIVE_PATH = os.path.join(
+    os.path.dirname(__file__), "football_archives_2022_2024.json.gz"
+)
+_FOOTBALL_ARCHIVES = None
+
+
+def load_football_archives():
+    global _FOOTBALL_ARCHIVES
+    if _FOOTBALL_ARCHIVES is None:
+        if not os.path.exists(FOOTBALL_ARCHIVE_PATH):
+            _FOOTBALL_ARCHIVES = {"seasons": {}}
+        else:
+            with gzip.open(
+                FOOTBALL_ARCHIVE_PATH, "rt", encoding="utf-8"
+            ) as source:
+                _FOOTBALL_ARCHIVES = json.load(source)
+    return _FOOTBALL_ARCHIVES
+
+
+def football_archive_response(season, summary_only=False, school_filter=""):
+    archive = load_football_archives().get("seasons", {}).get(str(season))
+    if not archive:
+        return None
+    schools = archive["schools"]
+    if school_filter:
+        schools = [
+            school for school in schools
+            if school["school"].casefold() == school_filter.casefold()
+        ]
+    if summary_only:
+        schools = [{**school, "games": []} for school in schools]
+    return {
+        "sport": "football",
+        "season": str(season),
+        "status": archive.get("status", "final"),
+        "source": "Airtable archive",
+        "count": len(schools),
+        "schools": schools,
+    }
 
 
 def get_db():
@@ -855,12 +896,20 @@ def embed_volleyball_rankings():
 
 @app.route("/api/schedules/football")
 def schedules_football():
+    requested_season = request.args.get("season")
+    summary_only = request.args.get("summary") == "1"
+    school_filter = (request.args.get("school") or "").strip()
+    if requested_season:
+        archived = football_archive_response(
+            requested_season, summary_only, school_filter
+        )
+        if archived is not None:
+            return jsonify(archived)
+
     conn = get_db()
     c = conn.cursor()
     try:
         season = available_schedule_season(conn, "football")
-        summary_only = request.args.get("summary") == "1"
-        school_filter = (request.args.get("school") or "").strip()
         roster_rows = c.execute("""
             SELECT school, division, track, class_, district, source, status
             FROM season_schools
@@ -1017,6 +1066,17 @@ def sport_seasons(sport):
             "is_locked": bool(row["is_locked"]),
         })
     conn.close()
+    if sport == "football":
+        for season, archive in load_football_archives().get(
+            "seasons", {}
+        ).items():
+            known.setdefault(season, {
+                "season": season,
+                "source": "Airtable archive",
+                "status": archive.get("status", "final"),
+                "is_locked": True,
+                "school_count": archive.get("count", 0),
+            })
     seasons = sorted(known.values(), key=lambda row: int(row["season"]), reverse=True)
     return jsonify({
         "sport": sport,
