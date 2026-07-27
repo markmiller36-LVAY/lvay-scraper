@@ -33,6 +33,7 @@ SCHOOL_ALIASES = {
 # official 2024-2026 LHSAA softball/baseball divisional alignment.
 SPORT_DIVISION_OVERRIDES = {
     "softball": {
+        "Harrisonburg": "Class C",
         "Westgate": "Non-Select Division II",
         "South Beauregard": "Non-Select Division III",
         "Lakeside": "Non-Select Division IV",
@@ -49,6 +50,7 @@ SPORT_DIVISION_OVERRIDES = {
         "St. Scholastica": "Select Division I",
     },
     "baseball": {
+        "Harrisonburg": "Class C",
         "West Ouachita": "Non-Select Division II",
         "St. Martinville": "Non-Select Division III",
         "St. Helena College & Career Acad.": "Non-Select Division IV",
