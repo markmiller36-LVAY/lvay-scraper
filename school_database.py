@@ -69,6 +69,11 @@ SPORT_DIVISION_OVERRIDES = {
     },
 }
 
+SPORT_CLASS_OVERRIDES = {
+    "softball": {"Harrisonburg": "C"},
+    "baseball": {"Harrisonburg": "C"},
+}
+
 
 def _load_winter_alignment_overrides():
     """Load official 2025-26 winter postseason alignment/report data."""
@@ -806,18 +811,25 @@ def get_school(name, sport=None, season=None):
     overrides = SPORT_DIVISION_OVERRIDES.get(sport_key, {})
     canonical = (result or {}).get("name", raw)
     division = overrides.get(canonical) or overrides.get(raw)
-    if division:
+    class_overrides = SPORT_CLASS_OVERRIDES.get(sport_key, {})
+    classification = (
+        class_overrides.get(canonical) or class_overrides.get(raw)
+    )
+    if division or classification:
         merged = dict(result or {
             "name": canonical,
             "class": None,
             "district": None,
         })
-        merged["division"] = division
-        merged["track"] = (
-            "non-select" if division.startswith("Non-Select")
-            else "select" if division.startswith("Select")
-            else "small-school"
-        )
+        if division:
+            merged["division"] = division
+            merged["track"] = (
+                "non-select" if division.startswith("Non-Select")
+                else "select" if division.startswith("Select")
+                else "small-school"
+            )
+        if classification:
+            merged["class"] = classification
         return merged
 
     return result

@@ -122,20 +122,29 @@ function lvay_winter_schedule($sport, $cfg, $season) {
     if (!$schools) return lvay_winter_empty($season, 'schedule', $cfg, 'schedule');
     $groups = array();
     foreach ($schools as $school) {
-        $class = strtoupper(trim((string)($school['class_'] ?? '')));
-        if ($class === 'B' || $class === 'C') $class = 'Class ' . $class;
+        if ($cfg['type'] === 'soccer') {
+            $class = trim((string)($school['division'] ?? ''));
+            if (!$class) $class = 'Other';
+        } else {
+            $class = strtoupper(trim((string)($school['class_'] ?? '')));
+            if ($class === 'B' || $class === 'C') $class = 'Class ' . $class;
+        }
         $district = trim((string)($school['district'] ?? ''));
         $groups[$class][$district][] = $school;
     }
     $out = '<div class="lvay-w-search"><input type="search" placeholder="Search for a school..." autocomplete="off"><div class="lvay-w-results" hidden></div></div><div class="lvay-w-groups">';
-    $order = $cfg['type'] === 'soccer' ? array('5A','4A','3A','2A','1A') : array('5A','4A','3A','2A','1A','Class B','Class C');
+    $order = $cfg['type'] === 'soccer'
+        ? array('Division I','Division II','Division III','Division IV')
+        : array('5A','4A','3A','2A','1A','Class B','Class C');
     foreach ($order as $class) {
         if (empty($groups[$class])) continue;
         $out .= '<details class="lvay-w-class"><summary><i>›</i>' . esc_html($class) . '</summary><div>';
         uksort($groups[$class], 'strnatcasecmp');
         foreach ($groups[$class] as $district => $rows) {
             usort($rows, function($a,$b){ return strcasecmp($a['school'],$b['school']); });
-            $district_label = $district ? $district . '-' . $class : $class;
+            $district_label = $cfg['type'] === 'soccer'
+                ? ($district ? 'District ' . $district : 'Unassigned District')
+                : ($district ? $district . '-' . $class : $class);
             $out .= '<details class="lvay-w-district"><summary><i>›</i>' . esc_html($district_label) . '</summary><div>';
             foreach ($rows as $row) {
                 $name = (string)$row['school'];
@@ -223,7 +232,7 @@ function lvay_winter_assets() {
     .lvay-w-table{overflow:auto}.lvay-w-layout table{width:100%;border-collapse:collapse;font:20px Teko,Arial,sans-serif;min-width:850px}.lvay-w-layout th{background:#078d8b;color:#fff;text-align:left;padding:8px 10px;font-size:18px}.lvay-w-layout td{padding:7px 10px;border-bottom:1px solid #ddd}.lvay-w-layout tr:nth-child(even){background:#f1f1f1}.lvay-w-layout td a{color:#078d8b;font-weight:600}
     .lvay-w-layout a.lvay-w-opponent{color:inherit!important;font-weight:inherit;text-decoration:none}.lvay-w-layout a.lvay-w-opponent:hover{text-decoration:underline}
     .lvay-w-brackets details>div{padding:12px}.lvay-w-brackets a{display:inline-block;background:#078d8b;color:#fff;padding:9px 14px;text-decoration:none;font:600 20px Teko;margin-bottom:10px}.lvay-w-brackets iframe{display:block;width:100%;height:820px;border:1px solid #bbb}.lvay-w-source{font:23px Teko}
-    .lvay-w-game.w td:nth-child(4){color:#079447;font-weight:700}.lvay-w-game.l td:nth-child(4){color:#d22;font-weight:700}.lvay-w-game.district{font-weight:600;color:#078d8b}
+    .lvay-w-game.w td:nth-child(6){color:#079447;font-weight:700}.lvay-w-game.l td:nth-child(6){color:#d22;font-weight:700}.lvay-w-game.district{font-weight:600;color:#078d8b}
     @media(max-width:1200px){.lvay-w-layout{grid-template-columns:1fr}.lvay-w-layout>main{grid-row:1}.lvay-w-archive{grid-row:2;order:2}.lvay-w-brackets iframe{height:620px}}
     @media(max-width:600px){.lvay-w-layout{width:calc(100vw - 24px);padding-top:8px}.lvay-w-layout>main>header h1{font-size:34px}.lvay-w-archive{padding:17px 19px}.lvay-w-class>summary{font-size:23px}.lvay-w-district>summary{font-size:18px}.lvay-w-school>button{font-size:22px}.lvay-w-empty{padding:24px}.lvay-w-brackets iframe{height:520px}}
     ');
