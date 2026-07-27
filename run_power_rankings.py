@@ -1,3 +1,4 @@
+school_info.get("class") == opp_info.get("class")
 """
 LVAY - Multi-Sport Power Rankings Runner
 ========================================
