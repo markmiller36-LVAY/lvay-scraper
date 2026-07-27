@@ -1,4 +1,3 @@
-school_info.get("class") == opp_info.get("class")
 """
 LVAY - Multi-Sport Power Rankings Runner
 ========================================
@@ -897,7 +896,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             is_district = 0
             if school_info and opp_info:
                 if (
-                    school_info.get("class") == opp_info.get("class")
+                    (school_info.get("division") == opp_info.get("division") if sport.endswith("_soccer") else school_info.get("class") == opp_info.get("class"))
                     and school_info.get("district") == opp_info.get("district")
                 ):
                     is_district = 1
