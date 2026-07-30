@@ -32,6 +32,24 @@ class VersionedSportAlignmentTests(unittest.TestCase):
             all(len(rows) >= 180 for rows in data["sports"].values())
         )
 
+    def test_lhsaa_legend_markers_are_not_school_name_characters(self):
+        data = json.loads(ALIGNMENT_PATH.read_text(encoding="utf-8"))
+        marked_names = [
+            school
+            for schools in data["sports"].values()
+            for school in schools
+            if school.endswith(("+", "*"))
+        ]
+        self.assertEqual([], marked_names)
+        self.assertIn(
+            "Young Audiences Charter",
+            data["sports"]["football"],
+        )
+        self.assertIn(
+            "Providence Classical Academy",
+            data["sports"]["volleyball"],
+        )
+
     def test_harrisonburg_uses_late_2025_26_class_b_reports(self):
         for sport in ("girls_basketball", "baseball", "softball"):
             info = get_school("Harrisonburg", sport=sport, season=2026)

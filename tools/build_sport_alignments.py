@@ -66,6 +66,9 @@ def parse_regular_report(path: Path, group_type: str) -> dict[str, dict]:
                 if not match:
                     continue
                 group, district, school = match.groups()
+                # Legend markers describe alignment notes and are not part
+                # of the school's canonical name.
+                school = re.sub(r"\s+[+*]+$", "", school).strip()
                 record = {
                     "district": int(district),
                     "source": path.name,
