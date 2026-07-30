@@ -33,7 +33,6 @@ SCHOOL_ALIASES = {
 # official 2024-2026 LHSAA softball/baseball divisional alignment.
 SPORT_DIVISION_OVERRIDES = {
     "softball": {
-        "Harrisonburg": "Class C",
         "Westgate": "Non-Select Division II",
         "South Beauregard": "Non-Select Division III",
         "Lakeside": "Non-Select Division IV",
@@ -50,7 +49,6 @@ SPORT_DIVISION_OVERRIDES = {
         "St. Scholastica": "Select Division I",
     },
     "baseball": {
-        "Harrisonburg": "Class C",
         "West Ouachita": "Non-Select Division II",
         "St. Martinville": "Non-Select Division III",
         "St. Helena College & Career Acad.": "Non-Select Division IV",
@@ -71,10 +69,7 @@ SPORT_DIVISION_OVERRIDES = {
     },
 }
 
-SPORT_CLASS_OVERRIDES = {
-    "softball": {"Harrisonburg": "C"},
-    "baseball": {"Harrisonburg": "C"},
-}
+SPORT_CLASS_OVERRIDES = {}
 
 
 def _load_winter_alignment_overrides():
@@ -89,6 +84,20 @@ def _load_winter_alignment_overrides():
 
 
 WINTER_ALIGNMENT_OVERRIDES = _load_winter_alignment_overrides()
+
+
+def _load_versioned_sport_alignments():
+    """Load official, season-scoped regular and postseason assignments."""
+    path = Path(__file__).with_name("sport_alignments_2025_2026.json")
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+VERSIONED_SPORT_ALIGNMENTS = _load_versioned_sport_alignments()
 
 # ──────────────────────────────────────────────────────────────────────────────
 # DIVISION ASSIGNMENTS
@@ -785,6 +794,44 @@ def get_school(name, sport=None, season=None):
         season_key = int(season) if season is not None else None
     except (TypeError, ValueError):
         season_key = None
+
+    alignment_seasons = VERSIONED_SPORT_ALIGNMENTS.get("season_keys", {})
+    expected_season = alignment_seasons.get(sport_key)
+    if expected_season == season_key:
+        sport_alignments = VERSIONED_SPORT_ALIGNMENTS.get(
+            "sports", {}
+        ).get(sport_key, {})
+        canonical = SCHOOL_ALIASES.get(raw, raw)
+        versioned_info = (
+            sport_alignments.get(raw)
+            or sport_alignments.get(canonical)
+        )
+        if versioned_info is None:
+            normalized_lookup = {
+                normalize_school_name(school_name).casefold(): info
+                for school_name, info in sport_alignments.items()
+            }
+            versioned_info = normalized_lookup.get(normalized.casefold())
+        if versioned_info:
+            merged = dict(result or {"name": canonical})
+            merged["class"] = versioned_info.get(
+                "class", merged.get("class")
+            )
+            merged["district"] = versioned_info.get("district")
+            merged["division"] = versioned_info.get(
+                "division", merged.get("division", "Unknown")
+            )
+            division = merged.get("division") or ""
+            merged["track"] = (
+                "non-select"
+                if division.startswith("Non-Select")
+                else "select"
+                if division.startswith("Select")
+                else "small-school"
+                if division.startswith("Class ")
+                else merged.get("track", "unknown")
+            )
+            return merged
 
     # These reports are the official final 2025-26 LHSAA postseason
     # groupings. Keep them season-scoped so the 2026-27 reclassification
