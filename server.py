@@ -29,6 +29,67 @@ FOOTBALL_ARCHIVE_PATH = os.path.join(
 _FOOTBALL_ARCHIVES = None
 
 
+def parse_schedule_date(value):
+    """Parse the mixed date formats returned by the LHSAA schedule pages."""
+    text = str(value or "").strip()
+    if not text:
+        return None
+
+    # Volleyball dates include a weekday suffix, for example 10/2/2025Thu.
+    match = re.match(r"^(\d{1,2}/\d{1,2}/\d{2,4})", text)
+    if match:
+        text = match.group(1)
+
+    for date_format in (
+        "%m/%d/%Y",
+        "%m/%d/%y",
+        "%Y-%m-%d",
+        "%m-%d-%Y",
+        "%m-%d-%y",
+        "%b %d, %Y",
+        "%B %d, %Y",
+    ):
+        try:
+            return datetime.strptime(text, date_format)
+        except ValueError:
+            continue
+
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).replace(
+            tzinfo=None
+        )
+    except ValueError:
+        return None
+
+
+def sort_schedule_games(games):
+    """Return games in chronological order with stable same-day ordering."""
+    indexed_games = list(enumerate(games))
+
+    def sort_key(indexed_game):
+        original_index, game = indexed_game
+        parsed_date = parse_schedule_date(game.get("game_date"))
+        try:
+            match_number = int(game.get("match_num") or 0)
+        except (TypeError, ValueError):
+            match_number = 0
+        try:
+            week_number = int(
+                str(game.get("week") or "0").replace("Week", "").strip()
+            )
+        except ValueError:
+            week_number = 0
+        return (
+            parsed_date is None,
+            parsed_date or datetime.max,
+            match_number,
+            week_number,
+            original_index,
+        )
+
+    return [game for _, game in sorted(indexed_games, key=sort_key)]
+
+
 def load_football_archives():
     global _FOOTBALL_ARCHIVES
     if _FOOTBALL_ARCHIVES is None:
@@ -52,8 +113,17 @@ def football_archive_response(season, summary_only=False, school_filter=""):
             school for school in schools
             if school["school"].casefold() == school_filter.casefold()
         ]
-    if summary_only:
-        schools = [{**school, "games": []} for school in schools]
+    schools = [
+        {
+            **school,
+            "games": (
+                []
+                if summary_only
+                else sort_schedule_games(school.get("games", []))
+            ),
+        }
+        for school in schools
+    ]
     return {
         "sport": "football",
         "season": str(season),
@@ -1093,7 +1163,7 @@ def schedules_football():
                     ),
                 })
                 games.append(game)
-            school["games"] = games
+            school["games"] = sort_schedule_games(games)
 
     except Exception as e:
         conn.close()
@@ -1205,7 +1275,7 @@ def schedules_volleyball():
                 WHERE sport='volleyball' AND season=? AND school=?
                 ORDER BY game_date ASC, match_num ASC
             """, (season, s["school"]))
-            games = [dict(r) for r in c.fetchall()]
+            games = sort_schedule_games([dict(r) for r in c.fetchall()])
 
             schools.append({
                 "school":       s["school"],
@@ -1290,7 +1360,7 @@ def get_sport_schedules(sport):
             ORDER BY gpp.week ASC
         """, (sport, season, school))
 
-        games = [dict(r) for r in c.fetchall()]
+        games = sort_schedule_games([dict(r) for r in c.fetchall()])
 
         schools.append({
             "school":       school,
@@ -1408,7 +1478,7 @@ def breakdown_volleyball(school):
             WHERE sport='volleyball' AND season=? AND school=?
             ORDER BY game_date ASC, match_num ASC
         """, (season, school))
-        games = [dict(r) for r in c.fetchall()]
+        games = sort_schedule_games([dict(r) for r in c.fetchall()])
 
         c.execute("""
             SELECT power_rating, wins, losses, games_played, rank, div_rank, division
