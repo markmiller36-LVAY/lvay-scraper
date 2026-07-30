@@ -87,14 +87,20 @@ WINTER_ALIGNMENT_OVERRIDES = _load_winter_alignment_overrides()
 
 
 def _load_versioned_sport_alignments():
-    """Load official, season-scoped regular and postseason assignments."""
-    path = Path(__file__).with_name("sport_alignments_2025_2026.json")
-    if not path.exists():
-        return {}
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
+    """Load every official, season-scoped alignment cycle."""
+    datasets = []
+    for filename in (
+        "sport_alignments_2025_2026.json",
+        "sport_alignments_2026_2027.json",
+    ):
+        path = Path(__file__).with_name(filename)
+        if not path.exists():
+            continue
+        try:
+            datasets.append(json.loads(path.read_text(encoding="utf-8")))
+        except (OSError, ValueError):
+            continue
+    return datasets
 
 
 VERSIONED_SPORT_ALIGNMENTS = _load_versioned_sport_alignments()
@@ -795,12 +801,18 @@ def get_school(name, sport=None, season=None):
     except (TypeError, ValueError):
         season_key = None
 
-    alignment_seasons = VERSIONED_SPORT_ALIGNMENTS.get("season_keys", {})
-    expected_season = alignment_seasons.get(sport_key)
-    if expected_season == season_key:
-        sport_alignments = VERSIONED_SPORT_ALIGNMENTS.get(
-            "sports", {}
-        ).get(sport_key, {})
+    versioned_dataset = next(
+        (
+            dataset
+            for dataset in VERSIONED_SPORT_ALIGNMENTS
+            if dataset.get("season_keys", {}).get(sport_key) == season_key
+        ),
+        None,
+    )
+    if versioned_dataset:
+        sport_alignments = versioned_dataset.get("sports", {}).get(
+            sport_key, {}
+        )
         canonical = SCHOOL_ALIASES.get(raw, raw)
         versioned_info = (
             sport_alignments.get(raw)
@@ -822,15 +834,23 @@ def get_school(name, sport=None, season=None):
                 "division", merged.get("division", "Unknown")
             )
             division = merged.get("division") or ""
-            merged["track"] = (
+            merged["track"] = versioned_info.get("track") or (
                 "non-select"
                 if division.startswith("Non-Select")
                 else "select"
                 if division.startswith("Select")
                 else "small-school"
                 if division.startswith("Class ")
+                else "combined"
+                if division.startswith("Division ")
+                else "unassigned"
+                if division == "Not Postseason Eligible"
                 else merged.get("track", "unknown")
             )
+            if versioned_info.get("alignment_status"):
+                merged["alignment_status"] = versioned_info[
+                    "alignment_status"
+                ]
             return merged
 
     # These reports are the official final 2025-26 LHSAA postseason
