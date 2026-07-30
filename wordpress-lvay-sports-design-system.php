@@ -99,6 +99,16 @@ function lvay_sports_design_system() {
   font:400 18px/1.15 Teko,Arial,sans-serif!important;
 }
 
+/* Archive boxes only show seasons that visitors can actually open. */
+.lvay-season-archives .lvay-archive-note,
+.lvay-season-archive > .coming,
+.lvay-bb-archive > span,
+.lvay-sb-archive > span,
+.lvay-vb-archive > span,
+.lvay-w-archive > span{
+  display:none!important;
+}
+
 /* Search */
 :is(#lvay-school-search,#lvay-bb-search,#lvay-sb-search,.lvay-w-search input){
   display:block!important;
