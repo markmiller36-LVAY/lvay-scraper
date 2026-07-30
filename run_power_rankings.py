@@ -469,6 +469,8 @@ def apply_override_to_row(row, sport: str, season: str, overrides: dict) -> dict
 
 def print_football_division_dump(ratings):
     division_order = [
+        "Division I", "Division II", "Division III", "Division IV",
+        "Division V",
         "Non-Select Division I", "Non-Select Division II",
         "Non-Select Division III", "Non-Select Division IV",
         "Select Division I", "Select Division II",

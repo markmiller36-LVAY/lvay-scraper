@@ -109,11 +109,13 @@ function lvay_sb_rankings_table($rankings, $season) {
     foreach ($rankings as $row) {
         $groups[$row['division'] ?? 'Unknown'][] = $row;
     }
-    $divisions = array(
-        'Non-Select Division I', 'Non-Select Division II', 'Non-Select Division III',
-        'Non-Select Division IV', 'Select Division I', 'Select Division II',
-        'Select Division III', 'Select Division IV', 'Class B', 'Class C'
-    );
+    $divisions = $season >= 2027
+        ? array('Division I', 'Division II', 'Division III', 'Division IV', 'Class B', 'Class C')
+        : array(
+            'Non-Select Division I', 'Non-Select Division II', 'Non-Select Division III',
+            'Non-Select Division IV', 'Select Division I', 'Select Division II',
+            'Select Division III', 'Select Division IV', 'Class B', 'Class C'
+        );
     $out = '<div class="lvay-sb-rankings">';
     foreach ($divisions as $division) {
         $rows = $groups[$division] ?? array();

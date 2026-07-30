@@ -31,11 +31,16 @@ class WinterAlignmentOverrideTests(unittest.TestCase):
             "Non-Select Division III",
         )
 
-    def test_2026_overrides_do_not_leak_into_2027(self):
-        self.assertEqual(
-            get_school("Sterlington", "girls_basketball", 2027)["division"],
-            "Non-Select Division III",
+    def test_2026_archive_and_2027_alignment_are_season_scoped(self):
+        archived = get_school(
+            "Sterlington", "girls_basketball", 2026
         )
+        upcoming = get_school(
+            "Sterlington", "girls_basketball", 2027
+        )
+        self.assertEqual("Non-Select Division II", archived["division"])
+        self.assertEqual("Division II", upcoming["division"])
+        self.assertEqual("combined", upcoming["track"])
 
     def test_soccer_uses_official_2026_division_and_district(self):
         mt_carmel = get_school("Mt. Carmel", "girls_soccer", 2026)

@@ -37,6 +37,11 @@ SCOPES = [
 ]
 
 DIVISION_ORDER = [
+    "Division I",
+    "Division II",
+    "Division III",
+    "Division IV",
+    "Division V",
     "Non-Select Division I",
     "Non-Select Division II",
     "Non-Select Division III",
@@ -48,6 +53,11 @@ DIVISION_ORDER = [
 ]
 
 DIVISION_LABELS = {
+    "Division I":              "Div I",
+    "Division II":             "Div II",
+    "Division III":            "Div III",
+    "Division IV":             "Div IV",
+    "Division V":              "Div V",
     "Non-Select Division I":   "NS I",
     "Non-Select Division II":  "NS II",
     "Non-Select Division III": "NS III",
@@ -635,6 +645,11 @@ if __name__ == "__main__":
 # ─── DIVISION TABS ────────────────────────────────────────────────────────────
 
 DIVISION_TAB_NAMES = {
+    "Division I":              "Division I",
+    "Division II":             "Division II",
+    "Division III":            "Division III",
+    "Division IV":             "Division IV",
+    "Division V":              "Division V",
     "Non-Select Division I":   "NS Division I",
     "Non-Select Division II":  "NS Division II",
     "Non-Select Division III": "NS Division III",
@@ -958,6 +973,10 @@ def export_division_and_class_tabs(season=SEASON):
 # ─── BASEBALL / SOFTBALL SHARED ───────────────────────────────────────────────
 
 BASEBALL_SOFTBALL_DIVISION_ORDER = [
+    "Division I",
+    "Division II",
+    "Division III",
+    "Division IV",
     "Non-Select Division I",
     "Non-Select Division II",
     "Non-Select Division III",

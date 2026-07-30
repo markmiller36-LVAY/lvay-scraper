@@ -62,6 +62,7 @@ DIVISION_RANK = {
     "Division II": 3,
     "Division III": 2,
     "Division IV": 1,
+    "Division V": 0,
     "Division I (Play Up)": 4,
 
     # Non-select
