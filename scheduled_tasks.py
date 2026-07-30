@@ -10,6 +10,13 @@ from datetime import datetime
 import os
 
 
+def require_success(result, label):
+    """Turn a swallowed exporter failure into a failed scheduled run."""
+    if result is False:
+        raise RuntimeError(f"{label} reported failure")
+    return result
+
+
 def get_active_sports():
     """Return list of sports currently in season based on month."""
     month = datetime.now().month
@@ -57,9 +64,18 @@ def scheduled_run():
                 export_football_scores,
                 export_division_and_class_tabs,
             )
-            export_football_to_sheets(season=season)
-            export_football_scores(season=season)
-            export_division_and_class_tabs(season=season)
+            require_success(
+                export_football_to_sheets(season=season),
+                "Football Sheets export",
+            )
+            require_success(
+                export_football_scores(season=season),
+                "Football scores export",
+            )
+            require_success(
+                export_division_and_class_tabs(season=season),
+                "Football division/class export",
+            )
             print("[SCHEDULER] Football pipeline complete")
 
         # 3. VOLLEYBALL
@@ -70,7 +86,10 @@ def scheduled_run():
             from run_power_rankings_volleyball import run_volleyball_rankings
             run_volleyball_rankings()
             from sheets_exporter import export_volleyball_to_sheets
-            export_volleyball_to_sheets()
+            require_success(
+                export_volleyball_to_sheets(),
+                "Volleyball Sheets export",
+            )
             print("[SCHEDULER] Volleyball pipeline complete")
 
         # 4. BASEBALL
@@ -82,7 +101,10 @@ def scheduled_run():
             from run_power_rankings import run_power_rankings
             run_power_rankings(sport="baseball", season=season)
             from sheets_exporter import export_baseball_to_sheets
-            export_baseball_to_sheets(season=int(season))
+            require_success(
+                export_baseball_to_sheets(season=int(season)),
+                "Baseball Sheets export",
+            )
             print("[SCHEDULER] Baseball pipeline complete")
 
         # 5. SOFTBALL
@@ -94,7 +116,10 @@ def scheduled_run():
             from run_power_rankings import run_power_rankings
             run_power_rankings(sport="softball", season=season)
             from sheets_exporter import export_softball_to_sheets
-            export_softball_to_sheets(season=int(season))
+            require_success(
+                export_softball_to_sheets(season=int(season)),
+                "Softball Sheets export",
+            )
             print("[SCHEDULER] Softball pipeline complete")
 
         # 6. BASKETBALL AND SOCCER
@@ -106,12 +131,15 @@ def scheduled_run():
                 continue
             season = resolve_season_year(sport)
             print(f"[SCHEDULER] Running {sport} pipeline...")
-            from scraper import scrape_sport
-            scrape_sport(sport)
+            # run_all_sports() already scraped every active winter sport.
+            # Avoid a second LHSAA request and duplicate database rewrite.
             from run_power_rankings import run_power_rankings
             run_power_rankings(sport=sport, season=season)
             from sheets_exporter import export_winter_sport_to_sheets
-            export_winter_sport_to_sheets(sport, season)
+            require_success(
+                export_winter_sport_to_sheets(sport, season),
+                f"{sport} Sheets export",
+            )
             print(f"[SCHEDULER] {sport} pipeline complete")
 
         print("[SCHEDULER] ALL COMPLETE")

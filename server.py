@@ -149,20 +149,29 @@ def init_db():
     c = conn.cursor()
     c.execute("""
         CREATE TABLE IF NOT EXISTS games (
-            id            INTEGER PRIMARY KEY AUTOINCREMENT,
-            sport         TEXT NOT NULL DEFAULT 'football',
-            season        TEXT NOT NULL DEFAULT '2025',
-            school        TEXT,
-            week          TEXT,
-            game_date     TEXT,
-            opponent      TEXT,
-            win_loss      TEXT,
-            score         TEXT,
-            home_away     TEXT,
-            district_class TEXT,
-            tournament    TEXT,
-            scraped_at    TEXT DEFAULT (datetime('now')),
-            UNIQUE(sport, season, school, week)
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            sport           TEXT NOT NULL DEFAULT 'football',
+            season          TEXT NOT NULL DEFAULT '2025',
+            school          TEXT,
+            week            TEXT,
+            game_date       TEXT,
+            opponent        TEXT,
+            win_loss        TEXT,
+            score           TEXT,
+            home_away       TEXT,
+            district        TEXT,
+            class_          TEXT,
+            district_class  TEXT,
+            opponent_class  TEXT,
+            tournament      TEXT,
+            tournament_host TEXT,
+            out_of_state    TEXT,
+            location        TEXT,
+            scraped_at      TEXT DEFAULT (datetime('now')),
+            source          TEXT,
+            is_district     INTEGER DEFAULT 0,
+            needs_review    INTEGER DEFAULT 0,
+            UNIQUE(sport, school, game_date, opponent, season)
         )
     """)
     c.execute("""
@@ -210,6 +219,21 @@ def init_db():
             sport      TEXT,
             games_found INTEGER,
             status     TEXT
+        )
+    """)
+    scrape_log_columns = {
+        row[1] for row in c.execute("PRAGMA table_info(scrape_log)")
+    }
+    if "note" not in scrape_log_columns:
+        c.execute("ALTER TABLE scrape_log ADD COLUMN note TEXT")
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS pipeline_runs (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            started_at    TEXT NOT NULL,
+            finished_at   TEXT,
+            status        TEXT NOT NULL,
+            active_sports TEXT,
+            error         TEXT
         )
     """)
     c.execute("""
@@ -279,24 +303,6 @@ with app.app_context():
                 print(f"Football preseason schedules imported: {imported}")
         except Exception as e:
             print(f"Football preseason schedule import error: {e}")
-    try:
-        from import_football_2025 import run as import_oos
-        import_oos()
-        print("OOS football opponents imported on startup")
-    except Exception as e:
-        print(f"OOS football import on startup error: {e}")
-    try:
-        from import_oos_baseball_2026 import run as import_oos_baseball
-        import_oos_baseball()
-        print("OOS baseball opponents imported on startup")
-    except Exception as e:
-        print(f"OOS baseball import on startup error: {e}")
-    try:
-        from import_oos_softball_2026 import run as import_oos_softball
-        import_oos_softball()
-        print("OOS softball opponents imported on startup")
-    except Exception as e:
-        print(f"OOS softball import on startup error: {e}")
 
 
 # ── STATUS ──────────────────────────────────────────────────
@@ -316,10 +322,25 @@ def status():
     except Exception:
         by_sport = {}
     try:
-        c.execute("SELECT ran_at, sport, games_found, status FROM scrape_log ORDER BY id DESC LIMIT 5")
+        c.execute("""
+            SELECT ran_at, sport, games_found, status, note
+            FROM scrape_log ORDER BY id DESC LIMIT 20
+        """)
         recent = [dict(r) for r in c.fetchall()]
     except Exception:
         recent = []
+    try:
+        latest_pipeline = c.execute("""
+            SELECT id, started_at, finished_at, status, active_sports, error
+            FROM pipeline_runs ORDER BY id DESC LIMIT 1
+        """).fetchone()
+        latest_pipeline = dict(latest_pipeline) if latest_pipeline else None
+        if latest_pipeline and latest_pipeline.get("active_sports"):
+            latest_pipeline["active_sports"] = json.loads(
+                latest_pipeline["active_sports"]
+            )
+    except Exception:
+        latest_pipeline = None
     conn.close()
     return jsonify({
         "status":           "ok",
@@ -327,7 +348,20 @@ def status():
         "records_by_sport": by_sport,
         "total_records":    sum(by_sport.values()),
         "recent_scrapes":   recent,
+        "latest_pipeline":  latest_pipeline,
     })
+
+
+@app.route("/api/health")
+def health():
+    """Render health check: prove the API can read its persistent database."""
+    try:
+        conn = get_db()
+        conn.execute("SELECT 1").fetchone()
+        conn.close()
+    except Exception as exc:
+        return jsonify({"status": "error", "database": str(exc)}), 503
+    return jsonify({"status": "ok", "database": "reachable"})
 
 
 # ── FULL PIPELINE TRIGGER ───────────────────────────────────
@@ -360,15 +394,31 @@ def run_full_pipeline():
             "started_at": PIPELINE_STATE["started_at"],
         }), 409
 
+    started_at = datetime.now().isoformat()
+    PIPELINE_STATE.update({
+        "status": "running",
+        "started_at": started_at,
+        "finished_at": None,
+        "error": None,
+    })
+
     def run():
-        PIPELINE_STATE.update({
-            "status": "running",
-            "started_at": datetime.now().isoformat(),
-            "finished_at": None,
-            "error": None,
-        })
+        run_id = None
         try:
-            from scheduled_tasks import scheduled_run
+            from scheduled_tasks import get_active_sports, scheduled_run
+            active_sports = get_active_sports()
+            conn = get_db()
+            cursor = conn.execute("""
+                INSERT INTO pipeline_runs
+                    (started_at, status, active_sports)
+                VALUES (?, 'running', ?)
+            """, (
+                PIPELINE_STATE["started_at"],
+                json.dumps(active_sports),
+            ))
+            run_id = cursor.lastrowid
+            conn.commit()
+            conn.close()
             scheduled_run()
             PIPELINE_STATE["status"] = "completed"
         except Exception as exc:
@@ -377,12 +427,32 @@ def run_full_pipeline():
             print(f"[PIPELINE] ERROR: {exc}")
         finally:
             PIPELINE_STATE["finished_at"] = datetime.now().isoformat()
+            if run_id is not None:
+                try:
+                    conn = get_db()
+                    conn.execute("""
+                        UPDATE pipeline_runs
+                        SET finished_at=?, status=?, error=?
+                        WHERE id=?
+                    """, (
+                        PIPELINE_STATE["finished_at"],
+                        PIPELINE_STATE["status"],
+                        PIPELINE_STATE["error"],
+                        run_id,
+                    ))
+                    conn.commit()
+                    conn.close()
+                except Exception as persist_exc:
+                    print(
+                        "[PIPELINE] Could not persist final state: "
+                        f"{persist_exc}"
+                    )
             PIPELINE_LOCK.release()
 
     threading.Thread(target=run, daemon=True).start()
     return jsonify({
         "status": "started",
-        "started_at": datetime.now().isoformat(),
+        "started_at": started_at,
         "message": "Full in-season pipeline started",
     }), 202
 
@@ -391,7 +461,21 @@ def run_full_pipeline():
 def pipeline_status():
     if not _pipeline_authorized():
         return jsonify({"status": "unauthorized"}), 401
-    return jsonify(PIPELINE_STATE)
+    state = dict(PIPELINE_STATE)
+    try:
+        conn = get_db()
+        latest = conn.execute("""
+            SELECT id, started_at, finished_at, status, active_sports, error
+            FROM pipeline_runs ORDER BY id DESC LIMIT 1
+        """).fetchone()
+        conn.close()
+        if latest:
+            state = dict(latest)
+            if state.get("active_sports"):
+                state["active_sports"] = json.loads(state["active_sports"])
+    except Exception as exc:
+        state["persistence_error"] = str(exc)
+    return jsonify(state)
 
 
 # ── SCRAPE TRIGGERS ─────────────────────────────────────────

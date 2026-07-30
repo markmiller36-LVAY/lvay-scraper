@@ -44,8 +44,7 @@ def run():
     try:
         rows = get_sheet_data()
     except Exception as e:
-        print(f"  Sheet read error: {e}")
-        return
+        raise RuntimeError(f"Baseball OOS Sheet read failed: {e}") from e
 
     print(f"  {len(rows)} rows read from sheet")
 
@@ -121,6 +120,7 @@ def run():
     conn.close()
     print(f"  Inserted: {inserted} | Updated: {updated} | Skipped: {skipped}")
     print(f"  Done.")
+    return {"inserted": inserted, "updated": updated, "skipped": skipped}
 
 
 if __name__ == "__main__":
