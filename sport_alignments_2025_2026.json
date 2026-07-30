@@ -78,7 +78,7 @@
         "division": "Class C",
         "source": "All_Schools_Class_Designations.pdf"
       },
-      "Amite +": {
+      "Amite": {
         "class": "3A",
         "district": 8,
         "source": "All_Schools_Class_Designations.pdf"
@@ -215,7 +215,7 @@
         "division": "Non-Select Division III",
         "source": "All_Schools_Class_Designations.pdf"
       },
-      "Bolton Academy *": {
+      "Bolton Academy": {
         "class": "3A",
         "district": 2,
         "source": "All_Schools_Class_Designations.pdf"
@@ -304,7 +304,7 @@
         "division": "Class C",
         "source": "All_Schools_Class_Designations.pdf"
       },
-      "Capitol *": {
+      "Capitol": {
         "class": "2A",
         "district": 8,
         "source": "All_Schools_Class_Designations.pdf"
@@ -440,7 +440,7 @@
         "division": "Non-Select Division I",
         "source": "All_Schools_Class_Designations.pdf"
       },
-      "Crescent City *": {
+      "Crescent City": {
         "class": "1A",
         "district": 10,
         "source": "All_Schools_Class_Designations.pdf"
@@ -487,7 +487,7 @@
         "division": "Non-Select Division IV",
         "source": "All_Schools_Class_Designations.pdf"
       },
-      "Delhi +": {
+      "Delhi": {
         "class": "1A",
         "district": 2,
         "source": "All_Schools_Class_Designations.pdf"
@@ -630,9 +630,10 @@
         "division": "Class B",
         "source": "All_Schools_Class_Designations.pdf"
       },
-      "Elton +": {
+      "Elton": {
         "class": "1A",
         "district": 4,
+        "division": "Non-Select Division IV",
         "source": "All_Schools_Class_Designations.pdf"
       },
       "Episcopal": {
@@ -766,7 +767,7 @@
         "division": "Class C",
         "source": "All_Schools_Class_Designations.pdf"
       },
-      "Glen Oaks *": {
+      "Glen Oaks": {
         "class": "3A",
         "district": 6,
         "source": "All_Schools_Class_Designations.pdf"
@@ -962,7 +963,7 @@
         "division": "Non-Select Division IV",
         "source": "All_Schools_Class_Designations.pdf"
       },
-      "Jefferson Rise Charter +": {
+      "Jefferson Rise Charter": {
         "class": "3A",
         "district": 9,
         "source": "All_Schools_Class_Designations.pdf"
@@ -1135,9 +1136,10 @@
         "division": "Non-Select Division I",
         "source": "All_Schools_Class_Designations.pdf"
       },
-      "Livingston Collegiate *": {
+      "Livingston Collegiate": {
         "class": "3A",
         "district": 10,
+        "division": "Select Division II",
         "source": "All_Schools_Class_Designations.pdf"
       },
       "Livonia": {
@@ -1380,9 +1382,10 @@
         "division": "Non-Select Division I",
         "source": "All_Schools_Class_Designations.pdf"
       },
-      "Northside +": {
+      "Northside": {
         "class": "4A",
         "district": 4,
+        "division": "Select Division II",
         "source": "All_Schools_Class_Designations.pdf"
       },
       "Northside Christian": {
@@ -1583,7 +1586,7 @@
         "division": "Non-Select Division I",
         "source": "All_Schools_Class_Designations.pdf"
       },
-      "Providence Classical Academy +": {
+      "Providence Classical Academy": {
         "class": "B",
         "district": 1,
         "division": "Class B",
@@ -1685,14 +1688,15 @@
         "division": "Non-Select Division I",
         "source": "All_Schools_Class_Designations.pdf"
       },
-      "Sarah T. Reed *": {
+      "Sarah T. Reed": {
         "class": "2A",
         "district": 10,
         "source": "All_Schools_Class_Designations.pdf"
       },
-      "Scotlandville +": {
+      "Scotlandville": {
         "class": "5A",
         "district": 4,
+        "division": "Select Division I",
         "source": "All_Schools_Class_Designations.pdf"
       },
       "Simpson": {
@@ -2966,7 +2970,7 @@
         "division": "Class B",
         "source": "Boys_Basketball_Class_Designations.pdf"
       },
-      "Grace Christian +": {
+      "Grace Christian": {
         "class": "B",
         "district": 5,
         "division": "Class B",
@@ -3410,7 +3414,7 @@
         "division": "Non-Select Division II",
         "source": "Boys_Basketball_Class_Designations.pdf"
       },
-      "Lutheran +": {
+      "Lutheran": {
         "class": "C",
         "district": 8,
         "division": "Class C",
@@ -3578,7 +3582,7 @@
         "division": "Non-Select Division I",
         "source": "Boys_Basketball_Class_Designations.pdf"
       },
-      "New Living Word +": {
+      "New Living Word": {
         "class": "C",
         "district": 1,
         "division": "Class C",
@@ -3854,7 +3858,7 @@
         "division": "Non-Select Division I",
         "source": "Boys_Basketball_Class_Designations.pdf"
       },
-      "Providence Classical Academy +": {
+      "Providence Classical Academy": {
         "class": "B",
         "district": 1,
         "division": "Class B",
@@ -4424,9 +4428,10 @@
         "division": "Non-Select Division II",
         "source": "Boys_Basketball_Class_Designations.pdf"
       },
-      "Young Audiences Charter +": {
+      "Young Audiences Charter": {
         "class": "3A",
         "district": 9,
+        "division": "Select Division II",
         "source": "Boys_Basketball_Class_Designations.pdf"
       },
       "Zachary": {
@@ -4483,7 +4488,7 @@
         "division": "Division III",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "Ascension Christian *": {
+      "Ascension Christian": {
         "district": 6,
         "division": "Division IV",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -4583,7 +4588,7 @@
         "division": "Division IV",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "Capitol *": {
+      "Capitol": {
         "district": 6,
         "division": "Division IV",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -4598,7 +4603,7 @@
         "division": "Division II",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "Carroll *": {
+      "Carroll": {
         "district": 1,
         "division": "Division III",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -4638,7 +4643,7 @@
         "division": "Division IV",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "Claiborne Christian *": {
+      "Claiborne Christian": {
         "district": 2,
         "division": "Division IV",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -4658,7 +4663,7 @@
         "division": "Division I",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "Crescent City +": {
+      "Crescent City": {
         "district": 10,
         "division": "Division IV",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -4683,7 +4688,7 @@
         "division": "Division III",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "Delhi Charter *": {
+      "Delhi Charter": {
         "district": 3,
         "division": "Division IV",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -4733,7 +4738,7 @@
         "division": "Division II",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "Ecole Classique +": {
+      "Ecole Classique": {
         "district": 10,
         "division": "Division IV",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -4843,7 +4848,7 @@
         "division": "Division I",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "Independence *": {
+      "Independence": {
         "district": 7,
         "division": "Division IV",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -4863,7 +4868,7 @@
         "division": "Division I",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "John Curtis Christian *": {
+      "John Curtis Christian": {
         "district": 9,
         "division": "Division III",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -4888,7 +4893,7 @@
         "division": "Division II",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "LaGrange +": {
+      "LaGrange": {
         "district": 4,
         "division": "Division II",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -4958,7 +4963,7 @@
         "division": "Division IV",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "Madison *": {
+      "Madison": {
         "district": 2,
         "division": "Division IV",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -4968,7 +4973,7 @@
         "division": "Division I",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "McDonogh #35 *": {
+      "McDonogh #35": {
         "district": 9,
         "division": "Division III",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -4998,7 +5003,7 @@
         "division": "Division III",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "N.O. Charter Science and Math +": {
+      "N.O. Charter Science and Math": {
         "district": 8,
         "division": "Division III",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -5053,7 +5058,7 @@
         "division": "Division I",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "Northside +": {
+      "Northside": {
         "district": 4,
         "division": "Division III",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -5128,7 +5133,7 @@
         "division": "Division II",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "Providence Classical Academy +": {
+      "Providence Classical Academy": {
         "district": 1,
         "division": "Division IV",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -5208,7 +5213,7 @@
         "division": "Division I",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "St. Augustine +": {
+      "St. Augustine": {
         "district": 10,
         "division": "Division II",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -5378,7 +5383,7 @@
         "division": "Division I",
         "source": "Boys_Soccer_Class_Designations.pdf"
       },
-      "Young Audiences Charter +": {
+      "Young Audiences Charter": {
         "district": 8,
         "division": "Division III",
         "source": "Boys_Soccer_Class_Designations.pdf"
@@ -5414,7 +5419,7 @@
         "division": "Select Division I",
         "source": "Regular Season Alignments.pdf"
       },
-      "Acadiana Renaissance Charter *": {
+      "Acadiana Renaissance Charter": {
         "class": "3A",
         "district": 5,
         "source": "Regular Season Alignments.pdf"
@@ -5545,9 +5550,10 @@
         "division": "Non-Select Division II",
         "source": "Regular Season Alignments.pdf"
       },
-      "Ben Franklin +": {
+      "Ben Franklin": {
         "class": "5A",
         "district": 10,
+        "division": "Select Division I",
         "source": "Regular Season Alignments.pdf"
       },
       "Benton": {
@@ -5580,7 +5586,7 @@
         "division": "Non-Select Division III",
         "source": "Regular Season Alignments.pdf"
       },
-      "Bolton Academy +": {
+      "Bolton Academy": {
         "class": "3A",
         "district": 2,
         "source": "Regular Season Alignments.pdf"
@@ -5915,7 +5921,7 @@
         "division": "Non-Select Division I",
         "source": "Regular Season Alignments.pdf"
       },
-      "Ecole Classique *": {
+      "Ecole Classique": {
         "class": "1A",
         "district": 10,
         "source": "Regular Season Alignments.pdf"
@@ -6172,7 +6178,7 @@
         "division": "Select Division II",
         "source": "Regular Season Alignments.pdf"
       },
-      "JS Clark Leadership Academy *": {
+      "JS Clark Leadership Academy": {
         "class": "1A",
         "district": 5,
         "source": "Regular Season Alignments.pdf"
@@ -6495,7 +6501,7 @@
         "division": "Non-Select Division II",
         "source": "Regular Season Alignments.pdf"
       },
-      "Morris Jeff *": {
+      "Morris Jeff": {
         "class": "3A",
         "district": 10,
         "source": "Regular Season Alignments.pdf"
@@ -6680,9 +6686,10 @@
         "division": "Non-Select Division II",
         "source": "Regular Season Alignments.pdf"
       },
-      "Pickering +": {
+      "Pickering": {
         "class": "2A",
         "district": 4,
+        "division": "Select Division IV",
         "source": "Regular Season Alignments.pdf"
       },
       "Pine": {
@@ -6769,9 +6776,10 @@
         "division": "Non-Select Division III",
         "source": "Regular Season Alignments.pdf"
       },
-      "Ringgold +": {
+      "Ringgold": {
         "class": "1A",
         "district": 1,
+        "division": "Non-Select Division IV",
         "source": "Regular Season Alignments.pdf"
       },
       "Riverdale": {
@@ -7020,9 +7028,10 @@
         "division": "Select Division I",
         "source": "Regular Season Alignments.pdf"
       },
-      "The Willow School +": {
+      "The Willow School": {
         "class": "4A",
         "district": 9,
+        "division": "Select Division II",
         "source": "Regular Season Alignments.pdf"
       },
       "Thibodaux": {
@@ -7217,9 +7226,10 @@
         "division": "Non-Select Division II",
         "source": "Regular Season Alignments.pdf"
       },
-      "Young Audiences Charter +": {
+      "Young Audiences Charter": {
         "class": "3A",
         "district": 9,
+        "division": "Select Division II",
         "source": "Regular Season Alignments.pdf"
       },
       "Zachary": {
@@ -7625,7 +7635,7 @@
         "division": "Class B",
         "source": "Girls_Basketball_Class_Designations.pdf"
       },
-      "Christ Episcopal School *": {
+      "Christ Episcopal School": {
         "class": "B",
         "district": 7,
         "division": "Class B",
@@ -7841,9 +7851,10 @@
         "division": "Class C",
         "source": "Girls_Basketball_Class_Designations.pdf"
       },
-      "Ecole Classique +": {
+      "Ecole Classique": {
         "class": "1A",
         "district": 10,
+        "division": "Select Division IV",
         "source": "Girls_Basketball_Class_Designations.pdf"
       },
       "Edna Karr": {
@@ -8031,13 +8042,13 @@
         "division": "Class B",
         "source": "Girls_Basketball_Class_Designations.pdf"
       },
-      "Grace Christian +": {
+      "Grace Christian": {
         "class": "B",
         "district": 5,
         "division": "Class B",
         "source": "Girls_Basketball_Class_Designations.pdf"
       },
-      "Grand Isle +": {
+      "Grand Isle": {
         "class": "C",
         "district": 8,
         "division": "Class C",
@@ -8456,9 +8467,10 @@
         "division": "Non-Select Division II",
         "source": "Girls_Basketball_Class_Designations.pdf"
       },
-      "Lycee Francais de la Nouvelle Orleans *": {
+      "Lycee Francais de la Nouvelle Orleans": {
         "class": "1A",
         "district": 10,
+        "division": "Select Division IV",
         "source": "Girls_Basketball_Class_Designations.pdf"
       },
       "Madison": {
@@ -8593,7 +8605,7 @@
         "division": "Class B",
         "source": "Girls_Basketball_Class_Designations.pdf"
       },
-      "N.O. Charter Science and Math +": {
+      "N.O. Charter Science and Math": {
         "class": "4A",
         "district": 10,
         "source": "Girls_Basketball_Class_Designations.pdf"
@@ -8622,7 +8634,7 @@
         "division": "Non-Select Division I",
         "source": "Girls_Basketball_Class_Designations.pdf"
       },
-      "New Living Word *": {
+      "New Living Word": {
         "class": "C",
         "district": 1,
         "division": "Class C",
@@ -8718,7 +8730,7 @@
         "division": "Non-Select Division I",
         "source": "Girls_Basketball_Class_Designations.pdf"
       },
-      "Notre Dame *": {
+      "Notre Dame": {
         "class": "2A",
         "district": 6,
         "source": "Girls_Basketball_Class_Designations.pdf"
@@ -8896,7 +8908,7 @@
         "division": "Non-Select Division I",
         "source": "Girls_Basketball_Class_Designations.pdf"
       },
-      "Providence Classical Academy +": {
+      "Providence Classical Academy": {
         "class": "B",
         "district": 1,
         "division": "Class B",
@@ -9286,7 +9298,7 @@
         "division": "Select Division III",
         "source": "Girls_Basketball_Class_Designations.pdf"
       },
-      "Thrive Academy *": {
+      "Thrive Academy": {
         "class": "1A",
         "district": 9,
         "source": "Girls_Basketball_Class_Designations.pdf"
@@ -9477,7 +9489,7 @@
         "division": "Non-Select Division II",
         "source": "Girls_Basketball_Class_Designations.pdf"
       },
-      "Young Audiences Charter +": {
+      "Young Audiences Charter": {
         "class": "3A",
         "district": 9,
         "source": "Girls_Basketball_Class_Designations.pdf"
@@ -9576,7 +9588,7 @@
         "division": "Division II",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "Belaire *": {
+      "Belaire": {
         "district": 5,
         "division": "Division III",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -9611,7 +9623,7 @@
         "division": "Division III",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "Broadmoor +": {
+      "Broadmoor": {
         "district": 6,
         "division": "Division II",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -9716,7 +9728,7 @@
         "division": "Division III",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "Delhi Charter *": {
+      "Delhi Charter": {
         "district": 2,
         "division": "Division IV",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -9771,7 +9783,7 @@
         "division": "Division II",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "Ecole Classique +": {
+      "Ecole Classique": {
         "district": 9,
         "division": "Division IV",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -9881,7 +9893,7 @@
         "division": "Division I",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "Independence *": {
+      "Independence": {
         "district": 7,
         "division": "Division IV",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -9986,7 +9998,7 @@
         "division": "Division IV",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "Madison *": {
+      "Madison": {
         "district": 2,
         "division": "Division IV",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -9996,7 +10008,7 @@
         "division": "Division I",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "McKinley *": {
+      "McKinley": {
         "district": 5,
         "division": "Division III",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -10061,7 +10073,7 @@
         "division": "Division II",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "Northeast +": {
+      "Northeast": {
         "district": 6,
         "division": "Division IV",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -10076,7 +10088,7 @@
         "division": "Division I",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "Northside +": {
+      "Northside": {
         "district": 4,
         "division": "Division III",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -10121,7 +10133,7 @@
         "division": "Division III",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "Peabody +": {
+      "Peabody": {
         "district": 2,
         "division": "Division III",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -10156,7 +10168,7 @@
         "division": "Division II",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "Providence Classical Academy +": {
+      "Providence Classical Academy": {
         "district": 1,
         "division": "Division IV",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -10256,7 +10268,7 @@
         "division": "Division III",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "St. Mary's Academy +": {
+      "St. Mary's Academy": {
         "district": 8,
         "division": "Division IV",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -10291,7 +10303,7 @@
         "division": "Division I",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "Tara +": {
+      "Tara": {
         "district": 6,
         "division": "Division II",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -10351,12 +10363,12 @@
         "division": "Division I",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "Walter L. Cohen *": {
+      "Walter L. Cohen": {
         "district": 9,
         "division": "Division III",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "Warren Easton *": {
+      "Warren Easton": {
         "district": 10,
         "division": "Division II",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -10406,7 +10418,7 @@
         "division": "Division III",
         "source": "Girls_Soccer_Class_Designations.pdf"
       },
-      "Young Audiences Charter +": {
+      "Young Audiences Charter": {
         "district": 8,
         "division": "Division III",
         "source": "Girls_Soccer_Class_Designations.pdf"
@@ -10436,7 +10448,7 @@
         "division": "Select Division II",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
-      "Acad. of Sacred Heart - G.C. *": {
+      "Acad. of Sacred Heart - G.C.": {
         "class": "B",
         "district": 6,
         "division": "Class B",
@@ -10568,7 +10580,7 @@
         "division": "Select Division III",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
-      "Belaire *": {
+      "Belaire": {
         "class": "4A",
         "district": 6,
         "source": "Softball_Regular_Season_Alignmnets.pdf"
@@ -10710,7 +10722,7 @@
         "division": "Class C",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
-      "Capitol *": {
+      "Capitol": {
         "class": "2A",
         "district": 8,
         "source": "Softball_Regular_Season_Alignmnets.pdf"
@@ -10817,7 +10829,7 @@
         "division": "Class C",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
-      "Comeaux +": {
+      "Comeaux": {
         "class": "4A",
         "district": 4,
         "source": "Softball_Regular_Season_Alignmnets.pdf"
@@ -11008,7 +11020,7 @@
         "division": "Class C",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
-      "Ecole Classique +": {
+      "Ecole Classique": {
         "class": "1A",
         "district": 10,
         "source": "Softball_Regular_Season_Alignmnets.pdf"
@@ -11019,7 +11031,7 @@
         "division": "Select Division I",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
-      "Eleanor McMain *": {
+      "Eleanor McMain": {
         "class": "4A",
         "district": 10,
         "source": "Softball_Regular_Season_Alignmnets.pdf"
@@ -11161,7 +11173,7 @@
         "division": "Class C",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
-      "Glen Oaks *": {
+      "Glen Oaks": {
         "class": "3A",
         "district": 6,
         "source": "Softball_Regular_Season_Alignmnets.pdf"
@@ -11763,9 +11775,10 @@
         "division": "Non-Select Division III",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
-      "Northeast *": {
+      "Northeast": {
         "class": "2A",
         "district": 8,
+        "division": "Non-Select Division IV",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
       "Northlake Christian": {
@@ -11990,7 +12003,7 @@
         "division": "Non-Select Division I",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
-      "Providence Classical Academy +": {
+      "Providence Classical Academy": {
         "class": "B",
         "district": 1,
         "division": "Class B",
@@ -12080,7 +12093,7 @@
         "division": "Non-Select Division I",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
-      "Sarah T. Reed *": {
+      "Sarah T. Reed": {
         "class": "2A",
         "district": 10,
         "source": "Softball_Regular_Season_Alignmnets.pdf"
@@ -12151,7 +12164,7 @@
         "division": "Non-Select Division II",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
-      "Southern Lab *": {
+      "Southern Lab": {
         "class": "1A",
         "district": 9,
         "source": "Softball_Regular_Season_Alignmnets.pdf"
@@ -12198,7 +12211,7 @@
         "division": "Select Division IV",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
-      "St. Helena College & Career Acad. *": {
+      "St. Helena College & Career Acad.": {
         "class": "2A",
         "district": 9,
         "source": "Softball_Regular_Season_Alignmnets.pdf"
@@ -12449,9 +12462,10 @@
         "division": "Non-Select Division II",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
-      "West Jefferson *": {
+      "West Jefferson": {
         "class": "5A",
         "district": 10,
+        "division": "Select Division I",
         "source": "Softball_Regular_Season_Alignmnets.pdf"
       },
       "West Monroe": {
@@ -12962,7 +12976,7 @@
         "division": "Division V",
         "source": "Volleyball_Class_Designations.pdf"
       },
-      "Erath *": {
+      "Erath": {
         "district": 3,
         "division": "Division III",
         "source": "Volleyball_Class_Designations.pdf"
@@ -13037,7 +13051,7 @@
         "division": "Division V",
         "source": "Volleyball_Class_Designations.pdf"
       },
-      "Green Oaks +": {
+      "Green Oaks": {
         "district": 1,
         "division": "Division IV",
         "source": "Volleyball_Class_Designations.pdf"
@@ -13052,7 +13066,7 @@
         "division": "Division I",
         "source": "Volleyball_Class_Designations.pdf"
       },
-      "Hamilton Christian *": {
+      "Hamilton Christian": {
         "district": 2,
         "division": "Division V",
         "source": "Volleyball_Class_Designations.pdf"
@@ -13157,7 +13171,7 @@
         "division": "Division II",
         "source": "Volleyball_Class_Designations.pdf"
       },
-      "La. School for Deaf +": {
+      "La. School for Deaf": {
         "district": 5,
         "division": "Division V",
         "source": "Volleyball_Class_Designations.pdf"
@@ -13302,7 +13316,7 @@
         "division": "Division II",
         "source": "Volleyball_Class_Designations.pdf"
       },
-      "Merryville +": {
+      "Merryville": {
         "district": 2,
         "division": "Division V",
         "source": "Volleyball_Class_Designations.pdf"
@@ -13492,7 +13506,7 @@
         "division": "Division I",
         "source": "Volleyball_Class_Designations.pdf"
       },
-      "Providence Classical Academy +": {
+      "Providence Classical Academy": {
         "district": 1,
         "division": "Division V",
         "source": "Volleyball_Class_Designations.pdf"
@@ -13507,7 +13521,7 @@
         "division": "Division IV",
         "source": "Volleyball_Class_Designations.pdf"
       },
-      "Richwood +": {
+      "Richwood": {
         "district": 1,
         "division": "Division IV",
         "source": "Volleyball_Class_Designations.pdf"
@@ -13562,7 +13576,7 @@
         "division": "Division III",
         "source": "Volleyball_Class_Designations.pdf"
       },
-      "South Beauregard *": {
+      "South Beauregard": {
         "district": 1,
         "division": "Division III",
         "source": "Volleyball_Class_Designations.pdf"
@@ -13757,7 +13771,7 @@
         "division": "Division V",
         "source": "Volleyball_Class_Designations.pdf"
       },
-      "Vidalia +": {
+      "Vidalia": {
         "district": 4,
         "division": "Division IV",
         "source": "Volleyball_Class_Designations.pdf"
@@ -13857,12 +13871,12 @@
         "division": "Division II",
         "source": "Volleyball_Class_Designations.pdf"
       },
-      "Wossman +": {
+      "Wossman": {
         "district": 4,
         "division": "Division III",
         "source": "Volleyball_Class_Designations.pdf"
       },
-      "Young Audiences Charter +": {
+      "Young Audiences Charter": {
         "district": 9,
         "division": "Division III",
         "source": "Volleyball_Class_Designations.pdf"
