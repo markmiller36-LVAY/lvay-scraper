@@ -81,6 +81,9 @@ function lvay_big_three_assets() {
   margin:0 0 22px;
   font-family:Teko,Arial,sans-serif;
 }
+.lvay-big-three-nav.is-archive{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
 .lvay-big-three-nav a{
   display:flex;
   align-items:center;
@@ -127,8 +130,10 @@ CSS
     );
 
     $season = isset($_GET['season']) ? absint($_GET['season']) : 0;
+    $is_archive = $season > 0;
     $links = array();
     foreach ($context['pages'] as $view => $slug) {
+        if ($is_archive && $view === 'rankings') continue;
         $url = home_url('/' . $slug . '/');
         if ($season) $url = add_query_arg('season', $season, $url);
         $links[] = array(
@@ -147,7 +152,10 @@ CSS
     wp_enqueue_script('lvay-big-three-nav');
     wp_add_inline_script(
         'lvay-big-three-nav',
-        'window.LVAY_BIG_THREE=' . wp_json_encode(array('links' => $links)) . ';',
+        'window.LVAY_BIG_THREE=' . wp_json_encode(array(
+            'links' => $links,
+            'archive' => $is_archive,
+        )) . ';',
         'before'
     );
     wp_add_inline_script('lvay-big-three-nav', <<<'JS'
@@ -167,6 +175,7 @@ CSS
 
     var nav=document.createElement("nav");
     nav.className="lvay-big-three-nav";
+    if(config.archive) nav.classList.add("is-archive");
     nav.setAttribute("aria-label","Sport pages");
     config.links.forEach(function(link){
       var a=document.createElement("a");
@@ -190,4 +199,3 @@ JS
     );
 }
 add_action('wp_enqueue_scripts', 'lvay_big_three_assets', 120);
-
