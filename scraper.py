@@ -481,7 +481,7 @@ def scrape_football():
     html = fetch_page(sport_key, season)
     if not html:
         log_scrape(sport_key, 0, "error", "No HTML returned")
-        return 0
+        raise RuntimeError("Football scrape failed: no HTML returned")
 
     games = parse_football(html, season)
     print(f"  Parsed {len(games)} games")
@@ -495,6 +495,7 @@ def scrape_class_loop_sport(sport_key: str):
 
     print(f"\n--- {sport_key.upper()} (season={season}) ---")
     total = 0
+    failed_classes = []
 
     classifications = CLASSIFICATIONS_BY_SPORT.get(sport_key, [])
 
@@ -502,6 +503,7 @@ def scrape_class_loop_sport(sport_key: str):
         print(f"  Class {class_}...")
         html = fetch_page(sport_key, season, class_)
         if not html:
+            failed_classes.append(class_)
             continue
 
         games = parse_schedule_table(html, sport_key, season)
@@ -509,6 +511,13 @@ def scrape_class_loop_sport(sport_key: str):
         total += save_games(games)
         time.sleep(2)
 
+    if failed_classes:
+        note = f"season={season}; failed_classes={','.join(failed_classes)}"
+        log_scrape(sport_key, total, "error", note)
+        raise RuntimeError(
+            f"{sport_key} scrape incomplete; failed classes: "
+            f"{', '.join(failed_classes)}"
+        )
     log_scrape(sport_key, total, "success", f"season={season}")
     return total
 

@@ -168,7 +168,7 @@ def scrape_division(division, season=SEASON):
         resp.raise_for_status()
     except requests.RequestException as e:
         print(f"  [VB] ERROR fetching Division {division}: {e}")
-        return []
+        return None
 
     soup = BeautifulSoup(resp.text, "html.parser")
     rows = []
@@ -349,9 +349,13 @@ def run_volleyball_scraper(season=None):
     total_updated  = 0
     total_skipped  = 0
     total_rows     = 0
+    failed_divisions = []
 
     for div in DIVISIONS:
         rows = scrape_division(div, season)
+        if rows is None:
+            failed_divisions.append(div)
+            continue
         total_rows += len(rows)
         if rows:
             ins, upd, skp = insert_games(conn, rows, season)
@@ -361,6 +365,12 @@ def run_volleyball_scraper(season=None):
             print(f"  [VB] Division {div}: inserted={ins} updated={upd} skipped={skp}")
 
     conn.close()
+
+    if failed_divisions:
+        raise RuntimeError(
+            "Volleyball scrape incomplete; failed divisions: "
+            + ", ".join(failed_divisions)
+        )
 
     print(f"\n{'='*54}")
     print(f"VOLLEYBALL SCRAPE COMPLETE")
