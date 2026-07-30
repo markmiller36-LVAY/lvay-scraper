@@ -11,6 +11,7 @@ function lvay_sports_design_system_pages() {
         'schedules', 'power-rankings', 'playoff-brackets',
         'baseball-schedules', 'baseball-power-rankings', 'baseball-playoff-brackets',
         'softball-schedules', 'softball-power-rankings', 'softball-playoff-brackets',
+        'volleyball-schedules', 'volleyball-power-rankings', 'volleyball-playoff-brackets',
         'boys-basketball-schedules', 'boys-basketball-power-rankings', 'boys-basketball-playoff-brackets',
         'girls-basketball-schedules', 'girls-basketball-power-rankings', 'girls-basketball-playoff-brackets',
         'boys-soccer-schedules', 'boys-soccer-power-rankings', 'boys-soccer-playoff-brackets',
