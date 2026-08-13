@@ -263,6 +263,13 @@ def init_db():
             note TEXT
         )
     """)
+    game_columns = {row[1] for row in c.execute("PRAGMA table_info(games)")}
+    if "source" not in game_columns:
+        c.execute("ALTER TABLE games ADD COLUMN source TEXT")
+    if "is_district" not in game_columns:
+        c.execute("ALTER TABLE games ADD COLUMN is_district INTEGER DEFAULT 0")
+    if "needs_review" not in game_columns:
+        c.execute("ALTER TABLE games ADD COLUMN needs_review INTEGER DEFAULT 0")
     c.execute("""
         CREATE TABLE IF NOT EXISTS season_registry (
             sport TEXT NOT NULL,
@@ -331,14 +338,23 @@ def save_games(games):
 
 
 def build_payload(template, season, classification=""):
+    # LHSAA resets the live-season selector to the opaque value ``1``.
+    # Keep our public/storage season as the real calendar year, but translate
+    # it only for the current football form submission.
+    source_season = season
+    if classification == "__football_current__":
+        source_season = "1"
+        classification = ""
     return {
-        k: v.format(season=season, classification=classification)
+        k: v.format(season=source_season, classification=classification)
         for k, v in template.items()
     }
 
 
 def fetch_page(sport_key, season, classification=""):
     config = SPORTS[sport_key]
+    if sport_key == "football" and str(season) == resolve_season_year("football"):
+        classification = "__football_current__"
     payload = build_payload(config["payload_template"], season, classification)
     headers = HEADERS.copy()
     headers["Referer"] = config["referer"]
@@ -366,6 +382,7 @@ def fetch_page(sport_key, season, classification=""):
 def parse_football(html, season):
     soup = BeautifulSoup(html, "html.parser")
     games = []
+    seen = set()
 
     for table in soup.find_all("table"):
         for row in table.find_all("tr"):
@@ -374,8 +391,18 @@ def parse_football(html, season):
                 continue
 
             t = [c.get_text(strip=True) for c in cells]
-            if not t[0] or t[0] == "School":
+            if (
+                len(t) != 11
+                or not t[0]
+                or t[0] == "School"
+                or not t[1].startswith("Week ")
+            ):
                 continue
+
+            identity = (t[0], t[1])
+            if identity in seen:
+                continue
+            seen.add(identity)
 
             games.append({
                 "sport": "football",
@@ -396,6 +423,7 @@ def parse_football(html, season):
                 "tournament_host": "",
                 "season": season,
                 "scraped_at": datetime.now().isoformat(),
+                "source": "LHSAA",
             })
 
     return games
@@ -485,8 +513,89 @@ def scrape_football():
 
     games = parse_football(html, season)
     print(f"  Parsed {len(games)} games")
-    saved = save_games(games)
+    saved = merge_football_games(games)
     log_scrape(sport_key, saved, "success", f"season={season}")
+    return saved
+
+
+FOOTBALL_SOURCE_SCHOOL_ALIASES = {
+    "Acadiana Renaissance Charter": "Acadiana Renaissance Charter Academy",
+    "Acadiana Christian": "Acadiana Christian School",
+    "Morris Jeff": "Morris Jeff Community School",
+    # False River Academy was renamed Bolton Academy for 2026-27.
+    "Bolton Academy": "False River Academy",
+}
+
+
+def merge_football_games(games):
+    """Overlay official LHSAA rows by school/week without deleting gap fillers.
+
+    The preseason Sportsline import deliberately contains all ten weekly slots.
+    LHSAA is authoritative where it has published a row, but an incomplete
+    official report must never erase a known preseason opponent.
+    """
+    if not games:
+        return 0
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    season = str(games[0]["season"])
+    if c.execute(
+        "SELECT 1 FROM season_registry WHERE sport='football' AND season=? AND is_locked=1",
+        (season,),
+    ).fetchone():
+        conn.close()
+        print(f"  Archive lock: refusing to modify football {season}")
+        return 0
+
+    saved = 0
+    for game in games:
+        school = FOOTBALL_SOURCE_SCHOOL_ALIASES.get(game["school"], game["school"])
+        opponent = FOOTBALL_SOURCE_SCHOOL_ALIASES.get(game["opponent"], game["opponent"])
+        values = (
+            game["game_date"], opponent, game["home_away"], game["win_loss"],
+            game["score"], game["district"], game["class_"], game["out_of_state"],
+            game["location"], game["scraped_at"], "LHSAA",
+            "football", season, school, game["week"],
+        )
+        updated = c.execute(
+            """
+            UPDATE games SET game_date=?, opponent=?, home_away=?, win_loss=?,
+                score=?, district=?, class_=?, out_of_state=?, location=?,
+                scraped_at=?, source=?, needs_review=0
+            WHERE sport=? AND season=? AND school=? AND week=?
+            """,
+            values,
+        )
+        if updated.rowcount == 0:
+            c.execute(
+                """
+                INSERT INTO games (
+                    sport, season, school, week, game_date, opponent, home_away,
+                    win_loss, score, district, class_, out_of_state, location,
+                    scraped_at, source, needs_review
+                ) VALUES ('football', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'LHSAA', 0)
+                """,
+                (
+                    season, school, game["week"], game["game_date"], opponent,
+                    game["home_away"], game["win_loss"], game["score"],
+                    game["district"], game["class_"], game["out_of_state"],
+                    game["location"], game["scraped_at"],
+                ),
+            )
+        saved += 1
+
+    c.execute(
+        """
+        UPDATE season_registry SET
+            source='LHSAA official + Louisiana Sportsline gap fill',
+            status='active', updated_at=datetime('now')
+        WHERE sport='football' AND season=?
+        """,
+        (season,),
+    )
+    conn.commit()
+    conn.close()
     return saved
 
 
