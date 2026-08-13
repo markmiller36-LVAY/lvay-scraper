@@ -34,6 +34,7 @@ from datetime import datetime
 # ──────────────────────────────────────────────────────────────────────────────
 
 SCRAPE_URL = "https://www.lhsaaonline.org/pr/vbpr/admin/ReportSchedule.asp"
+SEARCH_URL = "https://www.lhsaaonline.org/pr/vbpr/admin/SearchVolleyballSchedule.asp"
 SEASON     = os.environ.get("VOLLEYBALL_SEASON_YEAR", str(datetime.now().year))
 SPORT      = "volleyball"
 DIVISIONS  = ["I", "II", "III", "IV", "V"]
@@ -140,13 +141,46 @@ def parse_date(date_raw):
     return date_raw
 
 
+def resolve_lhsaa_season_token(season=SEASON):
+    """Translate our season year into the opaque value used by LHSAA's form.
+
+    LHSAA historically used the starting year itself (for example ``2025``),
+    but its 2026-2027 volleyball option uses ``1``. Reading the live form keeps
+    future selector changes from silently producing empty schedules.
+    """
+    override = os.environ.get("LHSAA_VOLLEYBALL_SEASON_TOKEN")
+    if override:
+        return override.strip()
+
+    requested = str(season).strip()
+    try:
+        resp = requests.get(SEARCH_URL, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+        select = soup.find("select", attrs={"name": "y"})
+        if select:
+            for option in select.find_all("option"):
+                label = option.get_text(" ", strip=True)
+                value = option.get("value", "").strip()
+                if value and re.match(rf"^\s*{re.escape(requested)}\s*[-–]", label):
+                    if value != requested:
+                        print(f"  [VB] LHSAA season {requested} maps to form token {value!r}")
+                    return value
+    except requests.RequestException as exc:
+        print(f"  [VB] WARNING: could not read LHSAA season selector: {exc}")
+
+    print(f"  [VB] WARNING: no selector match for {requested}; using legacy token")
+    return requested
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # SCRAPER — mirrors baseball/softball parse pattern exactly
 # ──────────────────────────────────────────────────────────────────────────────
 
-def scrape_division(division, season=SEASON):
+def scrape_division(division, season=SEASON, lhsaa_season_token=None):
+    lhsaa_season_token = lhsaa_season_token or resolve_lhsaa_season_token(season)
     payload = {
-        "y":          str(season),
+        "y":          lhsaa_season_token,
         "resultdate": "",
         "n":          "",
         "h":          "",
@@ -168,6 +202,10 @@ def scrape_division(division, season=SEASON):
         resp.raise_for_status()
     except requests.RequestException as e:
         print(f"  [VB] ERROR fetching Division {division}: {e}")
+        return None
+
+    if "Invalid object name" in resp.text or "Microsoft OLE DB Provider" in resp.text:
+        print(f"  [VB] ERROR: LHSAA rejected season token {lhsaa_season_token!r}")
         return None
 
     soup = BeautifulSoup(resp.text, "html.parser")
@@ -196,9 +234,12 @@ def scrape_division(division, season=SEASON):
             if not school or not opponent:
                 continue
 
-            win_loss = t[10].strip() if len(t) > 10 else ""
-            if win_loss not in ("W", "L", "w", "l"):
-                continue
+            # Preseason schedules do not have results yet. Preserve those rows
+            # so the website can publish the schedule before matches are played;
+            # the rankings engine already ignores blank/unknown results.
+            win_loss = t[10].strip().upper() if len(t) > 10 else ""
+            if win_loss not in ("W", "L"):
+                win_loss = ""
 
             rows.append({
                 "school":      school,
@@ -210,7 +251,7 @@ def scrape_division(division, season=SEASON):
                 "tournament":  t[7].strip() if len(t) > 7 else "",
                 "match_num":   t[8].strip() if len(t) > 8 else "1",
                 "home_away":   t[9].strip() if len(t) > 9 else "",
-                "win_loss":    win_loss.upper(),
+                "win_loss":    win_loss,
                 "score":       t[11].strip() if len(t) > 11 else "",
                 "division":    division,
             })
@@ -350,9 +391,10 @@ def run_volleyball_scraper(season=None):
     total_skipped  = 0
     total_rows     = 0
     failed_divisions = []
+    lhsaa_season_token = resolve_lhsaa_season_token(season)
 
     for div in DIVISIONS:
-        rows = scrape_division(div, season)
+        rows = scrape_division(div, season, lhsaa_season_token)
         if rows is None:
             failed_divisions.append(div)
             continue
