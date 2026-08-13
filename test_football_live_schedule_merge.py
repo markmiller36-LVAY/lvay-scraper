@@ -19,6 +19,29 @@ class FootballLiveScheduleMergeTests(unittest.TestCase):
             scraper.fetch_page("football", "2026")
         self.assertEqual(post.call_args.kwargs["data"]["y"], "1")
 
+    def test_winter_watchers_use_opaque_current_selector(self):
+        for sport in (
+            "boys_basketball", "girls_basketball",
+            "boys_soccer", "girls_soccer",
+        ):
+            with self.subTest(sport=sport), mock.patch.object(
+                scraper.requests, "post"
+            ) as post:
+                response = mock.Mock(text="<html></html>")
+                response.raise_for_status.return_value = None
+                post.return_value = response
+                scraper.fetch_page(sport, "2027", "5A")
+            self.assertEqual(post.call_args.kwargs["data"]["yr"], "1")
+
+    def test_winter_watchers_begin_in_august(self):
+        august = scraper.datetime(2026, 8, 13)
+        for sport in (
+            "boys_basketball", "girls_basketball",
+            "boys_soccer", "girls_soccer",
+        ):
+            with self.subTest(sport=sport):
+                self.assertEqual(scraper.should_scrape_sport(sport, august), (True, "active"))
+
     def test_lhsaa_overlays_week_without_deleting_gap_fill(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             db_path = str(Path(temp_dir) / "merge.db")
