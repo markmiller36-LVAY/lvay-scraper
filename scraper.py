@@ -52,6 +52,7 @@ SPORTS = {
         "season_mode": "calendar_year",
         "active_start": "08-01",
         "active_end": "12-31",
+        "current_season_selector": "1",
         "payload_template": {
             "y": "{season}",
             "resultdate": "",
@@ -128,7 +129,11 @@ SPORTS = {
         "base_url": "https://www.lhsaaonline.org/pr/bbpr/admin/ReportSchedule.asp",
         "referer": "https://www.lhsaaonline.org/pr/bbpr/admin/SearchBoysBasketballSchedule.asp",
         "loop_by_class": True, "season_mode": "school_year",
-        "active_start": "10-01", "active_end": "03-31",
+        # Begin watching before the playing season so LVAY detects the first
+        # official schedules within one four-hour cycle. Rankings/exports stay
+        # gated by scheduled_tasks.py until October.
+        "active_start": "08-01", "active_end": "03-31",
+        "current_season_selector": "1",
         "payload_template": {
             "yr": "{season}", "resultdate": "", "n": "", "h": "",
             "d": "{classification}", "f": "", "s": "", "paging": "",
@@ -142,7 +147,8 @@ SPORTS = {
         "base_url": "https://www.lhsaaonline.org/pr/bbpr/admin/ReportSchedule.asp",
         "referer": "https://www.lhsaaonline.org/pr/bbpr/admin/SearchGirlsBasketballSchedule.asp",
         "loop_by_class": True, "season_mode": "school_year",
-        "active_start": "10-01", "active_end": "03-31",
+        "active_start": "08-01", "active_end": "03-31",
+        "current_season_selector": "1",
         "payload_template": {
             "yr": "{season}", "resultdate": "", "n": "", "h": "",
             "d": "{classification}", "f": "", "s": "", "paging": "",
@@ -156,7 +162,8 @@ SPORTS = {
         "base_url": "https://www.lhsaaonline.org/pr/sopr/admin/ReportSchedule.asp",
         "referer": "https://www.lhsaaonline.org/pr/sopr/admin/SearchboyssoccerSchedule.asp",
         "loop_by_class": True, "season_mode": "school_year",
-        "active_start": "10-01", "active_end": "03-31",
+        "active_start": "08-01", "active_end": "03-31",
+        "current_season_selector": "1",
         "payload_template": {
             "yr": "{season}", "resultdate": "", "n": "", "h": "",
             "d": "{classification}", "f": "", "s": "", "paging": "",
@@ -170,7 +177,8 @@ SPORTS = {
         "base_url": "https://www.lhsaaonline.org/pr/sopr/admin/ReportSchedule.asp",
         "referer": "https://www.lhsaaonline.org/pr/sopr/admin/SearchgirlssoccerSchedule.asp",
         "loop_by_class": True, "season_mode": "school_year",
-        "active_start": "10-01", "active_end": "03-31",
+        "active_start": "08-01", "active_end": "03-31",
+        "current_season_selector": "1",
         "payload_template": {
             "yr": "{season}", "resultdate": "", "n": "", "h": "",
             "d": "{classification}", "f": "", "s": "", "paging": "",
@@ -338,24 +346,23 @@ def save_games(games):
 
 
 def build_payload(template, season, classification=""):
-    # LHSAA resets the live-season selector to the opaque value ``1``.
-    # Keep our public/storage season as the real calendar year, but translate
-    # it only for the current football form submission.
-    source_season = season
-    if classification == "__football_current__":
-        source_season = "1"
-        classification = ""
     return {
-        k: v.format(season=source_season, classification=classification)
+        k: v.format(season=season, classification=classification)
         for k, v in template.items()
     }
 
 
 def fetch_page(sport_key, season, classification=""):
     config = SPORTS[sport_key]
-    if sport_key == "football" and str(season) == resolve_season_year("football"):
-        classification = "__football_current__"
-    payload = build_payload(config["payload_template"], season, classification)
+    source_season = season
+    if (
+        str(season) == resolve_season_year(sport_key)
+        and config.get("current_season_selector")
+    ):
+        source_season = config["current_season_selector"]
+    payload = build_payload(
+        config["payload_template"], source_season, classification
+    )
     headers = HEADERS.copy()
     headers["Referer"] = config["referer"]
 
