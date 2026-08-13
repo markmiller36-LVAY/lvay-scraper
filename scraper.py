@@ -522,6 +522,7 @@ FOOTBALL_SOURCE_SCHOOL_ALIASES = {
     "Acadiana Renaissance Charter": "Acadiana Renaissance Charter Academy",
     "Acadiana Christian": "Acadiana Christian School",
     "Morris Jeff": "Morris Jeff Community School",
+    "JS Clark Leadership Academy": "J.S. Clark Leadership Academy",
     # False River Academy was renamed Bolton Academy for 2026-27.
     "Bolton Academy": "False River Academy",
 }
