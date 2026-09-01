@@ -87,7 +87,29 @@ def sort_schedule_games(games):
             original_index,
         )
 
-    return [game for _, game in sorted(indexed_games, key=sort_key)]
+    sorted_games = [game for _, game in sorted(indexed_games, key=sort_key)]
+    for game in sorted_games:
+        parsed_date = parse_schedule_date(game.get("game_date"))
+        if parsed_date is not None:
+            game["game_date"] = (
+                f"{parsed_date.month}/{parsed_date.day}/{parsed_date.year}"
+            )
+    return sorted_games
+
+
+def annotate_current_opponent_records(games, opponent_records):
+    """Fill missing opponent records from the sport's current rankings."""
+    for game in games:
+        opponent = str(game.get("opponent") or "").strip().casefold()
+        record = opponent_records.get(opponent)
+        if record is None:
+            continue
+        if game.get("opp_wins") is None or game.get("opp_losses") is None:
+            game["opp_wins"] = record.get("wins", 0)
+            game["opp_losses"] = record.get("losses", 0)
+            game["opp_ties"] = record.get("ties", 0)
+        game["opponent_internal"] = True
+    return games
 
 
 def annotate_volleyball_games(games, opponent_records):
@@ -1132,6 +1154,10 @@ def schedules_football():
                 WHERE sport='football' AND season=?
             """, (season,)).fetchall()
         }
+        ranking_rows_casefold = {
+            name.casefold(): ranking
+            for name, ranking in ranking_rows.items()
+        }
 
         for school in schools:
             ranking = ranking_rows.get(school["school"], {})
@@ -1174,12 +1200,33 @@ def schedules_football():
                 except ValueError:
                     week_number = 0
                 calculated = power_rows.get(week_number, {})
+                opponent_name = str(game.get("opponent") or "").strip()
+                opponent_ranking = ranking_rows_casefold.get(
+                    opponent_name.casefold()
+                )
+                opp_wins = calculated.get("opp_wins")
+                opp_losses = calculated.get("opp_losses")
+                opp_ties = calculated.get("opp_ties")
+                if (
+                    (opp_wins is None or opp_losses is None)
+                    and opponent_ranking is not None
+                ):
+                    opp_wins = opponent_ranking.get("wins", 0)
+                    opp_losses = opponent_ranking.get("losses", 0)
+                    opp_ties = opponent_ranking.get("ties", 0)
+                parsed_game_date = parse_schedule_date(game.get("game_date"))
                 game.update({
                     "week": week_number,
+                    "game_date": (
+                        f"{parsed_game_date.month}/{parsed_game_date.day}/"
+                        f"{parsed_game_date.year}"
+                        if parsed_game_date else game.get("game_date")
+                    ),
                     "result": calculated.get("result") or game.pop("win_loss", None),
                     "score": calculated.get("score") or game.get("score"),
-                    "opp_wins": calculated.get("opp_wins"),
-                    "opp_losses": calculated.get("opp_losses"),
+                    "opp_wins": opp_wins,
+                    "opp_losses": opp_losses,
+                    "opp_ties": opp_ties,
                     "opp_division": calculated.get("opp_division"),
                     "base_pts": calculated.get("base_pts"),
                     "div_bonus": calculated.get("div_bonus"),
@@ -1188,9 +1235,7 @@ def schedules_football():
                     "is_district": bool(
                         calculated.get("is_district", game.get("is_district"))
                     ),
-                    "opponent_internal": not bool(
-                        re.search(r"\([A-Z]{2}\)$", game.get("opponent") or "")
-                    ),
+                    "opponent_internal": opponent_ranking is not None,
                 })
                 games.append(game)
             school["games"] = sort_schedule_games(games)
@@ -1376,6 +1421,15 @@ def get_sport_schedules(sport):
         """, (sport, season))
 
     school_rows = [dict(r) for r in c.fetchall()]
+    opponent_records = {
+        str(row.get("school") or "").strip().casefold(): {
+            "wins": int(row.get("wins") or 0),
+            "losses": int(row.get("losses") or 0),
+            "ties": int(row.get("ties") or 0),
+            "games_played": int(row.get("games_played") or 0),
+        }
+        for row in school_rows
+    }
     schools = []
 
     for s in school_rows:
@@ -1404,6 +1458,7 @@ def get_sport_schedules(sport):
         """, (sport, season, school))
 
         games = sort_schedule_games([dict(r) for r in c.fetchall()])
+        annotate_current_opponent_records(games, opponent_records)
 
         schools.append({
             "school":       school,
