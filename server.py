@@ -90,6 +90,36 @@ def sort_schedule_games(games):
     return [game for _, game in sorted(indexed_games, key=sort_key)]
 
 
+def annotate_volleyball_games(games, opponent_records):
+    """Attach opponent records and per-match LHSAA power points."""
+    for game in games:
+        opponent = str(game.get("opponent") or "").strip().casefold()
+        opp = opponent_records.get(opponent)
+        if opp is None:
+            game["opp_wins"] = None
+            game["opp_losses"] = None
+            game["opp_games_played"] = None
+            game["opp_record"] = ""
+        else:
+            game["opp_wins"] = opp["wins"]
+            game["opp_losses"] = opp["losses"]
+            game["opp_games_played"] = opp["games_played"]
+            game["opp_record"] = f'{opp["wins"]}-{opp["losses"]}'
+
+        result = str(game.get("result") or "").strip().upper()
+        counts = bool(game.get("counts_for_pr"))
+        if not counts or opp is None or result not in ("W", "L"):
+            game["power_points"] = None
+        elif result == "W":
+            game["power_points"] = round(5.0 + opp["wins"], 3)
+        else:
+            game["power_points"] = round(opp["wins"] / 3.0, 3)
+        # Keep the established front-end field name while also exposing the
+        # clearer API name for future consumers.
+        game["total_pts"] = game["power_points"]
+    return games
+
+
 def load_football_archives():
     global _FOOTBALL_ARCHIVES
     if _FOOTBALL_ARCHIVES is None:
@@ -1264,6 +1294,17 @@ def schedules_volleyball():
             ORDER BY vr.division ASC, vr.district ASC, vr.school ASC
         """, (season,))
         school_rows = [dict(r) for r in c.fetchall()]
+        # Reuse the calculated rankings table as the source of truth for every
+        # opponent's live record.  Schedule rows previously omitted this data,
+        # which also meant the front end could not show per-match power points.
+        opponent_records = {
+            str(row["school"] or "").strip().casefold(): {
+                "wins": int(row["wins"] or 0),
+                "losses": int(row["losses"] or 0),
+                "games_played": int(row["games_played"] or 0),
+            }
+            for row in school_rows
+        }
         schools = []
 
         for s in school_rows:
@@ -1276,6 +1317,8 @@ def schedules_volleyball():
                 ORDER BY game_date ASC, match_num ASC
             """, (season, s["school"]))
             games = sort_schedule_games([dict(r) for r in c.fetchall()])
+
+            annotate_volleyball_games(games, opponent_records)
 
             schools.append({
                 "school":       s["school"],
