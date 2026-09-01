@@ -1158,6 +1158,19 @@ def schedules_football():
             name.casefold(): ranking
             for name, ranking in ranking_rows.items()
         }
+        # Before the first completed football game there may be no ranking rows
+        # yet.  The official season roster is still sufficient to identify an
+        # in-state opponent and truthfully report its current 0-0 record.
+        for roster_school in schools:
+            ranking_rows_casefold.setdefault(
+                str(roster_school.get("school") or "").strip().casefold(),
+                {
+                    "wins": 0,
+                    "losses": 0,
+                    "ties": 0,
+                    "games_played": 0,
+                },
+            )
 
         for school in schools:
             ranking = ranking_rows.get(school["school"], {})
