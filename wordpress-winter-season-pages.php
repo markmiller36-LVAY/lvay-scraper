@@ -1,6 +1,6 @@
 /**
  * LVAY winter season pages: Boys/Girls Basketball and Boys/Girls Soccer.
- * Creates each sport's Schedule, Power Rankings, and Playoff Brackets page,
+ * Creates each sport's Schedule, Power Ratings, and Playoff Brackets page,
  * then supplies season-aware 2026 archives and 2027 preseason shells.
  * Paste into Code Snippets without an opening PHP tag.
  */
@@ -45,7 +45,7 @@ function lvay_winter_install_pages() {
     foreach (lvay_winter_sports() as $cfg) {
         foreach (array(
             $cfg['schedule'] => ucwords(strtolower($cfg['label'])) . ' Schedules',
-            $cfg['rankings'] => ucwords(strtolower($cfg['label'])) . ' Power Rankings',
+            $cfg['rankings'] => ucwords(strtolower($cfg['label'])) . ' Power Ratings',
             $cfg['brackets'] => ucwords(strtolower($cfg['label'])) . ' Playoff Brackets',
         ) as $slug => $title) {
             if (!get_page_by_path($slug)) {
@@ -108,7 +108,7 @@ function lvay_winter_empty($season, $kind, $cfg, $view) {
     $archive = lvay_winter_url($cfg[$view], 2026);
     $messages = array(
         'schedule' => array('SCHEDULES COMING SOON', 'Schedules are not available yet.', 'This page will populate automatically when official LHSAA schedules enter the LVAY system.'),
-        'rankings' => array('PRESEASON', 'Power rankings begin after games are played.', 'Rankings will populate automatically when official scores enter the LVAY system.'),
+        'rankings' => array('PRESEASON', 'Power ratings begin after games are played.', 'Ratings will populate automatically when official scores enter the LVAY system.'),
         'brackets' => array('COMING THIS POSTSEASON', 'Playoff brackets will appear here.', 'The completed 2025-2026 brackets remain preserved in the Season Archives.'),
     );
     $m = $messages[$kind];
@@ -209,7 +209,7 @@ function lvay_winter_replace($content) {
     list($sport,$cfg,$view) = $context;
     $season = lvay_winter_season();
     $body = $view === 'schedule' ? lvay_winter_schedule($sport,$cfg,$season) : ($view === 'rankings' ? lvay_winter_rankings($sport,$cfg,$season) : lvay_winter_brackets($cfg,$season));
-    $title = lvay_winter_season_label($season) . ' LHSAA<br>' . $cfg['label'] . ' ' . strtoupper($view === 'rankings' ? 'POWER RANKINGS' : ($view === 'brackets' ? 'PLAYOFF BRACKETS' : 'SCHEDULES'));
+    $title = lvay_winter_season_label($season) . ' LHSAA<br>' . $cfg['label'] . ' ' . strtoupper($view === 'rankings' ? 'POWER RATINGS' : ($view === 'brackets' ? 'PLAYOFF BRACKETS' : 'SCHEDULES'));
     return '<section class="lvay-w-layout" data-sport="' . esc_attr($sport) . '" data-season="' . $season . '"><main><header><h1>' . $title . '</h1></header>' . $body . '</main>' . lvay_winter_nav($cfg,$view,$season) . '</section>';
 }
 add_filter('the_content','lvay_winter_replace',999);

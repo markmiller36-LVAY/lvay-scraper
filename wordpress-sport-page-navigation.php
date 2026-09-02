@@ -1,7 +1,7 @@
 /**
  * LVAY Big Three cross-page navigation.
  *
- * Adds a fast, consistent Schedules / Power Rankings / Playoff Brackets
+ * Adds a fast, consistent Schedules / Power Ratings / Playoff Brackets
  * navigation strip to all eight automated sports. Paste into Code Snippets
  * without an opening PHP tag and run everywhere.
  */
@@ -140,7 +140,7 @@ CSS
             'view' => $view,
             'label' => array(
                 'schedule' => 'Schedules',
-                'rankings' => 'Power Rankings',
+                'rankings' => 'Power Ratings',
                 'brackets' => 'Playoff Brackets',
             )[$view],
             'url' => $url,

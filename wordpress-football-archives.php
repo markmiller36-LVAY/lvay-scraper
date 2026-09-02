@@ -98,7 +98,7 @@ function lvay_archive_rankings_output_v2($output, $tag, $attr, $match) {
     ) ? $data['rankings'] : array();
 
     $heading = '<div class="lvay-rankings-heading">' . esc_html($season)
-        . ' LHSAA<br>FOOTBALL POWER RANKINGS</div>';
+        . ' LHSAA<br>FOOTBALL POWER RATINGS</div>';
     $main = '<main class="lvay-season-main">' . $heading;
 
     if ($rankings) {
@@ -116,15 +116,15 @@ function lvay_archive_rankings_output_v2($output, $tag, $attr, $match) {
         $main .= lvay_archive_rankings_table_v2($rankings, $season);
     } else {
         $main .= '<section class="lvay-preseason-card"><span>PRESEASON</span>';
-        $main .= '<h2>Power rankings begin after games are played.</h2>';
-        $main .= '<p>The 2026 page is ready. Rankings will populate automatically when official scores enter the LVAY system.</p>';
-        $main .= '<a href="' . esc_url(add_query_arg('season', 2025, 'https://louisianavsallyall.com/power-rankings/')) . '">View the final 2025 rankings</a></section>';
+        $main .= '<h2>Power ratings begin after games are played.</h2>';
+        $main .= '<p>The 2026 page is ready. Ratings will populate automatically when official scores enter the LVAY system.</p>';
+        $main .= '<a href="' . esc_url(add_query_arg('season', 2025, 'https://louisianavsallyall.com/football/power-ratings/')) . '">View the final 2025 ratings</a></section>';
     }
     $main .= '</main>';
 
     return '<section class="lvay-rankings-design lvay-season-layout">'
         . $main
-        . lvay_archive_nav_v2('https://louisianavsallyall.com/power-rankings/', $season)
+        . lvay_archive_nav_v2('https://louisianavsallyall.com/football/power-ratings/', $season)
         . '</section><script>if(typeof lvayToggle!=="function"){function lvayToggle(el){el.classList.toggle("open");el.nextElementSibling.classList.toggle("open");}}</script>';
 }
 add_filter('do_shortcode_tag', 'lvay_archive_rankings_output_v2', 99, 4);

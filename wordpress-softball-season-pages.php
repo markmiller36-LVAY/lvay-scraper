@@ -1,7 +1,7 @@
 /**
  * LVAY Softball season pages.
  *
- * Replaces the Softball Schedules, Power Rankings, and Playoff Brackets page
+ * Replaces the Softball Schedules, Power Ratings, and Playoff Brackets page
  * bodies with season-aware, responsive displays matching the football pages.
  * Paste into Code Snippets without an opening PHP tag.
  */
@@ -146,7 +146,7 @@ function lvay_sb_rankings_table($rankings, $season) {
 }
 
 function lvay_sb_rankings_page($season) {
-    $url = 'https://louisianavsallyall.com/softball-power-rankings/';
+    $url = 'https://louisianavsallyall.com/softball/power-ratings/';
     $data = lvay_sb_get('/api/rankings/softball?season=' . $season);
     $rows = (
         isset($data['season'], $data['rankings'])
@@ -154,16 +154,16 @@ function lvay_sb_rankings_page($season) {
         && is_array($data['rankings'])
     ) ? $data['rankings'] : array();
     $main = '<main class="lvay-sb-main"><header class="lvay-sb-title"><h1>'
-        . $season . ' LHSAA<br>SOFTBALL POWER RANKINGS</h1></header>';
+        . $season . ' LHSAA<br>SOFTBALL POWER RATINGS</h1></header>';
     if ($rows) {
         $main .= lvay_sb_rankings_table($rows, $season);
     } else {
         $main .= lvay_sb_empty_card(
             'PRESEASON',
-            'Power rankings begin after games are played.',
-            'Rankings will populate automatically when official scores enter the LVAY system.',
+            'Power ratings begin after games are played.',
+            'Ratings will populate automatically when official scores enter the LVAY system.',
             add_query_arg('season', 2025, $url),
-            'View the final 2025 rankings'
+            'View the final 2025 ratings'
         );
     }
     return '<section class="lvay-sb-layout">' . $main . '</main>'

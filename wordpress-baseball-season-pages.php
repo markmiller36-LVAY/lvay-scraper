@@ -1,7 +1,7 @@
 /**
  * LVAY Baseball season pages.
  *
- * Replaces the Baseball Schedules, Power Rankings, and Playoff Brackets page
+ * Replaces the Baseball Schedules, Power Ratings, and Playoff Brackets page
  * bodies with season-aware, responsive displays matching the football pages.
  * Paste into Code Snippets without an opening PHP tag.
  */
@@ -146,7 +146,7 @@ function lvay_bb_rankings_table($rankings, $season) {
 }
 
 function lvay_bb_rankings_page($season) {
-    $url = 'https://louisianavsallyall.com/baseball-power-rankings/';
+    $url = 'https://louisianavsallyall.com/baseball/power-ratings/';
     $data = lvay_bb_get('/api/rankings/baseball?season=' . $season);
     $rows = (
         isset($data['season'], $data['rankings'])
@@ -154,16 +154,16 @@ function lvay_bb_rankings_page($season) {
         && is_array($data['rankings'])
     ) ? $data['rankings'] : array();
     $main = '<main class="lvay-bb-main"><header class="lvay-bb-title"><h1>'
-        . $season . ' LHSAA<br>BASEBALL POWER RANKINGS</h1></header>';
+        . $season . ' LHSAA<br>BASEBALL POWER RATINGS</h1></header>';
     if ($rows) {
         $main .= lvay_bb_rankings_table($rows, $season);
     } else {
         $main .= lvay_bb_empty_card(
             'PRESEASON',
-            'Power rankings begin after games are played.',
-            'Rankings will populate automatically when official scores enter the LVAY system.',
+            'Power ratings begin after games are played.',
+            'Ratings will populate automatically when official scores enter the LVAY system.',
             add_query_arg('season', 2025, $url),
-            'View the final 2025 rankings'
+            'View the final 2025 ratings'
         );
     }
     return '<section class="lvay-bb-layout">' . $main . '</main>'

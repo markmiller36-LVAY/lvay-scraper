@@ -1093,7 +1093,7 @@ def embed_volleyball_rankings():
     h1{{font-size:24px}}h2{{margin-top:28px}}table{{width:100%;
     border-collapse:collapse}}th,td{{padding:9px;border-bottom:1px solid
     #ddd;text-align:left}}th{{background:#f2f4f7;position:sticky;top:0}}
-    </style></head><body><h1>{season} LHSAA Volleyball Power Rankings</h1>
+    </style></head><body><h1>{season} LHSAA Volleyball Power Ratings</h1>
     <p>{len(rows)} teams • Updated automatically</p>
     {''.join(sections)}</body></html>"""
 
