@@ -32,7 +32,9 @@ services:
   - type: cron
     name: lvay-pipeline-scheduler
     env: python
-    schedule: "0 */4 * * *"
+    # Wake every 30 minutes; trigger_pipeline.py applies the Central-time
+    # regular cadence and in-season Thursday/Friday football boost.
+    schedule: "*/30 * * * *"
     buildCommand: pip install -r requirements.txt
     startCommand: python trigger_pipeline.py
     envVars:
@@ -40,3 +42,5 @@ services:
         value: https://lvay-scraper.onrender.com/api/pipeline/run
       - key: PIPELINE_TOKEN
         sync: false
+      - key: SCHEDULE_GATED
+        value: "true"
