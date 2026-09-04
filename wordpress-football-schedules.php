@@ -309,7 +309,7 @@ function lvay_football_schedule_shortcode_v5($atts) {
           const record=data.games_played?data.record:'';
           const division=data.source_division||data.division||'';
           let html='<div class="lvay-school-meta"><strong>'
-            +esc(data.district+'-'+data.class_)+'</strong><span>'+esc(division)+'</span>';
+            +esc(data.district+'-'+data.class_)+'</strong><span>'+esc(formatDivision(division))+'</span>';
           if(record)html+='<span>Overall: '+esc(record)+'</span>';
           if(data.power_rating!==null&&data.power_rating!==undefined){
             html+='<span>PR: '+Number(data.power_rating).toFixed(2)+'</span>';
