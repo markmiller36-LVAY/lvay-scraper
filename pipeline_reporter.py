@@ -151,12 +151,13 @@ def email_report(subject, body):
     if not enabled or not api_key:
         print("[REPORT] Email skipped: REPORT_EMAIL_ENABLED/RESEND_API_KEY not configured")
         return False
+    recipients = [address.strip() for address in REPORT_TO.split(",") if address.strip()]
     response = requests.post(
         "https://api.resend.com/emails",
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json={"from": REPORT_FROM, "to": [REPORT_TO], "subject": subject, "html": body},
+        json={"from": REPORT_FROM, "to": recipients, "subject": subject, "html": body},
         timeout=30,
     )
     response.raise_for_status()
-    print(f"[REPORT] Email sent to {REPORT_TO}")
+    print(f"[REPORT] Email sent to {', '.join(recipients)}")
     return True
