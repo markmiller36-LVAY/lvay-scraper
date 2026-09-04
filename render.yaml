@@ -16,6 +16,14 @@ services:
         value: 3.11.0
       - key: PIPELINE_TOKEN
         sync: false
+      - key: REPORT_EMAIL_TO
+        value: markmiller36@gmail.com
+      - key: REPORT_EMAIL_FROM
+        value: LVAY Pipeline <onboarding@resend.dev>
+      - key: REPORT_EMAIL_ENABLED
+        value: "true"
+      - key: RESEND_API_KEY
+        sync: false
     disk:
       name: lvay-data
       mountPath: /data

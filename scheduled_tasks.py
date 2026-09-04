@@ -47,6 +47,9 @@ def scheduled_run():
     active = get_active_sports()
     print(f"[SCHEDULER] Active sports this month: {active}")
 
+    from pipeline_reporter import capture_snapshot
+    before_snapshot = capture_snapshot(active)
+
     try:
         # 1. SCRAPE
         print("[SCHEDULER] Running scraper...")
@@ -143,6 +146,22 @@ def scheduled_run():
             print(f"[SCHEDULER] {sport} pipeline complete")
 
         print("[SCHEDULER] ALL COMPLETE")
+
+        # Report only after every scrape, calculation, and export succeeds.
+        # Email delivery is deliberately non-fatal to the sports pipeline.
+        try:
+            from pipeline_reporter import build_report, email_report
+            after_snapshot = capture_snapshot(active)
+            subject, body, summary = build_report(
+                before_snapshot,
+                after_snapshot,
+                active,
+                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            )
+            print(f"[REPORT] {summary}")
+            email_report(subject, body)
+        except Exception as report_error:
+            print(f"[REPORT] ERROR (pipeline remains successful): {report_error}")
 
     except Exception as e:
         print(f"[SCHEDULER] ERROR: {e}")
