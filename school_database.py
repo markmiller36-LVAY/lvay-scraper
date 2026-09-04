@@ -833,6 +833,20 @@ def get_school(name, sport=None, season=None):
             merged["division"] = versioned_info.get(
                 "division", merged.get("division", "Unknown")
             )
+            # The season alignment PDFs use combined labels such as
+            # "Division I" even for sports whose postseason brackets split
+            # Select and Non-Select schools.  Preserve the school's known
+            # track while accepting the season-specific division number.
+            if (
+                sport_key in {
+                    "football", "baseball", "softball",
+                    "boys_basketball", "girls_basketball",
+                }
+                and str(merged.get("division") or "").startswith("Division ")
+                and (result or {}).get("track") in {"select", "non-select"}
+            ):
+                prefix = "Select" if result["track"] == "select" else "Non-Select"
+                merged["division"] = f'{prefix} {merged["division"]}'
             division = merged.get("division") or ""
             merged["track"] = versioned_info.get("track") or (
                 "non-select"
@@ -847,6 +861,14 @@ def get_school(name, sport=None, season=None):
                 if division == "Not Postseason Eligible"
                 else merged.get("track", "unknown")
             )
+            if sport_key in {
+                "football", "baseball", "softball",
+                "boys_basketball", "girls_basketball",
+            }:
+                if str(merged.get("division") or "").startswith("Non-Select"):
+                    merged["track"] = "non-select"
+                elif str(merged.get("division") or "").startswith("Select"):
+                    merged["track"] = "select"
             if versioned_info.get("alignment_status"):
                 merged["alignment_status"] = versioned_info[
                     "alignment_status"
