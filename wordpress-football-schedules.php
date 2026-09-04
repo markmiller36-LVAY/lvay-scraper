@@ -107,9 +107,9 @@ function lvay_football_schedule_shortcode_v5($atts) {
                                         <?php foreach ($district_schools as $school):
                                             $school_name = $school['school'];
                                             $school_key = sanitize_title($school_name);
-                                            $record = !empty($school['games_played'])
-                                                ? ($school['record'] ?? '')
-                                                : '';
+                                            $record = $school['record'] ?? (
+                                                (int) ($school['wins'] ?? 0) . '-' . (int) ($school['losses'] ?? 0)
+                                            );
                                             ?>
                                             <article class="lvay-school"
                                                 id="school-<?php echo esc_attr($school_key); ?>"

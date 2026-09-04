@@ -87,11 +87,13 @@ function lvay_bb_schedule_page($season) {
                 foreach ($district_schools as $school) {
                     $name = (string) $school['school'];
                     $key = sanitize_title($name);
+                    $record = (int) ($school['wins'] ?? 0) . '-' . (int) ($school['losses'] ?? 0)
+                        . (!empty($school['ties']) ? '-' . (int) $school['ties'] : '');
                     $main .= '<article class="lvay-bb-school" id="bb-school-' . esc_attr($key)
                         . '" data-name="' . esc_attr(strtolower($name)) . '" data-label="'
                         . esc_attr($name) . '" data-district="' . esc_attr($district_label) . '">'
                         . '<button type="button" class="lvay-bb-school-toggle" aria-expanded="false">'
-                        . '<b>' . esc_html($name) . '</b></button><div class="lvay-bb-school-body" hidden></div></article>';
+                        . '<b>' . esc_html($name) . '</b><span>' . esc_html($record) . '</span></button><div class="lvay-bb-school-body" hidden></div></article>';
                 }
                 $main .= '</div></details>';
             }
@@ -237,7 +239,7 @@ function lvay_bb_assets() {
 .lvay-bb-class>summary{min-height:68px;padding:10px 15px;font-size:31px;border-bottom:2px solid #078b88}.lvay-bb-district>summary{min-height:48px;padding:8px 30px;font-size:23px}
 .lvay-bb-class summary i,.lvay-bb-district summary i,.lvay-bb-rankings summary i,.lvay-bb-brackets summary i{color:#45b8b2;font-family:Arial,sans-serif;font-size:34px;font-style:normal;line-height:.7;transition:transform .15s}
 .lvay-bb-class[open]>summary i,.lvay-bb-district[open]>summary i,.lvay-bb-rankings details[open]>summary i,.lvay-bb-brackets details[open]>summary i{transform:rotate(90deg)}
-.lvay-bb-school-toggle{display:block;width:100%;min-height:50px;padding:8px 45px;border:0;border-bottom:1px solid #e7e9e9;background:#fff;color:#080808;font-family:Teko,Arial,sans-serif;font-size:25px;text-align:left;cursor:pointer}
+.lvay-bb-school-toggle{display:flex;justify-content:space-between;gap:16px;width:100%;min-height:50px;padding:8px 45px;border:0;border-bottom:1px solid #e7e9e9;background:#fff;color:#080808;font-family:Teko,Arial,sans-serif;font-size:25px;text-align:left;cursor:pointer}
 .lvay-bb-school-toggle:hover{background:#050505;color:#fff}.lvay-bb-school-toggle[aria-expanded=true]{background:#333;color:#fff}
 .lvay-bb-school-body{padding:0 0 18px}.lvay-bb-meta{display:flex;gap:24px;flex-wrap:wrap;padding:9px 13px;background:#078b88;color:#fff;font-family:Teko,Arial,sans-serif;font-size:22px}
 .lvay-bb-table-scroll{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.lvay-bb-table-scroll table{width:100%;min-width:850px;border-collapse:collapse;font-size:15px}

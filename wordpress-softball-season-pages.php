@@ -87,11 +87,13 @@ function lvay_sb_schedule_page($season) {
                 foreach ($district_schools as $school) {
                     $name = (string) $school['school'];
                     $key = sanitize_title($name);
+                    $record = (int) ($school['wins'] ?? 0) . '-' . (int) ($school['losses'] ?? 0)
+                        . (!empty($school['ties']) ? '-' . (int) $school['ties'] : '');
                     $main .= '<article class="lvay-sb-school" id="sb-school-' . esc_attr($key)
                         . '" data-name="' . esc_attr(strtolower($name)) . '" data-label="'
                         . esc_attr($name) . '" data-district="' . esc_attr($district_label) . '">'
                         . '<button type="button" class="lvay-sb-school-toggle" aria-expanded="false">'
-                        . '<b>' . esc_html($name) . '</b></button><div class="lvay-sb-school-body" hidden></div></article>';
+                        . '<b>' . esc_html($name) . '</b><span>' . esc_html($record) . '</span></button><div class="lvay-sb-school-body" hidden></div></article>';
                 }
                 $main .= '</div></details>';
             }
@@ -237,7 +239,7 @@ function lvay_sb_assets() {
 .lvay-sb-class>summary{min-height:68px;padding:10px 15px;font-size:31px;border-bottom:2px solid #078b88}.lvay-sb-district>summary{min-height:48px;padding:8px 30px;font-size:23px}
 .lvay-sb-class summary i,.lvay-sb-district summary i,.lvay-sb-rankings summary i,.lvay-sb-brackets summary i{color:#45b8b2;font-family:Arial,sans-serif;font-size:34px;font-style:normal;line-height:.7;transition:transform .15s}
 .lvay-sb-class[open]>summary i,.lvay-sb-district[open]>summary i,.lvay-sb-rankings details[open]>summary i,.lvay-sb-brackets details[open]>summary i{transform:rotate(90deg)}
-.lvay-sb-school-toggle{display:block;width:100%;min-height:50px;padding:8px 45px;border:0;border-bottom:1px solid #e7e9e9;background:#fff;color:#080808;font-family:Teko,Arial,sans-serif;font-size:25px;text-align:left;cursor:pointer}
+.lvay-sb-school-toggle{display:flex;justify-content:space-between;gap:16px;width:100%;min-height:50px;padding:8px 45px;border:0;border-bottom:1px solid #e7e9e9;background:#fff;color:#080808;font-family:Teko,Arial,sans-serif;font-size:25px;text-align:left;cursor:pointer}
 .lvay-sb-school-toggle:hover{background:#050505;color:#fff}.lvay-sb-school-toggle[aria-expanded=true]{background:#333;color:#fff}
 .lvay-sb-school-body{padding:0 0 18px}.lvay-sb-meta{display:flex;gap:24px;flex-wrap:wrap;padding:9px 13px;background:#078b88;color:#fff;font-family:Teko,Arial,sans-serif;font-size:22px}
 .lvay-sb-table-scroll{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.lvay-sb-table-scroll table{width:100%;min-width:850px;border-collapse:collapse;font-size:15px}
