@@ -17,8 +17,10 @@ class AutomationHardeningTests(unittest.TestCase):
         central = ZoneInfo("America/Chicago")
         expected = [
             datetime(2026, 9, 3, 6, 0, tzinfo=central),   # Thursday morning
+            datetime(2026, 9, 3, 14, 30, tzinfo=central), # Thursday afternoon
             datetime(2026, 9, 3, 22, 30, tzinfo=central), # Thursday game night
             datetime(2026, 9, 4, 0, 0, tzinfo=central),   # after Thursday
+            datetime(2026, 9, 4, 17, 30, tzinfo=central), # Friday afternoon
             datetime(2026, 9, 4, 9, 0, tzinfo=central),   # Friday morning
             datetime(2026, 9, 5, 0, 0, tzinfo=central),   # after Friday
         ]

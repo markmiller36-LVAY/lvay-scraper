@@ -36,11 +36,10 @@ def should_trigger_now(now=None):
     if now.month not in {8, 9, 10, 11}:
         return False
 
-    # Thursday and Friday early-morning additions.
-    if weekday in {3, 4} and minute == 0 and hour in {6, 8, 9}:
-        return True
-    # Thursday and Friday game nights: every 30 minutes, 10 PM-midnight.
-    if weekday in {3, 4} and hour in {22, 23} and minute in {0, 30}:
+    # During football season, refresh continuously on the two primary game
+    # days.  Partial score sets are intentional: each later pass replaces the
+    # in-progress snapshot as the official source publishes more finals.
+    if weekday in {3, 4} and minute in {0, 30}:
         return True
     # Midnight immediately following Thursday and Friday game nights.
     if weekday in {4, 5} and hour == 0 and minute == 0:
