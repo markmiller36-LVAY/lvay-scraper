@@ -292,6 +292,28 @@ function lvay_football_schedule_shortcode_v5($atts) {
       const formatDivision=value=>String(value||'')
         .replace(/^Non-Select Division\s+/i,'NS')
         .replace(/^Select Division\s+/i,'S');
+      async function refreshSchoolRecords(){
+        try{
+          const url='https://lvay-scraper.onrender.com/api/schedules/football?season='
+            +encodeURIComponent(root.dataset.season)+'&summary=1&_='+Date.now();
+          const response=await fetch(url,{cache:'no-store'});
+          if(!response.ok)throw new Error('Record refresh unavailable');
+          const payload=await response.json();
+          const records=new Map((payload.schools||[]).map(item=>[
+            normalize(item.school),item.record||'0-0'
+          ]));
+          root.querySelectorAll('.lvay-school').forEach(article=>{
+            const record=records.get(normalize(article.dataset.school));
+            if(record===undefined)return;
+            const button=article.querySelector('.lvay-school-toggle');
+            let label=button.querySelector('small');
+            if(!label){label=document.createElement('small');button.appendChild(label)}
+            label.textContent=record;
+          });
+        }catch(error){
+          console.warn('LVAY record refresh failed',error);
+        }
+      }
       async function renderSchoolBody(body){
         if(body.dataset.loaded==='1')return;
         if(body.dataset.loading==='1')return;
@@ -397,6 +419,7 @@ function lvay_football_schedule_shortcode_v5($atts) {
         });
         status.textContent=query?matches+' school'+(matches===1?'':'s')+' found':'';
       });
+      refreshSchoolRecords();
       if(schoolParam){
         const target=Array.from(root.querySelectorAll('.lvay-school')).find(
           article=>normalize(article.dataset.school)===normalize(schoolParam)
