@@ -357,7 +357,9 @@ function lvay_football_schedule_shortcode_v5($atts) {
               ? '' : Number(game.total_pts).toFixed(2);
             const rowClass=game.is_district?'is-district':'is-nondistrict';
             const resultClass='result-'+String(game.result||'').toLowerCase();
-            const division=formatDivision(game.opp_division||game.district_class||'');
+            const rawDivision=game.opp_division||game.district_class||'';
+            const division=game.opponent_out_of_state||/^unknown$/i.test(rawDivision)
+              ? '' : formatDivision(rawDivision);
             const weekLabel=game.phase&&game.phase!=='Regular Season'
               ? game.phase
               : 'Wk'+esc(game.week||'')+(game.is_district?' D':'');

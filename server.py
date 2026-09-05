@@ -1207,7 +1207,8 @@ def schedules_football():
             games = []
             game_rows = c.execute("""
                 SELECT week, opponent, win_loss, score, home_away, game_date,
-                       district_class, is_district, needs_review, source
+                       district_class, is_district, needs_review, source,
+                       out_of_state
                 FROM games
                 WHERE sport='football' AND season=? AND school=?
                 ORDER BY CAST(REPLACE(week,'Week ','') AS INTEGER)
@@ -1223,6 +1224,9 @@ def schedules_football():
                 opponent_ranking = ranking_rows_casefold.get(
                     opponent_name.casefold()
                 )
+                out_of_state = str(game.get("out_of_state") or "").strip().upper() in {
+                    "Y", "YES", "1", "TRUE"
+                }
                 opp_wins = calculated.get("opp_wins")
                 opp_losses = calculated.get("opp_losses")
                 opp_ties = calculated.get("opp_ties")
@@ -1255,6 +1259,7 @@ def schedules_football():
                         calculated.get("is_district", game.get("is_district"))
                     ),
                     "opponent_internal": opponent_ranking is not None,
+                    "opponent_out_of_state": out_of_state,
                 })
                 games.append(game)
             school["games"] = sort_schedule_games(games)
