@@ -62,24 +62,7 @@ def scheduled_run():
             print("[SCHEDULER] Running football pipeline...")
             from run_power_rankings import run_power_rankings
             run_power_rankings(sport="football", season=season)
-            from sheets_exporter import (
-                export_football_to_sheets,
-                export_football_scores,
-                export_division_and_class_tabs,
-            )
-            require_success(
-                export_football_to_sheets(season=season),
-                "Football Sheets export",
-            )
-            require_success(
-                export_football_scores(season=season),
-                "Football scores export",
-            )
-            require_success(
-                export_division_and_class_tabs(season=season),
-                "Football division/class export",
-            )
-            print("[SCHEDULER] Football pipeline complete")
+            print("[SCHEDULER] Football ratings complete")
 
         # 3. VOLLEYBALL
         if "volleyball" in active:
@@ -88,12 +71,7 @@ def scheduled_run():
             run_volleyball_scraper()
             from run_power_rankings_volleyball import run_volleyball_rankings
             run_volleyball_rankings()
-            from sheets_exporter import export_volleyball_to_sheets
-            require_success(
-                export_volleyball_to_sheets(),
-                "Volleyball Sheets export",
-            )
-            print("[SCHEDULER] Volleyball pipeline complete")
+            print("[SCHEDULER] Volleyball ratings complete")
 
         # 4. BASEBALL
         if "baseball" in active:
@@ -103,12 +81,7 @@ def scheduled_run():
             import_oos_baseball()
             from run_power_rankings import run_power_rankings
             run_power_rankings(sport="baseball", season=season)
-            from sheets_exporter import export_baseball_to_sheets
-            require_success(
-                export_baseball_to_sheets(season=int(season)),
-                "Baseball Sheets export",
-            )
-            print("[SCHEDULER] Baseball pipeline complete")
+            print("[SCHEDULER] Baseball ratings complete")
 
         # 5. SOFTBALL
         if "softball" in active:
@@ -118,12 +91,7 @@ def scheduled_run():
             import_oos_softball()
             from run_power_rankings import run_power_rankings
             run_power_rankings(sport="softball", season=season)
-            from sheets_exporter import export_softball_to_sheets
-            require_success(
-                export_softball_to_sheets(season=int(season)),
-                "Softball Sheets export",
-            )
-            print("[SCHEDULER] Softball pipeline complete")
+            print("[SCHEDULER] Softball ratings complete")
 
         # 6. BASKETBALL AND SOCCER
         for sport in (
@@ -138,17 +106,11 @@ def scheduled_run():
             # Avoid a second LHSAA request and duplicate database rewrite.
             from run_power_rankings import run_power_rankings
             run_power_rankings(sport=sport, season=season)
-            from sheets_exporter import export_winter_sport_to_sheets
-            require_success(
-                export_winter_sport_to_sheets(sport, season),
-                f"{sport} Sheets export",
-            )
-            print(f"[SCHEDULER] {sport} pipeline complete")
+            print(f"[SCHEDULER] {sport} ratings complete")
 
-        print("[SCHEDULER] ALL COMPLETE")
-
-        # Report only after every scrape, calculation, and export succeeds.
-        # Email delivery is deliberately non-fatal to the sports pipeline.
+        # Send the score/rating report as soon as calculations are current.
+        # Google Sheets exports follow afterward and can be materially slower;
+        # they must not delay the report email on game nights.
         try:
             from pipeline_reporter import build_report, email_report
             after_snapshot = capture_snapshot(active)
@@ -162,6 +124,36 @@ def scheduled_run():
             email_report(subject, body)
         except Exception as report_error:
             print(f"[REPORT] ERROR (pipeline remains successful): {report_error}")
+
+        # 7. GOOGLE SHEETS EXPORTS
+        from sheets_exporter import (
+            export_football_to_sheets,
+            export_football_scores,
+            export_division_and_class_tabs,
+            export_volleyball_to_sheets,
+            export_baseball_to_sheets,
+            export_softball_to_sheets,
+            export_winter_sport_to_sheets,
+        )
+        if "football" in active:
+            season = resolve_season_year("football")
+            require_success(export_football_to_sheets(season=season), "Football Sheets export")
+            require_success(export_football_scores(season=season), "Football scores export")
+            require_success(export_division_and_class_tabs(season=season), "Football division/class export")
+        if "volleyball" in active:
+            require_success(export_volleyball_to_sheets(), "Volleyball Sheets export")
+        if "baseball" in active:
+            season = resolve_season_year("baseball")
+            require_success(export_baseball_to_sheets(season=int(season)), "Baseball Sheets export")
+        if "softball" in active:
+            season = resolve_season_year("softball")
+            require_success(export_softball_to_sheets(season=int(season)), "Softball Sheets export")
+        for sport in ("boys_basketball", "girls_basketball", "boys_soccer", "girls_soccer"):
+            if sport in active:
+                season = resolve_season_year(sport)
+                require_success(export_winter_sport_to_sheets(sport, season), f"{sport} Sheets export")
+
+        print("[SCHEDULER] ALL COMPLETE")
 
     except Exception as e:
         print(f"[SCHEDULER] ERROR: {e}")
