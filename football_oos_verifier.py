@@ -27,6 +27,7 @@ SHEET_ID = os.environ.get(
     "FOOTBALL_OOS_SHEET_ID", "1IWrrYD8YIjV_uXuZUSxIHJQxoooBrmGZqFjD3J6BgbE"
 )
 TAB_NAME = os.environ.get("FOOTBALL_OOS_TAB", "OOS Team Registry")
+REGISTRY_RANGE = "A4:X1000"
 SEASON = os.environ.get("FOOTBALL_SEASON_YEAR", os.environ.get("SEASON_YEAR", "2026"))
 CREDS_PATH = os.environ.get(
     "GOOGLE_CREDENTIALS_PATH", "/etc/secrets/google-credentials.json"
@@ -234,11 +235,15 @@ def _open_registry():
 def run(db_path=None, worksheet=None, session=None):
     """Check every registry row, update its audit cells, and import enabled rows."""
     ws = worksheet or _open_registry()
-    all_values = ws.get_all_values()
-    if len(all_values) < 4:
+    # The managed registry is deliberately limited to A:X.  Some Sheets can
+    # retain stale/duplicate headers in columns to the right; reading the whole
+    # worksheet lets those duplicates overwrite the real control columns when
+    # rows are converted to dictionaries.
+    all_values = ws.get(REGISTRY_RANGE)
+    if not all_values:
         raise RuntimeError("OOS registry does not contain its row-4 header")
-    headers = all_values[3]
-    rows = [dict(zip(headers, values + [""] * (len(headers) - len(values)))) for values in all_values[4:]]
+    headers = all_values[0]
+    rows = [dict(zip(headers, values + [""] * (len(headers) - len(values)))) for values in all_values[1:]]
     header_index = {name: index + 1 for index, name in enumerate(headers)}
     required = {
         "Season", "OOS School", "Louisiana Opponent(s)", "LHSAA Class",
