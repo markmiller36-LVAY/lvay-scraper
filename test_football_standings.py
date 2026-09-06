@@ -23,7 +23,7 @@ class FootballStandingsTests(unittest.TestCase):
                     (sport,season,school,week,game_date,opponent,win_loss,score,is_district)
                     VALUES ('football','2026',?,?,?,?,?,?,?)""", [
                     ("Alpha", "Week 1", "9/1/2026", "Beta", "W", "28-14", 1),
-                    ("Alpha", "Week 2", "9/8/2026", "Gamma", "L", "7-10", 0),
+                    ("Alpha", "Week 2", "9/8/2026", "Gamma", "L", "10-7", 0),
                     ("Beta", "Week 1", "9/1/2026", "Alpha", "L", "14-28", 1),
                 ])
                 conn.commit(); conn.close()

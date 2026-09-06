@@ -1100,12 +1100,20 @@ def embed_volleyball_rankings():
 
 # ── SCHEDULES ENDPOINTS ──────────────────────────────────────
 
-def _standings_score(score):
+def _standings_score(score, result=None):
     """Return the school/opponent scores from a completed-game score string."""
     values = re.findall(r"\d+", str(score or ""))
     if len(values) < 2:
         return None
-    return int(values[0]), int(values[1])
+    first, second = int(values[0]), int(values[1])
+    normalized = "T" if result in ("T", "Tie") else str(result or "")[:1]
+    # LHSAA score strings can be home-away rather than school-opponent. The
+    # result field is authoritative, so orient the pair for the selected team.
+    if normalized == "W":
+        return max(first, second), min(first, second)
+    if normalized == "L":
+        return min(first, second), max(first, second)
+    return first, second
 
 
 def _standings_record(wins, losses, ties):
@@ -1151,7 +1159,7 @@ def standings_football():
                     if normalized == "W": dw += 1
                     elif normalized == "L": dl += 1
                     elif normalized == "T": dt += 1
-                parsed = _standings_score(game["score"])
+                parsed = _standings_score(game["score"], result)
                 if parsed:
                     pf += parsed[0]
                     pa += parsed[1]
