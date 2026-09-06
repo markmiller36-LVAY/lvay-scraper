@@ -39,6 +39,11 @@ class FootballStandingsTests(unittest.TestCase):
                 self.assertEqual(teams[0]["away_record"], "0-1")
                 self.assertEqual(teams[0]["streak"], "L1")
                 self.assertEqual((teams[0]["pf"], teams[0]["pa"], teams[0]["point_differential"]), (35, 24, 11))
+                all_response = server.app.test_client().get(
+                    "/api/standings/football?season=2026&class=all&districts=all"
+                )
+                self.assertEqual(all_response.status_code, 200)
+                self.assertEqual(all_response.get_json()["districts"][0]["name"], "1-5A")
         finally:
             os.unlink(path)
 

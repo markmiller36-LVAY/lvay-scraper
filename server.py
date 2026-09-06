@@ -1126,21 +1126,31 @@ def standings_football():
     requested_season = request.args.get("season")
     class_filter = (request.args.get("class") or "5A").strip().upper()
     districts_arg = request.args.get("districts") or "1,2,3"
-    districts = [value.strip() for value in districts_arg.split(",") if value.strip()]
+    all_classes = class_filter in ("ALL", "*")
+    all_districts = districts_arg.strip().upper() in ("ALL", "*")
+    districts = [] if all_districts else [value.strip() for value in districts_arg.split(",") if value.strip()]
 
     conn = get_db()
     try:
         season = requested_season or available_schedule_season(conn, "football")
-        placeholders = ",".join("?" for _ in districts)
+        conditions = ["sport='football'", "season=?"]
+        params = [season]
+        if not all_classes:
+            conditions.append("UPPER(class_)=?")
+            params.append(class_filter)
+        if districts:
+            placeholders = ",".join("?" for _ in districts)
+            conditions.append(f"district IN ({placeholders})")
+            params.extend(districts)
         roster = conn.execute(f"""
             SELECT school, class_, district
             FROM season_schools
-            WHERE sport='football' AND season=? AND UPPER(class_)=?
-              AND district IN ({placeholders})
-            ORDER BY CAST(district AS INTEGER), school
-        """, (season, class_filter, *districts)).fetchall()
+            WHERE {' AND '.join(conditions)}
+            ORDER BY CAST(SUBSTR(class_,1,1) AS INTEGER) DESC,
+                     CAST(district AS INTEGER), school
+        """, params).fetchall()
 
-        output = {district: [] for district in districts}
+        output = {}
         for team in roster:
             games = conn.execute("""
                 SELECT win_loss, score, is_district, home_away, week, game_date
@@ -1195,7 +1205,7 @@ def standings_football():
                 "pf": pf, "pa": pa, "point_differential": pf - pa,
                 "overall_games": overall_games, "district_games": district_games,
             }
-            output.setdefault(str(team["district"]), []).append(row)
+            output.setdefault((str(team["class_"]), str(team["district"])), []).append(row)
 
         def sort_key(row):
             dg, og = row["district_games"], row["overall_games"]
@@ -1205,12 +1215,18 @@ def standings_football():
                     -row["point_differential"], row["team"].casefold())
 
         groups = []
-        for district in districts:
-            rows = sorted(output.get(district, []), key=sort_key)
+        class_order = {"5A": 5, "4A": 4, "3A": 3, "2A": 2, "1A": 1}
+        group_keys = sorted(output, key=lambda key: (
+            -class_order.get(key[0].upper(), 0),
+            int(key[1]) if key[1].isdigit() else 999,
+            key[1],
+        ))
+        for class_name, district in group_keys:
+            rows = sorted(output.get((class_name, district), []), key=sort_key)
             for rank, row in enumerate(rows, 1):
                 row["rank"] = rank
-            groups.append({"name": f"{district}-{class_filter}", "district": district,
-                           "class": class_filter, "teams": rows})
+            groups.append({"name": f"{district}-{class_name}", "district": district,
+                           "class": class_name, "teams": rows})
     except Exception as exc:
         conn.close()
         return jsonify({"error": str(exc)}), 500
