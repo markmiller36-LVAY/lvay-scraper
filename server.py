@@ -1143,12 +1143,15 @@ def standings_football():
         output = {district: [] for district in districts}
         for team in roster:
             games = conn.execute("""
-                SELECT win_loss, score, is_district
+                SELECT win_loss, score, is_district, home_away, week, game_date
                 FROM games
                 WHERE sport='football' AND season=? AND school=?
                   AND win_loss IN ('W','L','T','Tie','W(f)','L(f)')
+                ORDER BY CAST(REPLACE(week,'Week ','') AS INTEGER), game_date
             """, (season, team["school"])).fetchall()
-            ow = ol = ot = dw = dl = dt = pf = pa = 0
+            ow = ol = ot = dw = dl = dt = hw = hl = ht = aw = al = at = pf = pa = 0
+            streak_result = None
+            streak_count = 0
             for game in games:
                 result = str(game["win_loss"] or "").strip()
                 normalized = "T" if result in ("T", "Tie") else result[:1]
@@ -1159,6 +1162,19 @@ def standings_football():
                     if normalized == "W": dw += 1
                     elif normalized == "L": dl += 1
                     elif normalized == "T": dt += 1
+                venue = str(game["home_away"] or "").strip().upper()
+                if venue == "H":
+                    if normalized == "W": hw += 1
+                    elif normalized == "L": hl += 1
+                    elif normalized == "T": ht += 1
+                elif venue == "A":
+                    if normalized == "W": aw += 1
+                    elif normalized == "L": al += 1
+                    elif normalized == "T": at += 1
+                if normalized == streak_result:
+                    streak_count += 1
+                else:
+                    streak_result, streak_count = normalized, 1
                 parsed = _standings_score(game["score"], result)
                 if parsed:
                     pf += parsed[0]
@@ -1171,6 +1187,9 @@ def standings_football():
                 "district": team["district"],
                 "overall_record": _standings_record(ow, ol, ot),
                 "district_record": _standings_record(dw, dl, dt),
+                "home_record": _standings_record(hw, hl, ht),
+                "away_record": _standings_record(aw, al, at),
+                "streak": f"{streak_result}{streak_count}" if streak_result else "-",
                 "overall_wins": ow, "overall_losses": ol, "overall_ties": ot,
                 "district_wins": dw, "district_losses": dl, "district_ties": dt,
                 "pf": pf, "pa": pa, "point_differential": pf - pa,

@@ -20,11 +20,11 @@ class FootballStandingsTests(unittest.TestCase):
                         (sport,season,school,class_,district,division,track,source,status)
                         VALUES ('football','2026',?,'5A','1','Division I','Non-Select','test','active')""", (school,))
                 conn.executemany("""INSERT INTO games
-                    (sport,season,school,week,game_date,opponent,win_loss,score,is_district)
-                    VALUES ('football','2026',?,?,?,?,?,?,?)""", [
-                    ("Alpha", "Week 1", "9/1/2026", "Beta", "W", "28-14", 1),
-                    ("Alpha", "Week 2", "9/8/2026", "Gamma", "L", "10-7", 0),
-                    ("Beta", "Week 1", "9/1/2026", "Alpha", "L", "14-28", 1),
+                    (sport,season,school,week,game_date,opponent,win_loss,score,is_district,home_away)
+                    VALUES ('football','2026',?,?,?,?,?,?,?,?)""", [
+                    ("Alpha", "Week 1", "9/1/2026", "Beta", "W", "28-14", 1, "H"),
+                    ("Alpha", "Week 2", "9/8/2026", "Gamma", "L", "10-7", 0, "A"),
+                    ("Beta", "Week 1", "9/1/2026", "Alpha", "L", "14-28", 1, "A"),
                 ])
                 conn.commit(); conn.close()
                 response = server.app.test_client().get(
@@ -35,6 +35,9 @@ class FootballStandingsTests(unittest.TestCase):
                 self.assertEqual([t["team"] for t in teams], ["Alpha", "Beta"])
                 self.assertEqual(teams[0]["overall_record"], "1-1")
                 self.assertEqual(teams[0]["district_record"], "1-0")
+                self.assertEqual(teams[0]["home_record"], "1-0")
+                self.assertEqual(teams[0]["away_record"], "0-1")
+                self.assertEqual(teams[0]["streak"], "L1")
                 self.assertEqual((teams[0]["pf"], teams[0]["pa"], teams[0]["point_differential"]), (35, 24, 11))
         finally:
             os.unlink(path)
