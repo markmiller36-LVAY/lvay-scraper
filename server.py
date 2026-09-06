@@ -1100,6 +1100,98 @@ def embed_volleyball_rankings():
 
 # ── SCHEDULES ENDPOINTS ──────────────────────────────────────
 
+def _standings_score(score):
+    """Return the school/opponent scores from a completed-game score string."""
+    values = re.findall(r"\d+", str(score or ""))
+    if len(values) < 2:
+        return None
+    return int(values[0]), int(values[1])
+
+
+def _standings_record(wins, losses, ties):
+    return f"{wins}-{losses}" + (f"-{ties}" if ties else "")
+
+
+@app.route("/api/standings/football")
+def standings_football():
+    """District standings built from the same games used by the ratings engine."""
+    requested_season = request.args.get("season")
+    class_filter = (request.args.get("class") or "5A").strip().upper()
+    districts_arg = request.args.get("districts") or "1,2,3"
+    districts = [value.strip() for value in districts_arg.split(",") if value.strip()]
+
+    conn = get_db()
+    try:
+        season = requested_season or available_schedule_season(conn, "football")
+        placeholders = ",".join("?" for _ in districts)
+        roster = conn.execute(f"""
+            SELECT school, class_, district
+            FROM season_schools
+            WHERE sport='football' AND season=? AND UPPER(class_)=?
+              AND district IN ({placeholders})
+            ORDER BY CAST(district AS INTEGER), school
+        """, (season, class_filter, *districts)).fetchall()
+
+        output = {district: [] for district in districts}
+        for team in roster:
+            games = conn.execute("""
+                SELECT win_loss, score, is_district
+                FROM games
+                WHERE sport='football' AND season=? AND school=?
+                  AND win_loss IN ('W','L','T','Tie','W(f)','L(f)')
+            """, (season, team["school"])).fetchall()
+            ow = ol = ot = dw = dl = dt = pf = pa = 0
+            for game in games:
+                result = str(game["win_loss"] or "").strip()
+                normalized = "T" if result in ("T", "Tie") else result[:1]
+                if normalized == "W": ow += 1
+                elif normalized == "L": ol += 1
+                elif normalized == "T": ot += 1
+                if bool(game["is_district"]):
+                    if normalized == "W": dw += 1
+                    elif normalized == "L": dl += 1
+                    elif normalized == "T": dt += 1
+                parsed = _standings_score(game["score"])
+                if parsed:
+                    pf += parsed[0]
+                    pa += parsed[1]
+
+            district_games = dw + dl + dt
+            overall_games = ow + ol + ot
+            row = {
+                "team": team["school"], "class": team["class_"],
+                "district": team["district"],
+                "overall_record": _standings_record(ow, ol, ot),
+                "district_record": _standings_record(dw, dl, dt),
+                "overall_wins": ow, "overall_losses": ol, "overall_ties": ot,
+                "district_wins": dw, "district_losses": dl, "district_ties": dt,
+                "pf": pf, "pa": pa, "point_differential": pf - pa,
+                "overall_games": overall_games, "district_games": district_games,
+            }
+            output.setdefault(str(team["district"]), []).append(row)
+
+        def sort_key(row):
+            dg, og = row["district_games"], row["overall_games"]
+            district_pct = ((row["district_wins"] + .5 * row["district_ties"]) / dg) if dg else 0
+            overall_pct = ((row["overall_wins"] + .5 * row["overall_ties"]) / og) if og else 0
+            return (-district_pct, -row["district_wins"], -overall_pct,
+                    -row["point_differential"], row["team"].casefold())
+
+        groups = []
+        for district in districts:
+            rows = sorted(output.get(district, []), key=sort_key)
+            for rank, row in enumerate(rows, 1):
+                row["rank"] = rank
+            groups.append({"name": f"{district}-{class_filter}", "district": district,
+                           "class": class_filter, "teams": rows})
+    except Exception as exc:
+        conn.close()
+        return jsonify({"error": str(exc)}), 500
+    conn.close()
+    return jsonify({"sport": "football", "season": str(season),
+                    "districts": groups, "count": sum(len(g["teams"]) for g in groups)})
+
+
 @app.route("/api/schedules/football")
 def schedules_football():
     requested_season = request.args.get("season")
