@@ -26,6 +26,8 @@ official LHSAA source is incomplete.
 - `scheduled_tasks.py` — season-aware pipeline orchestration.
 - `scraper.py`, `scraper_volleyball.py` — LHSAA schedule/result ingestion.
 - `run_power_rankings*.py`, `power_rating_engine.py` — rating calculations.
+- `football_oos_verifier.py` — verifies registry records and imports approved
+  football OOS records immediately before rating calculations.
 - `sheets_exporter.py` — Google Sheets review and correction workflow.
 - `server.py` — API, health/status endpoints, season archives, and triggers.
 - `school_database.py`, `winter_alignment_2026.json` — school metadata.

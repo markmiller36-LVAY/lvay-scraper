@@ -60,6 +60,20 @@ def scheduled_run():
         if "football" in active:
             season = resolve_season_year("football")
             print("[SCHEDULER] Running football pipeline...")
+            oos_summary = None
+            if os.environ.get("ENABLE_FOOTBALL_OOS_VERIFIER", "true").lower() == "true":
+                try:
+                    from football_oos_verifier import run as verify_football_oos
+                    oos_summary = verify_football_oos()
+                except Exception as oos_error:
+                    # Never erase the last verified records or stop LHSAA scores
+                    # from publishing because a third-party site/Sheet is down.
+                    print(f"[OOS] ERROR; retaining last verified records: {oos_error}")
+                    oos_summary = {
+                        "checked": 0, "verified": 0, "review": 0,
+                        "imported": 0, "changes": [],
+                        "issues": [f"Verifier failed: {oos_error}"],
+                    }
             from run_power_rankings import run_power_rankings
             run_power_rankings(sport="football", season=season)
             print("[SCHEDULER] Football ratings complete")
@@ -119,6 +133,7 @@ def scheduled_run():
                 after_snapshot,
                 active,
                 datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                oos_summary=locals().get("oos_summary"),
             )
             print(f"[REPORT] {summary}")
             email_report(subject, body)

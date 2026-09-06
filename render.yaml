@@ -12,6 +12,10 @@ services:
       # remains as a gap fill until every official weekly slot is published.
       - key: ENABLE_FOOTBALL
         value: "true"
+      - key: ENABLE_FOOTBALL_OOS_VERIFIER
+        value: "true"
+      - key: FOOTBALL_OOS_SHEET_ID
+        value: 1IWrrYD8YIjV_uXuZUSxIHJQxoooBrmGZqFjD3J6BgbE
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: PIPELINE_TOKEN

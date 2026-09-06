@@ -80,7 +80,7 @@ def capture_snapshot(active_sports, db_path=None):
     return snapshot
 
 
-def build_report(before, after, active_sports, started_at=None):
+def build_report(before, after, active_sports, started_at=None, oos_summary=None):
     game_changes = []
     for key, row in after["games"].items():
         previous = before["games"].get(key)
@@ -121,6 +121,23 @@ def build_report(before, after, active_sports, started_at=None):
     ) or '<tr><td colspan="6">No power-rating or record changes.</td></tr>'
 
     css = "table{border-collapse:collapse;width:100%;font-family:Arial,sans-serif}th,td{border:1px solid #ccc;padding:6px;text-align:left}th{background:#008584;color:#fff}h1,h2{font-family:Arial,sans-serif}"
+    oos_section = ""
+    if oos_summary is not None:
+        changes = "".join(
+            f"<li>{html.escape(str(item))}</li>" for item in oos_summary.get("changes", [])
+        ) or "<li>No OOS record changes.</li>"
+        issues = "".join(
+            f"<li>{html.escape(str(item))}</li>" for item in oos_summary.get("issues", [])
+        ) or "<li>No OOS verification issues.</li>"
+        oos_section = f"""
+        <h2>Football Out-of-State Verification</h2>
+        <p><strong>Checked:</strong> {oos_summary.get('checked', 0)} &nbsp;
+        <strong>Verified:</strong> {oos_summary.get('verified', 0)} &nbsp;
+        <strong>Needs review:</strong> {oos_summary.get('review', 0)} &nbsp;
+        <strong>Engine rows updated:</strong> {oos_summary.get('imported', 0)}</p>
+        <h3>Record changes</h3><ul>{changes}</ul>
+        <h3>Issues</h3><ul>{issues}</ul>"""
+
     body = f"""<html><head><style>{css}</style></head><body>
     <h1>LVAY Pipeline Report</h1>
     <p><strong>Run:</strong> {html.escape(run_time)}<br>
@@ -128,6 +145,7 @@ def build_report(before, after, active_sports, started_at=None):
     <strong>Game updates:</strong> {len(game_changes)} &nbsp; <strong>Rating updates:</strong> {len(rating_changes)}</p>
     <h2>New or Corrected Games</h2><table><thead><tr><th>Sport</th><th>Date</th><th>Team</th><th>Opponent</th><th>Result</th><th>Score</th><th>Base</th><th>Bonus</th><th>Opponent Quality</th><th>Total</th></tr></thead><tbody>{game_rows}</tbody></table>
     <h2>Record and Power-Rating Changes</h2><table><thead><tr><th>Sport</th><th>Team</th><th>Old Record</th><th>New Record</th><th>Old Rating</th><th>New Rating</th></tr></thead><tbody>{rating_rows}</tbody></table>
+    {oos_section}
     </body></html>"""
     subject = f"LVAY scrape report — {len(game_changes)} game updates — {run_time}"
     return subject, body, {"game_changes": len(game_changes), "rating_changes": len(rating_changes)}
