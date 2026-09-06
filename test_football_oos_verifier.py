@@ -27,6 +27,26 @@ class FootballOOSVerifierTests(unittest.TestCase):
             parse_record(html, "https://www.maxpreps.com/example/football/", "2026")
         )
 
+    def test_parses_mhsaa_team_overall_record(self):
+        html = "<h1>Brandon Bulldogs</h1><div>1-2 Overall • 0-0 League</div>"
+        self.assertEqual(
+            parse_record(
+                html,
+                "https://scores.misshsaa.com/teams/244214/schedule",
+                "2026",
+            ),
+            (1, 2, 0),
+        )
+
+    def test_mhsaa_record_controls_when_secondary_disagrees(self):
+        observations = [
+            Observation(2, 1, 0, "https://scores.misshsaa.com/teams/1/schedule", "MHSAA/SBLive"),
+            Observation(1, 1, 0, "https://maxpreps.com/a", "MaxPreps"),
+        ]
+        record, reason = choose_verified_record(observations)
+        self.assertEqual(record, (2, 1, 0))
+        self.assertIn("primary", reason.lower())
+
     def test_distinct_provider_consensus(self):
         observations = [
             Observation(2, 0, 0, "https://maxpreps.com/a", "MaxPreps"),

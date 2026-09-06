@@ -61,6 +61,8 @@ class Observation:
 
 def _provider(url):
     host = urlparse(url).netloc.lower().removeprefix("www.")
+    if host == "scores.misshsaa.com":
+        return "MHSAA/SBLive"
     if "maxpreps.com" in host:
         return "MaxPreps"
     if "nfhsnetwork.com" in host:
@@ -82,6 +84,19 @@ def parse_record(html_text, url, season=SEASON):
     soup = BeautifulSoup(html_text, "lxml")
     text = " ".join(soup.stripped_strings)
     provider = _provider(url)
+
+    # MHSAA's official SBLive team schedule pages display records as
+    # ``1-0 Overall`` (the association's dated scoreboard links into these
+    # pages).  Restrict this rule to team schedule/standings URLs so a global
+    # scoreboard cannot accidentally be attributed to one school.
+    if provider == "MHSAA/SBLive" and re.search(r"/teams/\d+/(?:schedule|standings)", url):
+        match = re.search(
+            r"\b(\d{1,2})-(\d{1,2})(?:-(\d{1,2}))?\s+Overall\b",
+            text,
+            re.IGNORECASE,
+        )
+        if match:
+            return tuple(int(value or 0) for value in match.groups())
 
     # MaxPreps' visible team record is stable and unambiguous:
     # <h4>Overall</h4><div class="data">2-0</div>.
@@ -132,6 +147,18 @@ def choose_verified_record(observations):
     """Return (record, reason) when evidence is safe enough to publish."""
     if not observations:
         return None, "No source returned a current-season record"
+    # For Mississippi members, the association-branded scoreboard is the
+    # controlling source.  MaxPreps and other URLs remain cross-checks, but a
+    # lagging secondary feed must not override MHSAA's published record.
+    mhsaa = [item for item in observations if item.provider == "MHSAA/SBLive"]
+    if mhsaa:
+        mhsaa_counts = Counter(item.record for item in mhsaa)
+        record, count = mhsaa_counts.most_common(1)[0]
+        if len(mhsaa_counts) == 1:
+            return record, "MHSAA/SBLive primary; secondary sources used as cross-checks"
+        if count > 1:
+            return record, "MHSAA/SBLive primary consensus"
+        return None, "MHSAA/SBLive sources reported conflicting records"
     counts = Counter(item.record for item in observations)
     record, count = counts.most_common(1)[0]
     if len(counts) > 1 and count == 1:
