@@ -8,6 +8,7 @@ ratings run, but only rows marked ``Include in Engine? = Yes`` are written to
 from __future__ import annotations
 
 import os
+import json
 import re
 import sqlite3
 from collections import Counter
@@ -215,7 +216,18 @@ def import_verified_row(conn, row, record, source_url, checked_at):
 
 
 def _open_registry():
-    creds = Credentials.from_service_account_file(CREDS_PATH, scopes=SCOPES)
+    if os.path.exists(CREDS_PATH):
+        creds = Credentials.from_service_account_file(CREDS_PATH, scopes=SCOPES)
+    else:
+        raw_credentials = (
+            os.environ.get("GOOGLE_CREDENTIALS_JSON")
+            or os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
+        )
+        if not raw_credentials:
+            raise RuntimeError("No Google service-account credentials configured")
+        creds = Credentials.from_service_account_info(
+            json.loads(raw_credentials), scopes=SCOPES
+        )
     return gspread.authorize(creds).open_by_key(SHEET_ID).worksheet(TAB_NAME)
 
 
