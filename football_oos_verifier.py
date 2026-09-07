@@ -63,6 +63,8 @@ def _provider(url):
     host = urlparse(url).netloc.lower().removeprefix("www.")
     if host == "scores.misshsaa.com":
         return "MHSAA/SBLive"
+    if host == "texasfootball.com":
+        return "Dave Campbell's Texas Football"
     if "maxpreps.com" in host:
         return "MaxPreps"
     if "nfhsnetwork.com" in host:
@@ -92,6 +94,23 @@ def parse_record(html_text, url, season=SEASON):
     if provider == "MHSAA/SBLive" and re.search(r"/teams/\d+/(?:schedule|standings)", url):
         match = re.search(
             r"\b(\d{1,2})-(\d{1,2})(?:-(\d{1,2}))?\s+Overall\b",
+            text,
+            re.IGNORECASE,
+        )
+        if match:
+            return tuple(int(value or 0) for value in match.groups())
+
+    # Dave Campbell's team pages label the current record immediately after
+    # the season heading, e.g. ``2026 Schedule 2 - 0``.  Limit this to the
+    # canonical team URL so rankings/index pages cannot be attributed to a
+    # specific opponent.
+    if (
+        provider == "Dave Campbell's Texas Football"
+        and re.search(r"/team/[^/?#]+/?$", url)
+    ):
+        match = re.search(
+            rf"\b{re.escape(str(season))}\s+Schedule\s+"
+            r"(\d{1,2})\s*-\s*(\d{1,2})(?:\s*-\s*(\d{1,2}))?\b",
             text,
             re.IGNORECASE,
         )
@@ -159,6 +178,24 @@ def choose_verified_record(observations):
         if count > 1:
             return record, "MHSAA/SBLive primary consensus"
         return None, "MHSAA/SBLive sources reported conflicting records"
+    # Dave Campbell's team pages distinguish regular-season results from
+    # non-counting Texas scrimmages.  Use that state-specific record ahead of
+    # aggregators such as MaxPreps when they disagree.
+    dctf = [
+        item for item in observations
+        if item.provider == "Dave Campbell's Texas Football"
+    ]
+    if dctf:
+        dctf_counts = Counter(item.record for item in dctf)
+        record, count = dctf_counts.most_common(1)[0]
+        if len(dctf_counts) == 1:
+            return record, (
+                "Dave Campbell's Texas Football primary; secondary sources "
+                "used as cross-checks"
+            )
+        if count > 1:
+            return record, "Dave Campbell's Texas Football primary consensus"
+        return None, "Dave Campbell's Texas Football sources reported conflicting records"
     counts = Counter(item.record for item in observations)
     record, count = counts.most_common(1)[0]
     if len(counts) > 1 and count == 1:

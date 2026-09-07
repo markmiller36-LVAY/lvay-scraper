@@ -11,6 +11,37 @@ from football_oos_verifier import (
 
 
 class FootballOOSVerifierTests(unittest.TestCase):
+    def test_parses_dave_campbells_team_record(self):
+        html = "<main><h2>2026 Schedule 2 - 0</h2></main>"
+
+        self.assertEqual(
+            (2, 0, 0),
+            parse_record(
+                html,
+                "https://www.texasfootball.com/team/houston-st-john-s-mavericks",
+                "2026",
+            ),
+        )
+
+    def test_dave_campbells_record_controls_aggregator_conflict(self):
+        observations = [
+            Observation(
+                2, 0, 0,
+                "https://www.texasfootball.com/team/houston-st-john-s-mavericks",
+                "Dave Campbell's Texas Football",
+            ),
+            Observation(
+                2, 1, 0,
+                "https://www.maxpreps.com/tx/houston/st-johns-mavericks/football/",
+                "MaxPreps",
+            ),
+        ]
+
+        record, reason = choose_verified_record(observations)
+
+        self.assertEqual((2, 0, 0), record)
+        self.assertIn("Dave Campbell's", reason)
+
     def test_parses_current_maxpreps_overall_record(self):
         html = """
         <div class='year'>26-27</div><div><h4>Overall</h4>
