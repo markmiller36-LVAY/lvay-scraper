@@ -53,10 +53,27 @@ class VersionedSportAlignment20262027Tests(unittest.TestCase):
         )
 
         self.assertEqual("Select Division I", archived["division"])
-        self.assertEqual("Division I", upcoming["division"])
+        self.assertEqual("Select Division I", upcoming["division"])
         self.assertEqual("5A", upcoming["class"])
         self.assertEqual(1, upcoming["district"])
-        self.assertEqual("combined", upcoming["track"])
+        self.assertEqual("select", upcoming["track"])
+
+    def test_2026_football_uses_postseason_select_designation(self):
+        jewel_sumner = get_school(
+            "Jewel Sumner", sport="football", season=2026
+        )
+
+        self.assertEqual(
+            "Non-Select Division III", jewel_sumner["division"]
+        )
+        self.assertEqual("non-select", jewel_sumner["track"])
+
+    def test_2025_football_alignment_is_unchanged(self):
+        archived = get_school(
+            "Jewel Sumner", sport="football", season=2025
+        )
+
+        self.assertEqual("Select Division III", archived["division"])
 
     def test_new_cycle_soccer_uses_sport_specific_classification(self):
         upcoming = get_school(
@@ -103,8 +120,9 @@ class VersionedSportAlignment20262027Tests(unittest.TestCase):
             "Evangel Christian", sport="football", season=2027
         )
 
-        self.assertEqual("Division I", upcoming["division"])
-        self.assertNotEqual(upcoming["division"], future["division"])
+        self.assertEqual("Select Division I", upcoming["division"])
+        self.assertEqual("standard", upcoming["alignment_status"])
+        self.assertNotIn("alignment_status", future)
 
 
 if __name__ == "__main__":
