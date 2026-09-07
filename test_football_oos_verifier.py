@@ -2,6 +2,7 @@ import os
 import sqlite3
 import tempfile
 import unittest
+from datetime import date
 
 os.environ.setdefault("FOOTBALL_SEASON_YEAR", "2026")
 
@@ -11,6 +12,31 @@ from football_oos_verifier import (
 
 
 class FootballOOSVerifierTests(unittest.TestCase):
+    def test_arkansas_is_zero_before_first_official_playing_date(self):
+        observations = [
+            Observation(1, 0, 0, "https://www.maxpreps.com/ar/example/football/", "MaxPreps")
+        ]
+
+        record, reason = choose_verified_record(
+            observations, state="AR", as_of=date(2026, 8, 26)
+        )
+
+        self.assertEqual((0, 0, 0), record)
+        self.assertIn("before 2026-08-27", reason)
+
+    def test_arkansas_maxpreps_controls_on_and_after_august_27(self):
+        observations = [
+            Observation(1, 0, 0, "https://www.maxpreps.com/ar/example/football/", "MaxPreps"),
+            Observation(2, 0, 0, "https://example-school.org/football", "example-school.org"),
+        ]
+
+        record, reason = choose_verified_record(
+            observations, state="AR", as_of=date(2026, 8, 27)
+        )
+
+        self.assertEqual((1, 0, 0), record)
+        self.assertIn("MaxPreps primary", reason)
+
     def test_parses_dave_campbells_team_record(self):
         html = "<main><h2>2026 Schedule 2 - 0</h2></main>"
 

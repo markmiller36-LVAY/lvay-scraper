@@ -13,7 +13,7 @@ import re
 import sqlite3
 from collections import Counter
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from urllib.parse import urlparse
 
 import gspread
@@ -33,6 +33,7 @@ CREDS_PATH = os.environ.get(
     "GOOGLE_CREDENTIALS_PATH", "/etc/secrets/google-credentials.json"
 )
 TIMEOUT = int(os.environ.get("OOS_SOURCE_TIMEOUT_SECONDS", "20"))
+ARKANSAS_FIRST_OFFICIAL_DATE = date(2026, 8, 27)
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -162,8 +163,31 @@ def fetch_observation(url, season=SEASON, session=None):
     return Observation(*record, url=response.url, provider=_provider(response.url)), None
 
 
-def choose_verified_record(observations):
+def choose_verified_record(observations, state="", as_of=None):
     """Return (record, reason) when evidence is safe enough to publish."""
+    state = str(state or "").strip().upper()
+    if state == "AR":
+        check_date = as_of or date.today()
+        if check_date < ARKANSAS_FIRST_OFFICIAL_DATE:
+            return (0, 0, 0), (
+                "Arkansas preseason: games before 2026-08-27 are scrimmages or "
+                "jamborees and do not count"
+            )
+        # Arkansas schools are required to report results to MaxPreps.  Its
+        # displayed Overall record excludes scrimmages/jamborees, so it is the
+        # controlling source beginning with the first official playing date.
+        maxpreps = [item for item in observations if item.provider == "MaxPreps"]
+        if not maxpreps:
+            return None, "Arkansas requires a current-season MaxPreps record"
+        counts = Counter(item.record for item in maxpreps)
+        record, count = counts.most_common(1)[0]
+        if len(counts) == 1:
+            return record, (
+                "Arkansas MaxPreps primary; only games on/after 2026-08-27 count"
+            )
+        if count > 1:
+            return record, "Arkansas MaxPreps primary consensus after 2026-08-27"
+        return None, "Arkansas MaxPreps endpoints reported conflicting records"
     if not observations:
         return None, "No source returned a current-season record"
     # For Mississippi members, the association-branded scoreboard is the
@@ -349,7 +373,9 @@ def run(db_path=None, worksheet=None, session=None):
                 else:
                     errors.append(f"{label}: {error}")
 
-            record, reason = choose_verified_record(observations)
+            record, reason = choose_verified_record(
+                observations, state=row.get("State", "")
+            )
             old_record = (
                 str(row.get("Wins") or ""), str(row.get("Losses") or ""),
                 str(row.get("Ties") or ""),
