@@ -601,6 +601,14 @@ def merge_football_games(games):
         return 0
 
     saved = 0
+    if season == "2026":
+        c.execute(
+            """
+            DELETE FROM games
+            WHERE sport='football' AND season='2026'
+              AND school='False River Academy' AND opponent='JV'
+            """
+        )
     for game in games:
         school = FOOTBALL_SOURCE_SCHOOL_ALIASES.get(game["school"], game["school"])
         opponent = FOOTBALL_SOURCE_SCHOOL_ALIASES.get(game["opponent"], game["opponent"])
