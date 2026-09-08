@@ -68,8 +68,11 @@ function lvay_archive_rankings_table_v2($rankings, $season) {
                     $ties = isset($school['ties']) ? (int) $school['ties'] : 0;
                     $record = (int) $school['wins'] . '-' . (int) $school['losses'];
                     if ($ties) $record .= '-' . $ties;
-                    $schedule_url = add_query_arg('season', $season, 'https://louisianavsallyall.com/schedules/');
-                    $schedule_url .= '#' . sanitize_title($school['school']);
+                    $schedule_url = add_query_arg(
+                        array('season' => $season, 'school' => $school['school']),
+                        'https://louisianavsallyall.com/football/schedules/'
+                    );
+                    $schedule_url .= '#school-' . sanitize_title($school['school']);
                     $out .= '<tr><td>' . ($index + 1) . '</td>';
                     $out .= '<td><a href="' . esc_url($schedule_url) . '">' . esc_html($school['school']) . '</a></td>';
                     $out .= '<td>' . esc_html($school['class_']) . '</td><td>' . esc_html($record) . '</td>';
@@ -112,7 +115,9 @@ function lvay_archive_rankings_output_v2($output, $tag, $attr, $match) {
                 $updated = '';
             }
         }
-        if ($updated) $main .= '<div class="lvay-updated">Final update: ' . esc_html($updated) . '</div>';
+        if ($updated) $main .= '<div class="lvay-updated">Updated: ' . esc_html($updated) . '</div>';
+        $main .= '<label class="screen-reader-text" for="lvay-ratings-search">Search football power ratings</label>';
+        $main .= '<input id="lvay-ratings-search" class="lvay-ratings-search" type="search" placeholder="Search for a school..." oninput="lvayFilterRatings(this.value)">';
         $main .= lvay_archive_rankings_table_v2($rankings, $season);
     } else {
         $main .= '<section class="lvay-preseason-card"><span>PRESEASON</span>';
@@ -125,7 +130,7 @@ function lvay_archive_rankings_output_v2($output, $tag, $attr, $match) {
     return '<section class="lvay-rankings-design lvay-season-layout">'
         . $main
         . lvay_archive_nav_v2('https://louisianavsallyall.com/football/power-ratings/', $season)
-        . '</section><script>if(typeof lvayToggle!=="function"){function lvayToggle(el){el.classList.toggle("open");el.nextElementSibling.classList.toggle("open");}}</script>';
+        . '</section><script>if(typeof lvayToggle!=="function"){function lvayToggle(el){el.classList.toggle("open");el.nextElementSibling.classList.toggle("open");}}function lvayFilterRatings(value){var q=(value||"").toLowerCase().trim();document.querySelectorAll(".lvay-rankings-design .lvay-acc").forEach(function(group){var hits=0;group.querySelectorAll("tbody tr").forEach(function(row){var show=!q||row.textContent.toLowerCase().indexOf(q)!==-1;row.style.display=show?"":"none";if(show&&q){hits++;}});var body=group.querySelector(".lvay-acc-body"),head=group.querySelector(".lvay-acc-hdr");if(q&&hits){body.classList.add("open");head.classList.add("open");}else if(q&&!hits){body.classList.remove("open");head.classList.remove("open");}});}</script>';
 }
 add_filter('do_shortcode_tag', 'lvay_archive_rankings_output_v2', 99, 4);
 
@@ -181,15 +186,26 @@ function lvay_archive_styles_v2() {
 .lvay-season-main{min-width:0}
 .lvay-rankings-design .lvay-acc-body{display:none!important}
 .lvay-rankings-design .lvay-acc-body.open{display:block!important}
+.lvay-rankings-heading{margin:0 0 17px!important;color:#078b88!important;font-family:"Alfa Slab One",Rockwell,serif!important;font-size:clamp(34px,3vw,46px)!important;font-weight:400!important;line-height:.95!important;letter-spacing:.2px!important;text-transform:uppercase!important}
+.lvay-rankings-design .lvay-updated{margin:0 0 12px;color:#666;font-family:Teko,Arial,sans-serif;font-size:18px;text-transform:none}
+.lvay-ratings-search{box-sizing:border-box!important;width:100%!important;height:50px!important;margin:0 0 26px!important;padding:10px 15px!important;border:2px solid #078b88!important;border-radius:4px!important;background:#fff!important;color:#080808!important;font-family:Teko,Arial,sans-serif!important;font-size:19px!important;box-shadow:none!important}
+.lvay-ratings-search::placeholder{color:#a0a0a0!important;opacity:1}
 .lvay-season-archive{align-self:start;background:#050505;color:#fff;padding:20px 24px 24px;display:grid;grid-template-columns:1fr 1fr;gap:7px 18px}
 .lvay-season-archive h3{grid-column:1/-1;margin:0 0 8px;color:#fff;font-family:Teko,Arial,sans-serif;font-size:34px;font-weight:500;line-height:1;letter-spacing:.8px;text-decoration:underline;text-underline-offset:5px}
 .lvay-season-archive a{color:#666!important;font-family:Teko,Arial,sans-serif;font-size:27px;font-weight:500;line-height:1.05;text-decoration:none!important}
 .lvay-season-archive a:hover,.lvay-season-archive a.active{color:#fff!important}
 .lvay-season-archive .coming{grid-column:1/-1;margin-top:12px;color:#999;font-family:Teko,Arial,sans-serif;font-size:20px;font-weight:400;line-height:1.15}
-.lvay-rankings-design .lvay-acc-hdr{min-height:82px!important;font-size:clamp(27px,2.25vw,42px)!important}
-.lvay-rankings-design .lvay-rtbl{font-size:16px!important}
-.lvay-rankings-design .lvay-rtbl th{padding:11px 12px!important;font-size:15px!important}
-.lvay-rankings-design .lvay-rtbl td{padding:10px 12px!important}
+.lvay-rankings-design .lvay-cols{display:grid;grid-template-columns:1fr!important;gap:0!important}
+.lvay-rankings-design .lvay-acc{margin:0!important;border:0!important}
+.lvay-rankings-design .lvay-acc-hdr{display:flex!important;align-items:center!important;gap:7px!important;min-height:0!important;padding:14px 4px 10px!important;border:0!important;border-bottom:2px solid #078b88!important;background:#fff!important;color:#090909!important;font-family:"Alfa Slab One",Rockwell,serif!important;font-size:27px!important;font-weight:400!important;line-height:1.1!important;cursor:pointer!important}
+.lvay-rankings-design .lvay-acc-hdr.open{background:#333!important;color:#fff!important;padding-left:16px!important}
+.lvay-rankings-design .lvay-arrow{color:#5dc7c1!important;font-family:Arial,sans-serif!important;font-size:32px!important;line-height:.7!important}
+.lvay-rankings-design .lvay-rtbl{width:100%!important;border-collapse:collapse!important;font-family:Teko,Arial,sans-serif!important;font-size:20px!important;color:#080808!important}
+.lvay-rankings-design .lvay-rtbl th{padding:8px 10px!important;background:#078b88!important;color:#fff!important;font-family:Teko,Arial,sans-serif!important;font-size:18px!important;font-weight:600!important;text-align:left!important}
+.lvay-rankings-design .lvay-rtbl td{padding:7px 10px!important;border-bottom:1px solid #e6e6e6!important;background:#fff!important;color:#080808!important;font-size:20px!important}
+.lvay-rankings-design .lvay-rtbl tr:nth-child(even) td{background:#f2f4f4!important}
+.lvay-rankings-design .lvay-rtbl a{color:#080808!important;font-weight:500!important;text-decoration:none!important}
+.lvay-rankings-design .lvay-rtbl a:hover{color:#078b88!important;text-decoration:underline!important}
 .lvay-preseason-card{border-top:8px solid #078b88;background:#f1f5f5;padding:34px 38px;margin-top:18px}
 .lvay-preseason-card span{color:#078b88;font-family:Teko,Arial,sans-serif;font-size:24px;font-weight:700;letter-spacing:2px}
 .lvay-preseason-card h2{margin:3px 0 10px;color:#080808;font-family:"Alfa Slab One",serif;font-size:clamp(27px,3vw,42px);line-height:1.05}
