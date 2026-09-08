@@ -24,7 +24,7 @@ def _rows(conn, sql, params=()):
 def capture_snapshot(active_sports, db_path=None):
     """Capture completed games, game points, and rankings for change detection."""
     path = db_path or DB_PATH
-    snapshot = {"games": {}, "points": {}, "ratings": {}}
+    snapshot = {"games": {}, "points": {}, "ratings": {}, "missing_results": []}
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
     try:
@@ -62,6 +62,34 @@ def capture_snapshot(active_sports, db_path=None):
                 key = tuple(str(row.get(k) or "") for k in
                             ("sport", "season", "school"))
                 snapshot["ratings"][key] = row
+
+        if "football" in active_sports:
+            unresolved = _rows(conn, """
+                SELECT season, school, opponent, game_date, score
+                FROM games
+                WHERE sport='football'
+                  AND COALESCE(TRIM(win_loss), '') = ''
+                  AND COALESCE(TRIM(opponent), '') NOT IN ('', 'JV')
+            """)
+            seen = set()
+            today = datetime.now().date()
+            for row in unresolved:
+                try:
+                    game_day = datetime.strptime(
+                        str(row.get("game_date") or "").split()[0], "%m/%d/%Y"
+                    ).date()
+                except ValueError:
+                    continue
+                if game_day >= today:
+                    continue
+                key = (
+                    str(row.get("season") or ""),
+                    game_day.isoformat(),
+                    *sorted((str(row.get("school") or ""), str(row.get("opponent") or ""))),
+                )
+                if key not in seen:
+                    seen.add(key)
+                    snapshot["missing_results"].append(row)
 
         points = _rows(conn, """
             SELECT sport, season, school, opponent, game_date, result, score,
@@ -120,6 +148,15 @@ def build_report(before, after, active_sports, started_at=None, oos_summary=None
         )) + "</tr>" for row, old, old_record, new_record in rating_changes
     ) or '<tr><td colspan="6">No power-rating or record changes.</td></tr>'
 
+    missing_rows = "".join(
+        "<tr>" + "".join(
+            f"<td>{html.escape(str(value if value is not None else '—'))}</td>"
+            for value in (
+                r.get("game_date"), r.get("school"), r.get("opponent"), r.get("score")
+            )
+        ) + "</tr>" for r in after.get("missing_results", [])
+    ) or '<tr><td colspan="4">No past football games are missing results.</td></tr>'
+
     css = "table{border-collapse:collapse;width:100%;font-family:Arial,sans-serif}th,td{border:1px solid #ccc;padding:6px;text-align:left}th{background:#008584;color:#fff}h1,h2{font-family:Arial,sans-serif}"
     oos_section = ""
     if oos_summary is not None:
@@ -145,6 +182,7 @@ def build_report(before, after, active_sports, started_at=None, oos_summary=None
     <strong>Game updates:</strong> {len(game_changes)} &nbsp; <strong>Rating updates:</strong> {len(rating_changes)}</p>
     <h2>New or Corrected Games</h2><table><thead><tr><th>Sport</th><th>Date</th><th>Team</th><th>Opponent</th><th>Result</th><th>Score</th><th>Base</th><th>Bonus</th><th>Opponent Quality</th><th>Total</th></tr></thead><tbody>{game_rows}</tbody></table>
     <h2>Record and Power-Rating Changes</h2><table><thead><tr><th>Sport</th><th>Team</th><th>Old Record</th><th>New Record</th><th>Old Rating</th><th>New Rating</th></tr></thead><tbody>{rating_rows}</tbody></table>
+    <h2>Past Football Games Still Missing Results</h2><table><thead><tr><th>Date</th><th>Team</th><th>Opponent</th><th>Score Field</th></tr></thead><tbody>{missing_rows}</tbody></table>
     {oos_section}
     </body></html>"""
     subject = f"LVAY scrape report — {len(game_changes)} game updates — {run_time}"
