@@ -186,6 +186,103 @@ def football_archive_response(season, summary_only=False, school_filter=""):
     }
 
 
+def football_archive_rankings_response(season):
+    """Reconstruct final regular-season ratings for a preserved archive."""
+    archive = load_football_archives().get("seasons", {}).get(str(season))
+    if not archive:
+        return None
+
+    schools = archive.get("schools", [])
+    identities = {
+        str(school.get("school") or "").casefold(): school for school in schools
+    }
+
+    def regular_games(school):
+        return [
+            game for game in school.get("games", [])
+            if not game.get("phase")
+            or str(game.get("phase")).lower().startswith("regular")
+        ]
+
+    records = {}
+    for school in schools:
+        games = regular_games(school)
+        records[str(school.get("school") or "").casefold()] = {
+            "wins": sum(str(game.get("result") or "").upper() == "W" for game in games),
+            "losses": sum(str(game.get("result") or "").upper() == "L" for game in games),
+            "ties": sum(str(game.get("result") or "").upper() == "T" for game in games),
+        }
+
+    roman_rank = {"I": 5, "II": 4, "III": 3, "IV": 2, "V": 1}
+
+    def legacy_group(school):
+        division = str(school.get("division") or "").strip()
+        match = re.search(r"Division\s+([IV]+)", division, re.I)
+        if match and int(season) <= 2021:
+            roman = match.group(1).upper()
+            return f"Division {roman}", roman_rank.get(roman, 0)
+        class_name = str(school.get("class_") or "").upper().strip()
+        try:
+            rank = int(class_name.replace("A", ""))
+        except ValueError:
+            rank = 0
+        if int(season) <= 2021:
+            return f"Class {class_name}", rank
+        return division, rank
+
+    rankings = []
+    for school in schools:
+        games = regular_games(school)
+        if not games:
+            continue
+        group, team_tier = legacy_group(school)
+        total = 0.0
+        wins = losses = ties = counted = 0
+        for game in games:
+            result = str(game.get("result") or "").upper()
+            if result not in ("W", "L", "T"):
+                continue
+            opponent_name = str(game.get("opponent") or "").casefold()
+            opponent = identities.get(opponent_name)
+            opponent_record = records.get(opponent_name, {})
+            opponent_wins = int(opponent_record.get("wins", 0))
+            opponent_gp = sum(int(opponent_record.get(key, 0)) for key in ("wins", "losses", "ties"))
+            opponent_quality = (opponent_wins / opponent_gp * 10) if opponent_gp else 0.0
+            opponent_tier = legacy_group(opponent)[1] if opponent else 0
+            bonus = max(opponent_tier - team_tier, 0) * 2
+            total += {"W": 10, "L": 0, "T": 5}[result] + bonus + opponent_quality
+            wins += result == "W"
+            losses += result == "L"
+            ties += result == "T"
+            counted += 1
+        if not counted:
+            continue
+        rankings.append({
+            "school": school.get("school", ""),
+            "division": group,
+            "track": school.get("track", ""),
+            "class_": school.get("class_", ""),
+            "district": school.get("district", ""),
+            "power_rating": round(total / counted, 2),
+            "wins": wins,
+            "losses": losses,
+            "ties": ties,
+            "games_played": counted,
+            "strength_factor": round(total / counted - (wins * 10 + ties * 5) / counted, 2),
+            "calculated_at": "",
+        })
+    rankings.sort(key=lambda row: (-row["power_rating"], row["school"].casefold()))
+    for rank, row in enumerate(rankings, 1):
+        row["rank"] = rank
+    return {
+        "sport": "football",
+        "season": int(season),
+        "count": len(rankings),
+        "source": "Airtable final archive reconstruction",
+        "rankings": rankings,
+    }
+
+
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -968,6 +1065,11 @@ def calculate_rankings():
 
 @app.route("/api/rankings/football")
 def rankings_football():
+    requested_season = request.args.get("season", type=int)
+    if requested_season is not None:
+        archived = football_archive_rankings_response(requested_season)
+        if archived is not None:
+            return jsonify(archived)
     conn = get_db()
     c = conn.cursor()
     try:
@@ -975,7 +1077,6 @@ def rankings_football():
         # another year. This keeps archive pages historically accurate and lets
         # the upcoming-season page correctly report that rankings are not yet
         # available.
-        requested_season = request.args.get("season", type=int)
         season = requested_season if requested_season is not None else available_season(conn, "football")
         c.execute("""
             SELECT school, division, track, class_, district,

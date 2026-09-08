@@ -8,18 +8,21 @@
 
 function lvay_archive_selected_season_v2() {
     $season = isset($_GET['season']) ? absint($_GET['season']) : 2026;
-    return in_array($season, array(2025, 2026), true) ? $season : 2026;
+    return in_array($season, range(2015, 2026), true) ? $season : 2026;
 }
 
 function lvay_archive_nav_v2($page_url, $selected) {
-    $years = array(2026, 2025);
+    $years = range(2025, 2015);
     $out = '<aside class="lvay-season-archive"><h3>SEASON ARCHIVES</h3>';
+    $out .= '<label for="lvay-ratings-season-select">Choose a season</label>';
+    $out .= '<select id="lvay-ratings-season-select" onchange="if(this.value){window.location.href=this.value;}">';
+    $out .= '<option value="">Select season…</option>';
     foreach ($years as $year) {
-        $url = $year === 2026 ? $page_url : add_query_arg('season', $year, $page_url);
-        $class = $year === $selected ? ' class="active"' : '';
-        $out .= '<a' . $class . ' href="' . esc_url($url) . '">' . esc_html($year) . '</a>';
+        $url = add_query_arg('season', $year, $page_url);
+        $out .= '<option value="' . esc_url($url) . '"' . selected($year, $selected, false) . '>';
+        $out .= esc_html($year) . ' Football</option>';
     }
-    $out .= '<span class="coming">More seasons will be added as they are digitized.</span></aside>';
+    $out .= '</select><span class="coming">Final archived power ratings.</span></aside>';
     return $out;
 }
 
@@ -46,10 +49,15 @@ function lvay_archive_rankings_table_v2($rankings, $season) {
     }
     unset($schools);
 
-    $tracks = array(
-        array('Non-Select Division I', 'Non-Select Division II', 'Non-Select Division III', 'Non-Select Division IV'),
-        array('Select Division I', 'Select Division II', 'Select Division III', 'Select Division IV'),
-    );
+    $tracks = $season <= 2021
+        ? array(
+            array('Class 5A', 'Class 4A', 'Class 3A', 'Class 2A', 'Class 1A'),
+            array('Division I', 'Division II', 'Division III', 'Division IV'),
+        )
+        : array(
+            array('Non-Select Division I', 'Non-Select Division II', 'Non-Select Division III', 'Non-Select Division IV'),
+            array('Select Division I', 'Select Division II', 'Select Division III', 'Select Division IV'),
+        );
     $out = '<div class="lvay lvay-cols">';
     foreach ($tracks as $divisions) {
         $out .= '<div>';
@@ -190,11 +198,11 @@ function lvay_archive_styles_v2() {
 .lvay-rankings-design .lvay-updated{margin:0 0 12px;color:#666;font-family:Teko,Arial,sans-serif;font-size:18px;text-transform:none}
 .lvay-ratings-search{box-sizing:border-box!important;width:100%!important;height:50px!important;margin:0 0 26px!important;padding:10px 15px!important;border:2px solid #078b88!important;border-radius:4px!important;background:#fff!important;color:#080808!important;font-family:Teko,Arial,sans-serif!important;font-size:19px!important;box-shadow:none!important}
 .lvay-ratings-search::placeholder{color:#a0a0a0!important;opacity:1}
-.lvay-season-archive{align-self:start;background:#050505;color:#fff;padding:20px 24px 24px;display:grid;grid-template-columns:1fr 1fr;gap:7px 18px}
-.lvay-season-archive h3{grid-column:1/-1;margin:0 0 8px;color:#fff;font-family:Teko,Arial,sans-serif;font-size:34px;font-weight:500;line-height:1;letter-spacing:.8px;text-decoration:underline;text-underline-offset:5px}
-.lvay-season-archive a{color:#666!important;font-family:Teko,Arial,sans-serif;font-size:27px;font-weight:500;line-height:1.05;text-decoration:none!important}
-.lvay-season-archive a:hover,.lvay-season-archive a.active{color:#fff!important}
-.lvay-season-archive .coming{grid-column:1/-1;margin-top:12px;color:#999;font-family:Teko,Arial,sans-serif;font-size:20px;font-weight:400;line-height:1.15}
+.lvay-season-archive{align-self:start;background:#050505;color:#fff;padding:20px 24px 24px}
+.lvay-season-archive h3{margin:0 0 12px;color:#fff;font-family:Teko,Arial,sans-serif;font-size:34px;font-weight:500;line-height:1;letter-spacing:.8px;text-decoration:underline;text-underline-offset:5px}
+.lvay-season-archive label{display:block;margin-bottom:6px;color:#bbb;font:400 18px/1 Teko,Arial,sans-serif}
+#lvay-ratings-season-select{width:100%;padding:9px 11px;border:1px solid #078b88;background:#fff;color:#111;font:500 21px/1 Teko,Arial,sans-serif}
+.lvay-season-archive .coming{display:block;margin-top:12px;color:#999;font-family:Teko,Arial,sans-serif;font-size:20px;font-weight:400;line-height:1.15}
 .lvay-rankings-design .lvay-cols{display:grid;grid-template-columns:1fr!important;gap:0!important}
 .lvay-rankings-design .lvay-acc{margin:0!important;border:0!important}
 .lvay-rankings-design .lvay-acc-hdr{display:flex!important;align-items:center!important;gap:7px!important;min-height:0!important;padding:14px 4px 10px!important;border:0!important;border-bottom:2px solid #078b88!important;background:#fff!important;color:#090909!important;font-family:"Alfa Slab One",Rockwell,serif!important;font-size:27px!important;font-weight:400!important;line-height:1.1!important;cursor:pointer!important}
@@ -224,7 +232,7 @@ function lvay_archive_styles_v2() {
 .lvay-official-link{display:inline-block;margin:0 0 12px;background:#050505;color:#fff!important;padding:9px 15px;font-family:Teko,Arial,sans-serif;font-size:20px;font-weight:600;text-decoration:none!important}
 .lvay-official-bracket iframe{display:block;width:100%;height:1220px;border:1px solid #cfd5d5;background:#fff}
 @media(max-width:1200px){.lvay-season-layout{grid-template-columns:1fr}.lvay-season-archive{grid-row:1}.lvay-season-main{grid-row:2}}
-@media(max-width:600px){.lvay-season-layout{padding-top:8px}.lvay-season-archive{grid-template-columns:1fr 1fr;padding:16px 18px}.lvay-preseason-card{padding:24px 20px}.lvay-official-bracket iframe{height:900px}.lvay-official-bracket>summary{padding:11px 10px}}
+@media(max-width:600px){.lvay-season-layout{padding-top:8px}.lvay-season-archive{padding:16px 18px}.lvay-preseason-card{padding:24px 20px}.lvay-official-bracket iframe{height:900px}.lvay-official-bracket>summary{padding:11px 10px}}
 CSS;
     wp_register_style('lvay-football-archives', false);
     wp_enqueue_style('lvay-football-archives');

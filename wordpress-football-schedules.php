@@ -32,7 +32,7 @@ function lvay_football_schedule_shortcode_v5($atts) {
         ? sanitize_text_field(wp_unslash($_GET['season']))
         : $atts['season'];
     $published_seasons = array(
-        2008, 2014, 2015, 2016, 2017, 2018, 2019,
+        2015, 2016, 2017, 2018, 2019,
         2020, 2021, 2022, 2023, 2024, 2025, 2026,
     );
     $season = (
@@ -211,12 +211,16 @@ function lvay_football_schedule_shortcode_v5($atts) {
 
         <aside class="lvay-season-archives" aria-label="Season Archives">
             <h2>SEASON ARCHIVES</h2>
-            <div class="lvay-season-grid">
+            <div class="lvay-season-select-wrap">
+                <label for="lvay-football-season-select">Choose a season</label>
+                <select id="lvay-football-season-select"
+                        onchange="if(this.value){window.location.href=this.value;}">
+                    <option value="">Select season…</option>
                 <?php
                 // Only publish seasons whose archive is actually preserved.
                 $archive_years = array(
                     2025, 2024, 2023, 2022, 2021, 2020, 2019,
-                    2018, 2017, 2016, 2015, 2014, 2008,
+                    2018, 2017, 2016, 2015,
                 );
                 foreach ($archive_years as $year):
                     $enabled = isset($available[(string) $year]);
@@ -224,14 +228,12 @@ function lvay_football_schedule_shortcode_v5($atts) {
                     if ($enabled):
                         $url = add_query_arg('season', (string) $year, $page_url);
                         ?>
-                        <a class="<?php echo $selected ? 'is-current' : ''; ?>"
-                           href="<?php echo esc_url($url); ?>">
-                            <?php echo esc_html($year); ?>
-                        </a>
-                    <?php else: ?>
-                        <span><?php echo esc_html($year); ?></span>
+                        <option value="<?php echo esc_url($url); ?>" <?php selected($selected); ?>>
+                            <?php echo esc_html($year); ?> Football
+                        </option>
                     <?php endif;
                 endforeach; ?>
+                </select>
             </div>
             <p class="lvay-archive-note">More seasons will be added as they are digitized.</p>
         </aside>
@@ -271,12 +273,8 @@ function lvay_football_schedule_shortcode_v5($atts) {
     .lvay-school td.result-l{color:#e53935!important;font-weight:700!important}
     .lvay-season-archives{align-self:start;padding:17px 26px 20px;background:#050505;color:#fff}
     .lvay-season-archives h2{margin:0 0 14px;text-align:center;text-decoration:underline;font-family:"Alfa Slab One",Rockwell,serif;font-size:25px}
-    .lvay-season-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px 18px}
-    .lvay-season-grid a,.lvay-season-grid span{font-family:"Teko",Arial,sans-serif;font-size:27px;font-weight:500;line-height:1.05;text-decoration:none}
-    .lvay-season-grid a{color:#999}
-    .lvay-season-grid a:hover{color:#fff}
-    .lvay-season-grid a.is-current{color:#fff;text-decoration:underline}
-    .lvay-season-grid span{color:#666}
+    .lvay-season-select-wrap label{display:block;margin-bottom:6px;color:#bbb;font:400 18px/1 "Teko",Arial,sans-serif}
+    #lvay-football-season-select{width:100%;padding:9px 11px;border:1px solid var(--teal);background:#fff;color:#111;font:500 21px/1 "Teko",Arial,sans-serif}
     .lvay-archive-note{margin:12px 0 0;color:#999;font:400 20px/1.15 "Teko",Arial,sans-serif}
     @media(max-width:900px){.lvay-football-schedules{grid-template-columns:1fr}.lvay-season-archives{order:2}.lvay-schedule-title h1{font-size:29px}}
     </style>
