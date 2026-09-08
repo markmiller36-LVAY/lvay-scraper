@@ -359,6 +359,40 @@ def run(db_path=None, worksheet=None, session=None):
             if not team:
                 continue
             summary["checked"] += 1
+            manual_notes = str(row.get("Notes") or "").strip()
+            if manual_notes.upper().startswith("MANUAL OVERRIDE:"):
+                try:
+                    record = tuple(
+                        int(row.get(column) or 0)
+                        for column in ("Wins", "Losses", "Ties")
+                    )
+                except (TypeError, ValueError):
+                    record = None
+                if record is not None:
+                    wins, losses, ties = record
+                    checked_at = datetime.now().strftime("%Y-%m-%d %I:%M %p")
+                    if _truthy(row.get("Include in Engine?")):
+                        best_url = str(row.get("Primary Record URL") or "").strip()
+                        summary["imported"] += import_verified_row(
+                            conn, row, record, best_url, checked_at
+                        )
+                    summary["verified"] += 1
+                    values = {
+                        "Record Source": str(row.get("Record Source") or "Manual LVAY verification"),
+                        "Wins": str(wins), "Losses": str(losses), "Ties": str(ties),
+                        "Games Played": str(wins + losses + ties),
+                        "Record Through Date": str(row.get("Record Through Date") or ""),
+                        "Verified By": "Manual LVAY verification",
+                        "Verification Status": "Verified",
+                        "Last Checked": checked_at,
+                        "Notes": manual_notes[:500],
+                    }
+                    for column, value in values.items():
+                        updates.append({
+                            "range": gspread.utils.rowcol_to_a1(offset, header_index[column]),
+                            "values": [[value]],
+                        })
+                    continue
             observations, errors = [], []
             for label in ("Primary Record URL", "Secondary Record URL", "Backup Record URL"):
                 url = str(row.get(label) or "").strip()
