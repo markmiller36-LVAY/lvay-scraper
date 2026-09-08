@@ -17,6 +17,14 @@ class FootballResultReconciliationTests(unittest.TestCase):
         self.assertEqual(corrected["score"], "42-7")
         self.assertEqual(corrected["win_loss"], "W")
 
+    def test_verified_final_repairs_malformed_lhsaa_score(self):
+        game = {"score": "-20", "win_loss": ""}
+        corrected = apply_verified_football_result(
+            game, "Jesuit", "Madison Prep", "2026"
+        )
+        self.assertEqual(corrected["score"], "28-20")
+        self.assertEqual(corrected["win_loss"], "W")
+
     def test_existing_lhsaa_result_is_not_replaced(self):
         game = {"score": "21-7", "win_loss": "W"}
         corrected = apply_verified_football_result(

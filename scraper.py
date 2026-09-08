@@ -549,6 +549,9 @@ FOOTBALL_VERIFIED_FINALS_2026 = {
     ("washington-marion", "lagrange"): "30-0",
     ("lagrange", "washington-marion"): "0-30",
     ("pearl river", "pearl river central, ms"): "28-42",
+    ("jesuit", "madison prep"): "28-20",
+    ("madison prep", "jesuit"): "20-28",
+    ("parkview baptist", "parklane academy, ms"): "14-38",
 }
 
 
@@ -568,7 +571,8 @@ def _football_result_from_score(score):
 def apply_verified_football_result(game, school, opponent, season):
     """Fill trustworthy missing football results without replacing LHSAA data."""
     corrected = dict(game)
-    if str(season) == "2026" and not str(corrected.get("score") or "").strip(" -"):
+    score_numbers = re.findall(r"\d+", str(corrected.get("score") or ""))
+    if str(season) == "2026" and len(score_numbers) != 2:
         verified_score = FOOTBALL_VERIFIED_FINALS_2026.get(
             (school.casefold(), opponent.casefold())
         )
