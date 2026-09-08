@@ -56,7 +56,8 @@ def test_comeaux_2016_schedule_is_reconstructed():
     assert len(school["games"]) == 11
 
 
-def test_2021_districts_do_not_duplicate_class_suffix():
-    response = football_archive_response("2021", summary_only=True)
-    assert all(not school["district"].endswith(f"-{school['class_']}")
-               for school in response["schools"])
+def test_archive_districts_do_not_duplicate_class_suffix():
+    for season in map(str, range(2015, 2025)):
+        response = football_archive_response(season, summary_only=True)
+        assert all(not school["district"].endswith(f"-{school['class_']}")
+                   for school in response["schools"])

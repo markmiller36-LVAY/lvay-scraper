@@ -139,13 +139,12 @@ def main():
             by_name.pop(alias)
             refresh_school(target)
 
-        # Older imports stored just the district number; 2021 accidentally
-        # stored labels such as 1-5A, which the frontend expanded to 1-5A-5A.
-        if season == "2021":
-            for school in schools:
-                match = re.match(r"^(\d+)-[1-5]A$", str(school.get("district", "")), re.I)
-                if match:
-                    school["district"] = match.group(1)
+        # Airtable may store full labels such as 1-5A. The archive frontend
+        # already appends the class, so its API contract uses the number only.
+        for school in schools:
+            match = re.match(r"^(\d+)-[1-5]A$", str(school.get("district", "")), re.I)
+            if match:
+                school["district"] = match.group(1)
 
         for school_name, (class_name, district) in ALIGNMENTS.get(season, {}).items():
             school = by_name.get(school_name)

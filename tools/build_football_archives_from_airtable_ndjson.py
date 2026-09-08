@@ -58,6 +58,13 @@ def division_track(division):
     return ""
 
 
+def archive_district(raw):
+    """Return the number expected by the archive frontend (avoid 1-5A-5A)."""
+    text = str(raw or "").strip()
+    match = re.match(r"^(\d+)-[1-5]A$", text, re.I)
+    return match.group(1) if match else text
+
+
 def build_season(season, records):
     raw_rows = [record.get("cellValuesByFieldId", {}) for record in records]
     identities = {}
@@ -66,7 +73,7 @@ def build_season(season, records):
         if school:
             identities[school.casefold()] = {
                 "class_": str(value(fields, "class_")).strip(),
-                "district": str(value(fields, "district")).strip(),
+                "district": archive_district(value(fields, "district")),
                 "division": str(value(fields, "division")).strip(),
             }
 
