@@ -78,7 +78,7 @@ def capture_snapshot(active_sports, db_path=None):
                     game_day = datetime.strptime(
                         str(row.get("game_date") or "").split()[0], "%m/%d/%Y"
                     ).date()
-                except ValueError:
+                except (ValueError, IndexError):
                     continue
                 if game_day >= today:
                     continue
