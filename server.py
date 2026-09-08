@@ -24,7 +24,7 @@ PIPELINE_STATE = {
     "error": None,
 }
 FOOTBALL_ARCHIVE_PATH = os.path.join(
-    os.path.dirname(__file__), "football_archives_2022_2024.json.gz"
+    os.path.dirname(__file__), "football_archives_greenlit.json.gz"
 )
 _FOOTBALL_ARCHIVES = None
 

@@ -2,7 +2,20 @@ from server import football_archive_response
 
 
 def test_archived_seasons_are_available():
-    expected = {"2022": 292, "2023": 299, "2024": 303}
+    expected = {
+        "2008": 313,
+        "2014": 276,
+        "2015": 285,
+        "2016": 282,
+        "2017": 283,
+        "2018": 284,
+        "2019": 289,
+        "2020": 297,
+        "2021": 294,
+        "2022": 292,
+        "2023": 299,
+        "2024": 303,
+    }
     for season, school_count in expected.items():
         response = football_archive_response(season, summary_only=True)
         assert response["count"] == school_count

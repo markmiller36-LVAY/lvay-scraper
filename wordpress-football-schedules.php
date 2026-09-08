@@ -31,9 +31,13 @@ function lvay_football_schedule_shortcode_v5($atts) {
     $requested = isset($_GET['season'])
         ? sanitize_text_field(wp_unslash($_GET['season']))
         : $atts['season'];
+    $published_seasons = array(
+        2008, 2014, 2015, 2016, 2017, 2018, 2019,
+        2020, 2021, 2022, 2023, 2024, 2025, 2026,
+    );
     $season = (
         preg_match('/^\d{4}$/', $requested)
-        && in_array((int) $requested, array(2022, 2023, 2024, 2025, 2026), true)
+        && in_array((int) $requested, $published_seasons, true)
     ) ? $requested : '2026';
 
     $schedule = lvay_football_schedule_fetch_v5(
@@ -210,7 +214,10 @@ function lvay_football_schedule_shortcode_v5($atts) {
             <div class="lvay-season-grid">
                 <?php
                 // Only publish seasons whose archive is actually preserved.
-                $archive_years = array(2025, 2024, 2023, 2022);
+                $archive_years = array(
+                    2025, 2024, 2023, 2022, 2021, 2020, 2019,
+                    2018, 2017, 2016, 2015, 2014, 2008,
+                );
                 foreach ($archive_years as $year):
                     $enabled = isset($available[(string) $year]);
                     $selected = (string) $year === $season;
