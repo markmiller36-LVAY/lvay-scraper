@@ -17,6 +17,7 @@ Features:
 """
 
 import os
+import re
 import time
 import sqlite3
 from datetime import datetime
@@ -534,6 +535,49 @@ FOOTBALL_SOURCE_SCHOOL_ALIASES = {
     "Bolton Academy": "False River Academy",
 }
 
+# Verified finals used only when the LHSAA schedule report has not populated
+# its result columns.  Scores are stored from the named school's perspective.
+FOOTBALL_VERIFIED_FINALS_2026 = {
+    ("bossier", "north caddo"): "42-7",
+    ("north caddo", "bossier"): "7-42",
+    ("mckinley", "capitol"): "46-6",
+    ("capitol", "mckinley"): "6-46",
+    ("church point", "jennings"): "24-8",
+    ("jennings", "church point"): "8-24",
+    ("kinder", "westlake"): "59-13",
+    ("westlake", "kinder"): "13-59",
+    ("washington-marion", "lagrange"): "30-0",
+    ("lagrange", "washington-marion"): "0-30",
+    ("pearl river", "pearl river central, ms"): "28-42",
+}
+
+
+def _football_result_from_score(score):
+    """Infer a school's W/L/T when LHSAA supplies a score but no result."""
+    numbers = re.findall(r"\d+", str(score or ""))
+    if len(numbers) != 2:
+        return ""
+    school_points, opponent_points = map(int, numbers)
+    if school_points > opponent_points:
+        return "W"
+    if school_points < opponent_points:
+        return "L"
+    return "T"
+
+
+def apply_verified_football_result(game, school, opponent, season):
+    """Fill trustworthy missing football results without replacing LHSAA data."""
+    corrected = dict(game)
+    if str(season) == "2026" and not str(corrected.get("score") or "").strip(" -"):
+        verified_score = FOOTBALL_VERIFIED_FINALS_2026.get(
+            (school.casefold(), opponent.casefold())
+        )
+        if verified_score:
+            corrected["score"] = verified_score
+    if not str(corrected.get("win_loss") or "").strip():
+        corrected["win_loss"] = _football_result_from_score(corrected.get("score"))
+    return corrected
+
 
 def merge_football_games(games):
     """Overlay official LHSAA rows by school/week without deleting gap fillers.
@@ -560,6 +604,10 @@ def merge_football_games(games):
     for game in games:
         school = FOOTBALL_SOURCE_SCHOOL_ALIASES.get(game["school"], game["school"])
         opponent = FOOTBALL_SOURCE_SCHOOL_ALIASES.get(game["opponent"], game["opponent"])
+        # The source sometimes emits a non-varsity placeholder as an opponent.
+        if str(season) == "2026" and school == "False River Academy" and opponent == "JV":
+            continue
+        game = apply_verified_football_result(game, school, opponent, season)
         values = (
             game["game_date"], opponent, game["home_away"], game["win_loss"],
             game["score"], game["district"], game["class_"], game["out_of_state"],
