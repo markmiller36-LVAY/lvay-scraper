@@ -1341,6 +1341,10 @@ def schedules_football():
     requested_season = request.args.get("season")
     summary_only = request.args.get("summary") == "1"
     school_filter = (request.args.get("school") or "").strip()
+    requested_date = (request.args.get("date") or "").strip()
+    date_filter = parse_schedule_date(requested_date) if requested_date else None
+    if requested_date and date_filter is None:
+        return jsonify({"error": "date must be a valid schedule date"}), 400
     if requested_season:
         archived = football_archive_response(
             requested_season, summary_only, school_filter
@@ -1451,6 +1455,9 @@ def schedules_football():
             """, (season, school["school"])).fetchall()
             for row in game_rows:
                 game = dict(row)
+                parsed_game_date = parse_schedule_date(game.get("game_date"))
+                if date_filter and parsed_game_date != date_filter:
+                    continue
                 try:
                     week_number = int(str(game["week"]).replace("Week", "").strip())
                 except ValueError:
@@ -1473,7 +1480,6 @@ def schedules_football():
                     opp_wins = opponent_ranking.get("wins", 0)
                     opp_losses = opponent_ranking.get("losses", 0)
                     opp_ties = opponent_ranking.get("ties", 0)
-                parsed_game_date = parse_schedule_date(game.get("game_date"))
                 game.update({
                     "week": week_number,
                     "game_date": (
@@ -1504,13 +1510,19 @@ def schedules_football():
         conn.close()
         return jsonify({"error": str(e)}), 500
     conn.close()
-    return jsonify({
+    response = jsonify({
         "sport": "football",
         "season": season,
+        "date": date_filter.strftime("%Y-%m-%d") if date_filter else None,
         "status": schools[0].get("status", "active") if schools else "empty",
         "count": len(schools),
         "schools": schools,
     })
+    # Scoreboard clients refresh frequently; let browsers and edge caches reuse
+    # an identical daily response between refreshes.
+    if date_filter:
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=60"
+    return response
 
 
 @app.route("/api/seasons/<sport>")
