@@ -1343,8 +1343,22 @@ def schedules_football():
     school_filter = (request.args.get("school") or "").strip()
     requested_date = (request.args.get("date") or "").strip()
     date_filter = parse_schedule_date(requested_date) if requested_date else None
+    requested_date_from = (request.args.get("date_from") or "").strip()
+    requested_date_to = (request.args.get("date_to") or "").strip()
+    date_from_filter = (
+        parse_schedule_date(requested_date_from) if requested_date_from else None
+    )
+    date_to_filter = (
+        parse_schedule_date(requested_date_to) if requested_date_to else None
+    )
     if requested_date and date_filter is None:
         return jsonify({"error": "date must be a valid schedule date"}), 400
+    if requested_date_from and date_from_filter is None:
+        return jsonify({"error": "date_from must be a valid schedule date"}), 400
+    if requested_date_to and date_to_filter is None:
+        return jsonify({"error": "date_to must be a valid schedule date"}), 400
+    if date_from_filter and date_to_filter and date_from_filter > date_to_filter:
+        return jsonify({"error": "date_from must be on or before date_to"}), 400
     if requested_season:
         archived = football_archive_response(
             requested_season, summary_only, school_filter
@@ -1458,6 +1472,14 @@ def schedules_football():
                 parsed_game_date = parse_schedule_date(game.get("game_date"))
                 if date_filter and parsed_game_date != date_filter:
                     continue
+                if date_from_filter and (
+                    parsed_game_date is None or parsed_game_date < date_from_filter
+                ):
+                    continue
+                if date_to_filter and (
+                    parsed_game_date is None or parsed_game_date > date_to_filter
+                ):
+                    continue
                 try:
                     week_number = int(str(game["week"]).replace("Week", "").strip())
                 except ValueError:
@@ -1514,13 +1536,17 @@ def schedules_football():
         "sport": "football",
         "season": season,
         "date": date_filter.strftime("%Y-%m-%d") if date_filter else None,
+        "date_from": (
+            date_from_filter.strftime("%Y-%m-%d") if date_from_filter else None
+        ),
+        "date_to": date_to_filter.strftime("%Y-%m-%d") if date_to_filter else None,
         "status": schools[0].get("status", "active") if schools else "empty",
         "count": len(schools),
         "schools": schools,
     })
     # Scoreboard clients refresh frequently; let browsers and edge caches reuse
     # an identical daily response between refreshes.
-    if date_filter:
+    if date_filter or date_from_filter or date_to_filter:
         response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=60"
     return response
 
