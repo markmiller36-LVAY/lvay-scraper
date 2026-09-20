@@ -122,24 +122,6 @@ def scheduled_run():
             run_power_rankings(sport=sport, season=season)
             print(f"[SCHEDULER] {sport} ratings complete")
 
-        # Send the score/rating report as soon as calculations are current.
-        # Google Sheets exports follow afterward and can be materially slower;
-        # they must not delay the report email on game nights.
-        try:
-            from pipeline_reporter import build_report, email_report
-            after_snapshot = capture_snapshot(active)
-            subject, body, summary = build_report(
-                before_snapshot,
-                after_snapshot,
-                active,
-                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                oos_summary=locals().get("oos_summary"),
-            )
-            print(f"[REPORT] {summary}")
-            email_report(subject, body)
-        except Exception as report_error:
-            print(f"[REPORT] ERROR (pipeline remains successful): {report_error}")
-
         # 7. GOOGLE SHEETS EXPORTS
         from sheets_exporter import (
             export_football_to_sheets,
@@ -167,6 +149,32 @@ def scheduled_run():
             if sport in active:
                 season = resolve_season_year(sport)
                 require_success(export_winter_sport_to_sheets(sport, season), f"{sport} Sheets export")
+
+        # Refresh only after calculations and exports succeed.
+        from website_refresh import refresh_website
+        website_status = refresh_website(active)
+        print(f"[WEBSITE] {website_status}")
+
+        # The report now follows website verification, not just scraping.
+        try:
+            from pipeline_reporter import build_report, email_report
+            after_snapshot = capture_snapshot(active)
+            subject, body, summary = build_report(
+                before_snapshot,
+                after_snapshot,
+                active,
+                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                oos_summary=locals().get("oos_summary"),
+            )
+            body = body.replace(
+                "<h1>LVAY Pipeline Report</h1>",
+                "<h1>LVAY Pipeline Report</h1><p><strong>Website:</strong> "
+                + website_status + "</p>",
+            )
+            print(f"[REPORT] {summary}")
+            email_report(subject, body)
+        except Exception as report_error:
+            print(f"[REPORT] ERROR (pipeline remains successful): {report_error}")
 
         print("[SCHEDULER] ALL COMPLETE")
 
