@@ -136,7 +136,7 @@ def annotate_volleyball_games(games, opponent_records):
         elif result == "W":
             game["power_points"] = round(5.0 + opp["wins"], 3)
         else:
-            game["power_points"] = round(opp["wins"] / 3.0, 3)
+            game["power_points"] = round(opp["wins"] * 0.33, 3)
         # Keep the established front-end field name while also exposing the
         # clearer API name for future consumers.
         game["total_pts"] = game["power_points"]

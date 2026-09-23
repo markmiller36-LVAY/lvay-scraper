@@ -29,6 +29,7 @@ import os
 import re
 from datetime import datetime
 from volleyball_records import is_out_of_state, repair_oos_eligibility
+from volleyball_sync import normalize_result, reconcile_snapshot, canonical_date
 
 # ──────────────────────────────────────────────────────────────────────────────
 # CONFIG
@@ -132,14 +133,7 @@ def parse_school_division(div_str):
 def parse_date(date_raw):
     if not date_raw:
         return None
-    parts = date_raw.split()
-    for part in parts:
-        for fmt in ("%m/%d/%Y", "%m/%d/%y"):
-            try:
-                return datetime.strptime(part, fmt).strftime("%Y-%m-%d")
-            except ValueError:
-                continue
-    return date_raw
+    return canonical_date(date_raw)
 
 
 def resolve_lhsaa_season_token(season=SEASON):
@@ -238,9 +232,7 @@ def scrape_division(division, season=SEASON, lhsaa_season_token=None):
             # Preseason schedules do not have results yet. Preserve those rows
             # so the website can publish the schedule before matches are played;
             # the rankings engine already ignores blank/unknown results.
-            win_loss = t[10].strip().upper() if len(t) > 10 else ""
-            if win_loss not in ("W", "L"):
-                win_loss = ""
+            win_loss = normalize_result(t[10] if len(t) > 10 else "")
 
             rows.append({
                 "school":      school,
@@ -265,7 +257,7 @@ def scrape_division(division, season=SEASON, lhsaa_season_token=None):
 # DB INSERT
 # ──────────────────────────────────────────────────────────────────────────────
 
-def insert_games(conn, rows, season=SEASON):
+def insert_games(conn, rows, season=SEASON, commit=True):
     inserted = 0
     updated  = 0
     skipped  = 0
@@ -323,9 +315,12 @@ def insert_games(conn, rows, season=SEASON):
             updated += 1
         except sqlite3.Error as e:
             print(f"  [VB] DB error on {row['school']} vs {row['opponent']}: {e}")
+            if not commit:
+                raise
             skipped += 1
 
-    conn.commit()
+    if commit:
+        conn.commit()
 
     # Final safety pass: historical rows may have been created before OOS
     # placeholders were excluded. Reassert the rule after every scrape so a
@@ -362,7 +357,8 @@ def insert_games(conn, rows, season=SEASON):
                     AND COALESCE(correct.score, '')=COALESCE(duplicate.score, '')
               )
         """, (SPORT, str(season)))
-    conn.commit()
+    if commit:
+        conn.commit()
 
     return inserted, updated, skipped
 
@@ -387,26 +383,27 @@ def run_volleyball_scraper(season=None):
     failed_divisions = []
     lhsaa_season_token = resolve_lhsaa_season_token(season)
 
-    for div in DIVISIONS:
-        rows = scrape_division(div, season, lhsaa_season_token)
-        if rows is None:
-            failed_divisions.append(div)
-            continue
-        total_rows += len(rows)
-        if rows:
-            ins, upd, skp = insert_games(conn, rows, season)
-            total_inserted += ins
-            total_updated  += upd
-            total_skipped  += skp
-            print(f"  [VB] Division {div}: inserted={ins} updated={upd} skipped={skp}")
-
-    conn.close()
-
-    if failed_divisions:
-        raise RuntimeError(
-            "Volleyball scrape incomplete; failed divisions: "
-            + ", ".join(failed_divisions)
-        )
+    snapshots = {}
+    try:
+        for div in DIVISIONS:
+            rows = scrape_division(div, season, lhsaa_season_token)
+            if not rows:
+                raise RuntimeError(f"Volleyball scrape incomplete: Division {div}")
+            snapshots[div] = rows
+        # Validate every division before changing any schedule. Removal and
+        # insertion share one transaction; failure restores the old snapshot.
+        with conn:
+            rows, exclusions = reconcile_snapshot(conn, snapshots, season)
+            total_rows = len(rows)
+            total_inserted, total_updated, total_skipped = insert_games(
+                conn, rows, season, commit=False)
+            for school, game_date, opponent, match_num in exclusions:
+                conn.execute("UPDATE volleyball_games SET counts_for_pr=0 "
+                             "WHERE sport=? AND season=? AND school=? AND game_date=? "
+                             "AND opponent=? AND match_num=?",
+                             (SPORT, season, school, game_date, opponent, match_num))
+    finally:
+        conn.close()
 
     print(f"\n{'='*54}")
     print(f"VOLLEYBALL SCRAPE COMPLETE")
