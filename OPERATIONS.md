@@ -99,3 +99,35 @@ Do not delete:
 - alignment or official override files;
 - regression tests;
 - WordPress snippet source until the active snippet mapping is documented.
+
+## Automatic website cache refresh
+
+Install `wordpress-pipeline-cache-refresh.php` as an active PHP Code Snippets
+snippet that runs everywhere. It adds POST `/wp-json/lvay/v1/refresh-cache`,
+requires WordPress authentication and `manage_options`, and calls the existing
+The Cache Purger plugin. Anonymous requests must return 401/403. The plugin must
+remain active with the existing cache selections.
+
+Configure these variables on the Render **web service**, where the pipeline runs:
+
+- `WORDPRESS_USERNAME`: the existing WordPress automation user.
+- `WORDPRESS_APP_PASSWORD`: its existing application password (secret; never Git).
+- `WEBSITE_REFRESH_ENABLED=true`: enable only once the snippet and credentials exist.
+
+After successful Sheets exports, the pipeline requests the cache purge and checks
+all public football school records, games played, power ratings and strength
+factors against the backend. It uses the normal anonymous `/power-rankings/` URL,
+without cookies or cache-busting query parameters. It retries while hosting cache
+work completes, then fails the pipeline if public data still differs. A purge
+acknowledgment alone is not considered proof of a website update. Other sports'
+page contents are not yet verified; the purge still applies to configured caches.
+
+The email report follows this check and states website status. With refresh
+disabled (default), the report explicitly says freshness was not checked. A
+refresh failure prevents the normal success report and appears in pipeline
+status/Render cron failure logs. Rollback: set `WEBSITE_REFRESH_ENABLED=false`;
+this preserves scraping, ratings and exports while marking freshness unchecked.
+
+The website timestamp currently treats naive Central-time `calculated_at` values
+as UTC. This separate display issue is not fixed by cache invalidation; validation
+compares actual ratings rather than trusting that label.
