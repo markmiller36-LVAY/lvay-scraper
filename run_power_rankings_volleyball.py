@@ -28,6 +28,7 @@ import sqlite3
 import os
 from datetime import datetime
 from school_database import get_school
+from volleyball_records import repair_oos_eligibility
 
 # ──────────────────────────────────────────────────────────────────────────────
 # CONFIG
@@ -274,6 +275,9 @@ def run_volleyball_rankings(season=None):
     print(f"{'='*54}")
 
     conn = get_db()
+    # Recalculations must also repair historical eligibility without requiring
+    # another scrape. Preserve every game for the schedule's overall record.
+    repair_oos_eligibility(conn, SEASON)
     try:
         from run_power_rankings import load_sheet_overrides
         overrides = load_sheet_overrides(SPORT, SEASON)
@@ -290,7 +294,7 @@ def run_volleyball_rankings(season=None):
     school_rows = conn.execute("""
         SELECT DISTINCT school, school_division, school_district
         FROM volleyball_games
-        WHERE sport=? AND season=? AND counts_for_pr=1
+        WHERE sport=? AND season=?
         ORDER BY school
     """, (SPORT, SEASON)).fetchall()
 

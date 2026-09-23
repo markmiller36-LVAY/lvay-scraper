@@ -12,6 +12,7 @@ import os
 import re
 from datetime import datetime
 import threading
+from volleyball_records import schedule_record
 
 app = Flask(__name__)
 CORS(app)
@@ -1159,7 +1160,8 @@ def rankings_volleyball():
         conn.close()
         return jsonify({"error": str(e)}), 500
     conn.close()
-    return jsonify({"sport": "volleyball", "season": season, "count": len(rows), "rankings": rows})
+    return jsonify({"sport": "volleyball", "season": season, "count": len(rows),
+                    "record_label": "PR Record", "rankings": rows})
 
 
 @app.route("/embed/volleyball-rankings")
@@ -1662,6 +1664,7 @@ def schedules_volleyball():
             games = sort_schedule_games([dict(r) for r in c.fetchall()])
 
             annotate_volleyball_games(games, opponent_records)
+            overall = schedule_record(games)
 
             schools.append({
                 "school":       s["school"],
@@ -1673,9 +1676,11 @@ def schedules_volleyball():
                 "power_rating": s.get("power_rating", 0),
                 "rank":         s.get("rank", 0),
                 "div_rank":     s.get("div_rank", 0),
-                "wins":         s.get("wins", 0),
-                "losses":       s.get("losses", 0),
-                "games_played": s.get("games_played", 0),
+                **overall,
+                "pr_wins":      s.get("wins", 0),
+                "pr_losses":    s.get("losses", 0),
+                "pr_games_played": s.get("games_played", 0),
+                "pr_record":    f'{s.get("wins", 0)}-{s.get("losses", 0)}',
                 "games":        games,
             })
 
