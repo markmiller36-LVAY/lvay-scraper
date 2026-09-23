@@ -78,8 +78,13 @@ def reconcile_snapshot(conn, snapshots, season):
     for row in old:
         old_schools[row['school']].add((canonical_date(row['game_date']), row['opponent'], row['match_num']))
     for school, games in old_schools.items():
-        if school not in schools or len(schools[school]) < len(games) * 0.75:
+        if school not in schools or len(schools[school]) < len(games) * 0.5:
             raise ValueError(f'Incomplete snapshot for {school}; existing schedule retained')
+    for school in old_schools:
+        old_completed = sum(r['school'] == school and r['result'] in ('W', 'L') for r in old)
+        new_completed = sum(r['school'] == school and r['win_loss'] in ('W', 'L') for r in incoming.values())
+        if new_completed < old_completed * 0.75:
+            raise ValueError(f'Incomplete completed results for {school}')
     conn.execute('CREATE TABLE IF NOT EXISTS volleyball_schedule_history ('
                  'id INTEGER PRIMARY KEY, season TEXT, archived_at TEXT DEFAULT CURRENT_TIMESTAMP, '
                  'reason TEXT, row_json TEXT)')

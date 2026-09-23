@@ -525,7 +525,7 @@ with app.app_context():
             print(f"Football preseason schedule import error: {e}")
 
 
-# â”€â”€ STATUS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── STATUS ──────────────────────────────────────────────────
 
 @app.route("/")
 def index():
@@ -584,7 +584,7 @@ def health():
     return jsonify({"status": "ok", "database": "reachable"})
 
 
-# â”€â”€ FULL PIPELINE TRIGGER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── FULL PIPELINE TRIGGER ───────────────────────────────────
 
 def _pipeline_authorized():
     configured_token = os.environ.get("PIPELINE_TOKEN", "")
@@ -698,7 +698,7 @@ def pipeline_status():
     return jsonify(state)
 
 
-# â”€â”€ SCRAPE TRIGGERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── SCRAPE TRIGGERS ─────────────────────────────────────────
 
 @app.route("/api/scrape/football")
 def scrape_football():
@@ -709,7 +709,7 @@ def scrape_football():
         except Exception as e:
             print(f"Football scrape error: {e}")
     threading.Thread(target=run, daemon=True).start()
-    return jsonify({"status": "started", "sport": "football", "message": "Football scrape running â€” check /api/status in 2-3 min"})
+    return jsonify({"status": "started", "sport": "football", "message": "Football scrape running — check /api/status in 2-3 min"})
 
 
 @app.route("/api/scrape/baseball")
@@ -721,7 +721,7 @@ def scrape_baseball():
         except Exception as e:
             print(f"Baseball scrape error: {e}")
     threading.Thread(target=run, daemon=True).start()
-    return jsonify({"status": "started", "sport": "baseball", "message": "Baseball scrape running â€” check /api/status in 2-3 min"})
+    return jsonify({"status": "started", "sport": "baseball", "message": "Baseball scrape running — check /api/status in 2-3 min"})
 
 
 @app.route("/api/scrape/softball")
@@ -733,7 +733,7 @@ def scrape_softball():
         except Exception as e:
             print(f"Softball scrape error: {e}")
     threading.Thread(target=run, daemon=True).start()
-    return jsonify({"status": "started", "sport": "softball", "message": "Softball scrape running â€” check /api/status in 2-3 min"})
+    return jsonify({"status": "started", "sport": "softball", "message": "Softball scrape running — check /api/status in 2-3 min"})
 
 
 @app.route("/api/scrape/volleyball")
@@ -749,10 +749,10 @@ def scrape_volleyball():
         except Exception as e:
             print(f"Volleyball scrape error: {e}")
     threading.Thread(target=run, daemon=True).start()
-    return jsonify({"status": "started", "sport": "volleyball", "message": "Volleyball scrape running â€” check logs in 2-3 min"})
+    return jsonify({"status": "started", "sport": "volleyball", "message": "Volleyball scrape running — check logs in 2-3 min"})
 
 
-# â”€â”€ GOOGLE SHEETS BUILD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── GOOGLE SHEETS BUILD ──────────────────────────────────────
 
 @app.route("/api/build/football-sheets")
 def build_football_sheets():
@@ -763,7 +763,7 @@ def build_football_sheets():
         except Exception as e:
             print(f"Sheets build error: {e}")
     threading.Thread(target=run, daemon=True).start()
-    return jsonify({"status": "started", "message": "Football sheets building â€” check Google Sheet in 3-5 min"})
+    return jsonify({"status": "started", "message": "Football sheets building — check Google Sheet in 3-5 min"})
 
 
 @app.route("/api/build/baseball-sheets")
@@ -775,7 +775,7 @@ def build_baseball_sheets():
         except Exception as e:
             print(f"Baseball sheets build error: {e}")
     threading.Thread(target=run, daemon=True).start()
-    return jsonify({"status": "started", "message": "Baseball sheets building â€” check Google Sheet in 3-5 min"})
+    return jsonify({"status": "started", "message": "Baseball sheets building — check Google Sheet in 3-5 min"})
 
 
 @app.route("/api/build/softball-sheets")
@@ -787,10 +787,10 @@ def build_softball_sheets():
         except Exception as e:
             print(f"Softball sheets build error: {e}")
     threading.Thread(target=run, daemon=True).start()
-    return jsonify({"status": "started", "message": "Softball sheets building â€” check Google Sheet in 3-5 min"})
+    return jsonify({"status": "started", "message": "Softball sheets building — check Google Sheet in 3-5 min"})
 
 
-# â”€â”€ DATA FIX ENDPOINTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── DATA FIX ENDPOINTS ───────────────────────────────────────
 
 @app.route("/api/build/volleyball-sheets")
 def build_volleyball_sheets():
@@ -954,7 +954,7 @@ def fix_stfrederick_oos():
         return jsonify({"error": str(e)}), 500
 
 
-# â”€â”€ OOS IMPORT & RANKINGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── OOS IMPORT & RANKINGS ────────────────────────────────────
 
 @app.route("/api/fix/new-oos-games")
 def fix_new_oos_games():
@@ -1033,10 +1033,10 @@ def import_oos_2025():
         except Exception as e:
             print(f"OOS import error: {e}")
     threading.Thread(target=run, daemon=True).start()
-    return jsonify({"status": "started", "message": "Importing OOS opponent records â€” check logs"})
+    return jsonify({"status": "started", "message": "Importing OOS opponent records — check logs"})
 
 
-# â”€â”€ RANKINGS CALCULATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── RANKINGS CALCULATE ───────────────────────────────────────
 
 @app.route("/api/rankings/calculate")
 def calculate_rankings():
@@ -1059,10 +1059,10 @@ def calculate_rankings():
 
     threading.Thread(target=run, daemon=True).start()
     return jsonify({"status": "started", "sport": sport, "season": season,
-                    "message": f"{sport} rankings calculating â€” check logs"})
+                    "message": f"{sport} rankings calculating — check logs"})
 
 
-# â”€â”€ RANKINGS ENDPOINTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── RANKINGS ENDPOINTS ───────────────────────────────────────
 
 @app.route("/api/rankings/football")
 def rankings_football():
@@ -1197,11 +1197,11 @@ def embed_volleyball_rankings():
     border-collapse:collapse}}th,td{{padding:9px;border-bottom:1px solid
     #ddd;text-align:left}}th{{background:#f2f4f7;position:sticky;top:0}}
     </style></head><body><h1>{season} LHSAA Volleyball Power Ratings</h1>
-    <p>{len(rows)} teams â€¢ Updated automatically</p>
+    <p>{len(rows)} teams • Updated automatically</p>
     {''.join(sections)}</body></html>"""
 
 
-# â”€â”€ SCHEDULES ENDPOINTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── SCHEDULES ENDPOINTS ──────────────────────────────────────
 
 def _standings_score(score, result=None):
     """Return the school/opponent scores from a completed-game score string."""
@@ -1791,7 +1791,7 @@ def get_sport_schedules(sport):
     })
 
 
-# â”€â”€ BREAKDOWN ENDPOINTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── BREAKDOWN ENDPOINTS ──────────────────────────────────────
 
 @app.route("/api/breakdown/football/<school>")
 def breakdown_football(school):
@@ -1907,7 +1907,7 @@ def breakdown_volleyball(school):
     })
 
 
-# â”€â”€ CONTROL PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── CONTROL PANEL ────────────────────────────────────────────
 
 WINTER_SPORTS = {
     "boys_basketball", "girls_basketball",
@@ -2143,16 +2143,16 @@ def control_panel():
 </style>
 </head>
 <body>
-<h1>LVAY â€” Football Control Panel</h1>
+<h1>LVAY — Football Control Panel</h1>
 <div class="section">
-  <div class="section-title">Formula reference â€” LHSAA 14.12</div>
+  <div class="section-title">Formula reference — LHSAA 14.12</div>
   <div class="formula-row"><span class="formula-label">Win base points</span><span class="formula-val">10</span><span class="formula-note">per game</span></div>
   <div class="formula-row"><span class="formula-label">Loss base points</span><span class="formula-val">0</span></div>
   <div class="formula-row"><span class="formula-label">Tie base points</span><span class="formula-val">5</span></div>
   <div class="formula-row"><span class="formula-label">In-state div bonus</span><span class="formula-val">+2</span><span class="formula-note">per div higher</span></div>
   <div class="formula-row"><span class="formula-label">OOS class bonus</span><span class="formula-val">+2</span><span class="formula-note">per class higher</span></div>
-  <div class="formula-row"><span class="formula-label">Opponent quality (OppQ)</span><span class="formula-val">Ã—10</span><span class="formula-note">(opp wins Ã· opp games) Ã— 10</span></div>
-  <div class="formula-row"><span class="formula-label">Final power rating</span><span class="formula-val">Ã· GP</span><span class="formula-note">total points Ã· games played</span></div>
+  <div class="formula-row"><span class="formula-label">Opponent quality (OppQ)</span><span class="formula-val">×10</span><span class="formula-note">(opp wins ÷ opp games) × 10</span></div>
+  <div class="formula-row"><span class="formula-label">Final power rating</span><span class="formula-val">÷ GP</span><span class="formula-note">total points ÷ games played</span></div>
 </div>
 <div class="section">
   <div class="section-title">Live rankings by division</div>
@@ -2175,7 +2175,7 @@ def control_panel():
   </div>
 </div>
 <div class="section">
-  <div class="section-title">School lookup â€” game-by-game breakdown</div>
+  <div class="section-title">School lookup — game-by-game breakdown</div>
   <div class="search-row">
     <input type="text" id="school-input" placeholder="e.g. Calvary Baptist" />
     <button onclick="lookupSchool()">Look up</button>
@@ -2193,10 +2193,10 @@ def control_panel():
       </div>
     </div>
     <div class="metric-grid">
-      <div class="metric"><div class="metric-label">Record</div><div class="metric-value" id="s-record">â€”</div></div>
-      <div class="metric"><div class="metric-label">Games played</div><div class="metric-value" id="s-gp">â€”</div></div>
-      <div class="metric"><div class="metric-label">Class</div><div class="metric-value" id="s-class">â€”</div></div>
-      <div class="metric"><div class="metric-label">District</div><div class="metric-value" id="s-district">â€”</div></div>
+      <div class="metric"><div class="metric-label">Record</div><div class="metric-value" id="s-record">—</div></div>
+      <div class="metric"><div class="metric-label">Games played</div><div class="metric-value" id="s-gp">—</div></div>
+      <div class="metric"><div class="metric-label">Class</div><div class="metric-value" id="s-class">—</div></div>
+      <div class="metric"><div class="metric-label">District</div><div class="metric-value" id="s-district">—</div></div>
     </div>
     <div style="overflow-x:auto">
       <table style="min-width:500px">
@@ -2208,8 +2208,8 @@ def control_panel():
 </div>
 <div class="section">
   <div class="section-title">Pipeline status</div>
-  <div class="checklist-item"><div class="dot done"></div><span>Scraper â€” LHSAA schedule pages â†’ SQLite</span></div>
-  <div class="checklist-item"><div class="dot done"></div><span>OOS import â€” out-of-state opponent records</span></div>
+  <div class="checklist-item"><div class="dot done"></div><span>Scraper — LHSAA schedule pages → SQLite</span></div>
+  <div class="checklist-item"><div class="dot done"></div><span>OOS import — out-of-state opponent records</span></div>
   <div class="checklist-item"><div class="dot done"></div><span>Power rating engine (power_rating_engine.py)</span></div>
   <div class="checklist-item"><div class="dot done"></div><span>Rankings calculate endpoint</span></div>
   <div class="checklist-item"><div class="dot done"></div><span>Google Sheets exporter</span></div>
@@ -2267,7 +2267,7 @@ def control_panel():
       const badge = s.division.startsWith('Select')
         ? '<span class="badge badge-s">S</span>'
         : '<span class="badge badge-ns">NS</span>';
-      tr.innerHTML = `<td>${i+1}</td><td>${s.school}${badge}</td><td>${cls}</td><td>${rec}</td><td>${s.games_played||'â€”'}</td><td><strong>${(+s.power_rating).toFixed(2)}</strong></td><td>${sf}</td>`;
+      tr.innerHTML = `<td>${i+1}</td><td>${s.school}${badge}</td><td>${cls}</td><td>${rec}</td><td>${s.games_played||'—'}</td><td><strong>${(+s.power_rating).toFixed(2)}</strong></td><td>${sf}</td>`;
       tr.onclick = () => { document.getElementById('school-input').value = s.school; lookupSchool(); };
       tbody.appendChild(tr);
     });
@@ -2294,13 +2294,13 @@ def control_panel():
       tbody.innerHTML = '';
       (d.games||[]).forEach(g => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${g.week}</td><td>${g.opponent}</td><td class="${g.result==='W'?'w':'l'}">${g.result}</td><td>${g.score||'â€”'}</td><td>${(+(g.base_pts||0)).toFixed(1)}</td><td>${(+(g.div_bonus||0)).toFixed(1)}</td><td>${(+(g.opp_quality||0)).toFixed(2)}</td><td><strong>${(+(g.total_pts||0)).toFixed(2)}</strong></td>`;
+        tr.innerHTML = `<td>${g.week}</td><td>${g.opponent}</td><td class="${g.result==='W'?'w':'l'}">${g.result}</td><td>${g.score||'—'}</td><td>${(+(g.base_pts||0)).toFixed(1)}</td><td>${(+(g.div_bonus||0)).toFixed(1)}</td><td>${(+(g.opp_quality||0)).toFixed(2)}</td><td><strong>${(+(g.total_pts||0)).toFixed(2)}</strong></td>`;
         tbody.appendChild(tr);
       });
       ss.style.display = 'none';
       sr.style.display = 'block';
     } catch(e) {
-      ss.textContent = 'School not found â€” check spelling, e.g. "Calvary Baptist"';
+      ss.textContent = 'School not found — check spelling, e.g. "Calvary Baptist"';
       ss.className = 'status err';
     }
   }
@@ -2313,7 +2313,7 @@ def control_panel():
     return html
 
 
-# â”€â”€ ENTRY POINT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── ENTRY POINT ──────────────────────────────────────────────
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
