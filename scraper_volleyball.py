@@ -28,6 +28,7 @@ import sqlite3
 import os
 import re
 from datetime import datetime
+from volleyball_records import is_out_of_state, repair_oos_eligibility
 
 # ──────────────────────────────────────────────────────────────────────────────
 # CONFIG
@@ -281,7 +282,7 @@ def insert_games(conn, rows, season=SEASON):
         # That incomplete metadata must not cause a Louisiana match to be
         # discarded. The report uses the explicit OUT OF STATE placeholder for
         # matches that should be excluded.
-        is_oos = row["opponent"].strip().upper() == "OUT OF STATE"
+        is_oos = is_out_of_state(row["opponent"], row["opp_dd"])
         # The LHSAA report's "D" flag means a normal district match.
         # These matches count toward both the official record and power rating.
         counts    = 0 if is_oos else 1
@@ -329,14 +330,7 @@ def insert_games(conn, rows, season=SEASON):
     # Final safety pass: historical rows may have been created before OOS
     # placeholders were excluded. Reassert the rule after every scrape so a
     # rescrape repairs those rows even if the source formatting changes.
-    conn.execute("""
-        UPDATE volleyball_games
-        SET counts_for_pr = CASE
-            WHEN UPPER(TRIM(opponent))='OUT OF STATE' THEN 0
-            ELSE 1
-        END
-        WHERE sport=? AND season=?
-    """, (SPORT, str(season)))
+    repair_oos_eligibility(conn, season)
 
     # The 2025 LHSAA Division III report contains Livingston Collegiate's
     # schedule a second time under the name Sarah T. Reed. Every affected
