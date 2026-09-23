@@ -33,7 +33,7 @@ class VolleyballRecordTests(unittest.TestCase):
         self.assertEqual((overall['wins'], overall['losses'], overall['games_played']), (3,2,5))
         eligible = [g for g in games if g['counts_for_pr']]
         stats = calculate_school_pr('Example', eligible, {'LA Rival': 7, 'Other LA': 9})
-        self.assertEqual(stats, {'wins':1,'losses':1,'games_played':2,'power_rating':7.5})
+        self.assertEqual(stats, {'wins':1,'losses':1,'games_played':2,'power_rating':7.485})
         self.assertEqual(len(games), 6)
 
     def test_schedule_endpoint_uses_overall_record(self):

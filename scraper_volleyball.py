@@ -29,10 +29,11 @@ import os
 import re
 from datetime import datetime
 from volleyball_records import is_out_of_state, repair_oos_eligibility
+from volleyball_sync import normalize_result, reconcile_snapshot, canonical_date
 
-# ──────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # CONFIG
-# ──────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 SCRAPE_URL = "https://www.lhsaaonline.org/pr/vbpr/admin/ReportSchedule.asp"
 SEARCH_URL = "https://www.lhsaaonline.org/pr/vbpr/admin/SearchVolleyballSchedule.asp"
@@ -50,9 +51,9 @@ HEADERS = {
 
 LA_DIVISION_PATTERN = re.compile(r"^\d+-(I{1,3}V?|V?I{0,3}|IV|V)$")
 
-# ──────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # DB SETUP
-# ──────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
@@ -106,9 +107,9 @@ def ensure_tables(conn):
     conn.commit()
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # HELPERS
-# ──────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def is_oos_opponent(opp_div_raw):
     if not opp_div_raw or not opp_div_raw.strip():
@@ -132,14 +133,7 @@ def parse_school_division(div_str):
 def parse_date(date_raw):
     if not date_raw:
         return None
-    parts = date_raw.split()
-    for part in parts:
-        for fmt in ("%m/%d/%Y", "%m/%d/%y"):
-            try:
-                return datetime.strptime(part, fmt).strftime("%Y-%m-%d")
-            except ValueError:
-                continue
-    return date_raw
+    return canonical_date(date_raw)
 
 
 def resolve_lhsaa_season_token(season=SEASON):
@@ -163,7 +157,7 @@ def resolve_lhsaa_season_token(season=SEASON):
             for option in select.find_all("option"):
                 label = option.get_text(" ", strip=True)
                 value = option.get("value", "").strip()
-                if value and re.match(rf"^\s*{re.escape(requested)}\s*[-–]", label):
+                if value and re.match(rf"^\s*{re.escape(requested)}\s*[-â€“]", label):
                     if value != requested:
                         print(f"  [VB] LHSAA season {requested} maps to form token {value!r}")
                     return value
@@ -174,9 +168,9 @@ def resolve_lhsaa_season_token(season=SEASON):
     return requested
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# SCRAPER — mirrors baseball/softball parse pattern exactly
-# ──────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# SCRAPER â€” mirrors baseball/softball parse pattern exactly
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def scrape_division(division, season=SEASON, lhsaa_season_token=None):
     lhsaa_season_token = lhsaa_season_token or resolve_lhsaa_season_token(season)
@@ -212,7 +206,7 @@ def scrape_division(division, season=SEASON, lhsaa_season_token=None):
     soup = BeautifulSoup(resp.text, "html.parser")
     rows = []
 
-    # Mirror baseball/softball: loop tables → rows → cells
+    # Mirror baseball/softball: loop tables â†’ rows â†’ cells
     for table in soup.find_all("table"):
         for row in table.find_all("tr"):
             cells = row.find_all("td")
@@ -221,7 +215,7 @@ def scrape_division(division, season=SEASON, lhsaa_season_token=None):
 
             t = [c.get_text(strip=True) for c in cells]
 
-            # Skip header rows — first cell is "#" or empty or "School"
+            # Skip header rows â€” first cell is "#" or empty or "School"
             if not t[0] or t[0] in ("#", "School"):
                 continue
 
@@ -238,9 +232,7 @@ def scrape_division(division, season=SEASON, lhsaa_season_token=None):
             # Preseason schedules do not have results yet. Preserve those rows
             # so the website can publish the schedule before matches are played;
             # the rankings engine already ignores blank/unknown results.
-            win_loss = t[10].strip().upper() if len(t) > 10 else ""
-            if win_loss not in ("W", "L"):
-                win_loss = ""
+            win_loss = normalize_result(t[10] if len(t) > 10 else "")
 
             rows.append({
                 "school":      school,
@@ -261,11 +253,11 @@ def scrape_division(division, season=SEASON, lhsaa_season_token=None):
     return rows
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # DB INSERT
-# ──────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-def insert_games(conn, rows, season=SEASON):
+def insert_games(conn, rows, season=SEASON, commit=True):
     inserted = 0
     updated  = 0
     skipped  = 0
@@ -323,9 +315,12 @@ def insert_games(conn, rows, season=SEASON):
             updated += 1
         except sqlite3.Error as e:
             print(f"  [VB] DB error on {row['school']} vs {row['opponent']}: {e}")
+            if not commit:
+                raise
             skipped += 1
 
-    conn.commit()
+    if commit:
+        conn.commit()
 
     # Final safety pass: historical rows may have been created before OOS
     # placeholders were excluded. Reassert the rule after every scrape so a
@@ -362,19 +357,20 @@ def insert_games(conn, rows, season=SEASON):
                     AND COALESCE(correct.score, '')=COALESCE(duplicate.score, '')
               )
         """, (SPORT, str(season)))
-    conn.commit()
+    if commit:
+        conn.commit()
 
     return inserted, updated, skipped
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # MAIN
-# ──────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def run_volleyball_scraper(season=None):
     season = str(season or SEASON)
     print(f"\n{'='*54}")
-    print(f"LVAY Volleyball Scraper — Season {season}")
+    print(f"LVAY Volleyball Scraper â€” Season {season}")
     print(f"{'='*54}")
 
     conn = get_db()
@@ -387,26 +383,27 @@ def run_volleyball_scraper(season=None):
     failed_divisions = []
     lhsaa_season_token = resolve_lhsaa_season_token(season)
 
-    for div in DIVISIONS:
-        rows = scrape_division(div, season, lhsaa_season_token)
-        if rows is None:
-            failed_divisions.append(div)
-            continue
-        total_rows += len(rows)
-        if rows:
-            ins, upd, skp = insert_games(conn, rows, season)
-            total_inserted += ins
-            total_updated  += upd
-            total_skipped  += skp
-            print(f"  [VB] Division {div}: inserted={ins} updated={upd} skipped={skp}")
-
-    conn.close()
-
-    if failed_divisions:
-        raise RuntimeError(
-            "Volleyball scrape incomplete; failed divisions: "
-            + ", ".join(failed_divisions)
-        )
+    snapshots = {}
+    try:
+        for div in DIVISIONS:
+            rows = scrape_division(div, season, lhsaa_season_token)
+            if not rows:
+                raise RuntimeError(f"Volleyball scrape incomplete: Division {div}")
+            snapshots[div] = rows
+        # Validate every division before changing any schedule. Removal and
+        # insertion share one transaction; failure restores the old snapshot.
+        with conn:
+            rows, exclusions = reconcile_snapshot(conn, snapshots, season)
+            total_rows = len(rows)
+            total_inserted, total_updated, total_skipped = insert_games(
+                conn, rows, season, commit=False)
+            for school, game_date, opponent, match_num in exclusions:
+                conn.execute("UPDATE volleyball_games SET counts_for_pr=0 "
+                             "WHERE sport=? AND season=? AND school=? AND game_date=? "
+                             "AND opponent=? AND match_num=?",
+                             (SPORT, season, school, game_date, opponent, match_num))
+    finally:
+        conn.close()
 
     print(f"\n{'='*54}")
     print(f"VOLLEYBALL SCRAPE COMPLETE")

@@ -117,10 +117,10 @@ def test_in_state_match_counts_when_report_only_supplies_roman_division():
     assert dict(game) == {"opponent": "Westgate", "counts_for_pr": 1}
 
 
-def test_loss_uses_exact_one_third_of_opponent_wins():
+def test_loss_uses_thirty_three_percent_of_opponent_wins():
     stats = calculate_school_pr(
         "Example High",
         [{"result": "L", "opponent": "Opponent High"}],
         {"Opponent High": 10},
     )
-    assert stats["power_rating"] == 3.333
+    assert stats["power_rating"] == 3.3
