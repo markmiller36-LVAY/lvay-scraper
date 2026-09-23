@@ -56,5 +56,17 @@ class VolleyballRecordTests(unittest.TestCase):
         self.assertEqual(flags['Named School - TX - UIL'], 0)
         self.assertEqual(flags['LA Rival'], 1)
 
+class ClearwaterRepairTests(unittest.TestCase):
+    def test_only_confirmed_stale_clearwater_copy_is_removed(self):
+        conn = sqlite3.connect(':memory:')
+        ensure_tables(conn)
+        for school in ('Mt. Carmel', 'Another School'):
+            for match_num in (1, 3):
+                conn.execute("INSERT INTO volleyball_games (sport,season,school,game_date,opponent,match_num,result,score) VALUES ('volleyball','2026',?,'9/5/2026','Clearwater Central Catholic - FL - FHSAA',?,'W','25-17, 25-15')", (school,match_num))
+        repair_oos_eligibility(conn, '2026')
+        self.assertEqual(conn.execute("SELECT match_num FROM volleyball_games WHERE school='Mt. Carmel'").fetchall(), [(3,)])
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM volleyball_games WHERE school='Another School'").fetchone()[0], 2)
+        conn.close()
+
 if __name__ == '__main__':
     unittest.main()
