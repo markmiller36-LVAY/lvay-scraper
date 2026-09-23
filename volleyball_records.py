@@ -15,6 +15,25 @@ def is_out_of_state(opponent, division):
 
 def repair_oos_eligibility(conn, season):
     """Exclude stored OOS rows without deleting schedules or lifting exclusions."""
+    # LHSAA source checked 2026-09-23: Mt. Carmel has exactly one Clearwater
+    # match on Sep 5, numbered 3. The old match-1 copy persisted after renumbering.
+    # Remove only that proven stale copy when the identical canonical row exists.
+    conn.execute("""
+        DELETE FROM volleyball_games AS stale
+        WHERE stale.sport='volleyball' AND stale.season='2026' AND stale.season=?
+          AND stale.school='Mt. Carmel'
+          AND stale.game_date IN ('9/5/2026', '2026-09-05')
+          AND stale.opponent='Clearwater Central Catholic - FL - FHSAA'
+          AND stale.match_num=1 AND stale.result='W'
+          AND stale.score='25-17, 25-15'
+          AND EXISTS (
+              SELECT 1 FROM volleyball_games AS current
+              WHERE current.sport=stale.sport AND current.season=stale.season
+                AND current.school=stale.school AND current.game_date=stale.game_date
+                AND current.opponent=stale.opponent AND current.match_num=3
+                AND current.result=stale.result AND current.score=stale.score
+          )
+    """, (str(season),))
     rows = conn.execute(
         "SELECT rowid, opponent, opp_division FROM volleyball_games "
         "WHERE sport='volleyball' AND season=? AND counts_for_pr=1", (str(season),)
