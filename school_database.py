@@ -899,6 +899,17 @@ def get_school(name, sport=None, season=None):
             sport_alignments.get(raw)
             or sport_alignments.get(canonical)
         )
+        if versioned_info is None and sport_key == "football":
+            # The season alignment file may list the school under one of
+            # its aliases, e.g. "Acadiana Renaissance Charter" for
+            # "Acadiana Renaissance Charter Academy". Without this the
+            # lookup silently falls back to the older alignment.
+            # Football only for now: other sports' verified results
+            # would shift and need their own review first.
+            for alias_name, alias_target in SCHOOL_ALIASES.items():
+                if alias_target == canonical and alias_name in sport_alignments:
+                    versioned_info = sport_alignments[alias_name]
+                    break
         if versioned_info is None:
             normalized_lookup = {
                 normalize_school_name(school_name).casefold(): info

@@ -95,3 +95,12 @@ def test_opponent_record_found_across_spellings():
     records = {"J.S. Clark Leadership Academy": {"wins": 3, "losses": 1, "ties": 0}}
     assert lookup_school_record(records, "JS Clark Leadership Academy")["wins"] == 3
     assert lookup_school_record(records, "Nobody High") is None
+
+
+def test_alias_listed_in_season_alignment_uses_current_class():
+    # 2026 alignment lists "Acadiana Renaissance Charter" (4A); our games
+    # say "...Charter Academy". Must not fall back to the old 3A listing,
+    # or Abbeville loses its division bonus (LHSAA PR 10.50).
+    info = get_school("Acadiana Renaissance Charter Academy", "football", 2026)
+    assert info["class"] == "4A"
+    assert info["division"] == "Select Division II"
