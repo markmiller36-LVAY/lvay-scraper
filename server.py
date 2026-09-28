@@ -13,6 +13,7 @@ import re
 from datetime import datetime
 import threading
 from volleyball_records import schedule_record
+from district_exceptions import is_non_district_game
 
 app = Flask(__name__)
 CORS(app)
@@ -1256,7 +1257,8 @@ def standings_football():
         output = {}
         for team in roster:
             games = conn.execute("""
-                SELECT win_loss, score, is_district, home_away, week, game_date
+                SELECT win_loss, score, is_district, home_away, week, game_date,
+                       opponent
                 FROM games
                 WHERE sport='football' AND season=? AND school=?
                   AND win_loss IN ('W','L','T','Tie','W(f)','L(f)')
@@ -1271,7 +1273,9 @@ def standings_football():
                 if normalized == "W": ow += 1
                 elif normalized == "L": ol += 1
                 elif normalized == "T": ot += 1
-                if bool(game["is_district"]):
+                if bool(game["is_district"]) and not is_non_district_game(
+                    "football", season, team["school"], game["opponent"]
+                ):
                     if normalized == "W": dw += 1
                     elif normalized == "L": dl += 1
                     elif normalized == "T": dt += 1
@@ -1523,6 +1527,8 @@ def schedules_football():
                     "total_pts": calculated.get("total_pts"),
                     "is_district": bool(
                         calculated.get("is_district", game.get("is_district"))
+                    ) and not is_non_district_game(
+                        "football", season, school["school"], opponent_name
                     ),
                     "opponent_internal": opponent_ranking is not None,
                     "opponent_out_of_state": out_of_state,

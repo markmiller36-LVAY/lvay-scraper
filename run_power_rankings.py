@@ -36,6 +36,7 @@ from official_record_overrides import (
     get_game_exclusions,
     get_record_overrides,
 )
+from district_exceptions import is_non_district_game
 from school_database import (
     get_school,
     loose_school_key,
@@ -946,6 +947,11 @@ def run_power_rankings(season=SEASON, sport=SPORT):
                     and school_info.get("district") == opp_info.get("district")
                 ):
                     is_district = 1
+            if is_district and is_non_district_game(
+                sport, season, r.name, meta.get("opponent", g["opponent"])
+            ):
+                # LHSAA-approved same-district game that doesn't count.
+                is_district = 0
 
             c.execute("""
                 INSERT OR REPLACE INTO game_power_points

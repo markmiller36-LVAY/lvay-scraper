@@ -104,3 +104,11 @@ def test_alias_listed_in_season_alignment_uses_current_class():
     info = get_school("Acadiana Renaissance Charter Academy", "football", 2026)
     assert info["class"] == "4A"
     assert info["division"] == "Select Division II"
+
+
+def test_evangel_huntington_is_non_district_in_2026():
+    from district_exceptions import is_non_district_game
+    assert is_non_district_game("football", "2026", "Huntington", "Evangel Christian")
+    assert is_non_district_game("football", 2026, "Evangel Christian", "Huntington")
+    assert not is_non_district_game("football", "2025", "Huntington", "Evangel Christian")
+    assert not is_non_district_game("football", "2026", "Huntington", "Captain Shreve")
