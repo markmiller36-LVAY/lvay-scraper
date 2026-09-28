@@ -36,7 +36,11 @@ from official_record_overrides import (
     get_game_exclusions,
     get_record_overrides,
 )
-from school_database import get_school
+from school_database import (
+    get_school,
+    loose_school_key,
+    resolve_school_spelling,
+)
 
 DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 
@@ -99,9 +103,18 @@ def reconcile_incomplete_winter_rating(rating, info, official_record):
     return True
 
 
-def normalize_result(wl):
+FOOTBALL_DOUBLE_FORFEITS = ("L(df)", "L(DF)", "DF", "L(dF)")
+
+
+def normalize_result(wl, sport=""):
     """Collapse forfeits into regular W/L and ties into T.
-    Returns one of: 'W', 'L', 'T', or '' for anything unrecognized."""
+    Returns one of: 'W', 'L', 'T', or '' for anything unrecognized.
+
+    Football double forfeits (L(df)) count as a loss for BOTH teams, the
+    way LHSAA scores them: a game played, 0 win points, but opponent
+    quality and division bonus still count. Other sports keep skipping
+    them until their rules are verified.
+    """
     if wl is None:
         return ""
     s = str(wl).strip()
@@ -111,7 +124,28 @@ def normalize_result(wl):
         return "L"
     if s in ("T", "Tie"):
         return "T"
+    if str(sport).lower() == "football" and s in FOOTBALL_DOUBLE_FORFEITS:
+        return "L"
     return ""
+
+
+def lookup_school_record(school_records, opponent):
+    """Find an opponent's record even when the two spellings differ only
+    by punctuation, e.g. "JS Clark" vs "J.S. Clark"."""
+    record = school_records.get(opponent)
+    if record is not None:
+        return record
+    key = loose_school_key(opponent)
+    for school, rec in school_records.items():
+        if loose_school_key(school) == key:
+            return rec
+    canonical = resolve_school_spelling(opponent)
+    if canonical:
+        canonical_key = loose_school_key(canonical)
+        for school, rec in school_records.items():
+            if loose_school_key(resolve_school_spelling(school) or school) == canonical_key:
+                return rec
+    return None
 
 
 def football_week_number(week):
@@ -169,7 +203,7 @@ def filter_regular_season_football_rows(rows, season="2025"):
             row.get("school", ""),
             str(row.get("game_date") or "").split()[0],
             row.get("opponent", ""),
-            normalize_result(row.get("win_loss")),
+            normalize_result(row.get("win_loss"), "football"),
             row.get("score", ""),
         )
         existing = deduplicated.get(key)
@@ -361,7 +395,8 @@ def load_games(conn, season=SEASON, sport=SPORT):
         WHERE sport=? AND season=?
           AND TRIM(COALESCE(school, '')) <> ''
           AND TRIM(COALESCE(opponent, '')) <> ''
-          AND win_loss IN ('W', 'L', 'Tie', 'T', 'W(f)', 'L(f)')
+          AND win_loss IN ('W', 'L', 'Tie', 'T', 'W(f)', 'L(f)',
+                           'L(df)', 'L(DF)', 'DF')
         ORDER BY school, game_date
     """, (sport, season))
     return c.fetchall()
@@ -430,11 +465,11 @@ def find_oos_record(oos_lookup, school, opponent):
     return None
 
 
-def build_school_records(rows):
+def build_school_records(rows, sport=""):
     records = {}
     for r in rows:
         school = r["school"]
-        wl = normalize_result(r["win_loss"])
+        wl = normalize_result(r["win_loss"], sport)
         if school not in records:
             records[school] = {"wins": 0, "losses": 0, "ties": 0}
         if wl == "W":
@@ -580,9 +615,19 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     forfeit_count = sum(1 for r in rows if str(r.get("win_loss") or "").strip() in ("W(f)", "L(f)"))
     if forfeit_count:
         print(f"  Forfeits normalized: {forfeit_count} W(f)/L(f) games treated as W/L")
+    if sport.lower() == "football":
+        double_forfeits = sum(
+            1 for r in rows
+            if str(r.get("win_loss") or "").strip() in FOOTBALL_DOUBLE_FORFEITS
+        )
+        if double_forfeits:
+            print(
+                f"  Double forfeits: {double_forfeits} L(df) games scored as "
+                "losses for both teams (LHSAA)"
+            )
 
     scores_lookup = load_scores(conn, season, sport)
-    school_records = build_school_records(rows)
+    school_records = build_school_records(rows, sport)
     record_overrides = get_record_overrides(sport, season)
     for school, (wins, losses, ties) in record_overrides.items():
         school_records[school] = {
@@ -648,7 +693,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
 
         # Normalize forfeits (W(f) -> W, L(f) -> L) and ties (Tie -> T) here.
         # Anything that doesn't map to W/L/T is skipped.
-        result = normalize_result(wl)
+        result = normalize_result(wl, sport)
         if result not in ("W", "L", "T"):
             continue
 
@@ -697,10 +742,9 @@ def run_power_rankings(season=SEASON, sport=SPORT):
                 ow, ol, ot = official_opp_record
                 opp_record = {"wins": ow, "losses": ol, "ties": ot}
             else:
-                opp_record = school_records.get(
-                    opponent,
-                    {"wins": 0, "losses": 0, "ties": 0},
-                )
+                opp_record = lookup_school_record(
+                    school_records, opponent
+                ) or {"wins": 0, "losses": 0, "ties": 0}
             opp_wins = opp_record["wins"]
             opp_losses = opp_record["losses"]
             opp_ties = opp_record["ties"]

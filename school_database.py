@@ -761,6 +761,78 @@ NORMALIZED_ALIASES = {
     for alias, canonical in SCHOOL_ALIASES.items()
 }
 
+
+def loose_school_key(name) -> str:
+    """Punctuation- and spacing-insensitive key for school names.
+
+    "J.S. Clark Leadership Academy" and "JS Clark Leadership Academy" both
+    become "jsclarkleadershipacademy". Extra words are NOT ignored, so
+    "Acadiana Christian School" still differs from "Acadiana Christian".
+    """
+    s = normalize_school_name(name).casefold()
+    return re.sub(r"[^a-z0-9]", "", s)
+
+
+_SPELLING_INDEX = None
+
+
+def _all_known_school_names():
+    names = set(SCHOOLS)
+    names.update(SCHOOL_ALIASES)
+    names.update(SCHOOL_ALIASES.values())
+    for dataset in VERSIONED_SPORT_ALIGNMENTS:
+        for sport_rows in dataset.get("sports", {}).values():
+            names.update(sport_rows)
+    return names
+
+
+def _build_spelling_index():
+    """loose key -> the one known spelling it matches.
+
+    Keys that would match two different schools are dropped so a
+    punctuation difference can never merge distinct schools.
+    """
+    index = {}
+    ambiguous = set()
+    for known in _all_known_school_names():
+        key = loose_school_key(known)
+        if not key:
+            continue
+        target = SCHOOL_ALIASES.get(known, known)
+        if key in index and index[key] != target:
+            # Two spellings that are aliases of each other are fine.
+            same = (
+                SCHOOL_ALIASES.get(index[key], index[key])
+                == SCHOOL_ALIASES.get(target, target)
+            )
+            if not same:
+                ambiguous.add(key)
+            continue
+        index[key] = target
+    for key in ambiguous:
+        index.pop(key, None)
+    return index
+
+
+def resolve_school_spelling(name):
+    """Return the known spelling of a school, ignoring punctuation."""
+    global _SPELLING_INDEX
+    if _SPELLING_INDEX is None:
+        _SPELLING_INDEX = _build_spelling_index()
+    return _SPELLING_INDEX.get(loose_school_key(name))
+
+
+def _is_known_spelling(raw, normalized):
+    if raw in SCHOOLS or raw in SCHOOL_ALIASES:
+        return True
+    if normalized in NORMALIZED_SCHOOLS or normalized in NORMALIZED_ALIASES:
+        return True
+    for dataset in VERSIONED_SPORT_ALIGNMENTS:
+        for sport_rows in dataset.get("sports", {}).values():
+            if raw in sport_rows:
+                return True
+    return False
+
 # ──────────────────────────────────────────────────────────────────────────────
 # LOOKUP HELPERS
 # ──────────────────────────────────────────────────────────────────────────────
@@ -771,6 +843,15 @@ def get_school(name, sport=None, season=None):
 
     raw = str(name).strip()
     normalized = normalize_school_name(raw)
+
+    # Spelling tolerance: "J.S. Clark Leadership Academy" and
+    # "JS Clark Leadership Academy" are the same school. When the name
+    # isn't known as written, retry with punctuation/spacing ignored.
+    if not _is_known_spelling(raw, normalized):
+        spelled = resolve_school_spelling(raw)
+        if spelled:
+            raw = spelled
+            normalized = normalize_school_name(raw)
 
     result = None
 

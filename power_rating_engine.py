@@ -8,9 +8,11 @@ FOOTBALL:
   OppQ: (Opp Wins / Opp GP) x 10
   Class/division bonus:
     - in-state: both class and playoff division must be higher;
-      +2 per class step up
+      +2 per DIVISION level up
     - OOS: +2 per class step up
-  Power Rating = Total Points / Games Played
+  Double forfeit (L(df)) = a loss for both teams: counts as a game played,
+    0 win points, still earns OppQ + bonus
+  Power Rating = Total Points / Games Played, half-cents round up
 
 BASEBALL:
   Win=20, Loss=0, Tie=5, Double Forfeit=+1 to winner
@@ -53,6 +55,7 @@ SOCCER:
 """
 
 from dataclasses import dataclass, field
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional
 
 
@@ -110,7 +113,11 @@ SPORT_CONFIGS = {
         "div_bonus_per_step": 2,
         "has_div_bonus": True,
         "opp_quality": "win_pct_x10",
-        "bonus_mode": "division_steps_with_class_gate",
+        # Verified against LHSAA's live 2026 football ratings: when an
+        # in-state opponent is in a higher class AND a higher division, the
+        # bonus is +2 per DIVISION level (not capped at the class gap).
+        # e.g. Vinton (2A, NS IV) vs Washington-Marion (3A, S II) = +4.
+        "bonus_mode": "division_steps_class_gated",
         "oos_bonus": True,
     },
     "baseball": {
@@ -192,6 +199,17 @@ def get_sport_config(
     if sport == "soccer" or sport.endswith("_soccer"):
         return SPORT_CONFIGS["soccer"]
     return SPORT_CONFIGS.get(sport, SPORT_CONFIGS["football"])
+
+
+def round_half_up(value: float, places: int = 2) -> float:
+    """Round like LHSAA's reports: exact half-cents always round up.
+
+    The value is first snapped to 9 decimals so float noise such as
+    13.124999999 is treated as the exact 13.125 it represents.
+    """
+    snapped = Decimal(repr(value)).quantize(Decimal("0.000000001"))
+    step = Decimal(1).scaleb(-places)
+    return float(snapped.quantize(step, rounding=ROUND_HALF_UP))
 
 
 @dataclass
@@ -329,6 +347,17 @@ class PowerRatingEngine:
                     if div_steps_up > 0:
                         gp.div_bonus = div_steps_up * bonus_per_step
 
+            elif bonus_mode == "division_steps_class_gated":
+                # Football: an in-state opponent must be both a higher class
+                # and a higher division; the bonus is +2 per division level.
+                # OOS: class-based bonus.
+                if oos:
+                    if oos_bonus_allowed and class_diff > 0:
+                        gp.div_bonus = class_diff * bonus_per_step
+                else:
+                    if class_diff > 0 and div_steps_up > 0:
+                        gp.div_bonus = div_steps_up * bonus_per_step
+
             elif bonus_mode == "division_steps_with_class_gate":
                 # Basketball: an in-state opponent must be both a higher
                 # class and a higher playoff division. Each bonus step must
@@ -430,10 +459,17 @@ class PowerRatingEngine:
         if counted == 0:
             return None
 
+        if team.sport == "football":
+            # LHSAA rounds half-cents up (13.125 -> 13.13). Python's round()
+            # on a float can go either way, so round the decimal value.
+            power_rating = round_half_up(total / counted)
+        else:
+            power_rating = round(total / counted, 2)
+
         return TeamRating(
             name=team_name,
             sport=team.sport,
-            power_rating=round(total / counted, 2),
+            power_rating=power_rating,
             wins=wins,
             losses=losses,
             ties=ties,
