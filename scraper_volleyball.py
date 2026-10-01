@@ -29,7 +29,7 @@ import os
 import re
 from datetime import datetime
 from volleyball_records import is_out_of_state, repair_oos_eligibility
-from volleyball_sync import normalize_result, reconcile_snapshot, canonical_date
+from volleyball_sync import normalize_result, reconcile_snapshot, canonical_date, is_called_off
 
 # ──────────────────────────────────────────────────────────────────────────────
 # CONFIG
@@ -229,10 +229,18 @@ def scrape_division(division, season=SEASON, lhsaa_season_token=None):
             if not school or not opponent:
                 continue
 
+            # LHSAA marks called-off matches "Cancelled" or "Postponed" in the
+            # Win/Loss column. Those are not real matches (a postponed match is
+            # re-listed on its makeup date), so leave them out entirely instead
+            # of storing them as blank, still-to-be-played games.
+            raw_result = t[10] if len(t) > 10 else ""
+            if is_called_off(raw_result):
+                continue
+
             # Preseason schedules do not have results yet. Preserve those rows
             # so the website can publish the schedule before matches are played;
             # the rankings engine already ignores blank/unknown results.
-            win_loss = normalize_result(t[10] if len(t) > 10 else "")
+            win_loss = normalize_result(raw_result)
 
             rows.append({
                 "school":      school,

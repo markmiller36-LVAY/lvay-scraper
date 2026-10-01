@@ -16,6 +16,14 @@ def normalize_result(value):
     raise ValueError(f'Unrecognized volleyball result: {value!r}')
 
 
+CALLED_OFF_RESULTS = ('CANCELLED', 'CANCELED', 'POSTPONED')
+
+
+def is_called_off(value):
+    """True when the LHSAA Win/Loss cell says the match was cancelled or postponed."""
+    return str(value or '').strip().upper() in CALLED_OFF_RESULTS
+
+
 def canonical_date(value):
     value = str(value or '')
     match = re.search(r'\d{1,2}/\d{1,2}/\d{4}', value)

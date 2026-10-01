@@ -89,3 +89,31 @@ def test_failure_rolls_back_archived_removal():
             raise RuntimeError('Simulated insert failure')
     assert c.execute("SELECT opponent FROM volleyball_games WHERE school='School I'").fetchone()[0] == 'Opponent'
     assert c.execute('SELECT count(*) FROM volleyball_schedule_history').fetchone()[0] == 0
+
+
+def test_cancelled_and_postponed_matches_are_left_out_of_the_scrape(monkeypatch):
+    """LHSAA's Win/Loss column says Cancelled/Postponed for called-off matches.
+    They must not be stored as blank upcoming games (e.g. Huntington 2026:
+    10/1 vs Haughton Postponed, 10/6 Cancelled, real match on 10/19)."""
+    import scraper_volleyball
+    from volleyball_sync import is_called_off
+
+    def row(n, date, opp, result):
+        cells = [f'{n}.', 'Huntington', '1-I', date, opp, '1-I', 'D', '', '1', 'H', result, '']
+        return '<tr>' + ''.join(f'<td>{c}</td>' for c in cells) + '</tr>'
+
+    html = '<table>' + row(1, '10/1/2026', 'Haughton', 'Postponed') + \
+        row(2, '10/6/2026', 'Haughton', 'Cancelled') + \
+        row(3, '10/19/2026', 'Haughton', '') + \
+        row(4, '9/29/2026', 'Airline', 'L') + '</table>'
+
+    class Resp:
+        text = html
+        def raise_for_status(self):
+            pass
+
+    monkeypatch.setattr(scraper_volleyball.requests, 'post', lambda *a, **k: Resp())
+    rows = scraper_volleyball.scrape_division('I', '2026', 'token')
+    assert [(r['date_raw'], r['win_loss']) for r in rows] == [('10/19/2026', ''), ('9/29/2026', 'L')]
+    assert is_called_off(' cancelled ') and is_called_off('Canceled') and is_called_off('POSTPONED')
+    assert not is_called_off('') and not is_called_off('W')
