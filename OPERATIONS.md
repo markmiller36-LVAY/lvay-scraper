@@ -99,3 +99,20 @@ Do not delete:
 - alignment or official override files;
 - regression tests;
 - WordPress snippet source until the active snippet mapping is documented.
+
+## Feed protection (added 2026-10-02)
+
+- Browsers can only read the API from louisianavsallyall.com (and www,
+  `*.wpcomstaging.com`, localhost). Add more with the `EXTRA_ALLOWED_ORIGINS`
+  env var (comma-separated). WordPress PHP, Apps Script and the cron are
+  server-to-server and are not affected.
+- `/api/scrape/*`, `/api/build/*`, `/api/fix/*`, `/api/import/*` and
+  `/api/recalculate/*` now require `PIPELINE_TOKEN`. To run one by hand in a
+  browser, add `?key=YOUR_PIPELINE_TOKEN` to the URL (or send the
+  `X-Pipeline-Token` header). Without a key they return 401.
+- `/api/rankings/calculate` stays open because the Google Sheet "LVAY Tools"
+  menu calls it without a key.
+- Public read endpoints are limited to `PUBLIC_RATE_LIMIT_PER_MINUTE`
+  requests per visitor IP (default 240). `/api/health`, `/api/status` and
+  requests carrying the token are exempt. Set the env var to 0 to disable.
+- All API responses send `X-Robots-Tag: noindex, nofollow`.

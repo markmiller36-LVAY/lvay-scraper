@@ -12,11 +12,125 @@ import os
 import re
 from datetime import datetime
 import threading
+import time
+from collections import deque
 from volleyball_records import schedule_record
 from district_exceptions import is_non_district_game
 
 app = Flask(__name__)
-CORS(app)
+
+# ── FEED PROTECTION ─────────────────────────────────────────
+# 1. Browsers may only read the feed from LVAY pages (plus WordPress staging
+#    and local testing). Server-to-server callers (WordPress PHP, Apps Script,
+#    the pipeline cron) send no Origin and are not affected by CORS.
+# 2. Endpoints that DO work (scrape, rebuild Sheets, one-off fixes, imports,
+#    winter recalculation) require the PIPELINE_TOKEN, sent as the
+#    X-Pipeline-Token header, an "Authorization: Bearer" header, or ?key=.
+# 3. Public read endpoints are rate limited per visitor so nobody can
+#    bulk-copy the data quickly.
+# 4. Raw API responses carry X-Robots-Tag: noindex so search engines send
+#    people to the website, not the feed.
+DEFAULT_ALLOWED_ORIGINS = [
+    "https://louisianavsallyall.com",
+    "https://www.louisianavsallyall.com",
+    r"https://.*\.wpcomstaging\.com",
+    r"http://localhost(:\d+)?",
+    r"http://127\.0\.0\.1(:\d+)?",
+]
+_extra_origins = [
+    origin.strip()
+    for origin in os.environ.get("EXTRA_ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+ALLOWED_ORIGINS = DEFAULT_ALLOWED_ORIGINS + _extra_origins
+CORS(app, origins=ALLOWED_ORIGINS)
+
+PROTECTED_PATH_PREFIXES = (
+    "/api/scrape/",
+    "/api/build/",
+    "/api/fix/",
+    "/api/import/",
+    "/api/recalculate/",
+)
+PUBLIC_RATE_LIMIT = int(os.environ.get("PUBLIC_RATE_LIMIT_PER_MINUTE", "240"))
+_RATE_WINDOW_SECONDS = 60
+_RATE_BUCKETS = {}
+_RATE_LOCK = threading.Lock()
+
+
+def _supplied_pipeline_token():
+    token = request.headers.get("X-Pipeline-Token", "")
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+    return token or request.args.get("key", "")
+
+
+def _has_valid_pipeline_token():
+    configured = os.environ.get("PIPELINE_TOKEN", "")
+    supplied = _supplied_pipeline_token()
+    return bool(configured) and bool(supplied) and hmac.compare_digest(
+        configured, supplied
+    )
+
+
+def _client_ip():
+    forwarded = request.headers.get("X-Forwarded-For", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.remote_addr or "unknown"
+
+
+def _rate_limited(ip):
+    now = time.monotonic()
+    with _RATE_LOCK:
+        if len(_RATE_BUCKETS) > 5000:
+            for key in [k for k, v in _RATE_BUCKETS.items()
+                        if not v or now - v[-1] > _RATE_WINDOW_SECONDS]:
+                del _RATE_BUCKETS[key]
+        hits = _RATE_BUCKETS.setdefault(ip, deque())
+        while hits and now - hits[0] > _RATE_WINDOW_SECONDS:
+            hits.popleft()
+        if len(hits) >= PUBLIC_RATE_LIMIT:
+            return True
+        hits.append(now)
+        return False
+
+
+@app.before_request
+def protect_feed():
+    path = request.path
+    if request.method == "OPTIONS":
+        return None
+    if path.startswith(PROTECTED_PATH_PREFIXES):
+        if not os.environ.get("PIPELINE_TOKEN"):
+            return jsonify({
+                "status": "unavailable",
+                "message": "PIPELINE_TOKEN is not configured",
+            }), 503
+        if not _has_valid_pipeline_token():
+            return jsonify({"status": "unauthorized"}), 401
+        return None
+    if path in ("/api/health", "/api/status"):
+        return None
+    if path.startswith("/api/") and not _has_valid_pipeline_token():
+        if PUBLIC_RATE_LIMIT > 0 and _rate_limited(_client_ip()):
+            response = jsonify({
+                "status": "rate_limited",
+                "message": "Too many requests. Please slow down.",
+            })
+            response.headers["Retry-After"] = str(_RATE_WINDOW_SECONDS)
+            return response, 429
+    return None
+
+
+@app.after_request
+def mark_feed_noindex(response):
+    if request.path.startswith(("/api/", "/embed/", "/control-panel")):
+        response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
 DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 PIPELINE_LOCK = threading.Lock()
 PIPELINE_STATE = {
