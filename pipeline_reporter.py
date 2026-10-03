@@ -14,6 +14,68 @@ REPORT_FROM = os.environ.get(
 )
 
 
+SIGNUP_STATS_URL = os.environ.get(
+    "LVAY_SIGNUP_STATS_URL",
+    "https://louisianavsallyall.com/wp-json/lvay/v1/signup-stats",
+)
+
+
+def fetch_signup_stats():
+    """Fan sign-up counts from WordPress (snippet #117). None if unavailable."""
+    key = os.environ.get("LVAY_STATS_KEY", "").strip()
+    if not key:
+        print("[REPORT] Sign-up stats skipped: LVAY_STATS_KEY not configured")
+        return None
+    try:
+        import requests
+        response = requests.get(
+            SIGNUP_STATS_URL,
+            headers={"X-LVAY-Key": key, "User-Agent": "LVAY-Pipeline-Report"},
+            timeout=15,
+        )
+        response.raise_for_status()
+        return response.json()
+    except Exception as error:  # never let this block the report
+        print(f"[REPORT] Sign-up stats unavailable: {error}")
+        return None
+
+
+def _signup_section(stats):
+    if not stats:
+        return ""
+    def n(key):
+        try:
+            return int(stats.get(key) or 0)
+        except (TypeError, ValueError):
+            return 0
+    tiles = "".join(
+        f"<td style=\"border:1px solid #ccc;padding:8px;text-align:center\">"
+        f"<div style=\"font-size:22px;font-weight:bold;color:#008584\">{n(key)}</div>"
+        f"<div style=\"font-size:12px;color:#555\">{html.escape(label)}</div></td>"
+        for key, label in (
+            ("total", "Total fans"),
+            ("today", "Today"),
+            ("yesterday", "Yesterday"),
+            ("last_7_days", "Last 7 days"),
+            ("since_launch", f"Since {stats.get('launch') or 'launch'}"),
+        )
+    )
+    daily = "".join(
+        f"<tr><td>{html.escape(str(d.get('label', '')))}</td><td>{int(d.get('count') or 0)}</td></tr>"
+        for d in (stats.get("daily") or [])[:7]
+    )
+    latest = ", ".join(
+        f"{html.escape(str(u.get('username', '')))} ({html.escape(str(u.get('joined', '')))})"
+        for u in (stats.get("latest") or [])
+    ) or "—"
+    return f"""
+    <h2>Fan Sign-ups</h2>
+    <table><tr>{tiles}</tr></table>
+    <p style="font-family:Arial,sans-serif"><strong>Newest fans:</strong> {latest}<br>
+    <span style="color:#777;font-size:12px">As of {html.escape(str(stats.get('as_of', '')))} · days are Central time</span></p>
+    <table style="width:auto"><thead><tr><th>Day</th><th>Sign-ups</th></tr></thead><tbody>{daily}</tbody></table>"""
+
+
 def _rows(conn, sql, params=()):
     try:
         return [dict(row) for row in conn.execute(sql, params)]
@@ -175,17 +237,22 @@ def build_report(before, after, active_sports, started_at=None, oos_summary=None
         <h3>Record changes</h3><ul>{changes}</ul>
         <h3>Issues</h3><ul>{issues}</ul>"""
 
+    signups = fetch_signup_stats()
+
     body = f"""<html><head><style>{css}</style></head><body>
     <h1>LVAY Pipeline Report</h1>
     <p><strong>Run:</strong> {html.escape(run_time)}<br>
     <strong>Sports:</strong> {html.escape(', '.join(active_sports))}<br>
     <strong>Game updates:</strong> {len(game_changes)} &nbsp; <strong>Rating updates:</strong> {len(rating_changes)}</p>
+    {_signup_section(signups)}
     <h2>New or Corrected Games</h2><table><thead><tr><th>Sport</th><th>Date</th><th>Team</th><th>Opponent</th><th>Result</th><th>Score</th><th>Base</th><th>Bonus</th><th>Opponent Quality</th><th>Total</th></tr></thead><tbody>{game_rows}</tbody></table>
     <h2>Record and Power-Rating Changes</h2><table><thead><tr><th>Sport</th><th>Team</th><th>Old Record</th><th>New Record</th><th>Old Rating</th><th>New Rating</th></tr></thead><tbody>{rating_rows}</tbody></table>
     <h2>Past Football Games Still Missing Results</h2><table><thead><tr><th>Date</th><th>Team</th><th>Opponent</th><th>Score Field</th></tr></thead><tbody>{missing_rows}</tbody></table>
     {oos_section}
     </body></html>"""
     subject = f"LVAY scrape report — {len(game_changes)} game updates — {run_time}"
+    if signups and signups.get("total") is not None:
+        subject += f" — {signups.get('total')} fans (+{signups.get('today', 0)} today)"
     return subject, body, {"game_changes": len(game_changes), "rating_changes": len(rating_changes)}
 
 
