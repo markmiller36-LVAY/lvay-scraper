@@ -493,33 +493,49 @@ def review_url(post_id):
 
 # ── EMAIL ────────────────────────────────────────────────────
 
+EMAIL_SUBJECT = "Social Media Graphics Review"
+
+
+def review_email(post, image_urls, link):
+    """(subject, html) for the approval email."""
+    subject = f"{EMAIL_SUBJECT}: {post['title']}"
+    slides = "".join(
+        f'<a href="{html.escape(link)}"><img src="{html.escape(u)}" width="300" alt="Slide {n}" '
+        f'style="width:300px;max-width:100%;margin:0 10px 12px 0;border:0;display:inline-block"></a>'
+        for n, u in enumerate(image_urls, 1)
+    )
+    count = len(image_urls)
+    body = f"""
+<div style="font-family:Arial,Helvetica,sans-serif;max-width:660px;color:#111">
+  <div style="background:#0e0e0e;color:#fff;padding:16px 20px">
+    <div style="font-size:13px;letter-spacing:.08em;color:#00b2b0;font-weight:bold">{EMAIL_SUBJECT.upper()}</div>
+    <div style="font-size:24px;font-weight:bold;margin-top:4px">{html.escape(post['title'])}</div>
+    <div style="font-size:13px;color:#bbb;margin-top:4px">{count} slide{'s' if count != 1 else ''} · Facebook + Instagram</div>
+  </div>
+  <p style="margin:20px 0">
+    <a href="{html.escape(link)}" style="background:#008584;color:#fff;padding:13px 24px;text-decoration:none;font-weight:bold;font-size:16px;display:inline-block">Review &amp; approve</a>
+  </p>
+  <p style="color:#555;font-size:13px;margin:0 0 18px">Nothing posts until you press <b>Approve &amp; post</b> on the review page.
+     You can edit the caption there, or skip this one.</p>
+  <div>{slides}</div>
+  <p style="font-size:13px;color:#555;margin:14px 0 6px"><b>Caption</b></p>
+  <pre style="white-space:pre-wrap;background:#f3f5f5;padding:12px;font-size:13px;font-family:Arial,Helvetica,sans-serif;margin:0">{html.escape(post['caption'])}</pre>
+</div>"""
+    return subject, body
+
+
 def email_for_review(post):
     import requests
     api_key = env("RESEND_API_KEY")
     if not api_key:
         print("[SOCIAL] Review email skipped: RESEND_API_KEY not set")
         return False
-    images = "".join(
-        f'<img src="{html.escape(u)}" width="270" style="width:270px;margin:0 8px 8px 0;border-radius:6px" alt="slide">'
-        for u in slide_urls(post)
-    )
-    body = f"""
-<div style="font-family:Arial,sans-serif;max-width:640px">
-  <p style="color:#008584;font-weight:bold;margin:0">LVAY SOCIAL · NEEDS YOUR OK</p>
-  <h2 style="margin:4px 0 12px">{html.escape(post['title'])}</h2>
-  <p><a href="{html.escape(review_url(post['id']))}"
-        style="background:#008584;color:#fff;padding:12px 22px;border-radius:24px;text-decoration:none;font-weight:bold">
-        Review &amp; post to Facebook + Instagram</a></p>
-  <p style="color:#666;font-size:13px">Nothing posts until you press <b>Approve &amp; post</b> on that page.
-     You can edit the caption there, or skip this one.</p>
-  <pre style="white-space:pre-wrap;background:#f4f6f6;padding:12px;border-radius:8px;font-size:13px">{html.escape(post['caption'])}</pre>
-  <div>{images}</div>
-</div>"""
+    subject, body = review_email(post, slide_urls(post), review_url(post["id"]))
     response = requests.post(
         "https://api.resend.com/emails",
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
         json={"from": env("REPORT_EMAIL_FROM", "LVAY Pipeline <onboarding@resend.dev>"),
-              "to": [approver_email()], "subject": f"Approve post: {post['title']}", "html": body},
+              "to": [approver_email()], "subject": subject, "html": body},
         timeout=30,
     )
     response.raise_for_status()

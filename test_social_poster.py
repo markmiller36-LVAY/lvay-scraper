@@ -44,6 +44,13 @@ class SocialHelperTests(unittest.TestCase):
         self.assertEqual((game["winner"], game["winner_pts"], game["loser_pts"]), ("Airline", 45, 22))
         self.assertEqual(game["home"], "Airline")
 
+    def test_review_email_subject(self):
+        subject, body = sp.review_email({"title": "Big Games · Week 6", "caption": "Hi"},
+                                        ["https://x/1.jpg", "https://x/2.jpg"], "https://x/review")
+        self.assertEqual(subject, "Social Media Graphics Review: Big Games · Week 6")
+        self.assertIn("2 slides", body)
+        self.assertIn("https://x/review", body)
+
     def test_review_token_is_per_post(self):
         self.assertNotEqual(sp.review_token(1), sp.review_token(2))
 
