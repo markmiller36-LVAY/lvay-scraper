@@ -116,3 +116,26 @@ Do not delete:
   requests per visitor IP (default 240). `/api/health`, `/api/status` and
   requests carrying the token are exempt. Set the env var to 0 to disable.
 - All API responses send `X-Robots-Tag: noindex, nofollow`.
+
+## Social posts (Facebook + Instagram)
+
+`social_poster.py` builds score, standings and power-rating graphics (1080x1350
+JPEG carousels, brand fonts in `assets/fonts/`) from the same feed the website
+uses. The cron job calls `POST /api/social/run` at 8:30 AM Central, Aug–mid Dec:
+
+- Sat: Big Games (both teams top 10 in their division) + Friday finals by class
+- Sun: Power Ratings, top 10 per division
+- Mon–Fri: district standings for 5A, 4A, 3A, 2A, 1A
+
+Each post is saved to `/data/social/`, recorded in `social_posts`, and emailed
+to `SOCIAL_APPROVER_EMAIL` (default lvaypipeline@gmail.com) with a review link.
+Nothing is published until "Approve & post" is pressed on the review page.
+Set `SOCIAL_AUTO_APPROVE=true` to publish without review.
+
+Render environment for publishing: `META_PAGE_ID`, `META_PAGE_TOKEN`
+(long-lived Page token with pages_manage_posts, pages_read_engagement,
+instagram_basic, instagram_content_publish), `META_IG_USER_ID`, and optionally
+`SOCIAL_PUBLIC_BASE`. Without them, approving records the OK but posts nothing.
+
+Manual test: `POST /api/social/run?date=YYYY-MM-DD&kind=ratings` with the
+pipeline token. Recent posts: `GET /api/social/posts` (token).
