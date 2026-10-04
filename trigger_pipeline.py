@@ -47,6 +47,29 @@ def should_trigger_now(now=None):
     return False
 
 
+def should_post_social_now(now=None):
+    """Daily social posts at 8:30 AM Central during football season.
+
+    8:30 leaves time for the 7 AM pipeline run (and, on Saturday, the
+    overnight game-night runs) to finish first.
+    """
+    now = (now or datetime.now(CENTRAL)).astimezone(CENTRAL)
+    in_season = now.month in {8, 9, 10, 11} or (now.month == 12 and now.day <= 15)
+    return in_season and now.hour == 8 and now.minute == 30
+
+
+def run_social_posts():
+    social_url = PIPELINE_URL.rsplit("/api/", 1)[0] + "/api/social/run"
+    response = requests.post(
+        social_url,
+        headers={"X-Pipeline-Token": PIPELINE_TOKEN},
+        timeout=600,
+    )
+    print(f"[CRON] Social posts returned HTTP {response.status_code}")
+    print(response.text[:2000])
+    return 0 if response.status_code == 200 else 1
+
+
 def pipeline_status():
     status_url = PIPELINE_URL.rsplit("/", 1)[0] + "/status"
     response = requests.get(
@@ -59,6 +82,14 @@ def pipeline_status():
 
 
 def main():
+    if (
+        os.environ.get("SCHEDULE_GATED", "false").lower() == "true"
+        and should_post_social_now()
+    ):
+        if not PIPELINE_TOKEN:
+            print("[CRON] PIPELINE_TOKEN is not configured")
+            return 2
+        return run_social_posts()
     if (
         os.environ.get("SCHEDULE_GATED", "false").lower() == "true"
         and not should_trigger_now()

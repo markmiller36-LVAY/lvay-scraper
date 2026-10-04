@@ -51,6 +51,7 @@ PROTECTED_PATH_PREFIXES = (
     "/api/fix/",
     "/api/import/",
     "/api/recalculate/",
+    "/api/social/",
 )
 PUBLIC_RATE_LIMIT = int(os.environ.get("PUBLIC_RATE_LIMIT_PER_MINUTE", "240"))
 _RATE_WINDOW_SECONDS = 60
@@ -2431,6 +2432,11 @@ def control_panel():
 </body>
 </html>"""
     return html
+
+
+# ── SOCIAL POSTS (Facebook + Instagram) ─────────────────────
+from social_poster import social_bp  # noqa: E402
+app.register_blueprint(social_bp)
 
 
 # ── ENTRY POINT ──────────────────────────────────────────────
