@@ -94,6 +94,13 @@ def get_or_create_tab(sheet, tab_name, rows=3000, cols=20):
     try:
         ws = sheet.worksheet(tab_name)
         ws.clear()
+        # An existing tab keeps whatever size it was created with, so grow it
+        # when this run has more rows than fit (never shrink it).
+        if ws.row_count < rows or ws.col_count < cols:
+            ws.resize(
+                rows=max(ws.row_count, rows),
+                cols=max(ws.col_count, cols),
+            )
     except gspread.WorksheetNotFound:
         ws = sheet.add_worksheet(title=tab_name, rows=rows, cols=cols)
     time.sleep(2)
