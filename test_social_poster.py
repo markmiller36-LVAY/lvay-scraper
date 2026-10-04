@@ -59,8 +59,10 @@ class SocialFlowTests(unittest.TestCase):
             "META_IG_USER_ID": "", "SOCIAL_AUTO_APPROVE": "",
         })
         self.env.start()
-        sp.LOGOS.index = {}
-        sp.LOGOS.images = {}
+        import social_graphics
+        social_graphics.LOGOS.index = {}
+        social_graphics.LOGOS.tiles = {}
+        social_graphics.LOGOS.local = {'_offline': ''}
         self.client = server.app.test_client()
         conn = sp.db()
         conn.execute("DELETE FROM social_posts")
