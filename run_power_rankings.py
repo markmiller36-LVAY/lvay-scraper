@@ -538,6 +538,13 @@ def run_power_rankings(season=SEASON, sport=SPORT):
     conn.row_factory = sqlite3.Row
     init_tables(conn)
 
+    if str(sport).lower() == "football":
+        # Count forfeits whose game date has now passed, even if today's
+        # LHSAA scrape failed before reaching the merge step.
+        from football_forfeits import apply_football_forfeits
+        if apply_football_forfeits(conn, season):
+            conn.commit()
+
     raw_rows = load_games(conn, season, sport)
     if not raw_rows:
         print(f"  No games found for {sport} season {season}")

@@ -709,6 +709,8 @@ def merge_football_games(games):
             )
         saved += 1
 
+    from football_forfeits import apply_football_forfeits
+    apply_football_forfeits(conn, season)
     c.execute(
         """
         UPDATE season_registry SET
