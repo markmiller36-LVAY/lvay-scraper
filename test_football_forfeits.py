@@ -52,3 +52,15 @@ def test_real_lhsaa_score_is_never_overwritten():
     conn.execute("UPDATE games SET score='21-14', win_loss='W' WHERE school='Wossman'")
     apply_football_forfeits(conn, "2026", today=date(2026, 10, 5))
     assert _row(conn, "Wossman", "Carroll") == ("21-14", "W")
+
+
+def test_lhsaa_date_with_weekday_suffix_matches():
+    import sqlite3
+    from datetime import date
+    from football_forfeits import apply_football_forfeits
+    conn = sqlite3.connect(":memory:")
+    conn.execute("CREATE TABLE games (sport TEXT, season TEXT, school TEXT, opponent TEXT, game_date TEXT, score TEXT, win_loss TEXT)")
+    conn.executemany("INSERT INTO games VALUES ('football','2026',?,?,?,'-','')",
+                     [("Carroll", "Wossman", "10/02/26Fri"), ("Wossman", "Carroll", "10/2/2026Fri")])
+    assert apply_football_forfeits(conn, "2026", today=date(2026, 10, 5)) == 2
+    assert dict(conn.execute("SELECT school, win_loss FROM games").fetchall()) == {"Carroll": "L(f)", "Wossman": "W(f)"}

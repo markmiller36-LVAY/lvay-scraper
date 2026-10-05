@@ -36,13 +36,20 @@ FOOTBALL_FORFEITS = {
 
 
 def _parse_date(text):
+    """Parse LHSAA's mixed date formats (10/2/2026, 10/2/26, 10/2/2026Fri, ISO...)."""
     text = str(text or "").strip()
-    for fmt in ("%m/%d/%Y", "%Y-%m-%d"):
+    match = re.match(r"^(\d{1,2}/\d{1,2}/\d{2,4})", text)
+    if match:
+        text = match.group(1)
+    for fmt in ("%m/%d/%Y", "%m/%d/%y", "%Y-%m-%d", "%m-%d-%Y", "%m-%d-%y", "%b %d, %Y", "%B %d, %Y"):
         try:
             return datetime.strptime(text, fmt).date()
         except ValueError:
             continue
-    return None
+    try:
+        return datetime.fromisoformat(text[:19]).date()
+    except ValueError:
+        return None
 
 
 def _key(name):
@@ -86,7 +93,7 @@ def apply_football_forfeits(conn, season, today=None):
         for school, opponent, result in sides:
             for rowid, row_school, row_opp, row_date, score, win_loss in rows:
                 if (_key(row_school) != _key(school) or _key(row_opp) != _key(opponent)
-                        or _parse_date(row_date) != game_day):
+                        or _parse_date(row_date) not in (game_day, None)):
                     continue
                 if _has_real_score(score):
                     continue  # LHSAA posted an actual result; never overwrite it
@@ -101,7 +108,10 @@ def apply_football_forfeits(conn, season, today=None):
     try:
         conn.execute(
             "INSERT INTO scrape_log (ran_at, sport, games_found, status, note) VALUES (?, 'football-forfeits', ?, 'success', ?)",
-            (datetime.now().isoformat(), changed, f"season={season} rows_changed={changed} checked={len(rows)}"),
+            (datetime.now().isoformat(), changed, f"season={season} rows_changed={changed} checked={len(rows)}" + (
+                "" if changed else " sample=" + "; ".join(
+                    f"{r[1]}|{r[2]}|{r[3]}|{r[4]}|{r[5]}" for r in rows
+                    if _key(r[1]) == _key(entries[0]["team"]))[:400])),
         )
     except sqlite3.OperationalError:
         pass
