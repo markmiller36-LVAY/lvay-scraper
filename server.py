@@ -2473,6 +2473,41 @@ def control_panel():
     return html
 
 
+# ── RECALCULATE ON DEPLOY ───────────────────────────────────
+# Data fixes pushed to the repo (forfeits, renames, exclusions) go live as
+# soon as Render deploys: apply forfeits and recalculate football ratings once
+# at startup, in the background, without waiting for the next scheduled run.
+
+def _football_recalc_on_deploy():
+    if not PIPELINE_LOCK.acquire(blocking=False):
+        return  # a pipeline run is already doing this work
+    try:
+        from scraper import resolve_season_year
+        season = resolve_season_year("football")
+        conn = get_db()
+        try:
+            from football_forfeits import apply_football_forfeits
+            changed = apply_football_forfeits(conn, season)
+            conn.commit()
+        finally:
+            conn.close()
+        from run_power_rankings import run_power_rankings
+        run_power_rankings(sport="football", season=season)
+        print(f"[DEPLOY] Football forfeits applied ({changed} rows) and ratings recalculated")
+    except Exception as exc:
+        print(f"[DEPLOY] Football recalculation skipped: {exc}")
+    finally:
+        PIPELINE_LOCK.release()
+
+
+if (
+    os.environ.get("ENABLE_FOOTBALL", "true").lower() == "true"
+    and os.environ.get("RECALC_ON_DEPLOY", "true").lower() == "true"
+    and os.environ.get("DB_PATH", "/data/lvay_v2.db").startswith("/data")
+):
+    threading.Timer(20, _football_recalc_on_deploy).start()
+
+
 # ── ENTRY POINT ──────────────────────────────────────────────
 
 if __name__ == "__main__":
