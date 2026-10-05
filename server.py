@@ -1166,6 +1166,8 @@ def calculate_rankings():
             if sport == "volleyball":
                 from run_power_rankings_volleyball import run_volleyball_rankings
                 run_volleyball_rankings(season)
+                from volleyball_playoff_eligibility import update_playoff_eligibility
+                print(f"Volleyball playoff eligibility: {update_playoff_eligibility(season)}")
             else:
                 from run_power_rankings import run_power_rankings
                 run_power_rankings(season=season, sport=sport)
@@ -1285,12 +1287,36 @@ def rankings_volleyball():
             ORDER BY rank ASC
         """, (season,))
         rows = [dict(r) for r in c.fetchall()]
+        # Match LHSAA: schools listed as not playing in the playoff are flagged
+        # and left out of the division ranking; the 32nd eligible school is the
+        # playoff cutoff (Bylaw 24.6.1).
+        from volleyball_playoff_eligibility import (
+            PLAYOFF_FIELD, annotate_rankings, last_updated,
+        )
+        annotate_rankings(rows, conn, season)
+        eligibility_updated = last_updated(conn, season)
     except Exception as e:
         conn.close()
         return jsonify({"error": str(e)}), 500
     conn.close()
     return jsonify({"sport": "volleyball", "season": season, "count": len(rows),
-                    "record_label": "PR Record", "rankings": rows})
+                    "record_label": "PR Record", "playoff_field": PLAYOFF_FIELD,
+                    "eligibility_updated": eligibility_updated,
+                    "not_playing": sorted(r["school"] for r in rows if not r["playoff_eligible"]),
+                    "rankings": rows})
+
+
+@app.route("/api/parity/volleyball")
+def parity_volleyball():
+    """LVAY volleyball ratings vs the last stored LHSAA power rating report."""
+    from volleyball_playoff_eligibility import parity_report
+    conn = get_db()
+    try:
+        season = request.args.get("season") or available_season(conn, "volleyball", "volleyball_rankings")
+        report = parity_report(conn, season)
+    finally:
+        conn.close()
+    return jsonify(report)
 
 
 @app.route("/embed/volleyball-rankings")
