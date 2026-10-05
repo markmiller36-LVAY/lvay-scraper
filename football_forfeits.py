@@ -45,6 +45,16 @@ def _parse_date(text):
     return None
 
 
+def _key(name):
+    """Loose school key: case, spacing and punctuation don't matter."""
+    try:
+        from school_database import loose_school_key, resolve_school_spelling
+        resolved = resolve_school_spelling(name) or name
+        return loose_school_key(resolved)
+    except Exception:
+        return re.sub(r"[^a-z0-9]", "", str(name or "").casefold())
+
+
 def _has_real_score(score):
     return len(re.findall(r"\d+", str(score or ""))) == 2
 
@@ -75,7 +85,8 @@ def apply_football_forfeits(conn, season, today=None):
         )
         for school, opponent, result in sides:
             for rowid, row_school, row_opp, row_date, score, win_loss in rows:
-                if row_school != school or row_opp != opponent or _parse_date(row_date) != game_day:
+                if (_key(row_school) != _key(school) or _key(row_opp) != _key(opponent)
+                        or _parse_date(row_date) != game_day):
                     continue
                 if _has_real_score(score):
                     continue  # LHSAA posted an actual result; never overwrite it
@@ -87,4 +98,11 @@ def apply_football_forfeits(conn, season, today=None):
                     (FORFEIT_SCORE, new_result, rowid),
                 )
                 changed += 1
+    try:
+        conn.execute(
+            "INSERT INTO scrape_log (ran_at, sport, games_found, status, note) VALUES (?, 'football-forfeits', ?, 'success', ?)",
+            (datetime.now().isoformat(), changed, f"season={season} rows_changed={changed} checked={len(rows)}"),
+        )
+    except sqlite3.OperationalError:
+        pass
     return changed

@@ -2496,6 +2496,12 @@ def _football_recalc_on_deploy():
         print(f"[DEPLOY] Football forfeits applied ({changed} rows) and ratings recalculated")
     except Exception as exc:
         print(f"[DEPLOY] Football recalculation skipped: {exc}")
+        try:
+            _c = get_db()
+            _c.execute("INSERT INTO scrape_log (ran_at, sport, games_found, status, note) VALUES (?, 'football-deploy', 0, 'error', ?)", (datetime.now().isoformat(), str(exc)[:300]))
+            _c.commit(); _c.close()
+        except Exception:
+            pass
     finally:
         PIPELINE_LOCK.release()
 
