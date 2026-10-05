@@ -92,6 +92,13 @@ def scheduled_run():
             from run_power_rankings_volleyball import run_volleyball_rankings
             run_volleyball_rankings()
             print("[SCHEDULER] Volleyball ratings complete")
+            try:
+                from run_power_rankings_volleyball import SEASON as VB_SEASON
+                from volleyball_playoff_eligibility import update_playoff_eligibility as update_vb_eligibility
+                print(f"[SCHEDULER] Volleyball playoff eligibility: {update_vb_eligibility(VB_SEASON)}")
+            except Exception as eligibility_error:
+                # Keep the last stored LHSAA list; never block ratings.
+                print(f"[SCHEDULER] Volleyball playoff eligibility not updated: {eligibility_error}")
 
         # 4. BASEBALL
         if "baseball" in active:
