@@ -86,9 +86,10 @@ def test_punctuation_differences_resolve_to_the_same_school():
     assert resolve_school_spelling("St Edmund") == "St. Edmund"
 
 
-def test_extra_words_are_not_merged():
-    # Held until Mark confirms how LHSAA lists this school.
-    assert get_school("Acadiana Christian School", "football", 2026) is None
+def test_acadiana_christian_uses_lhsaa_name():
+    # LHSAA lists the school as "Acadiana Christian" (Mark confirmed Oct 4, 2026).
+    school = get_school("Acadiana Christian", "football", 2026)
+    assert school is not None and school["class"] == "1A"
 
 
 def test_opponent_record_found_across_spellings():

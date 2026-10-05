@@ -528,7 +528,8 @@ def scrape_football():
 
 FOOTBALL_SOURCE_SCHOOL_ALIASES = {
     "Acadiana Renaissance Charter": "Acadiana Renaissance Charter Academy",
-    "Acadiana Christian": "Acadiana Christian School",
+    # LHSAA and the alignments list this school as "Acadiana Christian".
+    "Acadiana Christian School": "Acadiana Christian",
     "Morris Jeff": "Morris Jeff Community School",
     "JS Clark Leadership Academy": "J.S. Clark Leadership Academy",
     # False River Academy was renamed Bolton Academy for 2026-27.
@@ -549,6 +550,32 @@ def football_school_excluded(school, season):
     except (TypeError, ValueError):
         return False
     return season_year >= FOOTBALL_EXCLUSIONS_FROM_SEASON and school in FOOTBALL_EXCLUDED_SCHOOLS
+
+
+# Old spelling -> the name LHSAA uses.  Rows saved under the old spelling are
+# renamed (as the school and as an opponent) the next time football is merged.
+FOOTBALL_RENAMED_SCHOOLS = {"Acadiana Christian School": "Acadiana Christian"}
+
+
+def rename_football_schools(conn, season):
+    renamed = 0
+    for old, new in FOOTBALL_RENAMED_SCHOOLS.items():
+        for table, column in (("games", "school"), ("games", "opponent"),
+                              ("power_rankings", "school"), ("season_schools", "school")):
+            try:
+                renamed += conn.execute(
+                    f"UPDATE OR IGNORE {table} SET {column}=? "
+                    f"WHERE sport='football' AND season=? AND {column}=?",
+                    (new, str(season), old),
+                ).rowcount
+                # Anything left under the old name duplicated a row already saved under the new name.
+                conn.execute(
+                    f"DELETE FROM {table} WHERE sport='football' AND season=? AND {column}=?",
+                    (str(season), old),
+                )
+            except sqlite3.OperationalError:
+                continue
+    return renamed
 
 
 def purge_excluded_football_schools(conn, season):
@@ -642,6 +669,7 @@ def merge_football_games(games):
 
     saved = 0
     purge_excluded_football_schools(conn, season)
+    rename_football_schools(conn, season)
     for game in games:
         school = FOOTBALL_SOURCE_SCHOOL_ALIASES.get(game["school"], game["school"])
         opponent = FOOTBALL_SOURCE_SCHOOL_ALIASES.get(game["opponent"], game["opponent"])

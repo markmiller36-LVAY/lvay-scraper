@@ -36,7 +36,7 @@ CLASS_RE = re.compile(r"^[1-5]A$", re.IGNORECASE)
 BYE_MARKERS = {"", "-", "----", "--------", "—", "——", "————", "bye", "open"}
 
 SOURCE_HEADER_ALIASES = {
-    "acadiana christian": "Acadiana Christian School",
+    "acadiana christian": "Acadiana Christian",
     "acadiana renaissance": "Acadiana Renaissance Charter Academy",
     "berchman's academy": "Berchmans Academy",
     "btw no": "Booker T. Washington - N.O.",
