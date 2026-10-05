@@ -535,6 +535,42 @@ FOOTBALL_SOURCE_SCHOOL_ALIASES = {
     "Bolton Academy": "False River Academy",
 }
 
+# Schools left out of LVAY football from 2026 on.  False River Academy is
+# JV-only in the LHSAA 2026-27 football alignment, so it has no varsity
+# schedule, standings row or power rating.  (Its other sports are unaffected,
+# and past football seasons are archived as they were.)
+FOOTBALL_EXCLUDED_SCHOOLS = {"False River Academy"}
+FOOTBALL_EXCLUSIONS_FROM_SEASON = 2026
+
+
+def football_school_excluded(school, season):
+    try:
+        season_year = int(str(season)[:4])
+    except (TypeError, ValueError):
+        return False
+    return season_year >= FOOTBALL_EXCLUSIONS_FROM_SEASON and school in FOOTBALL_EXCLUDED_SCHOOLS
+
+
+def purge_excluded_football_schools(conn, season):
+    """Remove excluded schools' own football rows for a season (opponent rows stay)."""
+    try:
+        season_year = int(str(season)[:4])
+    except (TypeError, ValueError):
+        return 0
+    if season_year < FOOTBALL_EXCLUSIONS_FROM_SEASON:
+        return 0
+    removed = 0
+    for table in ("games", "power_rankings", "season_schools"):
+        for school in FOOTBALL_EXCLUDED_SCHOOLS:
+            try:
+                removed += conn.execute(
+                    f"DELETE FROM {table} WHERE sport='football' AND season=? AND school=?",
+                    (str(season), school),
+                ).rowcount
+            except sqlite3.OperationalError:
+                continue
+    return removed
+
 # Verified finals used only when the LHSAA schedule report has not populated
 # its result columns.  Scores are stored from the named school's perspective.
 FOOTBALL_VERIFIED_FINALS_2026 = {
@@ -605,19 +641,11 @@ def merge_football_games(games):
         return 0
 
     saved = 0
-    if season == "2026":
-        c.execute(
-            """
-            DELETE FROM games
-            WHERE sport='football' AND season='2026'
-              AND school='False River Academy' AND opponent='JV'
-            """
-        )
+    purge_excluded_football_schools(conn, season)
     for game in games:
         school = FOOTBALL_SOURCE_SCHOOL_ALIASES.get(game["school"], game["school"])
         opponent = FOOTBALL_SOURCE_SCHOOL_ALIASES.get(game["opponent"], game["opponent"])
-        # The source sometimes emits a non-varsity placeholder as an opponent.
-        if str(season) == "2026" and school == "False River Academy" and opponent == "JV":
+        if football_school_excluded(school, season):
             continue
         game = apply_verified_football_result(game, school, opponent, season)
         values = (
