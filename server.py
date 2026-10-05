@@ -1204,6 +1204,20 @@ def rankings_football():
             ORDER BY rank ASC
         """, (season,))
         rows = [dict(r) for r in c.fetchall()]
+        # Match LHSAA: schools in its "Schools not playing in the Playoff"
+        # sections are flagged and left out of the division ranking.
+        from football_playoff_eligibility import ineligible_schools
+        not_playing = ineligible_schools(conn, season)
+        by_division = {}
+        for row in rows:
+            row["playoff_eligible"] = row["school"] not in not_playing
+            row["division_rank"] = None
+            if row["playoff_eligible"]:
+                by_division.setdefault(row.get("division"), []).append(row)
+        for group in by_division.values():
+            group.sort(key=lambda r: (-(r.get("power_rating") or 0), -(r.get("strength_factor") or 0)))
+            for position, row in enumerate(group, 1):
+                row["division_rank"] = position
     except Exception as e:
         conn.close()
         return jsonify({"error": str(e)}), 500

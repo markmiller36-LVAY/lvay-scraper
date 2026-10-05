@@ -77,6 +77,12 @@ def scheduled_run():
             from run_power_rankings import run_power_rankings
             run_power_rankings(sport="football", season=season)
             print("[SCHEDULER] Football ratings complete")
+            try:
+                from football_playoff_eligibility import update_playoff_eligibility
+                print(f"[SCHEDULER] Playoff eligibility: {update_playoff_eligibility(season)}")
+            except Exception as eligibility_error:
+                # Keep the last stored LHSAA list; never block ratings.
+                print(f"[SCHEDULER] Playoff eligibility not updated: {eligibility_error}")
 
         # 3. VOLLEYBALL
         if "volleyball" in active:
