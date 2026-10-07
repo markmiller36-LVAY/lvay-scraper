@@ -1,0 +1,363 @@
+#T
+0|houma/aj-ellender-patriots|A.J. Ellender Patriots (Houma, LA)|4A District 8|4A District 8|4A District 8|4A District 7|4A District 7
+1|abbeville/abbeville-fighting-wildcats|Abbeville Fighting Wildcats (Abbeville, LA)|3A District 5|3A District 9|3A District 9|3A District 6|3A District 6
+2|lafayette/acadiana-rams|Acadiana Rams (Lafayette, LA)|5A District 3|5A District 3|5A District 3|5A District 3|5A District 3
+3|bossier-city/airline-vikings|Airline Vikings (Bossier City, LA)|5A District 1|5A District 1|5A District 1|5A District 1|5A District 1
+4|alexandria/alexandria-trojans|Alexandria Trojans (Alexandria, LA)|4A District 4|4A District 3|4A District 3|5A District 2|5A District 2
+5|amite/amite-warriors|Amite Warriors (Amite, LA)|3A District 9|3A District 8|3A District 8|3A District 8|3A District 8
+6|covington/archbishop-hannan-hawks|Archbishop Hannan Hawks (Covington, LA)|1A District 6|1A District 7|1A District 7|2A District 8|2A District 8
+7|metairie/archbishop-rummel-raiders|Archbishop Rummel Raiders (Metairie, LA)|5A District 10|5A District 9|5A District 9|5A District 9|5A District 9
+8|marrero/archbishop-shaw-eagles|Archbishop Shaw Eagles (Marrero, LA)|5A District 10|4A District 9|4A District 9|5A District 9|5A District 9
+9|donaldsonville/ascension-catholic-bulldogs|Ascension Catholic Bulldogs (Donaldsonville, LA)|1A District 8|1A District 9|1A District 9|1A District 8|1A District 8
+10|napoleonville/assumption-mustangs|Assumption Mustangs (Napoleonville, LA)|5A District 8|4A District 8|4A District 8|4A District 7|4A District 7
+11|moreauville/avoyelles-mustangs|Avoyelles Mustangs (Moreauville, LA)|3A District 3|3A District 3|3A District 3|3A District 3|3A District 3
+12|baker/baker-buffaloes|Baker Buffaloes (Baker, LA)|3A District 7|3A District 6|3A District 6|3A District 7|3A District 7
+13|lake-charles/barbe-bucs|Barbe Bucs (Lake Charles, LA)|5A District 3|5A District 3|5A District 3|5A District 3|5A District 3
+14|bastrop/bastrop-rams|Bastrop Rams (Bastrop, LA)|4A District 3|4A District 2|4A District 2|4A District 2|4A District 2
+15|belle-chasse/belle-chasse-fighting-cardinals|Belle Chasse Fighting Cardinals (Belle Chasse, LA)|4A District 8|4A District 9|4A District 9|4A District 9|4A District 9
+16|benton/benton-tigers|Benton Tigers (Benton, LA)|4A District 1|4A District 1|4A District 1|4A District 1|4A District 1
+17|bogalusa/bogalusa-lumberjacks|Bogalusa Lumberjacks (Bogalusa, LA)|3A District 9|3A District 8|3A District 8|3A District 8|3A District 8
+18|kenner/bonnabel-bruins|Bonnabel Bruins (Kenner, LA)|5A District 9|5A District 8|5A District 8|5A District 8|5A District 8
+19|gray/bourgeois-braves|Bourgeois Braves (Gray, LA)|5A District 8|5A District 7|5A District 7|5A District 7|5A District 7
+20|breaux-bridge/breaux-bridge-tigers|Breaux Bridge Tigers (Breaux Bridge, LA)|4A District 6|4A District 5|4A District 5|4A District 5|4A District 5
+21|baton-rouge/broadmoor-buccaneers|Broadmoor Buccaneers (Baton Rouge, LA)|4A District 7|4A District 6|4A District 6|5A District 4|5A District 4
+22|new-orleans/brother-martin-crusaders|Brother Martin Crusaders (New Orleans, LA)|5A District 10|5A District 9|5A District 9|5A District 9|5A District 9
+23|brusly/brusly-panthers|Brusly Panthers (Brusly, LA)|3A District 8|3A District 7|3A District 7|3A District 7|3A District 7
+24|bunkie/bunkie-panthers|Bunkie Panthers (Bunkie, LA)|3A District 3|2A District 5|2A District 5|2A District 3|2A District 3
+25|shreveport/byrd-yellow-jackets|Byrd Yellow Jackets (Shreveport, LA)|5A District 1|5A District 1|5A District 1|5A District 1|5A District 1
+26|columbia/caldwell-parish-spartans|Caldwell Parish Spartans (Columbia, LA)|3A District 2|3A District 3|3A District 3|3A District 3|3A District 3
+27|shreveport/calvary-baptist-academy-cavaliers|Calvary Baptist Academy Cavaliers (Shreveport, LA)|2A District 1|2A District 1|2A District 1|2A District 1|2A District 1
+28|shreveport/captain-shreve-gators|Captain Shreve Gators (Shreveport, LA)|5A District 1|5A District 1|5A District 1|5A District 1|5A District 1
+29|lafayette/carencro-bears|Carencro Bears (Lafayette, LA)|5A District 4|5A District 3|5A District 3|5A District 3|5A District 3
+30|monroe/carroll-bulldogs|Carroll Bulldogs (Monroe, LA)|3A District 2|3A District 2|3A District 2|3A District 2|3A District 2
+31|new-orleans/carver-collegiate-academy-rams|Carver Collegiate Academy Rams (New Orleans, LA)|3A District 10|2A District 10|2A District 10|2A District 10|2A District 10
+32|baton-rouge/catholic-br-bears|Catholic Bears (Baton Rouge, LA)|5A District 5|5A District 5|5A District 5|5A District 5|5A District 5
+33|new-iberia/catholic-ni-panthers|Catholic - N.I. Panthers (New Iberia, LA)|3A District 6|2A District 6|2A District 6|2A District 5|2A District 5
+34|new-roads/catholic-of-pointe-coupee-green-hornets|Catholic of Pointe Coupee Green Hornets (New Roads, LA)|1A District 5|1A District 6|1A District 6|1A District 5|1A District 5
+35|cecilia/cecilia-bulldogs|Cecilia Bulldogs (Cecilia, LA)|4A District 6|4A District 5|4A District 5|4A District 5|4A District 5
+36|baton-rouge/central-wildcats|Central Wildcats (Baton Rouge, LA)|5A District 5|5A District 4|5A District 4|5A District 4|5A District 4
+37|raceland/central-lafourche-trojans|Central Lafourche Trojans (Raceland, LA)|5A District 8|5A District 7|5A District 7|5A District 7|5A District 7
+38|chalmette/chalmette-owls|Chalmette Owls (Chalmette, LA)|5A District 9|5A District 9|5A District 9|5A District 8|5A District 8
+39|church-point/church-point-bears|Church Point Bears (Church Point, LA)|3A District 4|3A District 5|3A District 5|3A District 5|3A District 5
+40|lafayette/comeaux-spartans|Comeaux Spartans (Lafayette, LA)|5A District 4|5A District 3|5A District 3|5A District 3|5A District 3
+41|houma/covenant-christian-academy-lions|Covenant Christian Academy Lions (Houma, LA)|_|_|_|1A District 9|1A District 9
+42|covington/covington-fighting-lions|Covington Fighting Lions (Covington, LA)|5A District 7|5A District 6|5A District 6|5A District 6|5A District 6
+43|crowley/crowley-gent|Crowley Gent (Crowley, LA)|3A District 4|3A District 4|3A District 4|4A District 4|4A District 4
+44|new-orleans/de-la-salle-cavalier|De La Salle Cavalier (New Orleans, LA)|3A District 10|3A District 10|3A District 10|3A District 11|3A District 11
+45|denham-springs/denham-springs-yellowjackets|Denham Springs Yellowjackets (Denham Springs, LA)|5A District 5|5A District 4|5A District 4|5A District 4|5A District 4
+46|dequincy/dequincy-tigers|DeQuincy Tigers (DeQuincy, LA)|2A District 4|2A District 4|2A District 4|2A District 4|2A District 4
+47|deridder/deridder-dragons|DeRidder Dragons (DeRidder, LA)|4A District 5|4A District 4|4A District 4|4A District 3|4A District 3
+48|destrehan/destrehan-fighting-wildcats|Destrehan Fighting Wildcats (Destrehan, LA)|5A District 6|5A District 8|5A District 8|5A District 7|5A District 7
+49|donaldsonville/donaldsonville-tigers|Donaldsonville Tigers (Donaldsonville, LA)|2A District 7|3A District 7|3A District 7|3A District 9|3A District 9
+50|baton-rouge/dunham-tigers|Dunham Tigers (Baton Rouge, LA)|2A District 7|2A District 7|2A District 7|2A District 6|2A District 6
+51|geismar/dutchtown-griffins|Dutchtown Griffins (Geismar, LA)|5A District 6|5A District 5|5A District 5|5A District 5|5A District 5
+52|thibodaux/ed-white-cardinals|E.D. White Cardinals (Thibodaux, LA)|3A District 6|3A District 7|3A District 7|3A District 9|3A District 9
+53|gonzales/east-ascension-spartans|East Ascension Spartans (Gonzales, LA)|5A District 6|5A District 5|5A District 5|5A District 5|5A District 5
+54|jackson/east-feliciana-tigers|East Feliciana Tigers (Jackson, LA)|2A District 7|3A District 6|3A District 6|2A District 6|2A District 6
+55|metairie/east-jefferson-warriors|East Jefferson Warriors (Metairie, LA)|4A District 9|4A District 10|4A District 10|4A District 8|4A District 8
+56|reserve/east-st-john-wildcats|East St. John Wildcats (Reserve, LA)|5A District 6|5A District 8|5A District 8|5A District 7|5A District 7
+57|new-orleans/edna-karr-cougars|Edna Karr Cougars (New Orleans, LA)|4A District 10|4A District 9|4A District 9|4A District 9|4A District 9
+58|baton-rouge/episcopal-knights|Episcopal Knights (Baton Rouge, LA)|2A District 7|2A District 7|2A District 7|2A District 6|2A District 6
+59|erath/erath-bobcats|Erath Bobcats (Erath, LA)|3A District 5|3A District 9|3A District 9|3A District 6|3A District 6
+60|eunice/eunice-btlng-bobcats|Eunice Btlng Bobcats (Eunice, LA)|3A District 4|3A District 5|3A District 5|4A District 4|4A District 4
+61|shreveport/evangel-christian-academy-eagles|Evangel Christian Academy Eagles (Shreveport, LA)|2A District 1|2A District 1|2A District 1|3A District 1|3A District 1
+62|ferriday/ferriday-trojans|Ferriday Trojans (Ferriday, LA)|2A District 2|2A District 2|2A District 2|2A District 2|2A District 2
+63|mandeville/fontainebleau-bulldogs|Fontainebleau Bulldogs (Mandeville, LA)|5A District 7|5A District 6|5A District 6|5A District 6|5A District 6
+64|winnsboro/franklin-parish-patriots|Franklin Parish Patriots (Winnsboro, LA)|4A District 3|4A District 2|4A District 2|4A District 2|4A District 2
+65|franklinton/franklinton-demons|Franklinton Demons (Franklinton, LA)|4A District 9|4A District 7|4A District 7|4A District 8|4A District 8
+66|lake-providence/general-trass-panthers|General Trass Panthers (Lake Providence, LA)|2A District 2|2A District 2|2A District 2|2A District 2|2A District 2
+67|dry-prong/grant-cougars|Grant Cougars (Dry Prong, LA)|4A District 4|4A District 3|4A District 3|4A District 3|4A District 3
+68|shreveport/green-oaks-giants|Green Oaks Giants (Shreveport, LA)|3A District 1|3A District 1|3A District 1|3A District 1|3A District 1
+69|boutte/hahnville-tigers|Hahnville Tigers (Boutte, LA)|5A District 6|5A District 8|5A District 8|5A District 7|5A District 7
+70|hammond/hammond-tornadoes|Hammond Tornadoes (Hammond, LA)|5A District 7|4A District 7|4A District 7|5A District 6|5A District 6
+71|haughton/haughton-buccaneers|Haughton Buccaneers (Haughton, LA)|4A District 1|5A District 1|5A District 1|5A District 1|5A District 1
+72|metairie/haynes-academy|Haynes Academy (Metairie, LA)|2A District 9|2A District 9|_|2A District 9|2A District 9
+73|haynesville/haynesville-gldn-tornado|Haynesville Gldn Tornado (Haynesville, LA)|1A District 1|1A District 1|1A District 1|1A District 1|1A District 1
+74|new-orleans/holy-cross-tigers|Holy Cross Tigers (New Orleans, LA)|3A District 10|4A District 10|4A District 10|5A District 9|5A District 9
+75|homer/homer-pelicans|Homer Pelicans (Homer, LA)|2A District 1|2A District 2|2A District 2|2A District 1|2A District 1
+76|shreveport/huntington-raiders|Huntington Raiders (Shreveport, LA)|4A District 1|4A District 1|4A District 1|4A District 1|4A District 1
+77|independence/independence-tigers|Independence Tigers (Independence, LA)|3A District 9|3A District 8|3A District 8|3A District 8|3A District 8
+78|iota/iota-bulldogs|Iota Bulldogs (Iota, LA)|2A District 5|2A District 5|2A District 5|3A District 4|3A District 4
+79|iowa/iowa-yellowjackets|Iowa Yellowjackets (Iowa, LA)|3A District 4|3A District 4|3A District 4|3A District 4|3A District 4
+80|baton-rouge/istrouma-indians|Istrouma Indians (Baton Rouge, LA)|4A District 7|4A District 6|4A District 6|2A District 6|2A District 6
+81|jeanerette/jeanerette-tigers|Jeanerette Tigers (Jeanerette, LA)|2A District 6|2A District 6|2A District 6|2A District 5|2A District 5
+82|jena/jena-giants|Jena Giants (Jena, LA)|3A District 3|3A District 3|3A District 3|3A District 3|3A District 3
+83|jennings/jennings-bulldogs|Jennings Bulldogs (Jennings, LA)|4A District 5|3A District 4|3A District 4|3A District 4|3A District 4
+84|new-orleans/jesuit-blue-jays|Jesuit Blue Jays (New Orleans, LA)|5A District 10|5A District 9|5A District 9|5A District 9|5A District 9
+85|river-ridge/john-curtis-christian-patriots|John Curtis Christian Patriots (River Ridge, LA)|2A District 9|2A District 10|2A District 10|3A District 11|3A District 11
+86|marrero/john-ehret-patriots|John Ehret Patriots (Marrero, LA)|5A District 9|5A District 8|5A District 8|5A District 8|5A District 8
+87|kaplan/kaplan-pirates|Kaplan Pirates (Kaplan, LA)|3A District 5|3A District 9|3A District 9|3A District 6|3A District 6
+88|new-orleans/kennedy-leopards||||||
+89|kentwood/kentwood-kangaroos|Kentwood Kangaroos (Kentwood, LA)|1A District 6|1A District 7|1A District 7|1A District 6|1A District 6
+90|kinder/kinder-yellowjackets|Kinder Yellowjackets (Kinder, LA)|2A District 5|2A District 4|2A District 4|2A District 4|2A District 4
+91|marrero/lw-higgins-hurricanes|L.W. Higgins Hurricanes (Marrero, LA)|5A District 9|5A District 8|5A District 8|5A District 8|5A District 8
+92|lafayette/lafayette-mighty-lions|Lafayette Mighty Lions (Lafayette, LA)|5A District 3|5A District 3|5A District 3|5A District 3|5A District 3
+93|lafayette/lafayette-christian-academy-knights|Lafayette Christian Academy Knights (Lafayette, LA)|_|_|_|1A District 7|1A District 7
+94|lafayette/lafayette-renaissance-charter-academy-lafayette||||||
+95|lake-charles/lagrange-gators|LaGrange Gators (Lake Charles, LA)|5A District 3|4A District 4|4A District 4|4A District 4|4A District 4
+96|lake-charles/lake-charles-college-prep-trailblazers||||||
+97|mandeville/lakeshore|Lakeshore (Mandeville, LA)|_|4A District 7|4A District 7|4A District 8|4A District 8
+98|leesville/leesville-wampus-cats|Leesville Wampus Cats (Leesville, LA)|4A District 4|4A District 3|4A District 3|4A District 3|4A District 3
+99|baton-rouge/liberty-magnet-patriots||||||
+100|watson/live-oak-eagles|Live Oak Eagles (Watson, LA)|5A District 5|5A District 4|5A District 4|5A District 4|5A District 4
+101|livonia/livonia-wildcats|Livonia Wildcats (Livonia, LA)|3A District 8|3A District 5|3A District 5|3A District 5|3A District 5
+102|logansport/logansport-tigers|Logansport Tigers (Logansport, LA)|1A District 1|1A District 1|1A District 1|1A District 3|1A District 3
+103|loranger/loranger-wolves|Loranger Wolves (Loranger, LA)|3A District 9|3A District 8|3A District 8|3A District 8|3A District 8
+104|new-orleans/lord-beaconsfield-landry-buccaneers|Lord Beaconsfield Landry Buccaneers (New Orleans, LA)||||4A District 9|4A District 9
+105|loreauville/loreauville-tigers|Loreauville Tigers (Loreauville, LA)|2A District 6|2A District 6|2A District 6|2A District 5|2A District 5
+106|shreveport/loyola-college-prep-prep-flyers|Loyola College Prep Prep Flyers (Shreveport, LA)|3A District 1|3A District 1|3A District 1|4A District 1|4A District 1
+107|lutcher/lutcher-bulldogs|Lutcher Bulldogs (Lutcher, LA)|4A District 8|4A District 6|4A District 6|4A District 6|4A District 6
+108|baton-rouge/madison-prep-academy|Madison Prep Academy (Baton Rouge, LA)||_|_|1A District 6|1A District 6
+109|mandeville/mandeville-skippers|Mandeville Skippers (Mandeville, LA)|5A District 7|5A District 6|5A District 6|5A District 6|5A District 6
+110|mangham/mangham-dragons|Mangham Dragons (Mangham, LA)|2A District 2|1A District 3|1A District 3|1A District 2|1A District 2
+111|mansfield/mansfield-wolverines|Mansfield Wolverines (Mansfield, LA)|2A District 3|2A District 1|2A District 1|3A District 1|3A District 1
+112|many/many-tigers|Many Tigers (Many, LA)|2A District 3|2A District 3|2A District 3|2A District 3|2A District 3
+113|marksville/marksville-tigers|Marksville Tigers (Marksville, LA)|3A District 3|3A District 3|3A District 3|3A District 3|3A District 3
+114|new-orleans/mcdonogh-35-roneagles|McDonogh 35 Roneagles (New Orleans, LA)|4A District 10|4A District 9|4A District 9|4A District 9|4A District 9
+115|baton-rouge/mckinley-panthers|McKinley Panthers (Baton Rouge, LA)|4A District 7|5A District 5|5A District 5|5A District 5|5A District 5
+116|minden/minden-crimson-tide|Minden Crimson Tide (Minden, LA)|4A District 1|4A District 1|4A District 1|4A District 1|4A District 1
+117|natchitoches/natchitoches-central-chiefs|Natchitoches Central Chiefs (Natchitoches, LA)|5A District 1|5A District 2|5A District 2|5A District 2|5A District 2
+118|monroe/neville-tigers|Neville Tigers (Monroe, LA)|4A District 3|4A District 2|4A District 2|4A District 2|4A District 2
+119|new-iberia/new-iberia-yellowjackets|New Iberia Yellowjackets (New Iberia, LA)|5A District 4|5A District 7|5A District 7|5A District 3|5A District 3
+120|new-orleans/newman-greenies|Newman Greenies (New Orleans, LA)|2A District 9|2A District 10|2A District 10|2A District 10|2A District 10
+121|stonewall/north-desoto-griffins|North DeSoto Griffins (Stonewall, LA)|3A District 1|3A District 1|3A District 1|4A District 1|4A District 1
+122|maurice/north-vermilion-patriots|North Vermilion Patriots (Maurice, LA)|3A District 5|3A District 9|3A District 9|3A District 6|3A District 6
+123|springhill/north-webster-lumberjacks|North Webster Lumberjacks (Springhill, LA)||2A District 1|2A District 1|3A District 1|3A District 1
+124|slidell/northshore-panthers|Northshore Panthers (Slidell, LA)|5A District 7|5A District 6|5A District 6|5A District 6|5A District 6
+125|lafayette/northside-vikings|Northside Vikings (Lafayette, LA)|4A District 6|4A District 5|4A District 5|4A District 5|4A District 5
+126|opelousas/northwest-raiders|Northwest Raiders (Opelousas, LA)|3A District 4|3A District 5|3A District 5|3A District 5|3A District 5
+127|shreveport/northwood-falcons|Northwood Falcons (Shreveport, LA)|4A District 1|4A District 1|4A District 1|4A District 1|4A District 1
+128|crowley/notre-dame-pioneers|Notre Dame Pioneers (Crowley, LA)|3A District 5|3A District 4|3A District 4|3A District 6|3A District 6
+129|oak-grove/oak-grove-tigers|Oak Grove Tigers (Oak Grove, LA)|1A District 2|1A District 3|1A District 3|2A District 2|2A District 2
+130|opelousas/opelousas-fighting-tigers|Opelousas Fighting Tigers (Opelousas, LA)|4A District 6|4A District 4|4A District 4|4A District 4|4A District 4
+131|monroe/ouachita-christian-eagles|Ouachita Christian Eagles (Monroe, LA)|1A District 2|1A District 2|1A District 2|1A District 2|1A District 2
+132|monroe/ouachita-parish-lions|Ouachita Parish Lions (Monroe, LA)|5A District 1|5A District 2|5A District 2|5A District 2|5A District 2
+133|baton-rouge/parkview-baptist-eagles|Parkview Baptist Eagles (Baton Rouge, LA)|3A District 7|3A District 6|3A District 6|3A District 7|3A District 7
+134|bossier-city/parkway-panthers|Parkway Panthers (Bossier City, LA)|4A District 1|5A District 1|5A District 1|5A District 1|5A District 1
+135|patterson/patterson-lumberjacks|Patterson Lumberjacks (Patterson, LA)|3A District 6|3A District 9|3A District 9|3A District 9|3A District 9
+136|alexandria/peabody-warhorses|Peabody Warhorses (Alexandria, LA)|4A District 4|4A District 3|4A District 3|4A District 3|4A District 3
+137|pearl-river/pearl-river-rebels|Pearl River Rebels (Pearl River, LA)|4A District 9|4A District 7|4A District 7|4A District 8|4A District 8
+138|franklinton/pine-raiders|Pine Raiders (Franklinton, LA)|2A District 8|2A District 8|2A District 8|2A District 8|2A District 8
+139|pineville/pineville-rebels|Pineville Rebels (Pineville, LA)|5A District 1|5A District 2|5A District 2|5A District 2|5A District 2
+140|plaquemine/plaquemine-green-devils|Plaquemine Green Devils (Plaquemine, LA)|3A District 8|4A District 6|4A District 6|4A District 6|4A District 6
+141|ponchatoula/ponchatoula-green-wave|Ponchatoula Green Wave (Ponchatoula, LA)|5A District 7|5A District 6|5A District 6|5A District 6|5A District 6
+142|slidell/pope-john-paul-ii-jaguars|Pope John Paul II Jaguars (Slidell, LA)|2A District 8|2A District 8|2A District 8|2A District 8|2A District 8
+143|port-allen/port-allen-pelicans|Port Allen Pelicans (Port Allen, LA)|3A District 8|3A District 7|3A District 7|3A District 7|3A District 7
+144|prairieville/prairieville-hurricanes||||||
+145|rayne/rayne-wolves|Rayne Wolves (Rayne, LA)|3A District 5|3A District 5|3A District 5|4A District 4|4A District 4
+146|coushatta/red-river-bulldogs|Red River Bulldogs (Coushatta, LA)|2A District 3|2A District 3|2A District 3|2A District 1|2A District 1
+147|monroe/richwood-rams|Richwood Rams (Monroe, LA)|3A District 2|3A District 2|3A District 2|3A District 2|3A District 2
+148|jefferson/riverdale-rebels|Riverdale Rebels (Jefferson, LA)|4A District 9|4A District 10|4A District 10|4A District 8|4A District 8
+149|reserve/riverside-academy-rebels|Riverside Academy Rebels (Reserve, LA)|2A District 9|2A District 10|2A District 10|2A District 10|2A District 10
+150|ruston/ruston-bearcats|Ruston Bearcats (Ruston, LA)|4A District 3|5A District 2|5A District 2|5A District 2|5A District 2
+151|slidell/salmen-spartans|Salmen Spartans (Slidell, LA)|4A District 9|4A District 7|4A District 7|4A District 8|4A District 8
+152|lake-charles/sam-houston-broncos|Sam Houston Broncos (Lake Charles, LA)|4A District 5|5A District 3|5A District 3|5A District 3|5A District 3
+153|baton-rouge/scotlandville-hornets|Scotlandville Hornets (Baton Rouge, LA)|5A District 5|5A District 4|5A District 4|5A District 4|5A District 4
+154|slidell/slidell-tigers|Slidell Tigers (Slidell, LA)|5A District 7|5A District 6|5A District 6|5A District 6|5A District 6
+155|galliano/south-lafourche-tarpons|South Lafourche Tarpons (Galliano, LA)|5A District 8|5A District 7|5A District 7|5A District 7|5A District 7
+156|buras/south-plaquemines-hurricanes|South Plaquemines Hurricanes (Buras, LA)|1A District 9|2A District 10|2A District 10|2A District 9|2A District 9
+157|bourg/south-terrebonne-gators|South Terrebonne Gators (Bourg, LA)|5A District 8|4A District 8|4A District 8|4A District 7|4A District 7
+158|baton-rouge/southern-lab-kittens|Southern Lab Kittens (Baton Rouge, LA)|1A District 6|1A District 7|1A District 7|1A District 6|1A District 6
+159|youngsville/southside-sharks||||||
+160|shreveport/southwood-cowboys|Southwood Cowboys (Shreveport, LA)|5A District 1|5A District 1|5A District 1|5A District 1|5A District 1
+161|st-amant/st-amant-gators|St. Amant Gators (St. Amant, LA)|5A District 6|5A District 5|5A District 5|5A District 5|5A District 5
+162|new-orleans/st-augustine-purple-knights|St. Augustine Purple Knights (New Orleans, LA)|5A District 10|4A District 10|4A District 10|5A District 9|5A District 9
+163|laplace/st-charles-catholic-comets|St. Charles Catholic Comets (LaPlace, LA)|2A District 9|3A District 7|3A District 7|3A District 11|3A District 11
+164|monroe/st-frederick-warriors|St. Frederick Warriors (Monroe, LA)|1A District 2|1A District 2|1A District 2|1A District 2|1A District 2
+165|st-james/st-james-wildcats|St. James Wildcats (St. James, LA)|3A District 8|3A District 7|3A District 7|2A District 10|2A District 10
+166|lake-charles/st-louis-catholic-saints|St. Louis Catholic Saints (Lake Charles, LA)|4A District 5|4A District 4|4A District 4|3A District 4|3A District 4
+167|metairie/st-martins-episcopal-saints|St. Martin's Episcopal Saints (Metairie, LA)|1A District 9|1A District 10|1A District 10|1A District 9|1A District 9
+168|st-martinville/st-martinville-tigers|St. Martinville Tigers (St. Martinville, LA)|4A District 6|4A District 5|4A District 5|4A District 5|4A District 5
+169|baton-rouge/st-michael-warriors|St. Michael Warriors (Baton Rouge, LA)|4A District 7|4A District 6|4A District 6|4A District 6|4A District 6
+170|covington/st-pauls-wolves|St. Paul's Wolves (Covington, LA)|5A District 7|5A District 6|5A District 6|5A District 6|5A District 6
+171|lafayette/st-thomas-more-cougars|St. Thomas More Cougars (Lafayette, LA)|5A District 4|4A District 5|4A District 5|4A District 5|4A District 5
+172|sterlington/sterlington-panthers|Sterlington Panthers (Sterlington, LA)|2A District 2|2A District 2|2A District 2|2A District 2|2A District 2
+173|sulphur/sulphur-golden-tornados|Sulphur Golden Tornados (Sulphur, LA)|5A District 3|5A District 3|5A District 3|5A District 3|5A District 3
+174|kentwood/sumner-cowboys|Sumner Cowboys (Kentwood, LA)|3A District 9|3A District 8|3A District 8|3A District 8|3A District 8
+175|houma/terrebonne-tigers|Terrebonne Tigers (Houma, LA)|5A District 8|5A District 7|5A District 7|5A District 7|5A District 7
+176|lafayette/teurlings-catholic-rebels|Teurlings Catholic Rebels (Lafayette, LA)|4A District 6|4A District 5|4A District 5|4A District 5|4A District 5
+177|thibodaux/thibodaux-tigers|Thibodaux Tigers (Thibodaux, LA)|5A District 8|5A District 7|5A District 7|5A District 7|5A District 7
+178|tioga/tioga-indians|Tioga Indians (Tioga, LA)|4A District 4|4A District 3|4A District 3|4A District 3|4A District 3
+179|farmerville/union-parish-farmers|Union Parish Farmers (Farmerville, LA)|2A District 2|3A District 2|3A District 2|3A District 2|3A District 2
+180|baton-rouge/university-lab-cubs|University Lab Cubs (Baton Rouge, LA)|2A District 7|2A District 7|2A District 7|3A District 7|3A District 7
+181|houma/vandebilt-catholic-terriers|Vandebilt Catholic Terriers (Houma, LA)|4A District 8|4A District 8|4A District 8|4A District 7|4A District 7
+182|abbeville/vermilion-catholic-screaming-eagles|Vermilion Catholic Screaming Eagles (Abbeville, LA)|1A District 7|1A District 8|1A District 8|1A District 7|1A District 7
+183|vidalia/vidalia-vikings|Vidalia Vikings (Vidalia, LA)|3A District 3|3A District 3|3A District 3|3A District 3|3A District 3
+184|walker/walker-wildcats|Walker Wildcats (Walker, LA)|5A District 5|5A District 4|5A District 4|5A District 4|5A District 4
+185|new-orleans/warren-easton-fighting-eagles|Warren Easton Eagles (New Orleans, LA)|4A District 10|4A District 10|4A District 10|4A District 9|4A District 9
+186|lake-charles/washington-marion-chargin-indians|Washington-Marion Chargin' Indians (Lake Charles, LA)|4A District 5|4A District 4|4A District 4|4A District 4|4A District 4
+187|welsh/welsh-greyhounds|Welsh Greyhounds (Welsh, LA)|2A District 5|2A District 4|2A District 4|2A District 4|2A District 4
+188|st-francisville/west-feliciana-saints|West Feliciana Saints (St. Francisville, LA)|3A District 7|3A District 6|3A District 6|3A District 7|3A District 7
+189|harvey/west-jefferson-buccaneers|West Jefferson Buccaneers (Harvey, LA)|5A District 9|5A District 9|5A District 9|5A District 8|5A District 8
+190|west-monroe/west-monroe-rebels|West Monroe Rebels (West Monroe, LA)|5A District 1|5A District 2|5A District 2|5A District 2|5A District 2
+191|west-monroe/west-ouachita-chiefs|West Ouachita Chiefs (West Monroe, LA)|4A District 3|4A District 2|4A District 2|4A District 2|4A District 2
+192|edgard/west-st-john-rams|West St. John Rams (Edgard, LA)|1A District 8|1A District 9|1A District 9|1A District 8|1A District 8
+193|new-iberia/westgate-tigers|Westgate Tigers (New Iberia, LA)|5A District 4|5A District 7|5A District 7|4A District 5|4A District 5
+194|westlake/westlake-rams|Westlake Rams (Westlake, LA)|3A District 4|3A District 4|3A District 4|3A District 4|3A District 4
+195|new-orleans/willow-lions|Willow Lions (New Orleans, LA)|2A District 9|3A District 10|3A District 10|3A District 11|3A District 11
+196|winnfield/winnfield-tigers|Winnfield Tigers (Winnfield, LA)|2A District 3|2A District 3|2A District 3|2A District 2|2A District 2
+197|baton-rouge/woodlawn-br-panthers|Woodlawn-B.R. Panthers (Baton Rouge, LA)|4A District 7|5A District 5|5A District 5|5A District 5|5A District 5
+198|monroe/wossman-wildcats|Wossman Wildcats (Monroe, LA)|4A District 3|4A District 2|4A District 2|4A District 2|4A District 2
+199|zachary/zachary-broncos|Zachary Broncos (Zachary, LA)|5A District 5|5A District 4|5A District 4|5A District 4|5A District 4
+200|westwego/patrick-taylor-science-and-tech-academy-tigers|Patrick Taylor Science _ Tech Academy Tigers (Westwego, LA)|||||
+201|metairie/metairie-park-country-day-cajuns|Metairie Park Country Day Cajuns (Metairie, LA)|1A District 9|1A District 10|1A District 10|1A District 9|1A District 9
+202|morgan-city/morgan-city-tigers|Morgan City Tigers (Morgan City, LA)|4A District 8|4A District 8|4A District 8|4A District 7|4A District 7
+203|natchitoches/st-mary-tigers|St. Mary Tigers (Natchitoches, LA)|1A District 3|1A District 4|1A District 4|1A District 3|1A District 3
+204|hammond/st-thomas-aquinas-falcons|St. Thomas Aquinas Falcons (Hammond, LA)|2A District 8|2A District 8|2A District 8|2A District 7|2A District 7
+205|albany/albany-hornets|Albany Hornets (Albany, LA)|3A District 9|3A District 8|3A District 8|3A District 8|3A District 8
+206|opelousas/opelousas-catholic-vikings|Opelousas Catholic Vikings (Opelousas, LA)|2A District 6|1A District 6|1A District 6|2A District 5|2A District 5
+207|plaquemine/st-john-eagles|St. John Eagles (Plaquemine, LA)|1A District 8|1A District 9|1A District 9|1A District 8|1A District 8
+208|st-gabriel/east-iberville-tigers|East Iberville Tigers (St. Gabriel, LA)|1A District 8|1A District 9|1A District 9|1A District 8|1A District 8
+209|gonzales/ascension-christian|Ascension Christian (Gonzales, LA)|1A District 8|1A District 9|1A District 9|1A District 8|1A District 8
+210|baker/central-private-redhawks|Central Private Redhawks (Baker, LA)|MAIS AA District 5|MAIS AA District 6|MAIS AA District 6|MAIS AA District 6|MAIS AA District 6
+211|oakdale/oakdale-warriors|Oakdale Warriors (Oakdale, LA)|2A District 5|2A District 5|2A District 5|2A District 3|2A District 3
+212|alexandria/holy-savior-menard-eagles|Holy Savior Menard Eagles (Alexandria, LA)|2A District 3|2A District 3|2A District 3|2A District 3|2A District 3
+213|rosepine/rosepine-eagles|Rosepine Eagles (Rosepine, LA)|2A District 4|2A District 4|2A District 4|2A District 3|2A District 3
+214|leesville/pickering-red-devils|Pickering Red Devils (Leesville, LA)|2A District 4|2A District 4|2A District 4|2A District 3|2A District 3
+215|greensburg/st-helena-college-and-career-academy-hawks|St. Helena College and Career Academy Hawks (Greensburg, LA)|2A District 8|2A District 8|2A District 8|2A District 7|2A District 7
+216|pride/northeast-vikings|Northeast Vikings (Pride, LA)|3A District 7|2A District 7|2A District 7|2A District 6|2A District 6
+217|delhi/delhi-charter-gators|Delhi Charter Gators (Delhi, LA)|1A District 2|1A District 3|1A District 3|1A District 2|1A District 2
+218|kenner/kenner-discovery-health-sciences-academy-swamp-owls||||||
+219|new-orleans/frederick-a-douglass-bobcats|Frederick A. Douglass Bobcats (New Orleans, LA)|||||3A District 10
+220|franklin/franklin-hornets|Franklin Hornets (Franklin, LA)|3A District 6|3A District 9|3A District 9|3A District 9|3A District 9
+221|lafayette/ascension-episcopal|Ascension Episcopal (Lafayette, LA)|1A District 7|1A District 8|1A District 8|1A District 7|1A District 7
+222|arnaudville/beau-chene-gators|Beau Chene Gators (Arnaudville, LA)|4A District 6|4A District 4|4A District 4|4A District 4|4A District 4
+223|baton-rouge/belaire-bengals|Belaire Bengals (Baton Rouge, LA)|4A District 7|4A District 6|4A District 6|4A District 6|4A District 6
+224|baton-rouge/tara-trojans|Tara Trojans (Baton Rouge, LA)|4A District 7|4A District 6|4A District 6|4A District 6|4A District 6
+225|baton-rouge/glen-oaks-panthers|Glen Oaks Panthers (Baton Rouge, LA)|4A District 7|3A District 6|3A District 6|3A District 7|3A District 7
+226|jonesboro/jonesboro-hodge-tigers|Jonesboro-Hodge Tigers (Jonesboro, LA)|2A District 2|2A District 2|2A District 2|2A District 2|2A District 2
+227|buckeye/buckeye-panthers|Buckeye Panthers (Buckeye, LA)|3A District 3|3A District 3|3A District 3|3A District 3|3A District 3
+228|alexandria/bolton-academy-bears|Bolton Academy Bears (Alexandria, LA)|3A District 3|4A District 3|4A District 3|4A District 3|4A District 3
+229|vivian/north-caddo-rebs|North Caddo Titans (Vivian, LA)|2A District 1|2A District 1|2A District 1|2A District 1|2A District 1
+230|sibley/lakeside-warriors|Lakeside Warriors (Sibley, LA)|2A District 1|2A District 2|2A District 2|2A District 1|2A District 1
+231|delhi/delhi-bears|Delhi Bears (Delhi, LA)|1A District 2|1A District 3|1A District 3|1A District 2|1A District 2
+232|new-orleans/abramson-sci-academy-commodores||||||
+233|eunice/st-edmund-bluejays|St. Edmund Bluejays (Eunice, LA)|1A District 5|1A District 6|1A District 6|1A District 5|1A District 5
+234|lebeau/north-central-hurricanes|North Central Hurricanes (Lebeau, LA)|1A District 5|1A District 6|1A District 6|1A District 5|1A District 5
+235|opelousas/westminster-christian-academy-crusaders|Westminster Christian Academy Crusaders (Opelousas, LA)|1A District 5|1A District 6|1A District 6|2A District 5|2A District 5
+236|ruston/cedar-creek-cougars|Cedar Creek Cougars (Ruston, LA)|1A District 2|1A District 2|1A District 2|1A District 1|1A District 1
+237|baton-rouge/capitol-golden-lions|Capitol Golden Lions (Baton Rouge, LA)|2A District 7|2A District 7|2A District 7|2A District 6|2A District 6
+238|mamou/mamou-demons|Mamou Demons (Mamou, LA)|2A District 5|2A District 5|2A District 5|2A District 4|2A District 4
+239|port-barre/port-barre-red-devils|Port Barre Red Devils (Port Barre, LA)|2A District 6|3A District 5|3A District 5|3A District 5|3A District 5
+240|houma/houma-christian-warriors|Houma Christian Warriors (Houma, LA)||1A District 10|1A District 10|1A District 9|1A District 9
+241|centerville/centerville-bulldogs||||||
+242|longville/south-beauregard-golden-knights|South Beauregard Golden Knights (Longville, LA)|2A District 4|3A District 4|3A District 4|3A District 4|3A District 4
+243|lake-arthur/lake-arthur-tigers|Lake Arthur Tigers (Lake Arthur, LA)|2A District 5|2A District 4|2A District 4|2A District 4|2A District 4
+244|lake-charles/grand-lake-hornets|Grand Lake Hornets (Lake Charles, LA)||||1A District 4|1A District 4
+245|new-orleans/booker-t-washington-lions||||||
+246|new-orleans/reed-olympians|Reed Olympians (New Orleans, LA)|4A District 10|3A District 10|3A District 10|3A District 10|
+247|berwick/berwick-panthers|Berwick Panthers (Berwick, LA)|3A District 6|3A District 9|3A District 9|3A District 9|3A District 9
+248|elton/elton-indians|Elton Indians (Elton, LA)|1A District 4|1A District 5|1A District 5|1A District 4|1A District 4
+249|new-orleans/king-charter-jaguar||||||
+250|bossier-city/bossier-bearkats|Bossier Bearkats (Bossier City, LA)|4A District 1|3A District 1|3A District 1|3A District 1|3A District 1
+251|shreveport/woodlawn-shreveport-knights|Woodlawn-Shreveport Knights (Shreveport, LA)|4A District 1|4A District 1|4A District 1|4A District 1|4A District 1
+252|shreveport/booker-t-washington-shreveport-lions|Booker T. Washington-Shreveport Lions (Shreveport, LA)|3A District 1|2A District 1|2A District 1|3A District 1|3A District 1
+253|tallulah/madison-jaguars|Madison Jaguars (Tallulah, LA)|3A District 2|3A District 2|3A District 2|3A District 2|3A District 2
+254|rayville/rayville-hornets|Rayville Hornets (Rayville, LA)|3A District 2|3A District 2|3A District 2|3A District 2|3A District 2
+255|shreveport/magnolia-school-of-excellence||||||
+256|arcadia/arcadia-hornets|Arcadia Hornets (Arcadia, LA)|1A District 1|1A District 2|1A District 2|1A District 1|1A District 1
+257|montgomery/montgomery-tigers|Montgomery Tigers (Montgomery, LA)|1A District 3|1A District 4|1A District 4|1A District 3|1A District 3
+258|jonesville/block-bears|Block Bears (Jonesville, LA)|1A District 3|1A District 4|1A District 4|1A District 3|1A District 3
+259|gretna/thomas-jefferson|Thomas Jefferson (Gretna, LA)|2A District 9|2A District 9|_|3A District 10|3A District 10
+260|new-orleans/wright|Wright (New Orleans, LA)||_|_|2A District 10|2A District 10
+261|minden/glenbrook-apaches|Glenbrook Apaches (Minden, LA)|MAIS AA District 6|MAIS AA District 6|MAIS A District 3|MAIS AA District 3|MAIS AA District 3
+262|plain-dealing/plain-dealing-lions|Plain Dealing Lions (Plain Dealing, LA)|1A District 1|1A District 1|1A District 1|1A District 1|1A District 1
+263|ringgold/ringgold-redskins|Ringgold Redskins (Ringgold, LA)|1A District 1|1A District 1|1A District 1|1A District 1|1A District 1
+264|covington/northlake-christian-wolverines|Northlake Christian Wolverines (Covington, LA)|2A District 8|2A District 8|2A District 8|2A District 8|2A District 8
+265|baton-rouge/thrive-academy-bulldogs||||||
+266|slaughter/slaughter-community-charter-knights||||||
+267|new-orleans/abramson-commodores||||||
+268|lafayette/westminster-christian-academy-lafayette||||||
+269|white-castle/white-castle-bulldogs|White Castle Bulldogs (White Castle, LA)|1A District 8|1A District 9|1A District 9|1A District 8|1A District 8
+270|lena/northwood-gators|Northwood Gators (Lena, LA)|1A District 3|1A District 4|1A District 4|1A District 3|1A District 3
+271|campti/lakeview-gators|Lakeview Gators (Campti, LA)|2A District 3|2A District 3|2A District 3|2A District 1|2A District 1
+272|springfield/springfield-bulldogs|Springfield Bulldogs (Springfield, LA)|2A District 8|2A District 8|2A District 8|2A District 7|2A District 7
+273|baton-rouge/collegiate||||||
+274|ville-platte/sacred-heart-trojans|Sacred Heart Trojans (Ville Platte, LA)|2A District 6|1A District 6|1A District 6|1A District 5|1A District 5
+275|st-joseph/tensas-panthers|Tensas Panthers (St. Joseph, LA)|1A District 3|1A District 3|1A District 3|1A District 2|1A District 2
+276|grambling/lincoln-prep-panthers|Lincoln Prep Panthers (Grambling, LA)|1A District 1|1A District 2|1A District 2|1A District 1|1A District 1
+277|vinton/vinton-lions|Vinton Lions (Vinton, LA)|2A District 4|2A District 4|2A District 4|2A District 4|2A District 4
+278|ville-platte/ville-platte-bulldogs|Ville Platte Bulldogs (Ville Platte, LA)|2A District 6|2A District 5|2A District 5|3A District 5|3A District 5
+279|harvey/jefferson-rise-charter||||||
+280|new-orleans/livingston-collegiate-academy-wolves||||||
+281|metairie/crescent-city-christian-pioneers|Crescent City Christian Pioneers (Metairie, LA)|1A District 9|1A District 10|1A District 10|1A District 9|1A District 9
+282|new-orleans/cohen-green-hornets|Cohen Green Hornets (New Orleans, LA)|3A District 10|2A District 10|2A District 10|2A District 9|2A District 9
+283|lafitte/fisher-gators|Fisher Gators (Lafitte, LA)|2A District 9|2A District 9|_|2A District 9|2A District 9
+284|morgan-city/central-catholic-eagles|Central Catholic Eagles (Morgan City, LA)|1A District 7|1A District 8|1A District 8|1A District 7|1A District 7
+285|pine-prairie/pine-prairie-panthers|Pine Prairie Panthers (Pine Prairie, LA)|2A District 5|2A District 5|2A District 5|3A District 5|3A District 5
+286|sicily-island/sicily-island-tigers||||||
+287|baldwin/west-st-mary-wolfpack|West St. Mary Wolfpack (Baldwin, LA)|3A District 6|2A District 6|2A District 6|3A District 6|3A District 6
+288|lake-charles/hamilton-christian-warriors|Hamilton Christian Warriors (Lake Charles, LA)|1A District 4|1A District 5|1A District 5|1A District 4|1A District 4
+289|basile/basile-bearcats|Basile Bearcats (Basile, LA)|1A District 4|1A District 5|1A District 5|1A District 4|1A District 4
+290|baton-rouge/helix-mentorship-and-maritime-academy-sharks|Helix Mentorship _ Maritime Academy Sharks (Baton Rouge, LA)|||||_
+291|new-iberia/highland-baptist-christian-bears|Highland Baptist Christian Bears (New Iberia, LA)|_|_|1A District 8|1A District 7|1A District 7
+292|franklin/hanson-memorial-tigers|Hanson Memorial Tigers (Franklin, LA)|1A District 7|1A District 8|1A District 8|1A District 7|1A District 7
+293|ferriday/delta-charter-storm||||||
+294|new-orleans/benjamin-franklin-falcons|Benjamin Franklin Falcons (New Orleans, LA)|3A District 10|3A District 10|_|4A District 9|4A District 9
+295|angie/varnado-wildcats|Varnado Wildcats (Angie, LA)|1A District 6|1A District 7|1A District 7|1A District 6|1A District 6
+296|olla/lasalle-tigers|LaSalle Tigers (Olla, LA)|1A District 3|1A District 4|1A District 4|1A District 3|1A District 3
+297|gueydan/gueydan-bears|Gueydan Bears (Gueydan, LA)|1A District 7|1A District 8|1A District 8|1A District 7|1A District 7
+298|rosedale/north-iberville-unknown||||||
+299|oberlin/oberlin-fightin-tigers|Oberlin Fightin Tigers (Oberlin, LA)|1A District 4|1A District 5|1A District 5|1A District 4|1A District 4
+300|deridder/east-beauregard-trojans|East Beauregard Trojans (DeRidder, LA)|2A District 4|2A District 4|2A District 4|1A District 4|1A District 4
+301|delcambre/delcambre-panthers|Delcambre Panthers (Delcambre, LA)|1A District 7|2A District 6|2A District 6|2A District 5|2A District 5
+302|gretna/young-audiences-charter||||||
+303|farmerville/darbonne-woods||||||
+304|merryville/merryville-panthers|Merryville Panthers (Merryville, LA)|1A District 4|1A District 5|1A District 5|1A District 4|1A District 4
+305|bastrop/beekman-charter-tigers|Beekman Charter Tigers (Bastrop, LA)|||||_
+306|morganza/pointe-coupee-central-cougars|Pointe Coupee Central Cougars (Morganza, LA)|2A District 7|1A District 6|1A District 6|1A District 5|
+307|new-orleans/o-perry-walker-chargers|O. Perry Walker Chargers (New Orleans, LA)|4A District 10|4A District 9|4A District 9||
+308|harvey/cox-cougars|Cox Cougars (Harvey, LA)|4A District 8|4A District 9|4A District 9|5A District 8|5A District 8
+309|new-orleans/eleanor-mcmain-mustangs|Eleanor McMain Mustangs (New Orleans, LA)|3A District 10|3A District 10|3A District 10|3A District 11|3A District 11
+310|new-orleans/algiers-tech-academy-rams||||||
+311|mt-hermon/mt-hermon-yellowjackets|Mt. Hermon Yellowjackets (Mt. Hermon, LA)|_|1A District 7|1A District 7|2A District 8|
+312|metairie/ridgewood-golden-eagles|Ridgewood Golden Eagles (Metairie, LA)|1A District 9|1A District 10|1A District 10|1A District 9|1A District 9
+313|baton-rouge/the-church-academy-crusaders||||||
+314|metairie/grace-king-irish|Grace King Irish (Metairie, LA)|5A District 9|5A District 9|_|5A District 8|5A District 8
+315|new-roads/false-river-gators|False River Gators (New Roads, LA)|1A District 5|1A District 6|1A District 6|1A District 5|1A District 5
+316|baton-rouge/redemptorist-wolves|Redemptorist Wolves (Baton Rouge, LA)|3A District 7|2A District 7|2A District 7|2A District 6|2A District 6
+317|new-orleans/truth-academy|Truth Academy (New Orleans, LA)||_|_||
+318|new-orleans/js-clark-bulldogs|J.S. Clark Bulldogs (New Orleans, LA)|3A District 10|2A District 10|2A District 10|3A District 10|3A District 10
+319|shreveport/fair-park-indians|Fair Park Indians (Shreveport, LA)|4A District 1|4A District 1|4A District 1|4A District 1|4A District 1
+320|new-orleans/miller-mccoy-academy-lions|Miller-McCoy Academy Lions (New Orleans, LA)|_|_|_|3A District 10|3A District 10
+321|lakeland/baton-rouge-homeschool-wildcats|Baton Rouge HomeSchool Wildcats (Lakeland, LA)|||_|_|_
+322|new-orleans/landry-buccaneers|Landry Buccaneers (New Orleans, LA)||3A District 10|_||
+323|new-orleans/new-orleans-home-school-saints-saints|New Orleans Home School Saints Saints (New Orleans, LA)|_|_|_|_|_
+324|jonesville/central-panthers||||||
+325|metairie/lutheran-gryphons|Lutheran Gryphons (Metairie, LA)|1A District 9||||
+326|breaux-bridge/breaux-bridge-christian-academy-knights|Breaux Bridge Christian Academy Knights (Breaux Bridge, LA)|_||_|_|_
+327|baton-rouge/christian-home-educators-fellowship-patriots|Christian Home Educators Fellowship Patriots (Baton Rouge, LA)|_|_|_|_|_
+328|abbeville/harvest-time-christian-academy|Harvest Time Christian Academy (Abbeville, LA)|_|_|_|_|
+329|lafayette/acadiana-home-school-athletics-commandos|Acadiana Home School Athletics Commandos (Lafayette, LA)|_|_|_|_|_
+330|amite/oak-forest-academy-yellowjackets|Oak Forest Academy Yellowjackets (Amite, LA)|MAIS AAA District 2|MAIS AA District 6|MAIS AA District 6|MAIS AAA II District 2|MAIS AAA II District 2
+331|baton-rouge/baton-rouge-christian-patriots|Baton Rouge Christian Patriots (Baton Rouge, LA)|_|_|||
+332|new-orleans/lake-area-new-tech|Lake Area New Tech (New Orleans, LA)|||_|_|_
+333|metairie/ecole-classique-spartans|Ecole Classique Spartans (Metairie, LA)|1A District 9|1A District 10|1A District 10|1A District 9|1A District 9
+334|creole/south-cameron-tarpons|South Cameron Tarpons (Creole, LA)|1A District 4|1A District 5|1A District 5|1A District 4|1A District 4
+335|lafayette/john-paul-the-great-academy-guardians|John Paul the Great Academy Guardians (Lafayette, LA)|_|_|_|_|_
+336|eunice/sacred-heart-homeschool-wildcats|Sacred Heart HomeSchool Wildcats (Eunice, LA)|_|_|||
+337|west-monroe/northeast-baptist-knights|Northeast Baptist Knights (West Monroe, LA)|_|_|_|_|_
+338|athens/mount-olive-christian|Mount Olive Christian (Athens, LA)|_|_|_|_|
+339|natchitoches/natchitoches-christian-academy|Natchitoches Christian Academy (Natchitoches, LA)|_||||
+340|bastrop/prairie-view-academy-spartans|Prairie View Academy Spartans (Bastrop, LA)|MAIS AA District 6|MAIS AA District 3|MAIS AA District 3|MAIS AA District 3|MAIS AA District 3
+341|hineston/oak-hill-rams|Oak Hill Rams (Hineston, LA)|||||
+342|clinton/silliman-institute-wildcats|Silliman Institute Wildcats (Clinton, LA)|MAIS AA District 5|MAIS AA District 6|MAIS AA District 6|MAIS AA District 6|MAIS AA District 6
+343|franklinton/bowling-green-buccaneers|Bowling Green Buccaneers (Franklinton, LA)|MAIS AA District 4|MAIS AA District 6|MAIS AA District 6|MAIS AA District 6|MAIS AA District 6
+344|alexandria/university-academy-lions|University Academy Lions (Alexandria, LA)|MAIS AA District 6|MAIS AA District 6|MAIS A District 3|MAIS A District 5|MAIS A District 5
+345|rayville/riverfield-academy-raiders|Riverfield Academy Raiders (Rayville, LA)|MAIS A District 7|MAIS A District 7|MAIS A District 3|MAIS AA District 3|MAIS AA District 3
+346|bogalusa/bens-ford-christian-eagles|Ben's Ford Christian Eagles (Bogalusa, LA)|MAIS A District 8|MAIS A District 8|MAIS A District 4|MAIS AA District 6|MAIS AA District 6
+347|haynesville/claiborne-academy-rebels|Claiborne Academy Rebels (Haynesville, LA)|MAIS A District 7|MAIS A District 7|MAIS A District 3|MAIS A District 5|MAIS A District 5
+348|farmerville/union-christian-academy-lions|Union Christian Academy Lions (Farmerville, LA)|MAIS A District 7|MAIS A District 7|MAIS A District 3|MAIS A District 5|MAIS A District 5
+349|tallulah/tallulah-academy-trojans|Tallulah Academy Trojans (Tallulah, LA)|MAIS A District 6|MAIS A District 6|MAIS A District 3|MAIS A District 4|MAIS 8-Man District 6
+350|monroe/river-oaks-mustangs|River Oaks Mustangs (Monroe, LA)|MAIS AA District 6|MAIS AA District 3|MAIS AA District 3|MAIS AA District 3|MAIS AA District 3
+351|coushatta/riverdale-academy-rebels|Riverdale Academy Rebels (Coushatta, LA)|MAIS A District 7|MAIS AA District 3|MAIS AA District 3|MAIS A District 5|MAIS A District 5
+352|jennings/christ-bridge-academy-archangels|Christ Bridge Academy Archangels (Jennings, LA)||_|_|_|_
+353|lake-charles/southwest-louisiana-homeschool|Southwest Louisiana HomeSchool (Lake Charles, LA)||_||_|_
+354|lafayette/christian-homeschool-sports-association-of-acadiana-archangels|Christian HomeSchool Sports Association of Acadiana ArchAngels (Lafayette, LA)||_|_|_|_
+355|new-iberia/acadiana-christian-lions|Acadiana Christian Lions (New Iberia, LA)||||_|_
+356|baton-rouge/louisiana-school-for-the-deaf-war-eagles|Louisiana School for the Deaf War Eagles (Baton Rouge, LA)|_|_|_|_|_
+357|winnsboro/franklin-academy-cougars|Franklin Academy Cougars (Winnsboro, LA)|MAIS 8-Man District 2|MAIS 8-Man District 2|MAIS A District 6|MAIS 8-Man District 8|MAIS 8-Man District 8
+358|st-joseph/tensas-academy-chiefs|Tensas Academy Chiefs (St. Joseph, LA)|MAIS 8-Man District 2|MAIS 8-Man District 2|MAIS A District 6|MAIS 8-Man District 8|MAIS 8-Man District 8
+359|grand-coteau/berchmans-academy-saints|Berchmans Academy Saints (Grand Coteau, LA)|||||_
+360|lake-providence/briarfield-academy-rebels|Briarfield Academy Rebels (Lake Providence, LA)|MAIS 8-Man District 2|MAIS 8-Man District 2|MAIS A District 6|MAIS 8-Man District 8|MAIS 8-Man District 8
+361|deridder/beauregard-christian-academy|Beauregard Christian Academy (DeRidder, LA)|||_||

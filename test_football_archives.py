@@ -3,6 +3,11 @@ from server import football_archive_rankings_response, football_archive_response
 
 def test_archived_seasons_are_available():
     expected = {
+        "2010": 285,
+        "2011": 289,
+        "2012": 290,
+        "2013": 290,
+        "2014": 291,
         "2015": 282,
         "2016": 281,
         "2017": 282,
@@ -11,7 +16,7 @@ def test_archived_seasons_are_available():
         "2020": 285,
         "2021": 291,
         "2022": 292,
-        "2023": 299,
+        "2023": 303,
         "2024": 303,
     }
     for season, school_count in expected.items():
@@ -31,7 +36,20 @@ def test_archived_school_lookup_preserves_games():
 
 def test_incomplete_seasons_are_not_published():
     assert football_archive_response("2008") is None
-    assert football_archive_response("2014") is None
+    assert football_archive_response("2009") is None
+
+
+def test_2010_2014_maxpreps_import_champions():
+    expected = {
+        "2010": {"Acadiana", "Evangel Christian", "Franklinton", "Parkview Baptist", "White Castle"},
+        "2014": {"Acadiana", "Calvary Baptist", "Haynesville", "Jesuit", "Livonia", "Many",
+                 "Neville", "Ouachita Christian", "University Lab"},
+    }
+    for season, champs in expected.items():
+        response = football_archive_response(season)
+        got = {s["school"] for s in response["schools"] for g in s["games"]
+               if g["week"] == "State Championship" and g["result"] == "W"}
+        assert got == champs
 
 
 def test_legacy_archive_ratings_use_historical_groups():
