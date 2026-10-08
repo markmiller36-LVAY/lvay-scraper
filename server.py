@@ -16,6 +16,7 @@ import time
 from collections import deque
 from volleyball_records import schedule_record
 from district_exceptions import is_non_district_game
+import winter_archive
 
 app = Flask(__name__)
 
@@ -1766,6 +1767,18 @@ def sport_seasons(sport):
                 "is_locked": True,
                 "school_count": archive.get("count", 0),
             })
+    if sport in winter_archive.SOURCES:
+        for season, archive in winter_archive.load_archive(sport).get(
+            "seasons", {}
+        ).items():
+            known.setdefault(season, {
+                "season": season,
+                "source": archive.get("source", "LHSAA schedule archive"),
+                "status": "final",
+                "is_locked": True,
+                "school_count": archive.get("count", 0),
+                "archive": True,
+            })
     seasons = sorted(known.values(), key=lambda row: int(row["season"]), reverse=True)
     return jsonify({
         "sport": sport,
@@ -1884,6 +1897,13 @@ def get_sport_schedules(sport):
         """, (sport, season))
 
     school_rows = [dict(r) for r in c.fetchall()]
+    if not school_rows and sport in winter_archive.SOURCES:
+        archived = winter_archive_response(
+            sport, season, summary_only=summary_only, school_filter=school_filter
+        )
+        if archived is not None:
+            conn.close()
+            return jsonify(archived)
     opponent_records = {
         str(row.get("school") or "").strip().casefold(): {
             "wins": int(row.get("wins") or 0),
@@ -2219,6 +2239,61 @@ def schedules_winter_sport(sport):
     if sport not in WINTER_SPORTS:
         return jsonify({"error": "Unsupported sport"}), 404
     return get_sport_schedules(sport)
+
+
+def winter_archive_response(sport, season, summary_only=False, school_filter=""):
+    """Serve a finished season from the LHSAA schedule archive (display only)."""
+    archive = winter_archive.archive_season(sport, season)
+    if not archive:
+        return None
+    schools = archive.get("schools", [])
+    if school_filter:
+        exact = [
+            s for s in schools
+            if s["school"].casefold() == school_filter.casefold()
+        ]
+        schools = exact or [
+            s for s in schools
+            if school_filter.casefold() in s["school"].casefold()
+        ]
+    return {
+        "sport": sport,
+        "season": str(season),
+        "status": "final",
+        "source": archive.get("source", "LHSAA schedule archive"),
+        "archive": True,
+        "count": len(schools),
+        "schools": [
+            {**s, "games": [] if summary_only else s.get("games", [])}
+            for s in schools
+        ],
+    }
+
+
+@app.route("/api/archive/winter/<sport>")
+def winter_archive_status(sport):
+    if sport not in winter_archive.SOURCES:
+        return jsonify({"error": "Unsupported sport"}), 404
+    return jsonify(winter_archive.summary(sport))
+
+
+@app.route("/api/archive/winter/<sport>/build")
+def winter_archive_build(sport):
+    """Pull finished seasons from LHSAA into the archive (background job).
+
+    Only finished seasons (before the current one) are accepted, so the live
+    season and its ratings are never touched.
+    """
+    if sport not in winter_archive.SOURCES:
+        return jsonify({"error": "Unsupported sport"}), 404
+    seasons = winter_archive.parse_seasons(
+        request.args.get("seasons") or "", resolve_season(sport)
+    )
+    if not seasons:
+        return jsonify({"error": "Give finished seasons, e.g. ?seasons=2015-2025"}), 400
+    if not winter_archive.start_build(sport, seasons):
+        return jsonify({"status": "already_running", "job": winter_archive.STATE}), 409
+    return jsonify({"status": "started", "sport": sport, "seasons": seasons}), 202
 
 
 @app.route("/api/breakdown/winter/<sport>/<school>")
