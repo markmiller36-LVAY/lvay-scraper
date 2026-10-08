@@ -30,5 +30,39 @@ for f in ["g0.txt","h0.txt","h1.txt","h2.txt","h3.txt"]:
         fl=p[6] if len(p)>6 else ""
         n+=1
         G[str(n)]=[[T[ti],yk,ds,oslug,ost,on,p[4],p[5],"d" in fl,"p" in fl]]
+# newspaper corrections
+import os, datetime
+FX=os.environ.get("FIXES")
+def res(a,b):
+    return ("W" if a>b else "L" if a<b else "T")+f"{max(a,b) if a!=b else a}-{min(a,b) if a!=b else b}"
+if FX:
+    for ln in open(FX):
+        if ln.startswith("#") or not ln.strip(): continue
+        k,yy,md,a,b,sa,sb,src=ln.rstrip("\n").split("|"); yy=int(yy); sa=int(sa); sb=int(sb)
+        yk=YK[yy-10]; ds=md+"-20%02d"%yy
+        def side(x):
+            if x.startswith("~"):
+                q=x.split("~"); return "",q[2],q[1]
+            return T[int(x)],"la",""
+        A=side(a); B=side(b)
+        d0=datetime.date(2000+yy,int(md.split("-")[0]),int(md.split("-")[1]))
+        if k=="FIX":
+            hit=0
+            for gid,ps in G.items():
+                p=ps[0]
+                if p[1]!=yk: continue
+                pd=p[2].split("-")
+                try: dd=datetime.date(int(pd[2]),int(pd[0]),int(pd[1]))
+                except: continue
+                if abs((dd-d0).days)>2: continue
+                if p[0]==A[0] and p[3]==B[0]: p[7]=res(sa,sb); hit+=1
+                elif p[0]==B[0] and p[3]==A[0]: p[7]=res(sb,sa); hit+=1
+            print("FIX",a,b,"lines changed",hit)
+        else:
+            n+=1
+            if A[0]: G[str(n)]=[[A[0],yk,ds,B[0],B[1],B[2],"",res(sa,sb),False,False]]
+            if B[0]:
+                n+=1; G[str(n)]=[[B[0],yk,ds,A[0],A[1],A[2],"",res(sb,sa),False,False]]
+            print("ADD",a,b)
 json.dump({"G":G,"ST":ST,"NM":NM},open(sys.argv[2],"w"))
 print(n,bad)
