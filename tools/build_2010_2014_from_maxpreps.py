@@ -18,6 +18,9 @@ ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE = ROOT / "football_archives_greenlit.json.gz"
 YRS = {"10-11": 2010, "11-12": 2011, "12-13": 2012, "13-14": 2013, "14-15": 2014}
 ROUND = {0: "State Championship", 1: "Semifinal", 2: "Quarterfinal", 3: "Regional"}
+# Schools whose site history starts later than 2010 (Mark's call). Their games still
+# appear on opponents' schedules; they just get no season row of their own.
+FIRST_SEASON = {"houma/covenant-christian-academy-lions": 2013}
 ORD = {"1": 1, "Regional": 2, "Quarterfinal": 3, "Semifinal": 4, "State Championship": 5}
 
 
@@ -189,6 +192,8 @@ def main(crawl_path, names_path, out_csv, write=False):
         teams = {base["slug"], base["okey"]}
         for t in teams:
             if t.startswith("x:") or not ident(t, yk):
+                continue
+            if y < FIRST_SEASON.get(t, 0):
                 continue
             if t in sides:
                 x = sides[t]

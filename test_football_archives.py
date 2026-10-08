@@ -3,9 +3,9 @@ from server import football_archive_rankings_response, football_archive_response
 
 def test_archived_seasons_are_available():
     expected = {
-        "2010": 285,
-        "2011": 289,
-        "2012": 290,
+        "2010": 284,
+        "2011": 288,
+        "2012": 289,
         "2013": 290,
         "2014": 291,
         "2015": 282,
@@ -79,3 +79,9 @@ def test_archive_districts_do_not_duplicate_class_suffix():
         response = football_archive_response(season, summary_only=True)
         assert all(not school["district"].endswith(f"-{school['class_']}")
                    for school in response["schools"])
+
+
+def test_covenant_history_starts_2013():
+    for season in ("2010", "2011", "2012"):
+        assert football_archive_response(season, school_filter="Covenant Christian")["count"] == 0
+    assert football_archive_response("2013", school_filter="Covenant Christian")["count"] == 1
