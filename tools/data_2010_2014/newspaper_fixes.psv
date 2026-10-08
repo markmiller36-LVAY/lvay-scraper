@@ -12,3 +12,25 @@ ADD|11|9-2|111|102|32|0|3 newspapers (Sept 3, 2011)
 ADD|11|9-2|153|316|60|0|3 newspapers (Sept 3, 2011)
 ADD|11|9-2|163|~Tate~fl|42|0|3 newspapers (Sept 3, 2011)
 ADD|11|9-1|189|~John McDonogh~la|57|0|1 newspaper (Sept 3, 2011, Thursday scores)
+# Playoff scores from the official LHSAA brackets (already in Airtable), 2010-2013
+FIX|13|11-15|115|53|21|42|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — McKinley v East Ascension
+FIX|12|11-9|206|192|13|53|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Opelousas Catholic v West St. John
+FIX|12|11-16|105|180|21|52|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Loreauville v University Lab
+FIX|13|11-29|289|89|15|32|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Basile v Kentwood
+FIX|13|11-22|269|300|30|22|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — White Castle v East Beauregard
+FIX|13|11-22|73|256|66|0|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Haynesville v Arcadia
+FIX|13|11-22|55|121|44|6|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — East Jefferson v North DeSoto
+FIX|13|11-29|101|39|27|26|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Livonia v Church Point
+FIX|12|11-9|284|236|19|27|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Central Catholic v Cedar Creek
+FIX|12|11-9|54|26|29|12|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — East Feliciana v Caldwell Parish
+FIX|12|11-9|9|235|14|42|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Ascension Catholic v Westminster Christian
+FIX|13|11-22|248|192|20|68|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Elton v West St. John
+FIX|12|11-16|127|57|14|35|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Northwood - Shrev. v Edna Karr
+FIX|13|11-15|39|309|65|44|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Church Point v Eleanor McMain
+FIX|11|11-11|63|134|17|47|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Fontainebleau v Parkway
+FIX|12|11-9|85|142|63|0|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — John Curtis Christian v Pope John Paul II
+FIX|10|11-19|27|49|62|12|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Calvary v Donaldsonville
+FIX|10|11-26|30|128|8|39|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Carroll v Notre Dame
+FIX|13|11-15|263|262|14|52|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Ringgold v Plain Dealing
+FIX|12|11-23|95|74|8|40|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — LaGrange v Holy Cross
+FIX|13|11-22|48|150|34|7|LHSAA official bracket (Airtable LHSAA FOOTBALL HISTORY) — Destrehan v Ruston

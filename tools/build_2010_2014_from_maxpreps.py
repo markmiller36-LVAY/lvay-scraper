@@ -128,12 +128,15 @@ def main(crawl_path, names_path, out_csv, write=False):
             a, b = find((y, g[0]["slug"])), find((y, g[0]["okey"]))
             parent[a] = b
     comp_final = {}
+    comp_weeks, year_weeks = {}, {}
     for g in games:
         if any(x["po"] for x in g):
             y = g[0]["year"]
             wk = (g[0]["d"] - week1[y]).days // 7
             r = find((y, g[0]["slug"]))
             comp_final[r] = max(comp_final.get(r, 0), wk)
+            comp_weeks.setdefault(r, set()).add(wk)
+            year_weeks.setdefault(y, set()).add(wk)
     year_final = {}
     for r, v in comp_final.items():
         year_final[r[0]] = max(year_final.get(r[0], 0), v)
@@ -176,10 +179,13 @@ def main(crawl_path, names_path, out_csv, write=False):
         po = any(x["po"] for x in g)
         wk = (g[0]["d"] - week1[y]).days // 7 + 1
         if po:
-            cf = comp_final[find((y, g[0]["slug"]))]
-            if year_final[y] - cf > 1:  # partial / stray bracket piece: use the season final
-                cf = year_final[y]
-            off = cf - (wk - 1)
+            # Rounds counted back from the bracket's final by the weeks that bracket
+            # actually played (2013 Select: semis Nov 29, open week, final Dec 12).
+            r = find((y, g[0]["slug"]))
+            weeks = comp_weeks[r]
+            if year_final[y] - comp_final[r] > 1:  # stray bracket piece: use the season's weeks
+                weeks = year_weeks[y]
+            off = sum(1 for w in weeks if w > wk - 1)
             week = ROUND.get(off, "1")
         else:
             week = max(wk, 0)
