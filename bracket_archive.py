@@ -153,18 +153,25 @@ def _is_bye(name):
 
 def bracket_games(slots):
     """Real games with round numbers and names, from one bracket's slots."""
-    appear = {}
+    appear, last_game = {}, {}
     for s in slots:
         for team in (s["a"], s["b"]):
             if not _is_bye(team):
                 appear[team] = appear.get(team, 0) + 1
+                last_game[team] = max(last_game.get(team, 0), s["g"])
     games = []
     for s in slots:
         a, b = s["a"], s["b"]
         if _is_bye(a) or _is_bye(b):
             continue
         sa, sb = s["a_score"], s["b_score"]
-        if sa is not None and sb is not None and sa != sb:
+        # Who shows up in a later game is the winner, even when LHSAA's score is typed backwards.
+        a_on, b_on = last_game.get(a, 0) > s["g"], last_game.get(b, 0) > s["g"]
+        if a_on != b_on:
+            winner = a if a_on else b
+            if sa is not None and sb is not None and (sa > sb) != a_on and sa != sb:
+                s = {**s, "a_score": sb, "b_score": sa, "score_flipped": True}
+        elif sa is not None and sb is not None and sa != sb:
             winner = a if sa > sb else b
         elif appear.get(a, 0) != appear.get(b, 0):
             winner = a if appear.get(a, 0) > appear.get(b, 0) else b

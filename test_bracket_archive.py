@@ -75,6 +75,19 @@ class BracketTests(unittest.TestCase):
         self.assertEqual(labels(2020, "division"), ["Division I", "Division II", "Division III", "Division IV", "Division V"])
         self.assertEqual(ba.parse_seasons("2012-2027", 2027), list(range(2013, 2027)))
 
+    def test_advancement_beats_a_backwards_score(self):
+        html = page([
+            slot(1, "Alpha", 3, "Bravo", 0),
+            slot(2, "Charlie", 3, "Delta", 0),   # typed backwards: Delta is the one who advanced
+            slot(3, "Alpha", 3, "Delta", 1),
+        ])
+        games = {(g["a"], g["b"]): g for g in ba.bracket_games(ba.parse_bracket(html))}
+        g2 = games[("Charlie", "Delta")]
+        self.assertEqual(g2["winner"], "Delta")
+        self.assertEqual((g2["a_score"], g2["b_score"]), (0, 3))
+        self.assertEqual(g2["phase"], "Semifinals")
+        self.assertEqual(games[("Alpha", "Delta")]["phase"], "State Championship")
+
     def test_markers_are_stripped(self):
         self.assertEqual(ba.clean_name("Parkway ^"), "Parkway")
         self.assertEqual(ba.clean_name("Kinder ^*"), "Kinder")
