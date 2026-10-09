@@ -84,7 +84,7 @@ def scheduled_run():
                 # Keep the last stored LHSAA list; never block ratings.
                 print(f"[SCHEDULER] Playoff eligibility not updated: {eligibility_error}")
 
-               # 3. VOLLEYBALL
+                       # 3. VOLLEYBALL
         if "volleyball" in active:
             print("[SCHEDULER] Running volleyball pipeline...")
             try:
@@ -94,12 +94,15 @@ def scheduled_run():
                 run_volleyball_rankings()
                 print("[SCHEDULER] Volleyball ratings complete")
             except Exception as volleyball_error:
-                # Never let a bad volleyball source take down football/basketball/soccer.
+                # Never let volleyball take down football/basketball/soccer.
                 print(f"[SCHEDULER] Volleyball pipeline failed; continuing: {volleyball_error}")
             else:
                 try:
                     from run_power_rankings_volleyball import SEASON as VB_SEASON
                     from volleyball_playoff_eligibility import update_playoff_eligibility as update_vb_eligibility
+                    print(f"[SCHEDULER] Volleyball playoff eligibility: {update_vb_eligibility(VB_SEASON)}")
+                except Exception as eligibility_error:
+                    print(f"[SCHEDULER] Volleyball playoff eligibility not updated: {eligibility_error}")
                     print(f"[SCHEDULER] Volleyball playoff eligibility: {update_vb_eligibility(VB_SEASON)}")
                 except Exception as eligibility_error:
                     # Keep the last stored LHSAA list; never block ratings.
