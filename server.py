@@ -17,6 +17,7 @@ from collections import deque
 from volleyball_records import schedule_record
 from district_exceptions import is_non_district_game
 import winter_archive
+import bracket_archive
 
 app = Flask(__name__)
 
@@ -2275,6 +2276,40 @@ def winter_archive_status(sport):
     if sport not in winter_archive.SOURCES:
         return jsonify({"error": "Unsupported sport"}), 404
     return jsonify(winter_archive.summary(sport))
+
+
+@app.route("/api/brackets/<sport>")
+def bracket_archive_season(sport):
+    """One past season's LHSAA playoff brackets in the site's bracket-tree shape."""
+    if sport not in bracket_archive.SPORT_CODES:
+        return jsonify({"error": "Unsupported sport"}), 404
+    season = (request.args.get("season") or "").strip()
+    data = bracket_archive.season_data(sport, season) if re.fullmatch(r"\d{4}", season) else None
+    if not data:
+        return jsonify({"sport": sport, "season": season, "schools": []}), 404
+    return jsonify({"sport": sport, "season": season, "source": data.get("source"),
+                    "brackets": data.get("brackets", []), "champions": data.get("champions", {}),
+                    "schools": data.get("schools", [])})
+
+
+@app.route("/api/brackets/<sport>/seasons")
+def bracket_archive_seasons(sport):
+    if sport not in bracket_archive.SPORT_CODES:
+        return jsonify({"error": "Unsupported sport"}), 404
+    return jsonify(bracket_archive.summary(sport))
+
+
+@app.route("/api/brackets/<sport>/build")
+def bracket_archive_build(sport):
+    """Pull finished seasons' brackets from LHSAA (background job)."""
+    if sport not in bracket_archive.SPORT_CODES:
+        return jsonify({"error": "Unsupported sport"}), 404
+    seasons = bracket_archive.parse_seasons(request.args.get("seasons") or "", resolve_season(sport))
+    if not seasons:
+        return jsonify({"error": "Give finished seasons, e.g. ?seasons=2014-2025"}), 400
+    if not bracket_archive.start_build(sport, seasons):
+        return jsonify({"status": "already_running", "job": bracket_archive.STATE}), 409
+    return jsonify({"status": "started", "sport": sport, "seasons": seasons}), 202
 
 
 @app.route("/api/history/winter/<sport>")
