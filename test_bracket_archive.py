@@ -80,6 +80,9 @@ class BracketTests(unittest.TestCase):
         self.assertFalse(ba.heading_matches(("div", "V", "Select"), "Division V (Non-Select)"))
         self.assertFalse(ba.heading_matches(("div", "I", None), "Division II"))
         self.assertTrue(ba.heading_matches(("cls", "5A", None), "Class 5A"))
+        self.assertTrue(ba.heading_matches(("div", "II", None), "DIVISION II"))
+        self.assertFalse(ba.heading_matches(("div", "I", None), "DIVISION II"))
+        self.assertTrue(ba.heading_matches(("div", "V", "Select"), "DIVISION V (SELECT)"))
         self.assertTrue(ba.heading_matches(("div", "IV", None), ""))
         html = "<td>2019 LHSAA Baseball Playoff Bracket - Division IV (Select)</td><td>BI-DISTRICT - 5/1</td>"
         self.assertEqual(ba.page_heading(html), "Division IV (Select)")

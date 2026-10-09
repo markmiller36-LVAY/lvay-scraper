@@ -96,11 +96,11 @@ def heading_matches(expect, heading):
         return True
     kind, value, select = expect
     if kind == "cls":
-        ok = re.search(r"(?:Class\s+)?" + re.escape(value) + r"\b", heading) is not None
+        ok = re.search(r"(?:Class\s+)?" + re.escape(value) + r"\b", heading, re.I) is not None
     else:
-        ok = re.search(r"Division\s+" + value + r"(?![IV])", heading) is not None
-    if ok and select and re.search(r"\((?:Non-)?Select\)", heading):
-        ok = f"({select})" in heading
+        ok = re.search(r"Division\s+" + value + r"(?![IViv])", heading, re.I) is not None
+    if ok and select and re.search(r"\((?:Non-)?Select\)", heading, re.I):
+        ok = f"({select})".lower() in heading.lower()
     return ok
 
 
