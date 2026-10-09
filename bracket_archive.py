@@ -113,9 +113,14 @@ def _txt(soup, el_id):
     return re.sub(r"\s+", " ", el.get_text(" ").replace("\xa0", " ")).strip()
 
 
+def clean_name(name):
+    """Drop LHSAA's trailing markers (* home team, ^ and similar) from a team name."""
+    return re.sub(r"[\s*^#+†]+$", "", str(name or "")).strip()
+
+
 def _name(raw):
     raw = (raw or "").strip()
-    return re.sub(r"\s*\*\s*$", "", raw).strip(), raw.endswith("*")
+    return clean_name(raw), "*" in raw[-4:]
 
 
 def _score(raw):
@@ -244,7 +249,17 @@ def save_season(sport, season, season_data):
 
 
 def season_data(sport, season):
-    return load(sport).get("seasons", {}).get(str(season))
+    data = load(sport).get("seasons", {}).get(str(season))
+    if not data:
+        return data
+    # Seasons pulled before clean_name existed may still carry LHSAA markers ("Parkway ^").
+    schools = []
+    for school in data.get("schools", []):
+        school = dict(school, school=clean_name(school.get("school")))
+        school["games"] = [dict(g, opponent=clean_name(g.get("opponent"))) for g in school.get("games", [])]
+        schools.append(school)
+    champions = {k: clean_name(v) for k, v in (data.get("champions") or {}).items()}
+    return dict(data, schools=schools, champions=champions)
 
 
 # ── building ──────────────────────────────────────────────────
@@ -351,7 +366,8 @@ def summary(sport):
         "sport": sport,
         "seasons": {
             s: {"brackets": info.get("brackets", []), "games": info.get("games", 0),
-                "champions": info.get("champions", {}), "built_at": info.get("built_at")}
+                "champions": {k: clean_name(v) for k, v in (info.get("champions") or {}).items()},
+                "built_at": info.get("built_at")}
             for s, info in sorted(data.get("seasons", {}).items())
         },
         "job": STATE if STATE.get("sport") in (None, sport) else {"status": "busy"},

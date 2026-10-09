@@ -75,6 +75,12 @@ class BracketTests(unittest.TestCase):
         self.assertEqual(labels(2020, "division"), ["Division I", "Division II", "Division III", "Division IV", "Division V"])
         self.assertEqual(ba.parse_seasons("2012-2027", 2027), list(range(2013, 2027)))
 
+    def test_markers_are_stripped(self):
+        self.assertEqual(ba.clean_name("Parkway ^"), "Parkway")
+        self.assertEqual(ba.clean_name("Kinder ^*"), "Kinder")
+        self.assertEqual(ba._name("Iowa ^*"), ("Iowa", True))
+        self.assertEqual(ba._name("Catholic - B.R."), ("Catholic - B.R.", False))
+
     def test_heading_guard(self):
         self.assertTrue(ba.heading_matches(("div", "V", "Non-Select"), "Division V (Non-Select)"))
         self.assertFalse(ba.heading_matches(("div", "V", "Select"), "Division V (Non-Select)"))
