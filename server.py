@@ -2287,10 +2287,10 @@ def winter_archive_build(sport):
     if sport not in winter_archive.SOURCES:
         return jsonify({"error": "Unsupported sport"}), 404
     seasons = winter_archive.parse_seasons(
-        request.args.get("seasons") or "", resolve_season(sport)
+        request.args.get("seasons") or "", resolve_season(sport), sport
     )
     if not seasons:
-        return jsonify({"error": "Give finished seasons, e.g. ?seasons=2015-2025"}), 400
+        return jsonify({"error": "Give finished seasons, e.g. ?seasons=2014-2025"}), 400
     if not winter_archive.start_build(sport, seasons):
         return jsonify({"status": "already_running", "job": winter_archive.STATE}), 409
     return jsonify({"status": "started", "sport": sport, "seasons": seasons}), 202

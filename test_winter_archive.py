@@ -113,6 +113,39 @@ class BuildTests(unittest.TestCase):
                 del os.environ["WINTER_ARCHIVE_DIR"]
 
 
+class BasketballSourceTests(unittest.TestCase):
+    def test_basketball_seasons_start_at_2014(self):
+        self.assertEqual(wa.parse_seasons("2012-2027", 2027, "boys_basketball")[0], 2014)
+        self.assertEqual(wa.parse_seasons("2012-2027", 2027, "boys_soccer")[0], 2015)
+        self.assertEqual(wa.parse_seasons("2012-2027", 2027, "boys_basketball")[-1], 2026)
+
+    def test_basketball_pulls_one_class_at_a_time(self):
+        calls = []
+
+        def fake_fetch(sport, season, district, session=None, attempts=3, classification=""):
+            calls.append((district, classification))
+            if classification == "1A":
+                return page([row(1, "Arcadia", "1-1A", "11/20/2013 6:00:00 PM", "Homer", "1-2A", "T", "W", "59-58")])
+            return page([])
+
+        with tempfile.TemporaryDirectory() as tmp:
+            old_fetch, old_dir = wa.fetch_district, os.environ.get("WINTER_ARCHIVE_DIR")
+            wa.fetch_district = fake_fetch
+            os.environ["WINTER_ARCHIVE_DIR"] = tmp
+            try:
+                data = wa.build_from_lhsaa("boys_basketball", 2014, pause=0)
+            finally:
+                wa.fetch_district = old_fetch
+                if old_dir is None:
+                    os.environ.pop("WINTER_ARCHIVE_DIR", None)
+                else:
+                    os.environ["WINTER_ARCHIVE_DIR"] = old_dir
+        self.assertEqual(calls, [("", c) for c in wa.CLASS_ORDER])
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["schools"][0]["record"], "1-0")
+        self.assertEqual(data["rows_by_district"]["1A"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()
 

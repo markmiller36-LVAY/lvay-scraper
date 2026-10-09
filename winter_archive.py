@@ -1,4 +1,4 @@
-"""Past-season schedule archive for the winter sports (soccer first).
+"""Past-season schedule archive for the winter sports (soccer, boys basketball).
 
 LHSAA keeps every boys/girls soccer schedule back to 2014-15 on
 lhsaaonline.org, but only the current season goes through the ratings
@@ -40,12 +40,24 @@ SOURCES = {
         "path": "sopr", "params": {"p": "1", "so": "2"},
         "referer": "https://www.lhsaaonline.org/pr/sopr/admin/SearchgirlssoccerSchedule.asp",
     },
+    # Basketball's district filter takes "N - CLASS" values that change every
+    # alignment, so the report is pulled one class at a time instead (about
+    # 1,000-2,000 rows per class, well under the report's buffer limit).
+    "boys_basketball": {
+        "path": "bbpr", "params": {"p": "1", "bb": "1"},
+        "referer": "https://www.lhsaaonline.org/pr/bbpr/admin/SearchBoysBasketballSchedule.asp",
+        "split": "class", "first_season": 2014,  # 2013-14 is the oldest season LHSAA lists
+    },
 }
 
 # LHSAA soccer districts run 1-9 in every season checked (2015, 2026); the
 # extra numbers are cheap empty requests that guard against a season with more.
 DISTRICTS = range(1, 16)
-FIRST_SEASON = 2015  # 2014-15 is the oldest season LHSAA lists
+FIRST_SEASON = 2015  # soccer: 2014-15 is the oldest season LHSAA lists
+
+
+def first_season(sport):
+    return int(SOURCES.get(sport, {}).get("first_season", FIRST_SEASON))
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -284,10 +296,11 @@ def _game_sort_key(game):
 
 # ── fetching ──────────────────────────────────────────────────
 
-def fetch_district(sport, season, district, session=None, attempts=3):
+def fetch_district(sport, season, district, session=None, attempts=3, classification=""):
     source = SOURCES[sport]
-    payload = {"yr": str(season), "resultdate": "", "n": "", "h": "", "d": "",
-               "f": str(district), "s": "", "paging": "", "n1": "", "d1": ""}
+    payload = {"yr": str(season), "resultdate": "", "n": "", "h": "",
+               "d": classification, "f": str(district or ""), "s": "",
+               "paging": "", "n1": "", "d1": classification}
     headers = dict(HEADERS, Referer=source["referer"])
     http = session or requests
     last_error = None
@@ -303,18 +316,23 @@ def fetch_district(sport, season, district, session=None, attempts=3):
         except Exception as exc:  # network hiccups: retry with backoff
             last_error = exc
             time.sleep(3 * (attempt + 1))
-    raise RuntimeError(f"{sport} {season} district {district}: {last_error}")
+    raise RuntimeError(f"{sport} {season} {classification or 'district'} {district}: {last_error}")
 
 
 def build_from_lhsaa(sport, season, pause=1.0):
     session = requests.Session()
     rows, per_district = [], {}
-    for district in DISTRICTS:
-        html = fetch_district(sport, season, district, session=session)
+    by_class = SOURCES[sport].get("split") == "class"
+    for part in (CLASS_ORDER if by_class else DISTRICTS):
+        if by_class:
+            html = fetch_district(sport, season, "", session=session, classification=part)
+        else:
+            html = fetch_district(sport, season, part, session=session)
         found = parse_report(html)
-        per_district[str(district)] = len(found)
+        per_district[str(part)] = len(found)
         rows.extend(found)
-        STATE["progress"][str(season)] = f"district {district}: {len(rows)} rows"
+        label = "class" if by_class else "district"
+        STATE["progress"][str(season)] = f"{label} {part}: {len(rows)} rows"
         time.sleep(pause)
     if not rows:
         raise RuntimeError(f"LHSAA returned no {sport} games for {season}")
@@ -327,7 +345,7 @@ def build_from_lhsaa(sport, season, pause=1.0):
     return season_data
 
 
-def parse_seasons(text, current_season):
+def parse_seasons(text, current_season, sport=None):
     """'2015-2025' or '2015,2018' -> sorted list of finished seasons."""
     seasons = set()
     for part in str(text or "").split(","):
@@ -339,7 +357,8 @@ def parse_seasons(text, current_season):
             seasons.update(range(min(start, end), max(start, end) + 1))
         else:
             seasons.add(int(part))
-    return sorted(s for s in seasons if FIRST_SEASON <= s < int(current_season))
+    first = first_season(sport) if sport else FIRST_SEASON
+    return sorted(s for s in seasons if first <= s < int(current_season))
 
 
 def start_build(sport, seasons):
