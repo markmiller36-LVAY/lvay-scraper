@@ -1,4 +1,4 @@
-"""Past-season LHSAA playoff brackets for basketball (boys + girls).
+"""Past-season LHSAA playoff brackets (basketball, soccer, baseball, softball, volleyball).
 
 Reads the official bracket pages on lhsaaonline.org (MainBracket32.aspx and,
 for Class B/C, MainBracket32Print_2.aspx). Every page tags its slots with the
@@ -33,9 +33,18 @@ from bs4 import BeautifulSoup
 import winter_archive
 
 BASE = "https://www.lhsaaonline.org/"
-SPORT_CODES = {"boys_basketball": 2, "girls_basketball": 3}
-FIRST_SEASON = 2014  # 2013-14; LHSAA has no 2015-16 (y=2016) basketball brackets
-ROMAN = ["I", "II", "III", "IV"]
+# sport -> (LHSAA bracket sport code, bracket style)
+#   class:    5A-1A classes (+ Select Division I-V from 2016-17) through 2021-22, then
+#             Non-Select / Select divisions; Class B and C print pages when they exist
+#   division: plain Division I-V (volleyball, soccer)
+SPORTS = {
+    "boys_basketball": (2, "class"), "girls_basketball": (3, "class"),
+    "baseball": (4, "class"), "softball": (5, "class"), "volleyball": (6, "division"),
+    "boys_soccer": (17, "division"), "girls_soccer": (18, "division"),
+}
+SPORT_CODES = {k: v[0] for k, v in SPORTS.items()}
+FIRST_SEASON = 2013  # oldest LHSAA bracket pages; missing years (e.g. 2016, spring 2020) just come back empty
+ROMAN = ["I", "II", "III", "IV", "V"]
 CLASSES = ["5A", "4A", "3A", "2A", "1A"]
 P = "ctl00_ContentPlaceHolder1_"
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
@@ -48,30 +57,51 @@ _CACHE = {}
 
 # ── which brackets a season has ───────────────────────────────
 
-def bracket_pages(season):
-    """[(label, path)] for one season (2014 = 2013-14)."""
+def bracket_pages(season, kind="class"):
+    """[(label, path, expect)] to try for one season. Pages LHSAA doesn't have come back
+    empty and are skipped; `expect` is checked against the page's own heading."""
     season = int(season)
     pages = []
+    if kind == "division":
+        for d in ROMAN:
+            pages.append((f"Division {d}", f"MainBracket32.aspx?d={d}&s={{s}}&y={season}&select=0", ("div", d, None)))
+        return pages
     if season <= 2022:
-        # Classes 5A-1A were the non-select brackets through 2021-22.
         for cls in CLASSES:
-            pages.append((cls, f"MainBracket32.aspx?d={cls}&s={{s}}&y={season}"))
+            pages.append((cls, f"MainBracket32.aspx?d={cls}&s={{s}}&y={season}", ("cls", cls, None)))
         if season >= 2017:
-            # Select Division I-IV began in 2016-17 (the select flag is ignored then).
+            # Select divisions began in 2016-17 (the select flag is ignored then).
             for d in ROMAN:
-                pages.append((f"Select Division {d}", f"MainBracket32.aspx?d={d}&s={{s}}&y={season}&select=1"))
+                pages.append((f"Select Division {d}", f"MainBracket32.aspx?d={d}&s={{s}}&y={season}&select=1", ("div", d, None)))
     else:
-        # 2022-23 and 2023-24 had Division V (Non-Select and Select) instead of Class B/C.
-        divs = ROMAN + ["V"] if season in (2023, 2024) else ROMAN
-        for d in divs:
-            pages.append((f"Non-Select Division {d}", f"MainBracket32.aspx?d={d}&s={{s}}&y={season}&select=0"))
-        for d in divs:
-            pages.append((f"Select Division {d}", f"MainBracket32.aspx?d={d}&s={{s}}&y={season}&select=1"))
-        if season in (2023, 2024):
-            return pages
+        for d in ROMAN:
+            pages.append((f"Non-Select Division {d}", f"MainBracket32.aspx?d={d}&s={{s}}&y={season}&select=0", ("div", d, "Non-Select")))
+        for d in ROMAN:
+            pages.append((f"Select Division {d}", f"MainBracket32.aspx?d={d}&s={{s}}&y={season}&select=1", ("div", d, "Select")))
     for cls in ("B", "C"):
-        pages.append((f"Class {cls}", f"MainBracket32Print_2.aspx?d={cls}&s={{s}}&y={season}"))
+        pages.append((f"Class {cls}", f"MainBracket32Print_2.aspx?d={cls}&s={{s}}&y={season}", ("cls", cls, None)))
     return pages
+
+
+def page_heading(html):
+    """'Division V (Non-Select)' / 'Class 5A' from '... Playoff Bracket - <here> BI-DISTRICT'."""
+    text = re.sub(r"<[^>]+>", " ", html[:200000])
+    text = re.sub(r"\s+", " ", text.replace("&nbsp;", " "))
+    m = re.search(r"Playoff Bracket\s*-\s*(.{1,60}?)\s*(?:BI-DISTRICT|FIRST ROUND|ROUND|REGIONAL|\*\s*Denotes|$)", text, re.I)
+    return m.group(1).strip() if m else ""
+
+
+def heading_matches(expect, heading):
+    if not heading or not expect:
+        return True
+    kind, value, select = expect
+    if kind == "cls":
+        ok = re.search(r"(?:Class\s+)?" + re.escape(value) + r"\b", heading) is not None
+    else:
+        ok = re.search(r"Division\s+" + value + r"(?![IV])", heading) is not None
+    if ok and select and re.search(r"\((?:Non-)?Select\)", heading):
+        ok = f"({select})" in heading
+    return ok
 
 
 # ── parsing ───────────────────────────────────────────────────
@@ -234,13 +264,24 @@ def fetch(path, session=None, attempts=3):
 
 
 def build_season(sport, season, pause=0.5, fetcher=None):
-    code = SPORT_CODES[sport]
+    code, kind = SPORTS[sport]
     session = requests.Session()
     get = fetcher or (lambda path: fetch(path, session=session))
-    brackets, champions = {}, {}
-    for label, path in bracket_pages(season):
-        games = bracket_games(parse_bracket(get(path.format(s=code))))
+    brackets, champions, seen = {}, {}, set()
+    for label, path, expect in bracket_pages(season, kind):
+        try:
+            html = get(path.format(s=code))
+        except Exception as exc:  # one bad page shouldn't sink the season
+            STATE["progress"][str(season)] = f"{label}: {exc}"
+            missing = STATE.setdefault("page_errors", [])
+            missing.append(f"{sport} {season} {label}")
+            continue
+        games = bracket_games(parse_bracket(html)) if heading_matches(expect, page_heading(html)) else []
+        sig = tuple(sorted((g["a"], g["b"]) for g in games))
+        if games and sig in seen:
+            games = []  # LHSAA served another bracket's page for a division it doesn't have
         if games:
+            seen.add(sig)
             brackets[label] = games
             final = [g for g in games if g["phase"] == "State Championship"]
             if final and final[0]["winner"]:
@@ -273,7 +314,7 @@ def parse_seasons(text, current_season):
             seasons.update(range(min(a, b), max(a, b) + 1))
         else:
             seasons.add(int(part))
-    return sorted(s for s in seasons if FIRST_SEASON <= s < int(current_season) and s != 2016)
+    return sorted(s for s in seasons if FIRST_SEASON <= s < int(current_season))
 
 
 def start_build(sport, seasons):

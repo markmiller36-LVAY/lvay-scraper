@@ -64,7 +64,7 @@ class BracketTests(unittest.TestCase):
         self.assertEqual(ba.round_name(5, 5), "State Championship")
 
     def test_pages_by_era(self):
-        labels = lambda y: [label for label, _ in ba.bracket_pages(y)]
+        labels = lambda y, kind="class": [p[0] for p in ba.bracket_pages(y, kind)]
         self.assertEqual(labels(2014), ["5A", "4A", "3A", "2A", "1A", "Class B", "Class C"])
         self.assertIn("Select Division IV", labels(2020))
         self.assertIn("5A", labels(2020))
@@ -72,10 +72,17 @@ class BracketTests(unittest.TestCase):
         self.assertNotIn("5A", labels(2024))
         self.assertIn("Non-Select Division V", labels(2023))
         self.assertIn("Select Division V", labels(2024))
-        self.assertNotIn("Class B", labels(2024))
-        self.assertIn("Class B", labels(2025))
-        self.assertNotIn("Select Division V", labels(2025))
-        self.assertEqual(ba.parse_seasons("2013-2027", 2027), [2014, 2015] + list(range(2017, 2027)))
+        self.assertEqual(labels(2020, "division"), ["Division I", "Division II", "Division III", "Division IV", "Division V"])
+        self.assertEqual(ba.parse_seasons("2012-2027", 2027), list(range(2013, 2027)))
+
+    def test_heading_guard(self):
+        self.assertTrue(ba.heading_matches(("div", "V", "Non-Select"), "Division V (Non-Select)"))
+        self.assertFalse(ba.heading_matches(("div", "V", "Select"), "Division V (Non-Select)"))
+        self.assertFalse(ba.heading_matches(("div", "I", None), "Division II"))
+        self.assertTrue(ba.heading_matches(("cls", "5A", None), "Class 5A"))
+        self.assertTrue(ba.heading_matches(("div", "IV", None), ""))
+        html = "<td>2019 LHSAA Baseball Playoff Bracket - Division IV (Select)</td><td>BI-DISTRICT - 5/1</td>"
+        self.assertEqual(ba.page_heading(html), "Division IV (Select)")
 
     def test_build_season_and_route(self):
         with tempfile.TemporaryDirectory() as tmp:
