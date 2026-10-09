@@ -61,10 +61,14 @@ def bracket_pages(season):
             for d in ROMAN:
                 pages.append((f"Select Division {d}", f"MainBracket32.aspx?d={d}&s={{s}}&y={season}&select=1"))
     else:
-        for d in ROMAN:
+        # 2022-23 and 2023-24 had Division V (Non-Select and Select) instead of Class B/C.
+        divs = ROMAN + ["V"] if season in (2023, 2024) else ROMAN
+        for d in divs:
             pages.append((f"Non-Select Division {d}", f"MainBracket32.aspx?d={d}&s={{s}}&y={season}&select=0"))
-        for d in ROMAN:
+        for d in divs:
             pages.append((f"Select Division {d}", f"MainBracket32.aspx?d={d}&s={{s}}&y={season}&select=1"))
+        if season in (2023, 2024):
+            return pages
     for cls in ("B", "C"):
         pages.append((f"Class {cls}", f"MainBracket32Print_2.aspx?d={cls}&s={{s}}&y={season}"))
     return pages

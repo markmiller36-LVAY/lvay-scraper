@@ -70,6 +70,11 @@ class BracketTests(unittest.TestCase):
         self.assertIn("5A", labels(2020))
         self.assertEqual(labels(2024)[0], "Non-Select Division I")
         self.assertNotIn("5A", labels(2024))
+        self.assertIn("Non-Select Division V", labels(2023))
+        self.assertIn("Select Division V", labels(2024))
+        self.assertNotIn("Class B", labels(2024))
+        self.assertIn("Class B", labels(2025))
+        self.assertNotIn("Select Division V", labels(2025))
         self.assertEqual(ba.parse_seasons("2013-2027", 2027), [2014, 2015] + list(range(2017, 2027)))
 
     def test_build_season_and_route(self):
