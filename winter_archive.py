@@ -48,6 +48,11 @@ SOURCES = {
         "referer": "https://www.lhsaaonline.org/pr/bbpr/admin/SearchBoysBasketballSchedule.asp",
         "split": "class", "first_season": 2014,  # 2013-14 is the oldest season LHSAA lists
     },
+    "girls_basketball": {
+        "path": "bbpr", "params": {"p": "1", "bb": "2"},
+        "referer": "https://www.lhsaaonline.org/pr/bbpr/admin/SearchGirlsBasketballSchedule.asp",
+        "split": "class", "first_season": 2014,
+    },
 }
 
 # LHSAA soccer districts run 1-9 in every season checked (2015, 2026); the

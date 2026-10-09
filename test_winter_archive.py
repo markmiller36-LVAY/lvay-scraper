@@ -118,6 +118,8 @@ class BasketballSourceTests(unittest.TestCase):
         self.assertEqual(wa.parse_seasons("2012-2027", 2027, "boys_basketball")[0], 2014)
         self.assertEqual(wa.parse_seasons("2012-2027", 2027, "boys_soccer")[0], 2015)
         self.assertEqual(wa.parse_seasons("2012-2027", 2027, "boys_basketball")[-1], 2026)
+        self.assertEqual(wa.parse_seasons("2012-2027", 2027, "girls_basketball")[0], 2014)
+        self.assertEqual(wa.SOURCES["girls_basketball"]["params"]["bb"], "2")
 
     def test_basketball_pulls_one_class_at_a_time(self):
         calls = []
