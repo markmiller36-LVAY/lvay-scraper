@@ -2277,6 +2277,18 @@ def winter_archive_status(sport):
     return jsonify(winter_archive.summary(sport))
 
 
+@app.route("/api/history/winter/<sport>")
+def winter_school_history(sport):
+    """One school's archived seasons in a single response (team pages)."""
+    if sport not in winter_archive.SOURCES:
+        return jsonify({"error": "Unsupported sport"}), 404
+    school = (request.args.get("school") or "").strip()
+    if not school:
+        return jsonify({"error": "Give ?school="}), 400
+    seasons = winter_archive.school_history(sport, school)
+    return jsonify({"sport": sport, "school": school, "count": len(seasons), "seasons": seasons})
+
+
 @app.route("/api/archive/winter/<sport>/build")
 def winter_archive_build(sport):
     """Pull finished seasons from LHSAA into the archive (background job).

@@ -390,6 +390,28 @@ def start_build(sport, seasons):
     return True
 
 
+def core_name(name):
+    """Same school-name key the team pages use (norm + drop high/school/academy...)."""
+    text = re.sub(r"[^a-z0-9]+", " ", str(name or "").lower().replace("&", " and ")).strip()
+    text = re.sub(r"\b(high|school|hs|the|academy|of)\b", " ", text)
+    text = re.sub(r"\bsaint\b", "st", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def school_history(sport, name):
+    """Every archived season for one school: [{season, class_, district, record..., games}]."""
+    key = core_name(name)
+    out = []
+    if not key:
+        return out
+    for season, info in sorted(load_archive(sport).get("seasons", {}).items()):
+        for school in info.get("schools", []):
+            if core_name(school.get("school")) == key:
+                out.append(dict(school, season=str(season)))
+                break
+    return out
+
+
 def summary(sport):
     data = load_archive(sport)
     return {

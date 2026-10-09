@@ -145,6 +145,11 @@ class BasketballSourceTests(unittest.TestCase):
         self.assertEqual(data["schools"][0]["record"], "1-0")
         self.assertEqual(data["rows_by_district"]["1A"], 1)
 
+    def test_school_history_matches_team_page_names(self):
+        self.assertEqual(wa.core_name("St. Thomas More High School"), "st thomas more")
+        self.assertEqual(wa.core_name("Saint Thomas More"), "st thomas more")
+        self.assertEqual(wa.core_name("Catholic - B.R."), wa.core_name("Catholic-B.R."))
+
 
 if __name__ == "__main__":
     unittest.main()
@@ -223,3 +228,10 @@ class ServerArchiveRouteTests(unittest.TestCase):
     def test_build_rejects_current_season(self):
         resp = self.client.get("/api/archive/winter/boys_soccer/build?seasons=2030")
         self.assertEqual(resp.status_code, 400)
+
+    def test_school_history_route(self):
+        data = self.client.get("/api/history/winter/boys_soccer?school=Jesuit High School").get_json()
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["seasons"][0]["season"], "2015")
+        self.assertEqual(data["seasons"][0]["record"], "1-0")
+        self.assertEqual(self.client.get("/api/history/winter/boys_soccer").status_code, 400)
