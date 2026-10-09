@@ -152,6 +152,29 @@ class BasketballSourceTests(unittest.TestCase):
         self.assertEqual(wa.core_name("Saint Thomas More"), "st thomas more")
         self.assertEqual(wa.core_name("Catholic - B.R."), wa.core_name("Catholic-B.R."))
 
+    def test_pending_list_resumes_after_restart(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old_dir = os.environ.get("WINTER_ARCHIVE_DIR")
+            os.environ["WINTER_ARCHIVE_DIR"] = tmp
+            started = []
+            old_start = wa.start_build
+            try:
+                wa._set_pending("girls_basketball", [2019, 2020])
+                wa._done_pending("girls_basketball", 2019)
+                self.assertEqual(wa._read_pending()["girls_basketball"]["seasons"], [2020])
+                wa.start_build = lambda sport, seasons, attempts=0: started.append((sport, seasons, attempts)) or True
+                self.assertTrue(wa.resume_pending())
+                self.assertEqual(started, [("girls_basketball", [2020], 1)])
+                wa._set_pending("girls_basketball", [2020], wa.MAX_RESUMES)
+                self.assertFalse(wa.resume_pending())
+                self.assertEqual(wa._read_pending(), {})
+            finally:
+                wa.start_build = old_start
+                if old_dir is None:
+                    os.environ.pop("WINTER_ARCHIVE_DIR", None)
+                else:
+                    os.environ["WINTER_ARCHIVE_DIR"] = old_dir
+
 
 if __name__ == "__main__":
     unittest.main()

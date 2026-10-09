@@ -366,15 +366,69 @@ def parse_seasons(text, current_season, sport=None):
     return sorted(s for s in seasons if first <= s < int(current_season))
 
 
-def start_build(sport, seasons):
+def pending_path():
+    return os.path.join(archive_dir(), "pending.json")
+
+
+def _read_pending():
+    try:
+        with open(pending_path(), encoding="utf-8") as source:
+            data = json.load(source)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _write_pending(data):
+    os.makedirs(archive_dir(), exist_ok=True)
+    data = {k: v for k, v in data.items() if v.get("seasons")}
+    if not data:
+        try:
+            os.remove(pending_path())
+        except OSError:
+            pass
+        return
+    tmp = pending_path() + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as out:
+        json.dump(data, out)
+    os.replace(tmp, pending_path())
+
+
+def _set_pending(sport, seasons, attempts=0):
+    data = _read_pending()
+    data[sport] = {"seasons": [int(s) for s in seasons], "attempts": attempts}
+    _write_pending(data)
+
+
+def _done_pending(sport, season):
+    data = _read_pending()
+    entry = data.get(sport)
+    if entry:
+        entry["seasons"] = [s for s in entry.get("seasons", []) if int(s) != int(season)]
+        _write_pending(data)
+
+
+MAX_RESUMES = 5
+
+
+def start_build(sport, seasons, attempts=0):
+    """Pull seasons in a background thread.
+
+    The to-do list is saved on the persistent disk first, so a worker restart
+    mid-build does not lose it: resume_pending() picks it up on the next boot.
+    """
     if sport not in SOURCES:
         raise ValueError("Unsupported sport")
     if not _LOCK.acquire(blocking=False):
         return False
+    try:
+        _set_pending(sport, seasons, attempts)
+    except OSError:
+        pass
 
     def run():
         STATE.update({"status": "running", "sport": sport, "seasons": seasons,
-                      "progress": {}, "error": None,
+                      "progress": {}, "error": None, "resumes": attempts,
                       "started_at": datetime.now().isoformat(timespec="seconds"),
                       "finished_at": None})
         errors = []
@@ -385,14 +439,37 @@ def start_build(sport, seasons):
                 except Exception as exc:
                     errors.append(f"{season}: {exc}")
                     STATE["progress"][str(season)] = f"failed: {exc}"
+                try:
+                    _done_pending(sport, season)
+                except OSError:
+                    pass
             STATE["status"] = "completed" if not errors else "completed_with_errors"
             STATE["error"] = "; ".join(errors) or None
         finally:
             STATE["finished_at"] = datetime.now().isoformat(timespec="seconds")
             _LOCK.release()
+        resume_pending()  # another sport may be waiting
 
     threading.Thread(target=run, daemon=True).start()
     return True
+
+
+def resume_pending():
+    """Restart an unfinished build saved on disk (after a deploy or worker restart)."""
+    data = _read_pending()
+    for sport, entry in sorted(data.items()):
+        seasons = [int(s) for s in entry.get("seasons", [])]
+        attempts = int(entry.get("attempts", 0)) + 1
+        if sport not in SOURCES or not seasons:
+            continue
+        if attempts > MAX_RESUMES:
+            data.pop(sport, None)
+            _write_pending(data)
+            STATE.update({"status": "gave_up", "sport": sport,
+                          "error": f"stopped after {MAX_RESUMES} restarts; left: {seasons}"})
+            continue
+        return start_build(sport, seasons, attempts)
+    return False
 
 
 def core_name(name):

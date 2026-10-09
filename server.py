@@ -2600,6 +2600,12 @@ if (
 ):
     threading.Timer(20, _football_recalc_on_deploy).start()
 
+# Finish any LHSAA winter-archive build a restart interrupted (Oct 9, 2026).
+if os.environ.get("DB_PATH", "/data/lvay_v2.db").startswith("/data"):
+    _resume_timer = threading.Timer(45, winter_archive.resume_pending)
+    _resume_timer.daemon = True
+    _resume_timer.start()
+
 
 # ── ENTRY POINT ──────────────────────────────────────────────
 
