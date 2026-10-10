@@ -544,6 +544,13 @@ FOOTBALL_EXCLUDED_SCHOOLS = {"False River Academy"}
 FOOTBALL_EXCLUSIONS_FROM_SEASON = 2026
 
 
+def football_opponent_closed(opponent):
+    """LHSAA marks a game against a school that shut down by adding "-Closed"
+    to the opponent (e.g. "Bolton Academy-Closed"). No game is played, so the
+    week is an open week."""
+    return bool(re.search(r"[-\s]closed\s*$", str(opponent or ""), re.IGNORECASE))
+
+
 def football_school_excluded(school, season):
     try:
         season_year = int(str(season)[:4])
@@ -674,6 +681,14 @@ def merge_football_games(games):
         school = FOOTBALL_SOURCE_SCHOOL_ALIASES.get(game["school"], game["school"])
         opponent = FOOTBALL_SOURCE_SCHOOL_ALIASES.get(game["opponent"], game["opponent"])
         if football_school_excluded(school, season):
+            continue
+        if football_opponent_closed(opponent):
+            # Clear the week (including any preseason gap-fill row) so it shows open.
+            c.execute(
+                "DELETE FROM games WHERE sport='football' AND season=? "
+                "AND school=? AND week=?",
+                (season, school, game["week"]),
+            )
             continue
         game = apply_verified_football_result(game, school, opponent, season)
         values = (
