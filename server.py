@@ -1777,6 +1777,20 @@ def sport_seasons(sport):
             "status": row["status"],
             "is_locked": bool(row["is_locked"]),
         })
+    if sport == "volleyball":
+        # Volleyball's live seasons live in their own ratings table.
+        for row in conn.execute("""
+            SELECT season, COUNT(DISTINCT school) AS school_count
+            FROM volleyball_rankings WHERE sport='volleyball' GROUP BY season
+        """).fetchall():
+            season = str(row["season"])
+            known.setdefault(season, {
+                "season": season,
+                "source": "LHSAA",
+                # Volleyball seasons are named by the fall year (2026 = fall 2026).
+                "status": "final" if int(season) < datetime.now().year else "active",
+                "school_count": row["school_count"],
+            })
     conn.close()
     if sport == "football":
         for season, archive in load_football_archives().get(
