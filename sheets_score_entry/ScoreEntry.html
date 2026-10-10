@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<style>
+  :root { --teal: #008584; --line: #dadce0; --muted: #5f6368; --bad: #c5221f; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; font-size: 13px; color: #202124; margin: 0; padding: 12px; }
+  h2 { font-size: 15px; margin: 0 0 4px; color: var(--teal); }
+  p.help { color: var(--muted); margin: 0 0 12px; line-height: 1.4; }
+  label { display: block; font-weight: bold; margin-bottom: 4px; }
+  select, input { width: 100%; padding: 6px; border: 1px solid var(--line); border-radius: 4px; font-size: 13px; }
+  .game { border: 1px solid var(--line); border-radius: 6px; padding: 10px; margin-bottom: 10px; position: relative; }
+  .game .remove { position: absolute; top: 6px; right: 8px; border: 0; background: none; color: var(--muted); font-size: 16px; cursor: pointer; }
+  .scores { display: grid; grid-template-columns: 1fr 64px; gap: 6px 8px; align-items: center; margin-top: 8px; }
+  .scores span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .scores input { text-align: center; }
+  button.add { width: 100%; padding: 8px; border: 1px dashed var(--teal); background: #fff; color: var(--teal); border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 12px; }
+  button.save { width: 100%; padding: 10px; border: 0; background: var(--teal); color: #fff; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  #week-row { margin-bottom: 12px; }
+  #status { margin-top: 12px; line-height: 1.4; }
+  #status.error { color: var(--bad); }
+  #status ul { margin: 6px 0 0 18px; padding: 0; }
+</style>
+</head>
+<body>
+  <h2>Enter Week Scores</h2>
+  <p class="help">For games LHSAA hasn't posted yet. Scores go into the ratings on the next run (every 30 min on game nights). When LHSAA posts the game, its official score takes over.</p>
+
+  <div id="week-row">
+    <label for="week">Week</label>
+    <select id="week" disabled><option>Loading…</option></select>
+  </div>
+
+  <div id="games"></div>
+  <button class="add" id="add" disabled>+ ADD GAME</button>
+  <button class="save" id="save" disabled>Save Scores</button>
+  <div id="status"></div>
+
+<script>
+  var weekGames = [];
+
+  function el(tag, attrs, text) {
+    var node = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) { node.setAttribute(k, attrs[k]); });
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function setStatus(message, isError, items) {
+    var box = document.getElementById("status");
+    box.className = isError ? "error" : "";
+    box.textContent = message || "";
+    if (items && items.length) {
+      var list = el("ul");
+      items.forEach(function (item) { list.appendChild(el("li", {}, item)); });
+      box.appendChild(list);
+    }
+  }
+
+  function chosenIds(except) {
+    return Array.prototype.map.call(document.querySelectorAll(".game select"), function (s) {
+      return s === except ? "" : s.value;
+    }).filter(Boolean);
+  }
+
+  function refreshOptions() {
+    document.querySelectorAll(".game select").forEach(function (select) {
+      var taken = chosenIds(select);
+      var current = select.value;
+      select.innerHTML = "";
+      select.appendChild(el("option", { value: "" }, "Select a game…"));
+      weekGames.forEach(function (game) {
+        if (taken.indexOf(game.id) !== -1) return;
+        var option = el("option", { value: game.id }, game.label);
+        if (game.id === current) option.selected = true;
+        select.appendChild(option);
+      });
+    });
+    var openGames = weekGames.length - chosenIds().length;
+    document.getElementById("add").disabled = openGames <= 0;
+    document.getElementById("save").disabled = !document.querySelector(".game");
+  }
+
+  function addGame() {
+    var card = el("div", { "class": "game" });
+    var remove = el("button", { "class": "remove", title: "Remove" }, "×");
+    var select = el("select");
+    var scores = el("div", { "class": "scores" });
+    card.appendChild(remove);
+    card.appendChild(select);
+    card.appendChild(scores);
+    document.getElementById("games").appendChild(card);
+
+    select.addEventListener("change", function () {
+      scores.innerHTML = "";
+      var game = weekGames.filter(function (g) { return g.id === select.value; })[0];
+      if (game) {
+        [["away", game.away], ["home", game.home]].forEach(function (pair) {
+          scores.appendChild(el("span", { title: pair[1] }, pair[1] + (pair[0] === "home" ? " (home)" : "")));
+          scores.appendChild(el("input", { type: "number", min: "0", "data-side": pair[0], inputmode: "numeric" }));
+        });
+        scores.querySelector("input").focus();
+      }
+      refreshOptions();
+    });
+    remove.addEventListener("click", function () {
+      card.remove();
+      refreshOptions();
+    });
+    refreshOptions();
+  }
+
+  function loadWeek(week, keepStatus) {
+    document.getElementById("games").innerHTML = "";
+    if (!keepStatus) setStatus("Loading Week " + week + " games…");
+    google.script.run
+      .withSuccessHandler(function (games) {
+        weekGames = games;
+        if (!keepStatus) setStatus(games.length ? "" : "Every Week " + week + " game already has a score.");
+        if (games.length) addGame(); else refreshOptions();
+      })
+      .withFailureHandler(function (err) { setStatus(err.message, true); })
+      .scoreEntryGames(week);
+  }
+
+  function save() {
+    var week = document.getElementById("week").value;
+    var entries = [];
+    var problem = "";
+    document.querySelectorAll(".game").forEach(function (card) {
+      var id = card.querySelector("select").value;
+      if (!id) return;
+      var away = card.querySelector('input[data-side="away"]').value;
+      var home = card.querySelector('input[data-side="home"]').value;
+      if (away === "" || home === "") problem = "Enter both scores for every game you picked.";
+      entries.push({ id: id, awayScore: away, homeScore: home });
+    });
+    if (!entries.length) problem = "Pick at least one game.";
+    if (problem) { setStatus(problem, true); return; }
+
+    var saveButton = document.getElementById("save");
+    saveButton.disabled = true;
+    setStatus("Saving…");
+    google.script.run
+      .withSuccessHandler(function (saved) {
+        setStatus("Saved " + saved.length + " game" + (saved.length === 1 ? "" : "s") +
+          ". They'll count on the next run.", false, saved);
+        loadWeek(week, true);
+      })
+      .withFailureHandler(function (err) {
+        setStatus(err.message, true);
+        saveButton.disabled = false;
+      })
+      .scoreEntrySave(Number(week), entries);
+  }
+
+  document.getElementById("add").addEventListener("click", addGame);
+  document.getElementById("save").addEventListener("click", save);
+  document.getElementById("week").addEventListener("change", function () { loadWeek(this.value); });
+
+  google.script.run
+    .withSuccessHandler(function (info) {
+      var select = document.getElementById("week");
+      select.innerHTML = "";
+      info.weeks.forEach(function (w) {
+        var option = el("option", { value: w }, "Week " + w);
+        if (w === info.suggested) option.selected = true;
+        select.appendChild(option);
+      });
+      select.disabled = false;
+      if (info.suggested) loadWeek(info.suggested);
+    })
+    .withFailureHandler(function (err) { setStatus(err.message, true); })
+    .scoreEntryWeeks();
+</script>
+</body>
+</html>
