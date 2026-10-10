@@ -27,7 +27,15 @@ CENTRAL = ZoneInfo("America/Chicago")
 def should_trigger_now(now=None):
     """Apply the regular cadence plus Thu/Fri football game-night boosts."""
     now = (now or datetime.now(CENTRAL)).astimezone(CENTRAL)
-    weekday, hour, minute = now.weekday(), now.hour, now.minute
+    weekday, hour = now.weekday(), now.hour
+    # Render sometimes starts a :00 or :30 run a minute or two late, so treat
+    # the first ten minutes after each half hour as that half-hour slot.
+    if now.minute < 10:
+        minute = 0
+    elif 30 <= now.minute < 40:
+        minute = 30
+    else:
+        return False
 
     # Normal schedule: 3, 7, and 11 AM/PM Central every day.
     if minute == 0 and hour in {3, 7, 11, 15, 19, 23}:
