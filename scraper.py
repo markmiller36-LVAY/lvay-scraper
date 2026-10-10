@@ -586,7 +586,9 @@ def rename_football_schools(conn, season):
 
 
 def purge_excluded_football_schools(conn, season):
-    """Remove excluded schools' own football rows for a season (opponent rows stay)."""
+    """Remove excluded schools' own football rows for a season, plus other
+    schools' unplayed games against them (those weeks become open weeks).
+    Games against them that already have a result are kept."""
     try:
         season_year = int(str(season)[:4])
     except (TypeError, ValueError):
@@ -603,6 +605,15 @@ def purge_excluded_football_schools(conn, season):
                 ).rowcount
             except sqlite3.OperationalError:
                 continue
+    for school in FOOTBALL_EXCLUDED_SCHOOLS:
+        try:
+            removed += conn.execute(
+                "DELETE FROM games WHERE sport='football' AND season=? AND opponent=? "
+                "AND TRIM(COALESCE(win_loss, '')) = ''",
+                (str(season), school),
+            ).rowcount
+        except sqlite3.OperationalError:
+            continue
     return removed
 
 # Verified finals used only when the LHSAA schedule report has not populated
@@ -682,7 +693,11 @@ def merge_football_games(games):
         opponent = FOOTBALL_SOURCE_SCHOOL_ALIASES.get(game["opponent"], game["opponent"])
         if football_school_excluded(school, season):
             continue
-        if football_opponent_closed(opponent):
+        unplayed_vs_excluded = (
+            football_school_excluded(opponent, season)
+            and not str(game.get("win_loss") or "").strip()
+        )
+        if football_opponent_closed(opponent) or unplayed_vs_excluded:
             # Clear the week (including any preseason gap-fill row) so it shows open.
             c.execute(
                 "DELETE FROM games WHERE sport='football' AND season=? "
