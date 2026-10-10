@@ -88,5 +88,47 @@ class FootballLiveScheduleMergeTests(unittest.TestCase):
             )
 
 
+    def test_closed_opponent_leaves_an_open_week(self):
+        self.assertTrue(scraper.football_opponent_closed("Bolton Academy-Closed"))
+        self.assertTrue(scraper.football_opponent_closed("Bolton Academy - CLOSED "))
+        self.assertFalse(scraper.football_opponent_closed("Bolton Academy"))
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = str(Path(temp_dir) / "merge.db")
+            with mock.patch.object(scraper, "DB_PATH", db_path):
+                scraper.init_db()
+                payload = {
+                    "sport": "football", "season": "2026", "status": "preseason",
+                    "source": "Louisiana Sportsline preseason compilation",
+                    "generated_at": "2026-08-13T00:00:00",
+                    "schools": [{
+                        "school": "Delta Charter", "class_": "1A", "district": 4,
+                        "division": "Non-Select Division 4", "track": "Non-Select",
+                        "source_division": "NS4",
+                        "games": [
+                            {"week": 6, "game_date": None, "opponent": "Bolton Academy",
+                             "home_away": "A", "is_district": False, "is_bye": False,
+                             "needs_review": False},
+                            {"week": 7, "game_date": None, "opponent": "Holy Savior Menard",
+                             "home_away": "H", "is_district": False, "is_bye": False,
+                             "needs_review": False},
+                        ],
+                    }],
+                }
+                import_payload(payload, db_path, replace=True)
+                official = [{
+                    "sport": "football", "season": "2026", "school": "Delta Charter",
+                    "week": "Week 6", "game_date": "10/9/2026 7:00:00 PM",
+                    "opponent": "Bolton Academy-Closed", "home_away": "A",
+                    "win_loss": "", "score": "-", "district": "4", "class_": "1A",
+                    "out_of_state": "", "location": "", "scraped_at": "now",
+                }]
+                scraper.merge_football_games(official)
+            conn = sqlite3.connect(db_path)
+            rows = conn.execute(
+                "SELECT week, opponent FROM games WHERE school='Delta Charter' ORDER BY week"
+            ).fetchall()
+            conn.close()
+            self.assertEqual(rows, [("Week 7", "Holy Savior Menard")])
+
 if __name__ == "__main__":
     unittest.main()
