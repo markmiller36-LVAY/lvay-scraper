@@ -339,7 +339,16 @@ def _pair_own_runs(by_school):
     for school in by_school.values():
         for game in school["games"]:
             match = re.match(r"^\s*(\d+)\s*-\s*0\s*$", game["score"] or "")
-            game["runs"] = int(match.group(1)) if match and not game.get("forfeit") else None
+            if game.get("forfeit"):
+                game["runs"] = None
+            elif match:
+                game["runs"] = int(match.group(1))
+            elif game["result"] == "L" and not (game["score"] or "").strip():
+                # LHSAA leaves a shut-out loser's score blank (2026 check:
+                # Claiborne Christian 0-5 Mangham, 0-10 Family Community).
+                game["runs"] = 0
+            else:
+                game["runs"] = None
     slots = {}
     for school in by_school.values():
         for game in sorted(school["games"], key=_game_sort_key):

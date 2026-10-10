@@ -240,6 +240,8 @@ class SpringFallSportsTests(unittest.TestCase):
             ["3.", "Claiborne Christian", "1-C", "3/14/2026 Sat", "Tate - FL", "", "", "", "1", "H", "W", "6-0"],
             ["4.", "Claiborne Christian", "1-C", "4/9/2026 Thu", "Summerfield", "2-C", "", "", "1", "H", "W(f)", "1-0"],
             ["5.", "Summerfield", "2-C", "4/9/2026 Thu", "Claiborne Christian", "1-C", "", "", "1", "A", "L(f)", "0-0"],
+            ["6.", "Claiborne Christian", "1-C", "4/7/2026 Tue", "Mangham", "2-2A", "", "", "1", "A", "L", ""],
+            ["7.", "Mangham", "2-2A", "4/7/2026 Tue", "Claiborne Christian", "1-C", "", "", "1", "H", "W", "5-0"],
         ])
         data = wa.build_season("baseball", 2026, wa.parse_report(html))
         games = {(s["school"], g["opponent"]): g for s in data["schools"] for g in s["games"]}
@@ -249,6 +251,8 @@ class SpringFallSportsTests(unittest.TestCase):
         self.assertEqual(games[("Claiborne Christian", "Tate - FL")]["runs"], 6)
         self.assertEqual(games[("Claiborne Christian", "Summerfield")]["score"], "")  # forfeit
         self.assertEqual(games[("Claiborne Christian", "Summerfield")]["result"], "W")
+        self.assertEqual(games[("Claiborne Christian", "Mangham")]["score"], "0-5")  # shut out = blank row
+        self.assertEqual(games[("Mangham", "Claiborne Christian")]["score"], "5-0")
         soft = wa.build_season("softball", 2026, wa.parse_report(html))
         claiborne = [x for x in soft["schools"] if x["school"] == "Claiborne Christian"][0]
         self.assertEqual(claiborne["games"][0]["score"], "5-0")  # softball scores are used as listed
