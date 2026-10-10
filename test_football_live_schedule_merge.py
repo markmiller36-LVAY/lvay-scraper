@@ -130,5 +130,53 @@ class FootballLiveScheduleMergeTests(unittest.TestCase):
             conn.close()
             self.assertEqual(rows, [("Week 7", "Holy Savior Menard")])
 
+    def test_unplayed_games_against_excluded_school_become_open_weeks(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = str(Path(temp_dir) / "merge.db")
+            with mock.patch.object(scraper, "DB_PATH", db_path):
+                scraper.init_db()
+                payload = {
+                    "sport": "football", "season": "2026", "status": "preseason",
+                    "source": "Louisiana Sportsline preseason compilation",
+                    "generated_at": "2026-08-13T00:00:00",
+                    "schools": [{
+                        "school": "Highland Baptist", "class_": "1A", "district": 7,
+                        "division": "Select Division 4", "track": "Select",
+                        "source_division": "S4",
+                        "games": [
+                            {"week": 1, "game_date": None, "opponent": "False River Academy",
+                             "home_away": "H", "is_district": False, "is_bye": False,
+                             "needs_review": False},
+                            {"week": 7, "game_date": None, "opponent": "False River Academy",
+                             "home_away": "A", "is_district": False, "is_bye": False,
+                             "needs_review": False},
+                        ],
+                    }],
+                }
+                import_payload(payload, db_path, replace=True)
+                conn = sqlite3.connect(db_path)
+                conn.execute(
+                    "UPDATE games SET win_loss='W', score='21-0' "
+                    "WHERE school='Highland Baptist' AND week='Week 1'"
+                )
+                conn.commit()
+                conn.close()
+                official = [{
+                    "sport": "football", "season": "2026", "school": "Highland Baptist",
+                    "week": "Week 2", "game_date": "9/11/2026 7:00:00 PM",
+                    "opponent": "Bolton Academy", "home_away": "H",
+                    "win_loss": "", "score": "-", "district": "7", "class_": "1A",
+                    "out_of_state": "", "location": "", "scraped_at": "now",
+                }]
+                scraper.merge_football_games(official)
+            conn = sqlite3.connect(db_path)
+            rows = conn.execute(
+                "SELECT week, opponent, win_loss FROM games "
+                "WHERE school='Highland Baptist' ORDER BY week"
+            ).fetchall()
+            conn.close()
+            # The played game stays; the unplayed ones are cleared.
+            self.assertEqual(rows, [("Week 1", "False River Academy", "W")])
+
 if __name__ == "__main__":
     unittest.main()
