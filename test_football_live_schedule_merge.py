@@ -130,7 +130,7 @@ class FootballLiveScheduleMergeTests(unittest.TestCase):
             conn.close()
             self.assertEqual(rows, [("Week 7", "Holy Savior Menard")])
 
-    def test_unplayed_games_against_excluded_school_become_open_weeks(self):
+    def test_games_against_jv_only_school_stay_on_schedule(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             db_path = str(Path(temp_dir) / "merge.db")
             with mock.patch.object(scraper, "DB_PATH", db_path):
@@ -175,8 +175,13 @@ class FootballLiveScheduleMergeTests(unittest.TestCase):
                 "WHERE school='Highland Baptist' ORDER BY week"
             ).fetchall()
             conn.close()
-            # The played game stays; the unplayed ones are cleared.
-            self.assertEqual(rows, [("Week 1", "False River Academy", "W")])
+            # Games against the JV-only school stay; they're labelled and left
+            # out of the counts elsewhere (see jv_only_schools.py).
+            self.assertEqual(rows, [
+                ("Week 1", "False River Academy", "W"),
+                ("Week 2", "False River Academy", ""),
+                ("Week 7", "False River Academy", None),
+            ])
 
 if __name__ == "__main__":
     unittest.main()
