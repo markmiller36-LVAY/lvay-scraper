@@ -37,6 +37,7 @@ from official_record_overrides import (
     get_record_overrides,
 )
 from district_exceptions import is_non_district_game
+from jv_only_schools import is_jv_only_game
 from school_database import (
     get_school,
     loose_school_key,
@@ -586,6 +587,19 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         r for r in rows
         if str(r.get("win_loss") or "").strip() in COUNTED_RESULTS
     ]
+    jv_only_rows = sum(
+        1 for r in rows
+        if is_jv_only_game(sport, season, r.get("school"), r.get("opponent"))
+    )
+    if jv_only_rows:
+        rows = [
+            r for r in rows
+            if not is_jv_only_game(sport, season, r.get("school"), r.get("opponent"))
+        ]
+        print(
+            f"  Excluded {jv_only_rows} JV-only games "
+            "(shown on schedules, never counted)"
+        )
     if not rows:
         print(f"  No games found for {sport} season {season}")
         conn.close()
