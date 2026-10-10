@@ -68,6 +68,10 @@ SOURCES = {
         "path": "bpr", "params": {"p": "1", "bb": "1"},
         "referer": "https://www.lhsaaonline.org/pr/bpr/admin/SearchBaseballSchedule.asp",
         "split": "class", "year_field": "y", "first_season": 2021,
+        # LHSAA's baseball report shows only the winning margin ("16-0" = won
+        # by 16), never the real score, so archived baseball keeps the margin
+        # and leaves the score blank (no fake runs for/against).
+        "margin_scores": True,
     },
     "softball": {
         "path": "sbpr", "params": {"p": "1", "bb": "2"},
@@ -283,6 +287,13 @@ def build_season(sport, season, rows):
             "games_played": wins + losses + ties,
             "record": _record(wins, losses, ties),
         })
+
+    if SOURCES.get(sport, {}).get("margin_scores"):
+        for school in by_school.values():
+            for game in school["games"]:
+                match = re.match(r"^\s*(\d+)\s*-\s*0\s*$", game["score"] or "")
+                game["margin"] = int(match.group(1)) if match else None
+                game["score"] = ""
 
     if by_division:  # the division is not a class; keep class_ blank like the live feed's archive rows
         for school in by_school.values():

@@ -232,6 +232,19 @@ class SpringFallSportsTests(unittest.TestCase):
         self.assertEqual((data["y"], data["y1"], data["d"], data["d1"]), ("2022", "2022", "5A", "5A"))
         self.assertNotIn("yr", data)
 
+    def test_baseball_keeps_margin_not_fake_score(self):
+        html = self.page12([
+            ["1.", "Parkview Baptist", "7-3A", "2/22/2021 Mon", "Crowley", "5-3A", "", "", "1", "H", "W", "16-0"],
+            ["2.", "Parkview Baptist", "7-3A", "2/25/2021 Thu", "Lutcher", "9-3A", "", "", "1", "H", "L", "3-0"],
+        ])
+        data = wa.build_season("baseball", 2021, wa.parse_report(html))
+        games = data["schools"][0]["games"]
+        self.assertEqual([g["score"] for g in games], ["", ""])
+        self.assertEqual([g["margin"] for g in games], [16, 3])
+        self.assertEqual(data["schools"][0]["record"], "1-1")
+        soft = wa.build_season("softball", 2021, wa.parse_report(html))
+        self.assertEqual(soft["schools"][0]["games"][0]["score"], "16-0")
+
     def test_busy_build_queues_next_sport(self):
         with tempfile.TemporaryDirectory() as tmp:
             old_dir = os.environ.get("WINTER_ARCHIVE_DIR")
