@@ -9,6 +9,10 @@ Each entry is a team that must forfeit specific games.  For every listed game:
     a forfeit for a game that hasn't happened yet.
 A game LHSAA posts with a real score is left alone.
 
+Cancelled games (FOOTBALL_CANCELLED_GAMES) stay on both teams' schedules with
+the result "Cancelled". That is not a W/L/T, so the game never counts toward
+records, standings or power ratings (each team's rating uses one fewer game).
+
 Run by the football scrape merge and again just before football ratings are
 calculated, so the date switch happens even if the LHSAA scrape fails.
 """
@@ -31,6 +35,15 @@ FOOTBALL_FORFEITS = {
         {"team": "Carroll", "opponent": "Abramson", "game_date": "10/23/2026"},
         {"team": "Carroll", "opponent": "Sterlington", "game_date": "10/30/2026"},
         {"team": "Carroll", "opponent": "North Webster", "game_date": "11/6/2026"},
+    ],
+}
+
+# Called-off games (not forfeits): shown as "Cancelled", never counted.
+CANCELLED_RESULT = "Cancelled"
+FOOTBALL_CANCELLED_GAMES = {
+    "2026": [
+        # Week 6 game cancelled; not a forfeit. Mark, Oct 10, 2026.
+        {"team": "Booker T. Washington - N.O.", "opponent": "Bogalusa", "game_date": "10/9/2026"},
     ],
 }
 
@@ -66,11 +79,43 @@ def _has_real_score(score):
     return len(re.findall(r"\d+", str(score or ""))) == 2
 
 
-def apply_football_forfeits(conn, season, today=None):
-    """Mark listed forfeits in the games table. Returns rows changed."""
-    entries = FOOTBALL_FORFEITS.get(str(season))
+def apply_football_cancellations(conn, season):
+    """Mark listed cancelled games "Cancelled" on both schedules. Returns rows changed."""
+    entries = FOOTBALL_CANCELLED_GAMES.get(str(season))
     if not entries:
         return 0
+    try:
+        rows = conn.execute(
+            "SELECT rowid, school, opponent, game_date, score, win_loss FROM games "
+            "WHERE sport='football' AND season=?",
+            (str(season),),
+        ).fetchall()
+    except sqlite3.OperationalError:
+        return 0
+    changed = 0
+    for entry in entries:
+        game_day = _parse_date(entry["game_date"])
+        for school, opponent in ((entry["team"], entry["opponent"]), (entry["opponent"], entry["team"])):
+            for rowid, row_school, row_opp, row_date, score, win_loss in rows:
+                if (_key(row_school) != _key(school) or _key(row_opp) != _key(opponent)
+                        or _parse_date(row_date) not in (game_day, None)):
+                    continue
+                if (win_loss or "") == CANCELLED_RESULT and not (score or "").strip():
+                    continue
+                conn.execute(
+                    "UPDATE games SET score='', win_loss=? WHERE rowid=?",
+                    (CANCELLED_RESULT, rowid),
+                )
+                changed += 1
+    return changed
+
+
+def apply_football_forfeits(conn, season, today=None):
+    """Mark listed forfeits (and cancelled games) in the games table. Returns rows changed."""
+    cancelled = apply_football_cancellations(conn, season)
+    entries = FOOTBALL_FORFEITS.get(str(season))
+    if not entries:
+        return cancelled
     today = today or datetime.now(CENTRAL).date()
     changed = 0
     try:
@@ -105,6 +150,7 @@ def apply_football_forfeits(conn, season, today=None):
                     (FORFEIT_SCORE, new_result, rowid),
                 )
                 changed += 1
+    changed += cancelled
     try:
         conn.execute(
             "INSERT INTO scrape_log (ran_at, sport, games_found, status, note) VALUES (?, 'football-forfeits', ?, 'success', ?)",

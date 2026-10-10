@@ -971,7 +971,7 @@ def build_sport_review(sport):
             if not result and score:
                 issues.append("missing W/L")
             elif result and result not in (
-                "W", "L", "T", "Tie", "W(f)", "L(f)", "PPD", "OD", "JV"
+                "W", "L", "T", "Tie", "W(f)", "L(f)", "PPD", "OD", "JV", "Cancelled"
             ):
                 issues.append("unrecognized result")
             if result in ("W", "L", "T", "Tie", "W(f)", "L(f)") and not score:
