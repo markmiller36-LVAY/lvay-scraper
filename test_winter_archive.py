@@ -176,6 +176,79 @@ class BasketballSourceTests(unittest.TestCase):
                     os.environ["WINTER_ARCHIVE_DIR"] = old_dir
 
 
+class SpringFallSportsTests(unittest.TestCase):
+    """Volleyball / baseball / softball reports: 12 columns (no OT column)."""
+
+    @staticmethod
+    def page12(rows):
+        cells = ['<td>%s</td>' % c for c in ("#", "School", "District-Division", "Date", "Opponent",
+                 "Opp", "D/T", "Tournament", "Match#", "H/A", "W/L", "Score")]
+        body = "".join("<tr>" + "".join("<td>%s</td>" % c for c in r) + "</tr>" for r in rows)
+        return "<table><tr>" + "".join(cells) + "</tr>" + body + "</table>"
+
+    def test_volleyball_rows_get_divisions(self):
+        html = self.page12([
+            ["1.", "Acadiana", "3-I", "9/4/2013 Wed", "Rayne", "3-III", "", "", "1", "H", "L", "11-25, 13-25, 25-21, 12-25"],
+            ["2.", "Rayne", "3-III", "9/4/2013 Wed", "Acadiana", "3-I", "D", "", "1", "A", "W", "25-11, 25-13, 21-25, 25-12"],
+            ["3.", "Acadiana", "3-I", "9/9/2013 Mon", "Iowa", "1-III", "", "", "1", "H", "Cancelled", ""],
+        ])
+        rows = wa.parse_report(html)
+        self.assertEqual(len(rows), 3)
+        self.assertEqual((rows[0]["district"], rows[0]["class_"]), ("3", "I"))
+        self.assertEqual(rows[0]["score"], "11-25, 13-25, 25-21, 12-25")
+        self.assertFalse(rows[0]["overtime"])
+        self.assertEqual(rows[2]["result"], "")
+        data = wa.build_season("volleyball", 2013, rows)
+        acad = [x for x in data["schools"] if x["school"] == "Acadiana"][0]
+        self.assertEqual(acad["division"], "Division I")
+        self.assertEqual(acad["class_"], "")
+        self.assertEqual(acad["record"], "0-1")
+        self.assertEqual(acad["games"][0]["opp_division"], "III")
+        self.assertEqual(data["schools"][0]["school"], "Acadiana")  # Division I sorts first
+
+    def test_spring_sources_use_y_and_open_search_page(self):
+        self.assertEqual(wa.parse_seasons("2010-2027", 2027, "baseball")[0], 2021)
+        self.assertEqual(wa.parse_seasons("2010-2027", 2027, "volleyball")[0], 2013)
+        self.assertEqual(wa.SOURCES["softball"]["params"]["bb"], "2")
+        calls = []
+
+        class FakeResp:
+            text = "<table></table>"
+            def raise_for_status(self):
+                pass
+
+        class FakeSession:
+            def get(self, url, **kw):
+                calls.append(("get", url))
+            def post(self, url, params=None, data=None, **kw):
+                calls.append(("post", url, dict(params), dict(data)))
+                return FakeResp()
+
+        wa.fetch_district("softball", 2022, "", session=FakeSession(), classification="5A")
+        self.assertEqual(calls[0], ("get", wa.SOURCES["softball"]["referer"]))
+        _, url, params, data = calls[1]
+        self.assertIn("/sbpr/", url)
+        self.assertEqual(params, {"p": "1", "bb": "2"})
+        self.assertEqual((data["y"], data["y1"], data["d"], data["d1"]), ("2022", "2022", "5A", "5A"))
+        self.assertNotIn("yr", data)
+
+    def test_busy_build_queues_next_sport(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old_dir = os.environ.get("WINTER_ARCHIVE_DIR")
+            os.environ["WINTER_ARCHIVE_DIR"] = tmp
+            wa._LOCK.acquire()
+            try:
+                self.assertIsNone(wa.start_build("baseball", [2021, 2022]))
+                self.assertEqual(wa._read_pending()["baseball"]["seasons"], [2021, 2022])
+                self.assertFalse(wa.start_build("baseball", [2021]))  # already queued
+            finally:
+                wa._LOCK.release()
+                if old_dir is None:
+                    os.environ.pop("WINTER_ARCHIVE_DIR", None)
+                else:
+                    os.environ["WINTER_ARCHIVE_DIR"] = old_dir
+
+
 if __name__ == "__main__":
     unittest.main()
 

@@ -1823,6 +1823,21 @@ def schedules_softball():
 def schedules_volleyball():
     conn = get_db()
     c = conn.cursor()
+    requested = (request.args.get("season") or "").strip()
+    if re.fullmatch(r"\d{4}", requested):
+        live = c.execute(
+            "SELECT 1 FROM volleyball_rankings WHERE sport='volleyball' AND season=? LIMIT 1",
+            (requested,),
+        ).fetchone()
+        if not live:
+            archived = winter_archive_response(
+                "volleyball", requested,
+                summary_only=request.args.get("summary") == "1",
+                school_filter=(request.args.get("school") or "").strip(),
+            )
+            if archived is not None:
+                conn.close()
+                return jsonify(archived)
     try:
         season = available_season(conn, "volleyball", "volleyball_rankings")
         # Get all schools with their ranking info
@@ -2359,7 +2374,11 @@ def winter_archive_build(sport):
     )
     if not seasons:
         return jsonify({"error": "Give finished seasons, e.g. ?seasons=2014-2025"}), 400
-    if not winter_archive.start_build(sport, seasons):
+    started = winter_archive.start_build(sport, seasons)
+    if started is None:
+        return jsonify({"status": "queued", "sport": sport, "seasons": seasons,
+                        "running": winter_archive.STATE.get("sport")}), 202
+    if not started:
         return jsonify({"status": "already_running", "job": winter_archive.STATE}), 409
     return jsonify({"status": "started", "sport": sport, "seasons": seasons}), 202
 

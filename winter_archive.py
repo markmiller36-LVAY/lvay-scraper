@@ -1,4 +1,4 @@
-"""Past-season schedule archive for the winter sports (soccer, boys basketball).
+"""Past-season schedule archive (soccer, basketball, volleyball, baseball, softball).
 
 LHSAA keeps every boys/girls soccer schedule back to 2014-15 on
 lhsaaonline.org, but only the current season goes through the ratings
@@ -53,7 +53,30 @@ SOURCES = {
         "referer": "https://www.lhsaaonline.org/pr/bbpr/admin/SearchGirlsBasketballSchedule.asp",
         "split": "class", "first_season": 2014,
     },
+    # Volleyball (Oct 10): LHSAA lists 2013-14 on; season key = the fall year
+    # ("2013" = 2013-14), matching the live feed.  Pulled one division at a time.
+    "volleyball": {
+        "path": "vbpr", "params": {"p": "1"},
+        "referer": "https://www.lhsaaonline.org/pr/vbpr/admin/SearchVolleyballSchedule.asp",
+        "split": "class", "parts": ["I", "II", "III", "IV", "V"], "group": "division",
+        "year_field": "y", "first_season": 2013,
+    },
+    # Baseball/softball share one report (bb=1 / bb=2) and LHSAA remembers the
+    # last search page opened in the session, so the search page is opened first.
+    # LHSAA lists 2020-21 on; season key = the spring year.
+    "baseball": {
+        "path": "bpr", "params": {"p": "1", "bb": "1"},
+        "referer": "https://www.lhsaaonline.org/pr/bpr/admin/SearchBaseballSchedule.asp",
+        "split": "class", "year_field": "y", "first_season": 2021,
+    },
+    "softball": {
+        "path": "sbpr", "params": {"p": "1", "bb": "2"},
+        "referer": "https://www.lhsaaonline.org/pr/sbpr/admin/SearchSoftballSchedule.asp",
+        "split": "class", "year_field": "y", "first_season": 2021,
+    },
 }
+
+ROMAN = ["I", "II", "III", "IV", "V"]
 
 # LHSAA soccer districts run 1-9 in every season checked (2015, 2026); the
 # extra numbers are cheap empty requests that guard against a season with more.
@@ -135,10 +158,10 @@ def _clean(text):
 def split_district_class(value):
     """'8-5A' -> ('8', '5A'); 'B' or '' -> ('', 'B'/'')."""
     value = _clean(value).upper()
-    match = re.match(r"^(\d+)\s*-\s*([1-5]A|B|C)$", value)
+    match = re.match(r"^(\d+)\s*-\s*([1-5]A|B|C|I{1,3}|IV|V)$", value)
     if match:
         return match.group(1), match.group(2)
-    if value in CLASS_ORDER:
+    if value in CLASS_ORDER or value in ROMAN:
         return "", value
     return "", ""
 
@@ -170,9 +193,11 @@ def parse_report(html):
     games = []
     for tr in soup.find_all("tr"):
         cells = tr.find_all("td", recursive=False)
-        if len(cells) != 13:
+        if len(cells) not in (12, 13):
             continue
         t = [_clean(c.get_text(" ")) for c in cells]
+        if len(t) == 12:  # volleyball/baseball/softball reports have no OT column
+            t.insert(11, "")
         if not re.fullmatch(r"\d+\.", t[0]) or not t[1]:
             continue
         district, class_ = split_district_class(t[2])
@@ -209,6 +234,7 @@ def _record(wins, losses, ties):
 
 def build_season(sport, season, rows):
     """Group parsed rows into the schedules-feed shape for one season."""
+    by_division = SOURCES.get(sport, {}).get("group") == "division"
     by_school = {}
     seen = set()
     for row in rows:
@@ -229,7 +255,7 @@ def build_season(sport, season, rows):
             "opponent": row["opponent"],
             "opp_class": row["opp_class"],
             "opp_district": row["opp_district"],
-            "opp_division": "",
+            "opp_division": row["opp_class"] if by_division else "",
             "home_away": row["home_away"],
             "result": row["result"],
             "score": row["score"],
@@ -247,13 +273,22 @@ def build_season(sport, season, rows):
         losses = sum(g["result"] == "L" for g in school["games"])
         ties = sum(g["result"] == "T" for g in school["games"])
         records[school["school"].casefold()] = (wins, losses, ties)
+        division = ""
+        if by_division and school["class_"] in ROMAN:
+            division = f"Division {school['class_']}"
         school.update({
-            "sport": sport, "season": str(season), "division": "",
+            "sport": sport, "season": str(season), "division": division,
             "track": "", "power_rating": None, "rank": None,
             "wins": wins, "losses": losses, "ties": ties,
             "games_played": wins + losses + ties,
             "record": _record(wins, losses, ties),
         })
+
+    if by_division:  # the division is not a class; keep class_ blank like the live feed's archive rows
+        for school in by_school.values():
+            school["class_"] = ""
+            for game in school["games"]:
+                game["opp_class"] = ""
 
     for school in by_school.values():
         school["games"].sort(key=_game_sort_key)
@@ -266,10 +301,12 @@ def build_season(sport, season, rows):
                 game["opp_wins"] = game["opp_losses"] = game["opp_ties"] = None
                 game["opp_record"] = ""
 
+    order = ROMAN if by_division else CLASS_ORDER
+
     def school_key(s):
-        cls = s["class_"] if s["class_"] in CLASS_ORDER else "Z"
         dist = int(s["district"]) if s["district"].isdigit() else 99
-        return (CLASS_ORDER.index(cls) if cls in CLASS_ORDER else 99, dist, s["school"].casefold())
+        cls = s["class_"]
+        return (order.index(cls) if cls in order else 99, dist, s["school"].casefold())
 
     schools = sorted(by_school.values(), key=school_key)
     return {
@@ -303,14 +340,21 @@ def _game_sort_key(game):
 
 def fetch_district(sport, season, district, session=None, attempts=3, classification=""):
     source = SOURCES[sport]
-    payload = {"yr": str(season), "resultdate": "", "n": "", "h": "",
+    year_field = source.get("year_field", "yr")
+    payload = {year_field: str(season), "resultdate": "", "n": "", "h": "",
                "d": classification, "f": str(district or ""), "s": "",
                "paging": "", "n1": "", "d1": classification}
+    if year_field == "y":
+        payload["y1"] = str(season)
     headers = dict(HEADERS, Referer=source["referer"])
     http = session or requests
     last_error = None
     for attempt in range(attempts):
         try:
+            if source.get("year_field") == "y":
+                # Opens this sport's search page first: LHSAA's baseball and
+                # softball reports read the sport from the session.
+                http.get(source["referer"], headers={"User-Agent": HEADERS["User-Agent"]}, timeout=60)
             resp = http.post(REPORT_URL.format(path=source["path"]),
                              params=source["params"], data=payload,
                              headers=headers, timeout=90)
@@ -328,7 +372,8 @@ def build_from_lhsaa(sport, season, pause=1.0):
     session = requests.Session()
     rows, per_district = [], {}
     by_class = SOURCES[sport].get("split") == "class"
-    for part in (CLASS_ORDER if by_class else DISTRICTS):
+    parts = SOURCES[sport].get("parts", CLASS_ORDER) if by_class else DISTRICTS
+    for part in parts:
         if by_class:
             html = fetch_district(sport, season, "", session=session, classification=part)
         else:
@@ -420,6 +465,15 @@ def start_build(sport, seasons, attempts=0):
     if sport not in SOURCES:
         raise ValueError("Unsupported sport")
     if not _LOCK.acquire(blocking=False):
+        # Busy with another sport: queue this one; resume_pending() starts it
+        # when the running build finishes.
+        try:
+            data = _read_pending()
+            if sport not in data:
+                _set_pending(sport, seasons, attempts)
+                return None
+        except OSError:
+            pass
         return False
     try:
         _set_pending(sport, seasons, attempts)
