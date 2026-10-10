@@ -232,18 +232,26 @@ class SpringFallSportsTests(unittest.TestCase):
         self.assertEqual((data["y"], data["y1"], data["d"], data["d1"]), ("2022", "2022", "5A", "5A"))
         self.assertNotIn("yr", data)
 
-    def test_baseball_keeps_margin_not_fake_score(self):
+    def test_baseball_pairs_both_rows_into_real_score(self):
+        # Real 2026 games: Cedar Creek 17-5 Claiborne Christian; LHSAA lists "17-0" and "5-0".
         html = self.page12([
-            ["1.", "Parkview Baptist", "7-3A", "2/22/2021 Mon", "Crowley", "5-3A", "", "", "1", "H", "W", "16-0"],
-            ["2.", "Parkview Baptist", "7-3A", "2/25/2021 Thu", "Lutcher", "9-3A", "", "", "1", "H", "L", "3-0"],
+            ["1.", "Claiborne Christian", "1-C", "3/13/2026 Fri", "Cedar Creek", "1-1A", "", "", "1", "A", "L", "5-0"],
+            ["2.", "Cedar Creek", "1-1A", "3/13/2026 Fri", "Claiborne Christian", "1-C", "", "", "1", "H", "W", "17-0"],
+            ["3.", "Claiborne Christian", "1-C", "3/14/2026 Sat", "Tate - FL", "", "", "", "1", "H", "W", "6-0"],
+            ["4.", "Claiborne Christian", "1-C", "4/9/2026 Thu", "Summerfield", "2-C", "", "", "1", "H", "W(f)", "1-0"],
+            ["5.", "Summerfield", "2-C", "4/9/2026 Thu", "Claiborne Christian", "1-C", "", "", "1", "A", "L(f)", "0-0"],
         ])
-        data = wa.build_season("baseball", 2021, wa.parse_report(html))
-        games = data["schools"][0]["games"]
-        self.assertEqual([g["score"] for g in games], ["", ""])
-        self.assertEqual([g["margin"] for g in games], [16, 3])
-        self.assertEqual(data["schools"][0]["record"], "1-1")
-        soft = wa.build_season("softball", 2021, wa.parse_report(html))
-        self.assertEqual(soft["schools"][0]["games"][0]["score"], "16-0")
+        data = wa.build_season("baseball", 2026, wa.parse_report(html))
+        games = {(s["school"], g["opponent"]): g for s in data["schools"] for g in s["games"]}
+        self.assertEqual(games[("Claiborne Christian", "Cedar Creek")]["score"], "5-17")
+        self.assertEqual(games[("Cedar Creek", "Claiborne Christian")]["score"], "17-5")
+        self.assertEqual(games[("Claiborne Christian", "Tate - FL")]["score"], "")  # no opponent row
+        self.assertEqual(games[("Claiborne Christian", "Tate - FL")]["runs"], 6)
+        self.assertEqual(games[("Claiborne Christian", "Summerfield")]["score"], "")  # forfeit
+        self.assertEqual(games[("Claiborne Christian", "Summerfield")]["result"], "W")
+        soft = wa.build_season("softball", 2026, wa.parse_report(html))
+        claiborne = [x for x in soft["schools"] if x["school"] == "Claiborne Christian"][0]
+        self.assertEqual(claiborne["games"][0]["score"], "5-0")  # softball scores are used as listed
 
     def test_busy_build_queues_next_sport(self):
         with tempfile.TemporaryDirectory() as tmp:

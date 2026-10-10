@@ -68,10 +68,10 @@ SOURCES = {
         "path": "bpr", "params": {"p": "1", "bb": "1"},
         "referer": "https://www.lhsaaonline.org/pr/bpr/admin/SearchBaseballSchedule.asp",
         "split": "class", "year_field": "y", "first_season": 2021,
-        # LHSAA's baseball report shows only the winning margin ("16-0" = won
-        # by 16), never the real score, so archived baseball keeps the margin
-        # and leaves the score blank (no fake runs for/against).
-        "margin_scores": True,
+        # LHSAA's baseball report puts only the school's OWN runs in the score
+        # column ("11-0" was an 11-10 game; checked against 2026 real scores),
+        # so the full score comes from pairing both schools' rows of a game.
+        "own_runs_scores": True,
     },
     "softball": {
         "path": "sbpr", "params": {"p": "1", "bb": "2"},
@@ -269,6 +269,7 @@ def build_season(sport, season, rows):
             "tournament_host": row["tournament_host"],
             "match_num": row["match_num"],
             "total_pts": None,
+            "forfeit": "(F)" in row.get("result_raw", "").upper(),
         })
 
     records = {}
@@ -288,12 +289,8 @@ def build_season(sport, season, rows):
             "record": _record(wins, losses, ties),
         })
 
-    if SOURCES.get(sport, {}).get("margin_scores"):
-        for school in by_school.values():
-            for game in school["games"]:
-                match = re.match(r"^\s*(\d+)\s*-\s*0\s*$", game["score"] or "")
-                game["margin"] = int(match.group(1)) if match else None
-                game["score"] = ""
+    if SOURCES.get(sport, {}).get("own_runs_scores"):
+        _pair_own_runs(by_school)
 
     if by_division:  # the division is not a class; keep class_ blank like the live feed's archive rows
         for school in by_school.values():
@@ -329,6 +326,37 @@ def build_season(sport, season, rows):
         "built_at": datetime.now().isoformat(timespec="seconds"),
         "schools": schools,
     }
+
+
+def _pair_own_runs(by_school):
+    """Baseball: each row's "N-0" is that school's own runs; join both rows of a game.
+
+    Rows are matched on (date, the two schools), in time/match order for
+    doubleheaders.  A game whose opponent has no row of its own (out of state,
+    non-member) or whose two rows disagree with the W/L keeps a blank score.
+    Forfeits keep no score (Mark, Oct 5: a game with no score adds no points).
+    """
+    for school in by_school.values():
+        for game in school["games"]:
+            match = re.match(r"^\s*(\d+)\s*-\s*0\s*$", game["score"] or "")
+            game["runs"] = int(match.group(1)) if match and not game.get("forfeit") else None
+    slots = {}
+    for school in by_school.values():
+        for game in sorted(school["games"], key=_game_sort_key):
+            key = (school["school"].casefold(), game["opponent"].casefold(), game["game_date"])
+            slots.setdefault(key, []).append(game)
+    for (me, opp, date), games in slots.items():
+        theirs = slots.get((opp, me, date), [])
+        for i, game in enumerate(games):
+            other = theirs[i] if i < len(theirs) else None
+            own, against = game["runs"], (other or {}).get("runs")
+            game["score"] = ""
+            if own is None or against is None:
+                continue
+            result = game["result"]
+            if (result == "W" and own <= against) or (result == "L" and own >= against):
+                continue  # the two rows disagree; leave it blank rather than guess
+            game["score"] = f"{own}-{against}"
 
 
 def _game_sort_key(game):
