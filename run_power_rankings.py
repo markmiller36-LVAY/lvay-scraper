@@ -386,9 +386,23 @@ def load_sheet_overrides(sport: str, season: str) -> dict:
     return overrides
 
 
-def load_games(conn, season=SEASON, sport=SPORT):
+COUNTED_RESULTS = ('W', 'L', 'Tie', 'T', 'W(f)', 'L(f)', 'L(df)', 'L(DF)', 'DF')
+
+# Overrides typed in by the Sheet's "Enter Week Scores" form start their notes
+# with this tag. They fill in games LHSAA has not scored yet; once LHSAA posts
+# its own result, the official result is used instead.
+FORM_ENTRY_TAG = "[LVAY form]"
+
+
+def load_games(conn, season=SEASON, sport=SPORT, include_unscored=False):
+    """Load a sport's games. Unscored games are included only on request so
+    Sheet overrides can supply a result LHSAA has not posted yet."""
+    result_filter = "" if include_unscored else (
+        "AND win_loss IN ('W', 'L', 'Tie', 'T', 'W(f)', 'L(f)', "
+        "'L(df)', 'L(DF)', 'DF')"
+    )
     c = conn.cursor()
-    c.execute("""
+    c.execute(f"""
         SELECT school, opponent, win_loss, week, score, game_date,
                class_, district, district_class, out_of_state, home_away,
                opponent_class
@@ -396,8 +410,7 @@ def load_games(conn, season=SEASON, sport=SPORT):
         WHERE sport=? AND season=?
           AND TRIM(COALESCE(school, '')) <> ''
           AND TRIM(COALESCE(opponent, '')) <> ''
-          AND win_loss IN ('W', 'L', 'Tie', 'T', 'W(f)', 'L(f)',
-                           'L(df)', 'L(DF)', 'DF')
+          {result_filter}
         ORDER BY school, game_date
     """, (sport, season))
     return c.fetchall()
@@ -494,6 +507,26 @@ def apply_override_to_row(row, sport: str, season: str, overrides: dict) -> dict
     override = overrides.get(key)
     if not override:
         return row_data
+    official_result = str(row_data.get("win_loss") or "").strip()
+    if (
+        override.get("notes", "").startswith(FORM_ENTRY_TAG)
+        and official_result in COUNTED_RESULTS
+    ):
+        # LHSAA has posted this game since the score was entered by hand.
+        override_score = override.get("override_score", "")
+        official_score = str(row_data.get("score") or "").strip()
+        if (
+            override.get("override_win_loss") != official_result
+            or (override_score and override_score != official_score)
+        ):
+            print(
+                "  [REVIEW] Form score differs from LHSAA for "
+                f"{row_data.get('school')} vs {row_data.get('opponent')} "
+                f"({row_data.get('game_date')}): form "
+                f"{override.get('override_win_loss')} {override_score}, "
+                f"LHSAA {official_result} {official_score}. Using LHSAA."
+            )
+        return row_data
     if override.get("override_win_loss"):
         row_data["win_loss"] = override["override_win_loss"]
     if override.get("override_score"):
@@ -545,14 +578,18 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         if apply_football_forfeits(conn, season):
             conn.commit()
 
-    raw_rows = load_games(conn, season, sport)
-    if not raw_rows:
+    raw_rows = load_games(conn, season, sport, include_unscored=True)
+    overrides = load_sheet_overrides(sport, season)
+    rows = [apply_override_to_row(r, sport, season, overrides) for r in raw_rows]
+    # Keep only games with a result: LHSAA's, or one supplied by an override.
+    rows = [
+        r for r in rows
+        if str(r.get("win_loss") or "").strip() in COUNTED_RESULTS
+    ]
+    if not rows:
         print(f"  No games found for {sport} season {season}")
         conn.close()
         return []
-
-    overrides = load_sheet_overrides(sport, season)
-    rows = [apply_override_to_row(r, sport, season, overrides) for r in raw_rows]
     official_rankings = load_official_winter_rankings(sport, season)
     official_name_keys = {
         _rating_name_key(name) for name in official_rankings
