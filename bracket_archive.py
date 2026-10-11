@@ -49,6 +49,12 @@ CLASSES = ["5A", "4A", "3A", "2A", "1A"]
 P = "ctl00_ContentPlaceHolder1_"
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
+# Seasons LHSAA only posted as bracket PDFs (no MainBracket32 pages). Transcribed into
+# bracket_pdf_data/ and built from there instead of lhsaaonline.org.
+PDF_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bracket_pdf_data")
+PDF_SEASONS = {"volleyball": {2010: "volleyball_2010_2011.txt", 2011: "volleyball_2010_2011.txt",
+                              2015: "volleyball_2015.psv"}}
+
 _LOCK = threading.Lock()
 STATE = {"status": "idle", "sport": None, "seasons": [], "progress": {},
          "started_at": None, "finished_at": None, "error": None}
@@ -285,7 +291,59 @@ def fetch(path, session=None, attempts=3):
     raise RuntimeError(f"{path}: {last}")
 
 
+def _slot(g, a, a_sets, b, b_sets, a_home, b_home):
+    bye = lambda n: n in ("", "B", "Bye")
+    a, b = ("Bye" if bye(a) else a), ("Bye" if bye(b) else b)
+    num = lambda v: int(v) if str(v).strip().isdigit() else None
+    return {"g": int(g), "a": a, "b": b, "a_score": num(a_sets), "b_score": num(b_sets),
+            "a_home": bool(a_home), "b_home": bool(b_home)}
+
+
+def pdf_slots(sport, season):
+    """{"Division I": [slots]} for a season transcribed from LHSAA bracket PDFs."""
+    fname = (PDF_SEASONS.get(sport) or {}).get(int(season))
+    if not fname:
+        return {}
+    out, label = {}, None
+    with open(os.path.join(PDF_DIR, fname), encoding="utf-8") as src:
+        lines = src.read().splitlines()
+    if fname.endswith(".psv"):
+        # g|seedA|A|setsA|seedB|B|setsB ; lower seed is home
+        for line in lines:
+            if line.startswith("#Division"):
+                label = line[1:].strip()
+                out[label] = []
+                continue
+            if not line.strip() or line.startswith("#"):
+                continue
+            g, sa, a, xa, sb, b, xb = line.split("|")
+            ha = b != "Bye" and a != "Bye" and int(sa) < int(sb)
+            hb = b != "Bye" and a != "Bye" and int(sb) < int(sa)
+            out[label].append(_slot(g, a, xa, b, xb, ha, hb))
+        return out
+    # compact: "N name|name|..." then "#YYYY-D" blocks of "g a sets b sets home"
+    names = []
+    for line in lines:
+        if line.startswith("N "):
+            names = line[2:].split("|")
+            continue
+        m = re.match(r"^#(\d{4})-(\d)$", line)
+        if m:
+            label = f"Division {ROMAN[int(m.group(2)) - 1]}" if int(m.group(1)) == int(season) else None
+            if label:
+                out[label] = []
+            continue
+        if label is None or not line.strip() or line.startswith("#"):
+            continue
+        g, a, xa, b, xb, home = (line.split(" ") + [""] * 6)[:6]
+        name = lambda i: "Bye" if i in ("B", "-", "") else names[int(i)]
+        out[label].append(_slot(g, name(a), xa, name(b), xb, int(home or 0) & 1, int(home or 0) & 2))
+    return out
+
+
 def build_season(sport, season, pause=0.5, fetcher=None):
+    if int(season) in (PDF_SEASONS.get(sport) or {}):
+        return build_pdf_season(sport, season)
     code, kind = SPORTS[sport]
     session = requests.Session()
     get = fetcher or (lambda path: fetch(path, session=session))
@@ -325,7 +383,36 @@ def build_season(sport, season, pause=0.5, fetcher=None):
     return out
 
 
-def parse_seasons(text, current_season):
+def first_season(sport=None):
+    pdf = PDF_SEASONS.get(sport) or ()
+    return min([FIRST_SEASON, *pdf])
+
+
+def build_pdf_season(sport, season):
+    brackets, champions = {}, {}
+    for label, slots in pdf_slots(sport, season).items():
+        games = bracket_games(slots)
+        if not games:
+            continue
+        brackets[label] = games
+        final = [g for g in games if g["phase"] == "State Championship"]
+        if final and final[0]["winner"]:
+            champions[label] = final[0]["winner"]
+    if not brackets:
+        raise RuntimeError(f"No transcribed {sport} bracket PDF for {season}")
+    out = {
+        "season": str(season), "source": "LHSAA bracket PDF",
+        "built_at": datetime.now().isoformat(timespec="seconds"),
+        "brackets": list(brackets), "champions": champions,
+        "games": sum(len(g) for g in brackets.values()),
+        "schools": season_schools(brackets),
+    }
+    save_season(sport, season, out)
+    STATE["progress"][str(season)] = f"done: {len(brackets)} brackets, {out['games']} games (PDF)"
+    return out
+
+
+def parse_seasons(text, current_season, sport=None):
     seasons = set()
     for part in str(text or "").split(","):
         part = part.strip()
@@ -336,7 +423,7 @@ def parse_seasons(text, current_season):
             seasons.update(range(min(a, b), max(a, b) + 1))
         else:
             seasons.add(int(part))
-    return sorted(s for s in seasons if FIRST_SEASON <= s < int(current_season))
+    return sorted(s for s in seasons if first_season(sport) <= s < int(current_season))
 
 
 def start_build(sport, seasons):

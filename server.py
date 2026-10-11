@@ -2354,7 +2354,7 @@ def bracket_archive_build(sport):
     """Pull finished seasons' brackets from LHSAA (background job)."""
     if sport not in bracket_archive.SPORT_CODES:
         return jsonify({"error": "Unsupported sport"}), 404
-    seasons = bracket_archive.parse_seasons(request.args.get("seasons") or "", resolve_season(sport))
+    seasons = bracket_archive.parse_seasons(request.args.get("seasons") or "", resolve_season(sport), sport)
     if not seasons:
         return jsonify({"error": "Give finished seasons, e.g. ?seasons=2014-2025"}), 400
     if not bracket_archive.start_build(sport, seasons):

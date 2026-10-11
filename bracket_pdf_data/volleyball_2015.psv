@@ -1,0 +1,164 @@
+# Volleyball 2015-16 LHSAA playoff brackets, read from the scanned LHSAA bracket PDF
+# (lhsaa.org/siteuploads/editorimg/file/Volleyball/2015_LHSAA_Volleyball_Playoff_Bracket.pdf).
+# g|seed|team A|sets|seed|team B|sets   (Bye = no opponent). Higher seed (lower number) is home.
+# Slots 1-16 bi-district, 17-24 regional, 25-28 quarterfinals, 29-30 semifinals, 31 final.
+#Division I
+1|1|Mt. Carmel||32|Bye|
+2|16|Acadiana|3|17|Ponchatoula|1
+3|9|Northshore|3|24|C.E. Byrd|0
+4|8|East Ascension||25|Bye|
+5|5|St. Amant||28|Bye|
+6|12|H.L. Bourgeois|3|21|Hahnville|0
+7|13|Zachary|3|20|John Ehret|0
+8|4|Barbe||29|Bye|
+9|3|St. Joseph's Academy||30|Bye|
+10|14|Fontainebleau|3|19|Dominican|0
+11|11|Slidell|3|22|Sulphur|0
+12|6|Archbishop Chapelle||27|Bye|
+13|7|Dutchtown||26|Bye|
+14|10|Comeaux|3|23|Chalmette|0
+15|15|Baton Rouge|3|18|Ruston|0
+16|2|Mandeville||31|Bye|
+17|1|Mt. Carmel|3|16|Acadiana|0
+18|9|Northshore|3|8|East Ascension|0
+19|5|St. Amant|3|12|H.L. Bourgeois|0
+20|13|Zachary|1|4|Barbe|3
+21|3|St. Joseph's Academy|3|14|Fontainebleau|0
+22|11|Slidell|0|6|Archbishop Chapelle|3
+23|7|Dutchtown|1|10|Comeaux|3
+24|15|Baton Rouge|0|2|Mandeville|3
+25|1|Mt. Carmel|3|9|Northshore|0
+26|5|St. Amant|0|4|Barbe|3
+27|3|St. Joseph's Academy|1|6|Archbishop Chapelle|3
+28|10|Comeaux|1|2|Mandeville|3
+29|1|Mt. Carmel|3|4|Barbe|0
+30|6|Archbishop Chapelle|0|2|Mandeville|3
+31|1|Mt. Carmel|3|2|Mandeville|0
+#Division II
+1|1|St. Thomas More||32|Bye|
+2|16|Central Lafourche|3|17|Edna Karr|0
+3|9|South Terrebonne|3|24|Riverdale|0
+4|8|Academy of Our Lady||25|Bye|
+5|5|Belle Chasse||28|Bye|
+6|12|Breaux Bridge|3|21|Belaire|0
+7|13|Sam Houston|3|20|Carencro|0
+8|4|Central - B.R.||29|Bye|
+9|3|Assumption||30|Bye|
+10|14|Woodlawn - B.R.|3|19|Helen Cox|1
+11|11|Lakeshore|3|22|Lord Beaconsfield Landry|0
+12|6|St. Scholastica||27|Bye|
+13|7|Cabrini||26|Bye|
+14|10|Terrebonne|3|23|A.J. Ellender|0
+15|15|Live Oak|3|18|South Lafourche|0
+16|2|Ben Franklin||31|Bye|
+17|1|St. Thomas More|3|16|Central Lafourche|0
+18|9|South Terrebonne|0|8|Academy of Our Lady|3
+19|5|Belle Chasse|3|12|Breaux Bridge|0
+20|13|Sam Houston|1|4|Central - B.R.|3
+21|3|Assumption|3|14|Woodlawn - B.R.|0
+22|11|Lakeshore|0|6|St. Scholastica|3
+23|7|Cabrini|3|10|Terrebonne|0
+24|15|Live Oak|0|2|Ben Franklin|3
+25|1|St. Thomas More|3|8|Academy of Our Lady|0
+26|5|Belle Chasse|3|4|Central - B.R.|1
+27|3|Assumption|3|6|St. Scholastica|2
+28|7|Cabrini|3|2|Ben Franklin|2
+29|1|St. Thomas More|3|5|Belle Chasse|0
+30|3|Assumption|2|7|Cabrini|3
+31|1|St. Thomas More|3|7|Cabrini|0
+#Division III
+1|1|Teurlings Catholic||32|Bye|
+2|16|Leesville|0|17|Brusly|3
+3|9|Iota|3|24|Pearl River|0
+4|8|Parkview Baptist||25|Bye|
+5|5|Rayne||28|Bye|
+6|12|St. Martinville|3|21|Iowa|0
+7|13|North Vermilion|3|20|DeQuincy|0
+8|4|Ursuline Academy||29|Bye|
+9|3|Westlake||30|Bye|
+10|14|Cecilia|3|19|Northside|2
+11|11|E.D. White|3|22|Springfield|0
+12|6|St. Michael the Archangel||27|Bye|
+13|7|Vandebilt Catholic||26|Bye|
+14|10|St. Louis Catholic|3|23|Plaquemine|0
+15|15|Berwick|0|18|Lusher Charter|3
+16|2|Lutcher||31|Bye|
+17|1|Teurlings Catholic|3|17|Brusly|0
+18|9|Iota|1|8|Parkview Baptist|3
+19|5|Rayne|3|12|St. Martinville|0
+20|13|North Vermilion|0|4|Ursuline Academy|3
+21|3|Westlake|3|14|Cecilia|1
+22|11|E.D. White|3|6|St. Michael the Archangel|1
+23|7|Vandebilt Catholic|3|10|St. Louis Catholic|0
+24|18|Lusher Charter|0|2|Lutcher|3
+25|1|Teurlings Catholic|3|8|Parkview Baptist|0
+26|5|Rayne|1|4|Ursuline Academy|3
+27|3|Westlake|1|11|E.D. White|3
+28|7|Vandebilt Catholic|0|2|Lutcher|3
+29|1|Teurlings Catholic|3|4|Ursuline Academy|0
+30|11|E.D. White|1|2|Lutcher|3
+31|1|Teurlings Catholic|3|2|Lutcher|1
+#Division IV
+1|1|Pope John Paul II||32|Bye|
+2|16|Evangel Christian|1|17|St. Thomas Aquinas|3
+3|9|Isidore Newman|3|24|Cohen College Prep|0
+4|8|Northlake Christian||25|Bye|
+5|5|John Curtis Christian||28|Bye|
+6|12|St. Charles|3|21|Northeast|0
+7|13|Dunham|3|20|St. James|0
+8|4|Acad. of Sacred Heart - N.O.||29|Bye|
+9|3|Notre Dame||30|Bye|
+10|14|Haynes Academy|3|19|Catholic - N.I.|1
+11|11|University Lab|3|22|Loyola Prep|0
+12|6|Riverside Academy||27|Bye|
+13|7|Episcopal||26|Bye|
+14|10|De La Salle|3|23|St. Mary's Academy|0
+15|15|Thomas Jefferson|3|18|Madison Prep|0
+16|2|Archbishop Hannan||31|Bye|
+17|1|Pope John Paul II|3|17|St. Thomas Aquinas|0
+18|9|Isidore Newman|3|8|Northlake Christian|0
+19|5|John Curtis Christian|3|12|St. Charles|1
+20|13|Dunham|0|4|Acad. of Sacred Heart - N.O.|3
+21|3|Notre Dame|3|14|Haynes Academy|0
+22|11|University Lab|0|6|Riverside Academy|3
+23|7|Episcopal|3|10|De La Salle|2
+24|15|Thomas Jefferson|0|2|Archbishop Hannan|3
+25|1|Pope John Paul II|3|9|Isidore Newman|0
+26|5|John Curtis Christian|1|4|Acad. of Sacred Heart - N.O.|3
+27|3|Notre Dame|3|6|Riverside Academy|0
+28|7|Episcopal|0|2|Archbishop Hannan|3
+29|1|Pope John Paul II|3|4|Acad. of Sacred Heart - N.O.|0
+30|3|Notre Dame|2|2|Archbishop Hannan|3
+31|1|Pope John Paul II|3|2|Archbishop Hannan|0
+#Division V
+1|1|Louise McGehee||32|Bye|
+2|16|Westminster Christian|3|17|Highland Baptist|1
+3|9|Catholic - P.C.|3|24|Ecole Classique|0
+4|8|Northside Christian||25|Bye|
+5|5|Houma Christian||28|Bye|
+6|12|Lafayette Christian|3|21|White Castle|0
+7|13|St. John|3|20|Delcambre|1
+8|4|Ascension Catholic||29|Bye|
+9|3|Ascension Episcopal||30|Bye|
+10|14|Central Catholic|3|19|Ascension Christian|1
+11|11|Southern Lab|3|22|Runnels|1
+12|6|First Baptist Christian||27|Bye|
+13|7|Episcopal of Acadiana||26|Bye|
+14|10|Acad. of Sacred Heart - G.C.|3|23|East Iberville|0
+15|15|St. Martin's Episcopal|3|18|Fisher|0
+16|2|Metairie Park Country Day||31|Bye|
+17|1|Louise McGehee|3|16|Westminster Christian|0
+18|9|Catholic - P.C.|3|8|Northside Christian|1
+19|5|Houma Christian|3|12|Lafayette Christian|2
+20|13|St. John|0|4|Ascension Catholic|3
+21|3|Ascension Episcopal|3|14|Central Catholic|0
+22|11|Southern Lab|0|6|First Baptist Christian|3
+23|7|Episcopal of Acadiana|3|10|Acad. of Sacred Heart - G.C.|1
+24|15|St. Martin's Episcopal|0|2|Metairie Park Country Day|3
+25|1|Louise McGehee|3|9|Catholic - P.C.|0
+26|5|Houma Christian|0|4|Ascension Catholic|3
+27|3|Ascension Episcopal|3|6|First Baptist Christian|0
+28|2|Metairie Park Country Day|3|7|Episcopal of Acadiana|0
+29|1|Louise McGehee|3|4|Ascension Catholic|0
+30|3|Ascension Episcopal|3|2|Metairie Park Country Day|2
+31|1|Louise McGehee|3|3|Ascension Episcopal|0

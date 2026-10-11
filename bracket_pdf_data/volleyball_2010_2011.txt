@@ -1,0 +1,325 @@
+# Volleyball 2010-11 and 2011-12 LHSAA playoff brackets, parsed from the LHSAA bracket PDFs
+# (lhsaa.org/siteuploads/editorimg/file/Volleyball/{2010,2011}_LHSAA_Volleyball_Playoff_Bracket.pdf).
+# N line = school names (index 0..). Slot lines: g a a_sets b b_sets home(1=a,2=b). B = Bye.
+# Slots 1-16 bi-district, 17-24 regional, 25-28 quarterfinals, 29-30 semifinals, 31 final.
+N Mt. Carmel|Terrebonne|Comeaux|Destrehan|John Ehret|Lafayette|St. Joseph's Academy|Mandeville|Sulphur|Barbe|East Ascension|St. Amant|Fontainebleau|St. Scholastica|Thibodaux|Slidell|Grace King|Dutchtown|H.L. Bourgeois|Archbishop Chapelle|Walker|Covington|Bonnabel|Dominican|Assumption|Morgan City|Pearl River|Sam Houston|Northside|Breaux Bridge|Vandebilt Catholic|Westgate|South Terrebonne|Chalmette|Beau Chene|St. Martinville|Cabrini|O.P. Walker|Belaire|Woodlawn - B.R.|Scotlandville|Broadmoor|Central - B.R.|Live Oak|East Jefferson|Belle Chasse|Leesville|St. Thomas More|Notre Dame|Livonia|Xavier Prep|West Feliciana|Eleanor McMain|Teurlings Catholic|Parkview Baptist|Redemptorist|Crowley|DeQuincy|Westlake|St. Louis Catholic|Ursuline Academy|Iowa|Cecilia|Rayne|Loranger|Ben Franklin|St. Michael the Archangel|Lutcher|Sarah T. Reed|Brusly|Lakeshore|E.D. White|Catholic - N.I.|John Curtis Christian|Westminster Christian|Riverside Academy|Mansfield|Episcopal|St. Thomas Aquinas|Thomas Jefferson|Port Allen|Loyola Prep|Acad. of Sacred Heart - G.C.|University Lab|De La Salle|Isidore Newman|Haynes Academy|Lusher Charter|St. Charles|Acad. of Sacred Heart - N.O.|Dunham|Northlake Christian|Berwick|Iota|Runnels|Louise McGehee|Metairie Park Country Day|South Plaquemines|False River|Houma Christian|La. School for the Deaf|St. Martin's Episcopal|Ascension Episcopal|Ridgewood|Patrick Taylor - Science/Tech.|Northside Christian|Hamilton Christian|Ascension Catholic|Central Catholic|Ecole Classique|Ascension Christian|First Baptist Christian|Hosanna Christian|Archbishop Hannan|Catholic - P.C.|White Castle|West St. John|St. John|Delcambre|Episcopal of Acadiana|Acadiana|Zachary|Denham Springs|Northshore|New Iberia|Edna Karr|A.J. Ellender|Academy of Our Lady|Salmen|McKinley|Istrouma|Evangel Christian|St. James|West St. Mary|Pope John Paul II|Fisher|Cohen College Prep
+#2010-1
+1 0  B  0
+2 1 0 2 3 1
+3 3 3 4 0 1
+4 5  B  0
+5 6  B  0
+6 7 3 8 0 1
+7 9 3 10 0 1
+8 11  B  0
+9 12  B  0
+10 13 3 14 0 1
+11 15 3 16 0 1
+12 17  B  0
+13 18  B  0
+14 19 3 20 0 1
+15 21 3 22 1 1
+16 23  B  0
+17 0 3 2 0 1
+18 3 3 5 2 2
+19 6 2 7 3 1
+20 9 0 11 3 2
+21 12 3 13 0 1
+22 15 1 17 3 2
+23 18 2 19 3 1
+24 21 0 23 3 2
+25 0 3 3 0 1
+26 7 3 11 1 2
+27 12 3 17 0 1
+28 19 0 23 3 2
+29 0 3 7 2 1
+30 12 0 23 3 2
+31 0 3 23 1 1
+#2010-2
+1 24  B  0
+2 25 3 26 0 1
+3 27 3 28 0 1
+4 29  B  0
+5 30  B  0
+6 31 3 32 0 1
+7 33 3 34 0 1
+8 35  B  0
+9 36  B  0
+10 37 3 38 1 1
+11 39 3 40 1 0
+12 41  B  0
+13 42  B  0
+14 43 3 44 0 1
+15 45 3 46 1 1
+16 47  B  0
+17 24 3 25 0 1
+18 27 3 29 2 2
+19 30 3 31 1 1
+20 33 3 35 0 2
+21 36 3 37 0 1
+22 39 0 41 3 2
+23 42 3 43 1 1
+24 45 1 47 3 2
+25 24 3 27 0 1
+26 30 3 33 2 1
+27 36 3 41 0 1
+28 42 0 47 3 2
+29 24 3 30 0 0
+30 36 2 47 3 2
+31 24 1 47 3 1
+#2010-3
+1 48  B  0
+2 49 3 50 0 1
+3 51 3 52 0 1
+4 53  B  0
+5 54  B  0
+6 55 3 56 1 1
+7 57 3 58 1 1
+8 59  B  1
+9 60  B  0
+10 61 2 62 3 1
+11 63 3 64 0 1
+12 65  B  1
+13 66  B  1
+14 67 3 68 0 1
+15 69 0 70 3 1
+16 71  B  0
+17 48 3 49 0 1
+18 51 2 53 3 2
+19 54 3 55 0 1
+20 57 0 59 3 2
+21 60 3 62 0 1
+22 63 0 65 3 2
+23 66 3 67 1 1
+24 70 0 71 3 2
+25 48 3 53 0 1
+26 54 2 59 3 2
+27 60 3 65 0 1
+28 66 0 71 3 2
+29 48 3 59 0 1
+30 60 3 71 1 2
+31 48 3 60 1 1
+#2010-4
+1 72  B  0
+2 73 3 74 2 1
+3 75 3 76 0 1
+4 77  B  0
+5 78  B  0
+6 79 3 80 0 0
+7 81 3 82 0 1
+8 83  B  0
+9 84  B  0
+10 85 3 86 0 1
+11 87 3 88 0 1
+12 89  B  0
+13 90  B  0
+14 91 3 92 0 1
+15 93 3 94 0 1
+16 95  B  0
+17 72 3 73 0 1
+18 75 3 77 0 2
+19 78 3 79 0 1
+20 81 0 83 3 2
+21 84 3 85 1 1
+22 87 0 89 3 0
+23 90 3 91 1 1
+24 93 0 95 3 2
+25 72 3 75 1 1
+26 78 3 83 0 2
+27 84 0 89 3 1
+28 90 0 95 3 2
+29 72 3 78 0 1
+30 95  89  0
+31 72 3 89 2 1
+#2010-5
+1 96  B  0
+2 97 0 98 3 1
+3 99 3 100 0 1
+4 101  B  0
+5 102  B  0
+6 103 3 104 2 1
+7 105 3 106 0 1
+8 107  B  0
+9 108  B  1
+10 109 3 110 0 1
+11 111 3 112 0 1
+12 113  B  0
+13 114  B  0
+14 115 3 116 0 1
+15 117 3 118 2 1
+16 119  B  0
+17 96 3 98 0 1
+18 99 2 101 3 0
+19 102 3 103 0 1
+20 105 0 107 3 2
+21 108 3 109 0 1
+22 111 0 113 3 2
+23 114 3 115 1 1
+24 117 0 119 3 2
+25 96 3 101 0 1
+26 102 1 107 3 2
+27 108 3 113 0 1
+28 114 0 119 3 2
+29 96 3 107 0 1
+30 108 0 119 3 2
+31 96 3 119 1 1
+#2011-1
+1 12  B  0
+2 17 3 39 1 1
+3 5 3 120 0 1
+4 19  B  0
+5 23  B  0
+6 21 3 2 1 1
+7 9 3 121 1 1
+8 11  B  0
+9 3  B  0
+10 10 3 122 0 1
+11 123 3 124 0 1
+12 6  B  0
+13 1  B  0
+14 7 3 20 0 1
+15 15 1 18 3 1
+16 0  B  0
+17 12 3 17 0 1
+18 5 0 19 3 2
+19 23 3 21 0 1
+20 9 1 11 3 2
+21 3 3 10 0 1
+22 123 1 6 3 2
+23 1 3 7 0 1
+24 18 0 0 3 2
+25 12 3 19 0 1
+26 23 3 11 2 2
+27 3 0 6 3 1
+28 1 0 0 3 2
+29 12 3 23 1 1
+30 6 0 0 3 2
+31 12 3 0 1 1
+#2011-2
+1 47  B  0
+2 25 3 125 1 1
+3 41 3 32 0 1
+4 46  B  0
+5 24  B  0
+6 67 3 126 1 1
+7 42 2 38 3 1
+8 37  B  0
+9 35  B  0
+10 127 0 128 3 1
+11 66  44  1
+12 13  B  0
+13 29  B  0
+14 45 3 16 0 1
+15 129 0 27 3 1
+16 36  B  0
+17 47 3 25 0 1
+18 41 3 46 1 2
+19 24 3 67 0 1
+20 38 0 37 3 2
+21 35 3 128 0 1
+22 66 0 13 3 2
+23 29 1 45 3 1
+24 27 0 36 3 2
+25 47 3 41 0 1
+26 24 3 37 1 2
+27 35 3 13 1 1
+28 45 0 36 3 2
+29 47 3 24 0 1
+30 35 0 36 3 2
+31 47 1 36 3 1
+#2011-3
+1 60  B  0
+2 62 3 130 0 1
+3 70 3 131 0 1
+4 63  B  0
+5 71  B  0
+6 58 3 81 0 1
+7 87 3 57 1 1
+8 54  B  0
+9 59  B  0
+10 86 2 92 3 1
+11 69 3 64 1 1
+12 53  B  0
+13 65  B  0
+14 51 3 49 1 1
+15 50 1 61 3 1
+16 30  B  0
+17 60 3 62 0 1
+18 70 3 63 1 2
+19 71 3 58 0 1
+20 87 0 54 3 2
+21 59 3 92 0 1
+22 69 0 53 3 2
+23 65 3 51 0 1
+24 61 0 30 3 2
+25 60 3 70 0 1
+26 71 0 54 3 2
+27 59 3 53 1 1
+28 65 0 30 3 2
+29 60 3 54 0 1
+30 59 3 30 0 2
+31 60 3 59 0 1
+#2011-4
+1 48  B  0
+2 88 1 90 3 1
+3 91 3 132 0 1
+4 77  B  0
+5 72  B  0
+6 89 3 80 0 1
+7 75 3 133 0 1
+8 85  B  0
+9 83  B  0
+10 79 3 134 0 1
+11 93 3 135 0 1
+12 78  B  0
+13 95  B  0
+14 73 3 136 0 1
+15 55 0 94 3 1
+16 84  B  0
+17 48 3 90 0 1
+18 91 3 77 1 2
+19 72 3 89 1 1
+20 75 0 85 3 2
+21 83 3 79 0 1
+22 93 2 78 3 2
+23 95 1 73 3 1
+24 94 0 84 3 2
+25 48 3 91 0 1
+26 72 1 85 3 2
+27 83 3 78 0 1
+28 73 0 84 3 2
+29 48 3 85 1 1
+30 83 1 84 3 2
+31 48 3 84 0 1
+#2011-5
+1 96  B  0
+2 107 3 110 0 1
+3 101 3 97 0 1
+4 102  B  1
+5 99  B  0
+6 112 1 98 3 1
+7 115 2 105 3 1
+8 74  B  0
+9 108  B  0
+10 111 3 109 0 0
+11 114 3 116 0 1
+12 113  B  0
+13 117  B  0
+14 104 3 106 0 1
+15 118 2 82 3 1
+16 119  B  0
+17 96 3 107 0 1
+18 101 2 102 3 2
+19 99 3 98 1 1
+20 105 0 74 3 2
+21 108 3 111 1 1
+22 114 0 113 3 2
+23 117 3 104 0 1
+24 82 0 119 3 2
+25 96 3 102 0 1
+26 99 0 74 3 2
+27 108 3 113 0 1
+28 117 0 119 3 2
+29 96 3 74 0 1
+30 108 0 119 3 2
+31 96 3 119 0 1

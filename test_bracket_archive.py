@@ -74,6 +74,7 @@ class BracketTests(unittest.TestCase):
         self.assertIn("Select Division V", labels(2024))
         self.assertEqual(labels(2020, "division"), ["Division I", "Division II", "Division III", "Division IV", "Division V"])
         self.assertEqual(ba.parse_seasons("2011-2027", 2027), list(range(2012, 2027)))
+        self.assertEqual(ba.parse_seasons("2010-2014", 2026, "volleyball"), list(range(2010, 2015)))
 
     def test_advancement_beats_a_backwards_score(self):
         html = page([
@@ -130,6 +131,33 @@ class BracketTests(unittest.TestCase):
                     os.environ.pop("WINTER_ARCHIVE_DIR", None)
                 else:
                     os.environ["WINTER_ARCHIVE_DIR"] = old
+
+
+    def test_volleyball_pdf_seasons(self):
+        champs = {
+            2010: ["Mt. Carmel", "St. Thomas More", "Notre Dame", "Catholic - N.I.", "Metairie Park Country Day"],
+            2011: ["Fontainebleau", "Cabrini", "Ursuline Academy", "Notre Dame", "Metairie Park Country Day"],
+            2015: ["Mt. Carmel", "St. Thomas More", "Teurlings Catholic", "Pope John Paul II", "Louise McGehee"],
+        }
+        for season, expect in champs.items():
+            got = {}
+            for label, slots in ba.pdf_slots("volleyball", season).items():
+                games = ba.bracket_games(slots)
+                self.assertEqual(len(games), 23, (season, label))
+                phases = [g["phase"] for g in games]
+                for phase, n in (("Bi-District", 8), ("Regional", 8), ("Quarterfinals", 4),
+                                 ("Semifinals", 2), ("State Championship", 1)):
+                    self.assertEqual(phases.count(phase), n, (season, label, phase))
+                lost = set()
+                for g in sorted(games, key=lambda x: x["round"]):
+                    self.assertTrue(g["winner"], (season, label, g))
+                    self.assertNotIn(g["a"], lost, (season, label, g))
+                    self.assertNotIn(g["b"], lost, (season, label, g))
+                    lost.add(g["b"] if g["winner"] == g["a"] else g["a"])
+                    self.assertFalse(g.get("score_flipped"), (season, label, g))
+                final = [g for g in games if g["phase"] == "State Championship"][0]
+                got[label] = final["winner"]
+            self.assertEqual([got[f"Division {r}"] for r in ba.ROMAN], expect, season)
 
 
 if __name__ == "__main__":
