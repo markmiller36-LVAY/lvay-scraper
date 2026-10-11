@@ -210,6 +210,8 @@ def bracket_games(slots):
                 s = {**s, "a_score": sb, "b_score": sa, "score_flipped": True}
         elif sa is not None and sb is not None and sa != sb:
             winner = a if sa > sb else b
+        elif s.get("won") in ("a", "b"):
+            winner = a if s["won"] == "a" else b
         elif appear.get(a, 0) != appear.get(b, 0):
             winner = a if appear.get(a, 0) > appear.get(b, 0) else b
         else:
@@ -374,7 +376,7 @@ def _pdf_file_slots(fname, season):
             target[label].append(_slot(g, a, xa, b, xb, ha, hb))
         return out, patches
     # compact: "N name|name|..." then "#YYYY-D" (volleyball) or "#YYYY|Label" blocks
-    # of "g a sets b sets home" ("-" = blank, B = bye, home 1 = a, 2 = b)
+    # of "g a sets b sets flags" ("-" = blank, B = bye; flags 1/2 = a/b home, 4/8 = a/b won)
     names = []
     for line in lines:
         if line.startswith("N "):
@@ -397,7 +399,11 @@ def _pdf_file_slots(fname, season):
             continue
         g, a, xa, b, xb, home = (line.split(" ") + [""] * 6)[:6]
         name = lambda i: "Bye" if i in ("B", "-", "") else names[int(i)]
-        out[label].append(_slot(g, name(a), xa, name(b), xb, int(home or 0) & 1, int(home or 0) & 2))
+        flags = int(home or 0)  # 1 = a home, 2 = b home, 4 = a won, 8 = b won (no score printed)
+        slot = _slot(g, name(a), xa, name(b), xb, flags & 1, flags & 2)
+        if flags & 12:
+            slot["won"] = "a" if flags & 4 else "b"
+        out[label].append(slot)
     return out, patches
 
 
@@ -489,6 +495,14 @@ def build_pdf_season(sport, season):
 
 # PDF spellings that the automatic matcher can't resolve (or would resolve wrongly).
 NAME_FIX = {
+    "Sacred Heart-NO": "Acad. of Sacred Heart - N.O.", "Sacred Heart-GC": "Acad. of Sacred Heart - G.C.",
+    "Acad. Sacred Hrt. G.C.": "Acad. of Sacred Heart - G.C.", "Episcopal Acad.": "Episcopal of Acadiana",
+    "Episcopal Acadiana": "Episcopal of Acadiana", "Episcopal, Acadiana": "Episcopal of Acadiana",
+    "Episcopal, Acad": "Episcopal of Acadiana", "Episcopal of Acad.": "Episcopal of Acadiana",
+    "Northlake": "Northlake Christian", "Catholic –NI": "Catholic - N.I.", "Westminister": "Westminster Christian",
+    "School for Deaf": "La. School for the Deaf", "La. School for Deaf": "La. School for the Deaf",
+    "LA School for the Deaf": "La. School for the Deaf", "Met. Park Country Day": "Metairie Park Country Day",
+    "Mt. Pk. Country Day": "Metairie Park Country Day", "Mt. Pk. Ctry. Day": "Metairie Park Country Day",
     "Sacred Heart N.O.": "Acad. of Sacred Heart - N.O.", "Acad. Sac. Hrt., NO": "Acad. of Sacred Heart - N.O.",
     "Sacred Hrt. NO": "Acad. of Sacred Heart - N.O.", "Acad. Sac. Hrt., GC": "Acad. of Sacred Heart - G.C.",
     "Country Day.": "Country Day", "Newman.": "Isidore Newman", "Domincan": "Dominican",
@@ -539,7 +553,7 @@ NAME_FIX = {
 
 def _pdf_clean(name):
     name = re.sub(r"(\w)\u00ed(s)\b", r"\1'\2", name)  # "St. Mary\u00eds" (mis-encoded apostrophe)
-    name = re.sub(r"(?i)\s+inn\.?$|\s*\((forfeit|for)\)$|^[.\s]+", "", name)
+    name = re.sub(r"(?i)\s+inn\.?$|\s*\((forfeit|for)\)$|^[.\s]+|\s*\($", "", name)
     name = re.sub(r"(\w) s\b", r"\1's", name)  # "St. Joseph s" -> "St. Joseph's"
     name = re.sub(r"\s+(SO|PK)$", "", name)
     name = re.sub(r"\s*\((\d+\s*in\.?|\d+in)\)", "", name)
