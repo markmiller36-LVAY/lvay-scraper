@@ -19,6 +19,7 @@ from district_exceptions import is_non_district_game
 from jv_only_schools import JV_ONLY_LABEL, is_jv_only_game
 import winter_archive
 import bracket_archive
+import power_board_predictions
 
 app = Flask(__name__)
 
@@ -872,6 +873,22 @@ def scrape_volleyball():
 
 # ── GOOGLE SHEETS BUILD ──────────────────────────────────────
 
+@app.route("/api/build/football-predictions")
+def build_football_predictions():
+    """Freeze Power Board predictions now (token required: /api/build/)."""
+    from scraper import resolve_season_year
+    season = request.args.get("season") or resolve_season_year("football")
+    days = request.args.get("days")
+    conn = get_db()
+    try:
+        summary = power_board_predictions.freeze_upcoming_predictions(
+            conn, season, days_ahead=int(days) if days else None
+        )
+    finally:
+        conn.close()
+    return jsonify(summary)
+
+
 @app.route("/api/build/football-sheets")
 def build_football_sheets():
     def run():
@@ -1585,6 +1602,9 @@ def schedules_football():
             name.casefold(): ranking
             for name, ranking in ranking_rows.items()
         }
+        # Frozen PREDICTED WIN picks for the Power Board (formula stays on
+        # the server; only the result and % are published).
+        frozen_predictions = power_board_predictions.predictions_lookup(conn, season)
         # Before the first completed football game there may be no ranking rows
         # yet.  The official season roster is still sufficient to identify an
         # in-state opponent and truthfully report its current 0-0 record.
@@ -1694,6 +1714,13 @@ def schedules_football():
                     "opponent_internal": opponent_ranking is not None,
                     "opponent_out_of_state": out_of_state,
                 })
+                frozen = frozen_predictions.get((
+                    str(school["school"]).casefold(),
+                    opponent_name.casefold(),
+                    week_number,
+                ))
+                if frozen:
+                    game["pred_wl"], game["pred_prob"] = frozen
                 if is_jv_only_game(
                     "football", season, school["school"], opponent_name
                 ):

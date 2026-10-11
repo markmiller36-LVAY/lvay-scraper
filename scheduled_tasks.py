@@ -78,6 +78,17 @@ def scheduled_run():
             run_power_rankings(sport="football", season=season)
             print("[SCHEDULER] Football ratings complete")
             try:
+                import sqlite3
+                from power_board_predictions import freeze_upcoming_predictions
+                _pconn = sqlite3.connect(os.environ.get("DB_PATH", "/data/lvay_v2.db"))
+                try:
+                    print(f"[SCHEDULER] Power Board predictions: {freeze_upcoming_predictions(_pconn, season)}")
+                finally:
+                    _pconn.close()
+            except Exception as prediction_error:
+                # Predictions are a bonus; never block ratings or exports.
+                print(f"[SCHEDULER] Power Board predictions skipped: {prediction_error}")
+            try:
                 from football_playoff_eligibility import update_playoff_eligibility
                 print(f"[SCHEDULER] Playoff eligibility: {update_playoff_eligibility(season)}")
             except Exception as eligibility_error:
