@@ -1,0 +1,227 @@
+# Boys basketball 2015-16 LHSAA playoff brackets, read from the scanned LHSAA bracket PDF
+# (lhsaa.org/siteuploads/editorimg/file/Boys' Basketball/2016_LHSAA_Boys_BB_Brackets.pdf).
+# g|seed|team A|score|seed|team B|score   (Bye = no opponent, seed 99). Higher seed is home.
+#Class 5A
+1|1|Natchitoches Central|75|32|St. Amant|40
+2|16|Walker|70|17|Chalmette|85
+3|9|McKinley|72|24|Zachary|64
+4|8|H.L. Bourgeois|61|25|Barbe|60
+5|5|Ruston|66|28|Parkway|38
+6|12|Southwood|54|21|Central Lafourche|69
+7|13|East Ascension|60|20|Denham Springs|48
+8|4|St. Paul's|83|29|Acadiana|72
+9|3|Landry-Walker|65|30|Thibodaux|42
+10|14|East St. John|48|19|Bonnabel|64
+11|11|Ouachita Parish|60|22|Slidell|50
+12|6|West Jefferson|52|27|Brother Martin|39
+13|7|Comeaux|57|26|Helen Cox|45
+14|10|St. Augustine|68|23|West Monroe|49
+15|15|New Iberia|46|18|Catholic - B.R.|43
+16|2|Scotlandville|76|31|John Curtis Christian|38
+17|1|Natchitoches Central|53|17|Chalmette|45
+18|9|McKinley|55|8|H.L. Bourgeois|64
+19|5|Ruston|39|21|Central Lafourche|49
+20|13|East Ascension|71|4|St. Paul's|68
+21|3|Landry-Walker|45|19|Bonnabel|50
+22|11|Ouachita Parish|48|6|West Jefferson|45
+23|7|Comeaux|41|10|St. Augustine|43
+24|15|New Iberia|65|2|Scotlandville|82
+25|1|Natchitoches Central|85|8|H.L. Bourgeois|58
+26|21|Central Lafourche|64|13|East Ascension|71
+27|19|Bonnabel|53|11|Ouachita Parish|55
+28|10|St. Augustine|58|2|Scotlandville|71
+29|1|Natchitoches Central|66|13|East Ascension|49
+30|11|Ouachita Parish|45|2|Scotlandville|62
+31|1|Natchitoches Central|54|2|Scotlandville|52
+#Class 4A
+1|1|St. Thomas More|58|32|Rayne|38
+2|16|Carencro|69|17|Leesville|66
+3|9|Plaquemine|79|24|Westgate|56
+4|8|Northside|48|25|DeRidder|29
+5|5|A.J. Ellender|66|28|Abbeville|52
+6|12|Woodlawn - Shrev.|81|21|LaGrange|38
+7|13|Benjamin Franklin|45|20|Salmen|44
+8|4|Bossier|64|29|Neville|45
+9|3|Edna Karr|61|30|South Lafourche|45
+10|14|Franklinton|76|19|Bastrop|60
+11|11|Fair Park|62|22|Lake Area New Tech|55
+12|6|Breaux Bridge|54|27|St. Michael the Archangel|35
+13|7|Tioga|53|26|Opelousas|56
+14|10|McDonogh #35|86|23|Crowley|38
+15|15|St. Martinville|62|18|Huntington|47
+16|2|Washington-Marion|100|31|Minden|55
+17|1|St. Thomas More|62|16|Carencro|42
+18|9|Plaquemine|60|8|Northside|57
+19|5|A.J. Ellender|76|12|Woodlawn - Shrev.|59
+20|13|Benjamin Franklin|29|4|Bossier|58
+21|3|Edna Karr|71|14|Franklinton|56
+22|11|Fair Park|32|6|Breaux Bridge|29
+23|26|Opelousas|58|10|McDonogh #35|80
+24|15|St. Martinville|49|2|Washington-Marion|69
+25|1|St. Thomas More|53|9|Plaquemine|52
+26|5|A.J. Ellender|61|4|Bossier|63
+27|3|Edna Karr|58|11|Fair Park|49
+28|10|McDonogh #35|50|2|Washington-Marion|59
+29|1|St. Thomas More|48|4|Bossier|49
+30|3|Edna Karr|56|2|Washington-Marion|58
+31|4|Bossier|42|2|Washington-Marion|39
+#Class 3A
+1|1|Peabody|120|32|KIPP Renaissance|46
+2|16|Madison|67|17|Union Parish|65
+3|9|Port Allen|63|24|Richwood|60
+4|8|Eunice|62|25|Iowa|66
+5|5|Patterson|59|28|Lutcher|56
+6|12|Green Oaks|69|21|Bogalusa|38
+7|13|Jennings|55|20|Glen Oaks|63
+8|4|Wossman|80|29|Loyola Prep|66
+9|3|St. Louis Catholic|74|30|North Vermilion|54
+10|14|Parkview Baptist|82|19|South Beauregard|64
+11|11|Albany|53|22|Lusher Charter|40
+12|6|Carroll|60|27|Donaldsonville|31
+13|7|De La Salle|86|26|Northwest|59
+14|10|E.D. White|61|23|Vidalia|54
+15|15|Brusly|63|18|Port Barre|40
+16|2|University Lab|95|31|Ville Platte|63
+17|1|Peabody|62|16|Madison|25
+18|9|Port Allen|78|25|Iowa|68
+19|5|Patterson|69|12|Green Oaks|62
+20|20|Glen Oaks|52|4|Wossman|58
+21|3|St. Louis Catholic|83|14|Parkview Baptist|54
+22|11|Albany|35|6|Carroll|66
+23|7|De La Salle|54|10|E.D. White|47
+24|15|Brusly|41|2|University Lab|56
+25|1|Peabody|70|9|Port Allen|59
+26|5|Patterson|58|4|Wossman|65
+27|3|St. Louis Catholic|58|6|Carroll|56
+28|7|De La Salle|45|2|University Lab|67
+29|1|Peabody|57|4|Wossman|60
+30|3|St. Louis Catholic|56|2|University Lab|71
+31|4|Wossman|65|2|University Lab|98
+#Class 2A
+1|1|Madison Prep|99|32|Loreauville|46
+2|16|Isidore Newman|59|17|David Thibodaux|38
+3|9|Rapides|83|24|Rosepine|57
+4|8|Many|57|25|Jeanerette|56
+5|5|Episcopal|63|28|Red River|51
+6|12|Ferriday|63|21|Runnels|49
+7|13|Welsh|46|20|Doyle|49
+8|4|North Caddo|100|29|Pickering|63
+9|3|Metairie Park Country Day|82|30|Vinton|54
+10|14|St. Thomas Aquinas|65|19|Sophie B. Wright|71
+11|11|Archbishop Hannan|59|22|Thomas Jefferson|43
+12|6|Rayville|79|27|West St. Mary|48
+13|7|Dunham|66|26|Mamou|48
+14|10|Christian Life|93|23|Pope John Paul II|54
+15|15|Lakeview|67|18|East Feliciana|65
+16|2|Riverside Academy|95|31|Catholic - N.I.|43
+17|1|Madison Prep|60|16|Isidore Newman|17
+18|9|Rapides|50|8|Many|60
+19|5|Episcopal|61|12|Ferriday|51
+20|20|Doyle|42|4|North Caddo|67
+21|3|Metairie Park Country Day|87|19|Sophie B. Wright|65
+22|11|Archbishop Hannan|54|6|Rayville|92
+23|7|Dunham|62|10|Christian Life|59
+24|15|Lakeview|52|2|Riverside Academy|62
+25|1|Madison Prep|80|8|Many|26
+26|5|Episcopal|47|4|North Caddo|69
+27|3|Metairie Park Country Day|69|6|Rayville|63
+28|7|Dunham|48|2|Riverside Academy|81
+29|1|Madison Prep|66|4|North Caddo|56
+30|3|Metairie Park Country Day|52|2|Riverside Academy|71
+31|1|Madison Prep|41|2|Riverside Academy|33
+#Class 1A
+1|1|Lafayette Christian|113|32|Vermilion Catholic|44
+2|16|Haynesville|56|17|White Castle|53
+3|9|Sicily Island|57|24|Centerville|51
+4|8|Hamilton Christian|41|25|Grand Lake|27
+5|5|Varnado|68|28|Ascension Episcopal|51
+6|12|Covenant Christian|58|21|North Central|64
+7|13|Logansport|46|20|St. Martin's Episcopal|43
+8|4|Arcadia|70|29|St. Frederick|34
+9|3|Southern Lab|93|30|Hanson Memorial|47
+10|14|Crescent City|61|19|Central Catholic|46
+11|11|Block|62|22|Delhi Charter|59
+12|6|Grambling|65|27|East Beauregard|51
+13|7|Delhi|62|26|Plain Dealing|52
+14|10|Tensas|64|23|Montgomery|59
+15|15|Houma Christian|69|18|Elton|68
+16|2|Northwood - Lena|73|31|Oak Grove|47
+17|1|Lafayette Christian|89|16|Haynesville|53
+18|9|Sicily Island|44|8|Hamilton Christian|62
+19|5|Varnado|63|21|North Central|43
+20|13|Logansport|48|4|Arcadia|63
+21|3|Southern Lab|68|14|Crescent City|50
+22|11|Block|55|6|Grambling|66
+23|7|Delhi|62|10|Tensas|66
+24|15|Houma Christian|56|2|Northwood - Lena|65
+25|1|Lafayette Christian|75|8|Hamilton Christian|54
+26|5|Varnado|62|4|Arcadia|65
+27|3|Southern Lab|76|6|Grambling|56
+28|10|Tensas|62|2|Northwood - Lena|57
+29|1|Lafayette Christian|47|4|Arcadia|54
+30|3|Southern Lab|63|10|Tensas|34
+31|4|Arcadia|55|3|Southern Lab|48
+#Class B
+1|1|Simsboro||99|Bye|
+2|16|Episcopal of Acadiana|59|17|Doyline|44
+3|9|Florien|78|24|Monterey|34
+4|8|Stanley|68|25|Negreet|40
+5|5|Midland|70|28|Mt. Hermon|35
+6|12|Glenmora|69|21|Castor|41
+7|13|Lacassine|69|20|Hornbeck|58
+8|4|Zwolle|69|29|Oak Hill|29
+9|3|Anacoco|87|30|Converse|37
+10|14|Bell City|46|19|King Charter|57
+11|11|Pitkin|70|22|Quitman|42
+12|6|Weston|100|27|Forest|46
+13|7|Grace Christian|84|26|Patrick Taylor - Science/Tech.|34
+14|10|Hathaway|70|23|Hicks|57
+15|15|Avoyelles Charter|58|18|Choudrant|50
+16|2|Fairview|77|31|Holden|39
+17|1|Simsboro|96|16|Episcopal of Acadiana|87
+18|9|Florien|66|8|Stanley|74
+19|5|Midland|54|12|Glenmora|50
+20|13|Lacassine|40|4|Zwolle|72
+21|3|Anacoco|67|19|King Charter|63
+22|11|Pitkin|65|6|Weston|83
+23|7|Grace Christian|62|10|Hathaway|51
+24|15|Avoyelles Charter|44|2|Fairview|67
+25|1|Simsboro|76|8|Stanley|65
+26|5|Midland|76|4|Zwolle|78
+27|3|Anacoco|62|6|Weston|57
+28|7|Grace Christian|75|2|Fairview|62
+29|1|Simsboro|38|4|Zwolle|61
+30|3|Anacoco|54|7|Grace Christian|50
+31|4|Zwolle|46|3|Anacoco|59
+#Class C
+1|1|Elizabeth||99|Bye|
+2|16|Ebarb|39|17|Plainview|47
+3|9|Gibsland-Coleman|94|24|Georgetown|33
+4|8|Family Community Christian|62|25|Hackberry|46
+5|5|New Living Word|124|28|Evans|32
+6|12|Calvin|65|21|Saline|64
+7|13|Claiborne Christian|47|20|Northside Christian|45
+8|4|Starks||99|Bye|
+9|3|Summerfield||99|Bye|
+10|14|Family Christian|58|19|Phoenix|41
+11|11|Grand Isle|72|22|Epps|33
+12|6|Jehovah-Jireh|73|27|Johnson Bayou|28
+13|7|Simpson|86|26|Maurepas|49
+14|10|Singer|89|23|Downsville|35
+15|15|Pleasant Hill|71|18|Reeves|56
+16|2|Atlanta||99|Bye|
+17|1|Elizabeth|91|17|Plainview|43
+18|9|Gibsland-Coleman|72|8|Family Community Christian|60
+19|5|New Living Word|97|12|Calvin|58
+20|13|Claiborne Christian|56|4|Starks|63
+21|3|Summerfield|70|14|Family Christian|41
+22|11|Grand Isle|27|6|Jehovah-Jireh|58
+23|7|Simpson|72|10|Singer|51
+24|15|Pleasant Hill|39|2|Atlanta|71
+25|1|Elizabeth|52|9|Gibsland-Coleman|47
+26|5|New Living Word|82|4|Starks|56
+27|3|Summerfield|69|6|Jehovah-Jireh|62
+28|7|Simpson|39|2|Atlanta|55
+29|1|Elizabeth|62|5|New Living Word|67
+30|3|Summerfield|58|2|Atlanta|50
+31|5|New Living Word|54|3|Summerfield|72

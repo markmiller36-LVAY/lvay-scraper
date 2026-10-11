@@ -1,0 +1,227 @@
+# Girls basketball 2015-16 LHSAA playoff brackets, read from the scanned LHSAA bracket PDF
+# (lhsaa.org/siteuploads/editorimg/file/Girls' Basketball/2016_LHSAA_Girls_BB_Brackets.pdf).
+# g|seed|team A|score|seed|team B|score   (Bye = no opponent, seed 99). Higher seed is home.
+#Class 5A
+1|1|Mandeville|55|32|East Ascension|38
+2|16|Helen Cox|38|17|Walker|33
+3|9|Covington|42|24|New Iberia|43
+4|8|Southwood|44|25|Ruston|27
+5|5|Denham Springs|48|28|Sulphur|40
+6|12|Alexandria|57|21|Pineville|62
+7|13|Scotlandville|51|20|McKinley|37
+8|4|Barbe|49|29|East St. John|30
+9|3|Natchitoches Central|84|30|Hammond|48
+10|14|Ponchatoula|59|19|Slidell|57
+11|11|Ouachita Parish|61|22|Thibodaux|45
+12|6|Destrehan|80|27|Chalmette|40
+13|7|West Monroe|48|26|Live Oak|44
+14|10|John Curtis Christian|37|23|Dominican|30
+15|15|Zachary|48|18|Landry-Walker|40
+16|2|Mt. Carmel|60|31|Evangel Christian|41
+17|1|Mandeville|45|16|Helen Cox|44
+18|24|New Iberia|32|8|Southwood|27
+19|5|Denham Springs|53|21|Pineville|39
+20|13|Scotlandville|49|4|Barbe|58
+21|3|Natchitoches Central|58|14|Ponchatoula|48
+22|11|Ouachita Parish|55|6|Destrehan|67
+23|7|West Monroe|41|10|John Curtis Christian|45
+24|15|Zachary|31|2|Mt. Carmel|50
+25|1|Mandeville|48|24|New Iberia|42
+26|5|Denham Springs|58|4|Barbe|53
+27|3|Natchitoches Central|77|6|Destrehan|67
+28|10|John Curtis Christian|35|2|Mt. Carmel|54
+29|1|Mandeville|35|5|Denham Springs|47
+30|3|Natchitoches Central|48|2|Mt. Carmel|68
+31|5|Denham Springs|48|2|Mt. Carmel|59
+#Class 4A
+1|1|St. Thomas More|77|32|Assumption|24
+2|16|Bossier|64|17|Salmen|48
+3|9|A.J. Ellender|64|24|Teurlings Catholic|33
+4|8|Ursuline Academy|67|25|Plaquemine|56
+5|5|Bastrop|83|28|Benjamin Franklin|25
+6|12|Northside|82|21|Belaire|66
+7|13|Carencro|70|20|Minden|53
+8|4|Edna Karr|78|29|St. Scholastica|24
+9|3|Loranger|79|30|Woodlawn - Shrev.|47
+10|14|Fair Park|62|19|Cecilia|41
+11|11|Benton|40|22|Beau Chene|32
+12|6|Rayne|67|27|St. Martinville|30
+13|7|Warren Easton|72|26|Neville|45
+14|10|Cabrini|42|23|DeRidder|44
+15|15|South Lafourche|73|18|West Ouachita|45
+16|2|St. Michael the Archangel|60|31|Grant|33
+17|1|St. Thomas More|70|16|Bossier|50
+18|9|A.J. Ellender|48|8|Ursuline Academy|66
+19|5|Bastrop|58|12|Northside|43
+20|13|Carencro|54|4|Edna Karr|56
+21|3|Loranger|57|14|Fair Park|58
+22|11|Benton|41|6|Rayne|64
+23|7|Warren Easton|56|23|DeRidder|41
+24|15|South Lafourche|38|2|St. Michael the Archangel|47
+25|1|St. Thomas More|55|8|Ursuline Academy|59
+26|5|Bastrop|52|4|Edna Karr|59
+27|14|Fair Park|50|6|Rayne|57
+28|7|Warren Easton|48|2|St. Michael the Archangel|53
+29|8|Ursuline Academy|58|4|Edna Karr|50
+30|6|Rayne|48|2|St. Michael the Archangel|44
+31|8|Ursuline Academy|61|6|Rayne|48
+#Class 3A
+1|1|Iota|80|32|Marksville|44
+2|16|Iowa|49|17|Union Parish|44
+3|9|Loyola Prep|59|24|Madison|61
+4|8|E.D. White|48|25|Mansfield|45
+5|5|St. Louis Catholic|27|28|Jena|38
+6|12|South Beauregard|57|21|St. James|45
+7|13|Winnfield|62|20|Donaldsonville|63
+8|4|Parkview Baptist|79|29|Caldwell Parish|48
+9|3|University Lab|84|30|Acad. of Sacred Heart - N.O.|24
+10|14|Ville Platte|64|19|Carroll|45
+11|11|Richwood|66|22|Amite|42
+12|6|Albany|77|27|Avoyelles|55
+13|7|Westlake|52|26|Bogalusa|40
+14|10|Wossman|52|23|Brusly|42
+15|15|Erath|45|18|Washington|49
+16|2|Jewel Sumner|65|31|Jennings|34
+17|1|Iota|65|16|Iowa|42
+18|24|Madison|55|8|E.D. White|52
+19|28|Jena|33|12|South Beauregard|58
+20|20|Donaldsonville|65|4|Parkview Baptist|80
+21|3|University Lab|54|14|Ville Platte|53
+22|11|Richwood|37|6|Albany|42
+23|7|Westlake|43|10|Wossman|38
+24|18|Washington|41|2|Jewel Sumner|75
+25|1|Iota|70|24|Madison|48
+26|12|South Beauregard|71|4|Parkview Baptist|80
+27|3|University Lab|57|6|Albany|46
+28|7|Westlake|49|2|Jewel Sumner|68
+29|1|Iota|45|4|Parkview Baptist|59
+30|3|University Lab|43|2|Jewel Sumner|67
+31|4|Parkview Baptist|50|2|Jewel Sumner|60
+#Class 2A
+1|1|North Caddo|74|32|Sacred Heart|23
+2|16|Riverside Academy|44|17|Archbishop Hannan|48
+3|9|Episcopal|66|24|Mangham|32
+4|8|Mamou|61|25|Dunham|36
+5|5|Rayville|64|28|St. Charles Catholic|31
+6|12|Holy Savior Menard|32|21|Lake Arthur|57
+7|13|Lakeview|56|20|Pine|36
+8|4|Red River|70|29|Haynes Academy|26
+9|3|Rapides|52|30|Sterlington|43
+10|14|Jonesboro-Hodge|67|19|Louise McGehee|48
+11|11|Metairie Park Country Day|52|22|West St. Mary|32
+12|6|Madison Prep|62|27|French Settlement|31
+13|7|West St. John|70|26|South Plaquemines|38
+14|10|Pickering|51|23|Rosepine|37
+15|15|Doyle|64|18|Notre Dame|48
+16|2|St. Thomas Aquinas|75|31|Northlake Christian|31
+17|1|North Caddo|77|17|Archbishop Hannan|44
+18|9|Episcopal|34|8|Mamou|44
+19|5|Rayville|63|21|Lake Arthur|70
+20|13|Lakeview|37|4|Red River|68
+21|3|Rapides|51|14|Jonesboro-Hodge|56
+22|11|Metairie Park Country Day|27|6|Madison Prep|84
+23|7|West St. John|65|10|Pickering|51
+24|15|Doyle|60|2|St. Thomas Aquinas|68
+25|1|North Caddo|81|8|Mamou|43
+26|21|Lake Arthur|41|4|Red River|66
+27|14|Jonesboro-Hodge|52|6|Madison Prep|88
+28|7|West St. John|29|2|St. Thomas Aquinas|59
+29|1|North Caddo|57|4|Red River|33
+30|6|Madison Prep|69|2|St. Thomas Aquinas|44
+31|1|North Caddo|56|6|Madison Prep|48
+#Class 1A
+1|1|Arcadia|68|32|LaSalle|29
+2|16|St. Mary|58|17|Tensas|39
+3|9|Gueydan|53|24|Grambling|45
+4|8|Southern Lab|29|25|Central Catholic|18
+5|5|Vermilion Catholic|57|28|St. Edmund|43
+6|12|Basile|40|21|Homer|54
+7|13|Kentwood|47|20|Cedar Creek|34
+8|4|Montgomery|68|29|Varnado|45
+9|3|Lafayette Christian|68|30|St. Frederick|17
+10|14|White Castle|44|19|Hanson Memorial|37
+11|11|Plain Dealing|70|22|East Iberville|42
+12|6|Merryville|79|27|Block|29
+13|7|Houma Christian|51|26|East Beauregard|24
+14|10|Delhi|76|23|Logansport|32
+15|15|Oak Grove|48|18|Oberlin|55
+16|2|North Central|70|31|Elton|29
+17|1|Arcadia|63|16|St. Mary|33
+18|9|Gueydan|67|8|Southern Lab|68
+19|5|Vermilion Catholic|57|21|Homer|58
+20|13|Kentwood|46|4|Montgomery|48
+21|3|Lafayette Christian|44|14|White Castle|48
+22|11|Plain Dealing|45|6|Merryville|58
+23|7|Houma Christian|51|10|Delhi|55
+24|18|Oberlin|37|2|North Central|84
+25|1|Arcadia|69|8|Southern Lab|42
+26|21|Homer|34|4|Montgomery|42
+27|14|White Castle|47|6|Merryville|74
+28|10|Delhi|54|2|North Central|70
+29|1|Arcadia|64|4|Montgomery|48
+30|6|Merryville|65|2|North Central|44
+31|1|Arcadia|66|6|Merryville|62
+#Class B
+1|1|Lacassine||99|Bye|
+2|16|Avoyelles Charter|47|17|Weston|29
+3|9|Converse|66|24|Glenmora|26
+4|8|Pitkin|85|25|Quitman|39
+5|5|Midland||99|Bye|
+6|12|Choudrant|68|21|Hicks|64
+7|13|Hathaway|52|20|Forest|28
+8|4|Holden||99|Bye|
+9|3|Anacoco||99|Bye|
+10|14|Hornbeck|52|19|Zwolle|54
+11|11|Negreet|67|22|Mt. Hermon|14
+12|6|Fairview||99|Bye|
+13|7|Stanley|56|26|Oak Hill|37
+14|10|Castor|65|23|Simsboro|25
+15|15|Monterey|27|18|Bell City|43
+16|2|Florien||99|Bye|
+17|1|Lacassine|75|16|Avoyelles Charter|31
+18|9|Converse|58|8|Pitkin|51
+19|5|Midland|54|12|Choudrant|38
+20|13|Hathaway|50|4|Holden|75
+21|3|Anacoco|61|19|Zwolle|29
+22|11|Negreet|43|6|Fairview|53
+23|7|Stanley|54|10|Castor|49
+24|18|Bell City|30|2|Florien|68
+25|1|Lacassine|70|9|Converse|41
+26|5|Midland|34|4|Holden|51
+27|3|Anacoco|56|6|Fairview|47
+28|7|Stanley|40|2|Florien|62
+29|1|Lacassine|54|4|Holden|66
+30|3|Anacoco|30|2|Florien|42
+31|4|Holden|42|2|Florien|34
+#Class C
+1|1|Summerfield||99|Bye|
+2|16|Ebarb|58|17|Calvin|48
+3|9|Dodson|78|24|Family Community Christian|33
+4|8|Singer|58|25|Downsville|18
+5|5|Epps|87|28|Phoenix|37
+6|12|New Living Word|58|21|St. Joseph's - Plaucheville|33
+7|13|Elizabeth|34|20|Johnson Bayou|30
+8|4|Plainview||99|Bye|
+9|3|Atlanta||99|Bye|
+10|14|Harrisonburg|37|19|Reeves|41
+11|11|Hackberry|57|22|Kilbourne|34
+12|6|Simpson|78|27|Evans|48
+13|7|Starks|61|26|Claiborne Christian|23
+14|10|Saline|57|23|Gibsland-Coleman|33
+15|15|Georgetown|44|18|Maurepas|43
+16|2|Pleasant Hill||99|Bye|
+17|1|Summerfield|66|16|Ebarb|44
+18|9|Dodson|45|8|Singer|43
+19|5|Epps|61|12|New Living Word|53
+20|13|Elizabeth|29|4|Plainview|60
+21|3|Atlanta|63|19|Reeves|34
+22|11|Hackberry|50|6|Simpson|70
+23|7|Starks|30|10|Saline|31
+24|15|Georgetown|26|2|Pleasant Hill|67
+25|1|Summerfield|65|9|Dodson|32
+26|5|Epps|57|4|Plainview|66
+27|3|Atlanta|58|6|Simpson|38
+28|10|Saline|41|2|Pleasant Hill|62
+29|1|Summerfield|69|4|Plainview|36
+30|3|Atlanta|49|2|Pleasant Hill|65
+31|1|Summerfield|59|2|Pleasant Hill|34
