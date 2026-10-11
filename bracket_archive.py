@@ -74,7 +74,7 @@ def _scan_pdf_files():
         if p:
             _add_pdf_file(p.group(1), int(p.group(2)), fname)
             continue
-        m = re.match(r"^([a-z_]+)_pdf\.txt$", fname)
+        m = re.match(r"^([a-z_]+)_pdf\d*\.txt$", fname)
         if not m:
             continue
         with open(os.path.join(PDF_DIR, fname), encoding="utf-8") as src:
@@ -323,7 +323,7 @@ def fetch(path, session=None, attempts=3):
 
 
 def _slot(g, a, a_sets, b, b_sets, a_home, b_home):
-    bye = lambda n: n in ("", "B", "Bye")
+    bye = lambda n: n.strip().lower() in ("", "b", "bye")
     a, b = ("Bye" if bye(a) else a), ("Bye" if bye(b) else b)
     num = lambda v: int(v) if str(v).strip().isdigit() else None
     return {"g": int(g), "a": a, "b": b, "a_score": num(a_sets), "b_score": num(b_sets),
@@ -489,6 +489,9 @@ def build_pdf_season(sport, season):
 
 # PDF spellings that the automatic matcher can't resolve (or would resolve wrongly).
 NAME_FIX = {
+    "Lafayet t e": "Lafayette", "French Set t lement": "French Settlement", "Oak dale": "Oakdale",
+    "H.L Bourgeois": "H.L. Bourgeois", "l e Platte": "Ville Platte", "Hackberrry": "Hackberry",
+    "Harrsisonburg": "Harrisonburg", "Crecsent City": "Crescent City", "Glen Okas": "Glen Oaks",
     "Delhi": "Delhi", "Delhi High": "Delhi", "Episcopal, B.R.": "Episcopal", "Episcopal B.R.": "Episcopal",
     "W.L. Cohen": "Cohen College Prep", "Newman": "Isidore Newman", "McGehee": "Louise McGehee",
     "Sacred Heart, N.O.": "Acad. of Sacred Heart - N.O.", "Sacred Heart, G.C.": "Acad. of Sacred Heart - G.C.",
@@ -514,6 +517,8 @@ NAME_FIX = {
 
 
 def _pdf_clean(name):
+    name = re.sub(r"(\w)\u00ed(s)\b", r"\1'\2", name)  # "St. Mary\u00eds" (mis-encoded apostrophe)
+    name = re.sub(r"\s+inn\.?$|\s*\(Forfeit\)$", "", name)
     name = re.sub(r"(\w) s\b", r"\1's", name)  # "St. Joseph s" -> "St. Joseph's"
     name = re.sub(r"\s+(SO|PK)$", "", name)
     name = re.sub(r"\s*\((\d+\s*in\.?|\d+in)\)", "", name)
