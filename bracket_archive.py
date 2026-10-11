@@ -43,7 +43,7 @@ SPORTS = {
     "boys_soccer": (17, "division"), "girls_soccer": (18, "division"),
 }
 SPORT_CODES = {k: v[0] for k, v in SPORTS.items()}
-FIRST_SEASON = 2013  # oldest LHSAA bracket pages; missing years (e.g. 2016, spring 2020) just come back empty
+FIRST_SEASON = 2012  # oldest LHSAA bracket pages (volleyball has fall 2012; other sports start 2013); missing years (e.g. 2016, spring 2020) just come back empty
 ROMAN = ["I", "II", "III", "IV", "V"]
 CLASSES = ["5A", "4A", "3A", "2A", "1A"]
 P = "ctl00_ContentPlaceHolder1_"

@@ -73,7 +73,7 @@ class BracketTests(unittest.TestCase):
         self.assertIn("Non-Select Division V", labels(2023))
         self.assertIn("Select Division V", labels(2024))
         self.assertEqual(labels(2020, "division"), ["Division I", "Division II", "Division III", "Division IV", "Division V"])
-        self.assertEqual(ba.parse_seasons("2012-2027", 2027), list(range(2013, 2027)))
+        self.assertEqual(ba.parse_seasons("2011-2027", 2027), list(range(2012, 2027)))
 
     def test_advancement_beats_a_backwards_score(self):
         html = page([
