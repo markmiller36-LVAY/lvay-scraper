@@ -2342,6 +2342,17 @@ def bracket_archive_season(sport):
                     "schools": data.get("schools", [])})
 
 
+@app.route("/api/brackets/<sport>/school")
+def bracket_archive_school(sport):
+    """One school's playoff games in every archived season (team pages' Playoffs column)."""
+    if sport not in bracket_archive.SPORT_CODES:
+        return jsonify({"error": "Unsupported sport"}), 404
+    school = (request.args.get("school") or "").strip()
+    if not school:
+        return jsonify({"error": "Give ?school="}), 400
+    return jsonify(dict(bracket_archive.school_playoffs(sport, school), sport=sport, school=school))
+
+
 @app.route("/api/brackets/<sport>/seasons")
 def bracket_archive_seasons(sport):
     if sport not in bracket_archive.SPORT_CODES:

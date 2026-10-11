@@ -323,6 +323,26 @@ def fetch(path, session=None, attempts=3):
             time.sleep(3 * (attempt + 1))
     raise RuntimeError(f"{path}: {last}")
 
+def school_playoffs(sport, name):
+    """Every archived playoff run for one school: {"seasons": [archived years], "runs": {year: {bracket, games}}}.
+
+    Matched on the team pages' name key (winter_archive.core_name), so "St. Joseph's Academy" and
+    "St. Joseph's" style spellings line up the same way the schedules do.
+    """
+    key = winter_archive.core_name(name)
+    seasons = sorted(load(sport).get("seasons", {}), key=int)
+    runs = {}
+    if key:
+        for season in seasons:
+            data = season_data(sport, season) or {}
+            for school in data.get("schools", []):
+                if winter_archive.core_name(school.get("school")) == key and school.get("games"):
+                    runs[str(season)] = {"bracket": school.get("bracket", ""), "school": school.get("school"),
+                                         "games": school.get("games", [])}
+                    break
+    return {"seasons": [str(x) for x in seasons], "runs": runs}
+
+
 
 def _slot(g, a, a_sets, b, b_sets, a_home, b_home):
     bye = lambda n: n.strip().lower() in ("", "b", "bye")
