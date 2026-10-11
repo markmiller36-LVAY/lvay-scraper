@@ -1,0 +1,212 @@
+# Baseball 2016 LHSAA playoff brackets, read from the scanned LHSAA bracket PDF
+# (lhsaa.org/siteuploads/editorimg/file/Baseball/2016_LHSAA_Baseball_Bracket.pdf).
+# g|seed|team A|score|seed|team B|score   (Bye = no opponent, seed 99). Higher seed is home.
+# 2nd round and quarterfinals were best-of-3 series: the score is series wins.
+#Class 5A
+1|1|Barbe|3|32|John Ehret|0
+2|16|Walker|8|17|Archbishop Rummel|10
+3|9|Sam Houston|3|24|St. Amant|10
+4|8|Brother Martin|10|25|St. Paul's|0
+5|5|Jesuit|9|28|Ouachita Parish|3
+6|12|Destrehan|1|21|Denham Springs|0
+7|13|Hahnville|11|20|Central|1
+8|4|Catholic - B.R.|8|29|East Ascension|1
+9|3|Airline|7|30|Central Lafourche|0
+10|14|John Curtis Christian|4|19|Chalmette|8
+11|11|C.E. Byrd|10|22|Haughton|4
+12|6|Sulphur|1|27|Captain Shreve|3
+13|7|West Monroe|3|26|Ruston|7
+14|10|Zachary|11|23|New Iberia|1
+15|15|Acadiana|2|18|Dutchtown|1
+16|2|Lafayette|5|31|Alexandria|4
+17|1|Barbe|2|17|Archbishop Rummel|0
+18|24|St. Amant|2|8|Brother Martin|1
+19|5|Jesuit|2|12|Destrehan|0
+20|13|Hahnville|1|4|Catholic - B.R.|2
+21|3|Airline|2|19|Chalmette|0
+22|11|C.E. Byrd|2|27|Captain Shreve|0
+23|26|Ruston|2|10|Zachary|1
+24|15|Acadiana|2|2|Lafayette|1
+25|1|Barbe|2|24|St. Amant|0
+26|5|Jesuit|0|4|Catholic - B.R.|2
+27|3|Airline|1|11|C.E. Byrd|2
+28|26|Ruston|0|15|Acadiana|2
+29|1|Barbe|2|4|Catholic - B.R.|1
+30|11|C.E. Byrd|2|15|Acadiana|1
+31|1|Barbe|5|11|C.E. Byrd|2
+#Class 4A
+1|1|Teurlings Catholic|10|32|St. Martinville|0
+2|16|Livonia|3|17|Edna Karr|0
+3|9|Grant|10|24|Carencro|9
+4|8|Pearl River|9|25|Riverdale|0
+5|5|Breaux Bridge|5|28|LaGrange|4
+6|12|South Terrebonne|11|21|Cecilia|0
+7|13|North DeSoto|11|20|Minden|1
+8|4|Tioga|10|29|Westgate|0
+9|3|West Ouachita|4|30|Vandebilt Catholic|3
+10|14|Neville|8|19|Plaquemine|2
+11|11|Crowley|8|22|Morgan City|7
+12|6|Benton|6|27|Franklin Parish|1
+13|7|St. Thomas More|3|26|Salmen|6
+14|10|Franklinton|2|23|Lakeshore|0
+15|15|Beau Chene|2|18|Belle Chasse|0
+16|2|St. Michael the Archangel|13|31|DeRidder|0
+17|1|Teurlings Catholic|2|16|Livonia|0
+18|9|Grant|2|8|Pearl River|1
+19|5|Breaux Bridge|2|12|South Terrebonne|0
+20|13|North DeSoto|0|4|Tioga|2
+21|3|West Ouachita|2|14|Neville|1
+22|11|Crowley|0|6|Benton|2
+23|26|Salmen|0|10|Franklinton|2
+24|15|Beau Chene|3|2|St. Michael the Archangel|7
+25|1|Teurlings Catholic|2|9|Grant|0
+26|5|Breaux Bridge|2|4|Tioga|1
+27|3|West Ouachita|2|6|Benton|0
+28|10|Franklinton|0|2|St. Michael the Archangel|2
+29|1|Teurlings Catholic|5|5|Breaux Bridge|4
+30|3|West Ouachita|5|2|St. Michael the Archangel|3
+31|1|Teurlings Catholic|3|3|West Ouachita|2
+#Class 3A
+1|1|Brusly|28|32|KIPP Renaissance|0
+2|16|Buckeye|4|17|North Vermilion|3
+3|9|Lutcher|9|24|Albany|1
+4|8|Eunice|4|25|Kaplan|3
+5|5|Erath|10|28|Winnfield|0
+6|12|University Lab|6|21|Westlake|3
+7|13|Jena|2|20|Loyola Prep|4
+8|4|South Beauregard|10|29|Lusher Charter|0
+9|3|St. Louis Catholic|12|30|Caldwell Parish|2
+10|14|Berwick|5|19|Jennings|9
+11|11|Parkview Baptist|8|22|Iowa|10
+12|6|West Feliciana|10|27|Vidalia|0
+13|7|North Webster|6|26|Patterson|3
+14|10|De La Salle|1|23|Pine Prairie|2
+15|15|Union Parish|2|18|Iota|4
+16|2|E.D. White|7|31|Church Point|1
+17|1|Brusly|2|16|Buckeye|1
+18|9|Lutcher|2|8|Eunice|1
+19|5|Erath|1|12|University Lab|0
+20|20|Loyola Prep|0|4|South Beauregard|2
+21|3|St. Louis Catholic|2|19|Jennings|1
+22|22|Iowa|0|6|West Feliciana|2
+23|7|North Webster|2|23|Pine Prairie|0
+24|18|Iota|0|2|E.D. White|2
+25|1|Brusly|2|9|Lutcher|0
+26|5|Erath|1|4|South Beauregard|2
+27|3|St. Louis Catholic|1|6|West Feliciana|2
+28|2|E.D. White|2|7|North Webster|0
+29|1|Brusly|2|4|South Beauregard|4
+30|6|West Feliciana|7|2|E.D. White|4
+31|4|South Beauregard|2|6|West Feliciana|6
+#Class 2A
+1|1|St. Thomas Aquinas|7|32|Loreauville|4
+2|16|Thomas Jefferson|0|17|DeQuincy|3
+3|9|Kinder|10|24|Haynes Academy|3
+4|8|Notre Dame|4|25|Mangham|3
+5|5|Opelousas Catholic|5|28|Lakeside|3
+6|12|Rosepine|5|21|Pine|0
+7|13|Northlake Christian|7|20|Calvary Baptist|3
+8|4|Episcopal|8|29|Welsh|2
+9|3|Ouachita Christian|15|30|Christian Life|5
+10|14|Catholic - N.I.|4|19|Metairie Park Country Day|0
+11|11|Isidore Newman|7|22|Many|1
+12|6|Riverside Academy|12|27|North Caddo|2
+13|7|Holy Savior Menard|5|26|Mamou|0
+14|10|Archbishop Hannan|4|23|Doyle|14
+15|15|Sterlington|3|18|Sacred Heart|2
+16|2|St. Charles Catholic|10|31|East Feliciana|0
+17|1|St. Thomas Aquinas|2|17|DeQuincy|0
+18|9|Kinder|0|8|Notre Dame|2
+19|5|Opelousas Catholic|2|12|Rosepine|0
+20|13|Northlake Christian|0|4|Episcopal|2
+21|3|Ouachita Christian|2|14|Catholic - N.I.|0
+22|11|Isidore Newman|3|6|Riverside Academy|9
+23|7|Holy Savior Menard|2|23|Doyle|0
+24|15|Sterlington|1|2|St. Charles Catholic|2
+25|1|St. Thomas Aquinas|2|8|Notre Dame|1
+26|5|Opelousas Catholic|2|4|Episcopal|0
+27|3|Ouachita Christian|0|6|Riverside Academy|2
+28|7|Holy Savior Menard|0|2|St. Charles Catholic|2
+29|1|St. Thomas Aquinas|7|5|Opelousas Catholic|1
+30|6|Riverside Academy|0|2|St. Charles Catholic|3
+31|1|St. Thomas Aquinas|3|2|St. Charles Catholic|1
+#Class 1A
+1|1|Central Catholic|10|32|Logansport|0
+2|16|Grand Lake|8|17|LaSalle|4
+3|9|Cedar Creek|10|24|Block|2
+4|8|St. Martin's Episcopal|8|25|Lafayette Christian|3
+5|5|Hanson Memorial|14|28|East Beauregard|3
+6|12|Westminster Christian|5|21|Southern Lab|6
+7|13|Catholic - P.C.|10|20|Delhi Charter|0
+8|4|St. Mary|9|29|Oberlin|0
+9|3|Ascension Catholic|19|30|Beekman|1
+10|14|Ascension Episcopal|17|19|Merryville|1
+11|11|St. John|11|22|Varnado|1
+12|6|Vermilion Catholic|10|27|Crescent City|0
+13|7|Oak Grove|16|26|St. Frederick|6
+14|10|Houma Christian|14|23|Montgomery|6
+15|15|Ascension Christian|4|18|St. Edmund|5
+16|2|Covenant Christian|11|31|False River|1
+17|1|Central Catholic|5|16|Grand Lake|3
+18|9|Cedar Creek|9|8|St. Martin's Episcopal|3
+19|5|Hanson Memorial|24|21|Southern Lab|0
+20|13|Catholic - P.C.|4|4|St. Mary|1
+21|3|Ascension Catholic|6|14|Ascension Episcopal|1
+22|11|St. John|0|6|Vermilion Catholic|2
+23|7|Oak Grove|4|10|Houma Christian|1
+24|18|St. Edmund|6|2|Covenant Christian|2
+25|1|Central Catholic|8|9|Cedar Creek|4
+26|5|Hanson Memorial|6|13|Catholic - P.C.|5
+27|3|Ascension Catholic|1|6|Vermilion Catholic|6
+28|7|Oak Grove|11|18|St. Edmund|1
+29|1|Central Catholic|1|5|Hanson Memorial|0
+30|6|Vermilion Catholic|4|7|Oak Grove|9
+31|1|Central Catholic|8|7|Oak Grove|7
+#Class B
+1|1|Grace Christian||99|Bye|
+2|16|Doyline|1|17|Monterey|13
+3|9|Simsboro|7|24|Forest|9
+4|8|Florien|11|25|Mt. Hermon|1
+5|5|Anacoco||99|Bye|
+6|12|Converse|5|21|Hicks|17
+7|13|Holden|4|20|Episcopal of Acadiana|6
+8|4|Zwolle||99|Bye|
+9|3|Avoyelles Charter||99|Bye|
+10|14|Negreet|7|19|Pitkin|3
+11|11|Stanley|10|22|Bell City|0
+12|6|Fairview||27|Patrick Taylor - Science/Tech.|
+13|7|Choudrant|12|26|Weston|1
+14|10|Quitman|0|23|Hornbeck|11
+15|15|Oak Hill|13|18|Castor|3
+16|2|Glenmora||99|Bye|
+17|1|Grace Christian|11|17|Monterey|1
+18|24|Forest|3|8|Florien|14
+19|5|Anacoco|3|21|Hicks|2
+20|20|Episcopal of Acadiana|3|4|Zwolle|2
+21|3|Avoyelles Charter|17|14|Negreet|7
+22|11|Stanley|3|6|Fairview|4
+23|7|Choudrant|2|23|Hornbeck|1
+24|15|Oak Hill|3|2|Glenmora|4
+25|1|Grace Christian|10|8|Florien|7
+26|5|Anacoco|11|20|Episcopal of Acadiana|3
+27|3|Avoyelles Charter|4|6|Fairview|7
+28|7|Choudrant|6|2|Glenmora|19
+29|1|Grace Christian|5|5|Anacoco|1
+30|6|Fairview|14|2|Glenmora|9
+31|1|Grace Christian|3|6|Fairview|14
+#Class C
+1|1|Elizabeth|18|16|St. Joseph's - Plaucheville|0
+2|9|Calvin|5|8|Northside Christian|8
+3|5|Summerfield|5|12|Family Community Christian|7
+4|13|Evans|0|4|Claiborne Christian|18
+5|3|Simpson|11|14|Hackberry|1
+6|11|Georgetown|9|6|Saline|2
+7|7|Maurepas|8|10|Harrisonburg|0
+8|15|Reeves|0|2|Downsville|6
+9|1|Elizabeth|2|8|Northside Christian|1
+10|12|Family Community Christian|1|4|Claiborne Christian|11
+11|3|Simpson|16|11|Georgetown|2
+12|7|Maurepas|3|2|Downsville|7
+13|1|Elizabeth|2|4|Claiborne Christian|4
+14|3|Simpson|2|2|Downsville|4
+15|4|Claiborne Christian|6|2|Downsville|2
