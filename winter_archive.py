@@ -596,6 +596,56 @@ def school_history(sport, name):
     return out
 
 
+_DIST_CACHE = {}
+
+
+def district_champions(sport):
+    """{season: [school names]} — best district win % in each class/division + district (ties share it).
+
+    Same rule the team pages use for the live season (distChamps): regular-season district games only,
+    a district needs at least two schools with district results.
+    """
+    path = archive_path(sport)
+    mtime = os.path.getmtime(path) if os.path.exists(path) else 0
+    hit = _DIST_CACHE.get(sport)
+    if hit and hit[0] == mtime:
+        return hit[1]
+    out = {}
+    for season, info in load_archive(sport).get("seasons", {}).items():
+        groups = {}
+        for school in info.get("schools", []):
+            district = school.get("district")
+            if district in (None, ""):
+                continue
+            w = l = t = 0
+            for g in school.get("games", []):
+                if not g.get("is_district"):
+                    continue
+                r = str(g.get("result") or "").upper()[:1]
+                w += r == "W"
+                l += r == "L"
+                t += r == "T"
+            if w + l + t == 0:
+                continue
+            key = (school.get("division") or school.get("class_") or "", str(district))
+            groups.setdefault(key, []).append((school.get("school"), (w + t / 2) / (w + l + t)))
+        champs = []
+        for members in groups.values():
+            if len(members) < 2:
+                continue
+            best = max(p for _, p in members)
+            champs += [name for name, p in members if p == best]
+        out[str(season)] = champs
+    _DIST_CACHE[sport] = (mtime, out)
+    return out
+
+
+def school_district_titles(sport, name):
+    key = core_name(name)
+    return sorted(season for season, names in district_champions(sport).items()
+                  if any(core_name(n) == key for n in names))
+
+
 def summary(sport):
     data = load_archive(sport)
     return {

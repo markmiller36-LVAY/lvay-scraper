@@ -2385,6 +2385,18 @@ def winter_school_history(sport):
     return jsonify({"sport": sport, "school": school, "count": len(seasons), "seasons": seasons})
 
 
+@app.route("/api/history/winter/<sport>/district-titles")
+def winter_district_titles(sport):
+    """Seasons in the schedule archive where a school won (or shared) its district title."""
+    if sport not in winter_archive.SOURCES:
+        return jsonify({"error": "Unsupported sport"}), 404
+    school = (request.args.get("school") or "").strip()
+    if not school:
+        return jsonify({"error": "Give ?school="}), 400
+    return jsonify({"sport": sport, "school": school,
+                    "seasons": winter_archive.school_district_titles(sport, school)})
+
+
 @app.route("/api/archive/winter/<sport>/build")
 def winter_archive_build(sport):
     """Pull finished seasons from LHSAA into the archive (background job).
