@@ -489,6 +489,10 @@ def build_pdf_season(sport, season):
 
 # PDF spellings that the automatic matcher can't resolve (or would resolve wrongly).
 NAME_FIX = {
+    "Sacred Heart N.O.": "Acad. of Sacred Heart - N.O.", "Acad. Sac. Hrt., NO": "Acad. of Sacred Heart - N.O.",
+    "Sacred Hrt. NO": "Acad. of Sacred Heart - N.O.", "Acad. Sac. Hrt., GC": "Acad. of Sacred Heart - G.C.",
+    "Country Day.": "Country Day", "Newman.": "Isidore Newman", "Domincan": "Dominican",
+    "H.L. Bourgeios": "H.L. Bourgeois", "Grace KIng": "Grace King", "Terrebone": "Terrebonne", "De Le Salle": "De La Salle",
     'Ouachita': 'Ouachita Parish', 'Carver': 'George Washington Carver', 'Carver, GW': 'George Washington Carver',
     'Higgins': 'L. W. Higgins', 'L.W. Higgins': 'L. W. Higgins', 'Reed': 'Sarah T. Reed',
     'St. Paul': "St. Paul's", 'Sacred Heart, VP': 'Sacred Heart V.P.', 'Sacred Heart VP': 'Sacred Heart V.P.',
@@ -535,7 +539,7 @@ NAME_FIX = {
 
 def _pdf_clean(name):
     name = re.sub(r"(\w)\u00ed(s)\b", r"\1'\2", name)  # "St. Mary\u00eds" (mis-encoded apostrophe)
-    name = re.sub(r"(?i)\s+inn\.?$|\s*\(forfeit\)$", "", name)
+    name = re.sub(r"(?i)\s+inn\.?$|\s*\((forfeit|for)\)$|^[.\s]+", "", name)
     name = re.sub(r"(\w) s\b", r"\1's", name)  # "St. Joseph s" -> "St. Joseph's"
     name = re.sub(r"\s+(SO|PK)$", "", name)
     name = re.sub(r"\s*\((\d+\s*in\.?|\d+in)\)", "", name)
