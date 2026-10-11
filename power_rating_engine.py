@@ -389,6 +389,12 @@ class PowerRatingEngine:
         style = config["opp_quality"]
         if style == "win_pct_x10":
             gp.opp_quality = game.opponent_win_pct * 10
+            if team.sport == "football":
+                # LHSAA rounds each game's opponent quality to 2 decimals
+                # (half-up) BEFORE averaging (e.g. 3-4 = 4.2857 -> 4.29).
+                # Verified Oct 9-11, 2026 against all 302 schools: fixes the
+                # 26-28 schools that were 0.01 off and breaks none.
+                gp.opp_quality = round_half_up(gp.opp_quality)
         elif style == "win_pct_x34":
             gp.opp_quality = game.opponent_win_pct * 34
         elif style == "win_pct_x44":
