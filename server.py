@@ -2397,6 +2397,19 @@ def winter_district_titles(sport):
                     "seasons": winter_archive.school_district_titles(sport, school)})
 
 
+@app.route("/api/honors/<sport>/allstate")
+def honors_allstate(sport):
+    """One school's All-State players (honors_data/<sport>_allstate.txt)."""
+    import allstate
+    if sport not in allstate.FILES:
+        return jsonify({"error": "Unsupported sport"}), 404
+    school = (request.args.get("school") or "").strip()
+    if not school:
+        return jsonify({"error": "Give ?school="}), 400
+    players = allstate.school_allstate(sport, school)
+    return jsonify({"sport": sport, "school": school, "count": len(players), "players": players})
+
+
 @app.route("/api/archive/winter/<sport>/build")
 def winter_archive_build(sport):
     """Pull finished seasons from LHSAA into the archive (background job).
