@@ -489,6 +489,23 @@ def build_pdf_season(sport, season):
 
 # PDF spellings that the automatic matcher can't resolve (or would resolve wrongly).
 NAME_FIX = {
+    'Ouachita': 'Ouachita Parish', 'Carver': 'George Washington Carver', 'Carver, GW': 'George Washington Carver',
+    'Higgins': 'L. W. Higgins', 'L.W. Higgins': 'L. W. Higgins', 'Reed': 'Sarah T. Reed',
+    'St. Paul': "St. Paul's", 'Sacred Heart, VP': 'Sacred Heart V.P.', 'Sacred Heart VP': 'Sacred Heart V.P.',
+    'Sacred Heart, V.P.': 'Sacred Heart V.P.', 'Sacred Heart, NO': 'Acad. of Sacred Heart - N.O.', 'Acad. Sac. Hrt, NO': 'Acad. of Sacred Heart - N.O.',
+    'Sacred Hrt., NO': 'Acad. of Sacred Heart - N.O.', 'Cen. Jíville': 'Central - Jonesville', 'Central Jíville': 'Central - Jonesville',
+    'Central Jonesville': 'Central - Jonesville', 'MP Country Day': 'Metairie Park Country Day', 'St. Joseph – Plauc.': "St. Joseph's - Plaucheville",
+    "St. Joseph's – PL": "St. Joseph's - Plaucheville", 'Reserve Christ.': 'Reserve Christian', 'Reserve Chrs.': 'Reserve Christian',
+    'Excelsior Christ.': 'Excelsior Christian', 'Bethel Christ.': 'Bethel Christian', 'Bethel Chrs.': 'Bethel Christian',
+    'Bethany': 'Bethany Christian', 'Bethany Chrs.': 'Bethany Christian', 'Booth. Venice': 'Boothville-Venice',
+    'Boothville Venice': 'Boothville-Venice', 'Booth-Venice': 'Boothville-Venice', 'La. School Deaf': 'La. School for the Deaf',
+    'La Sch. Deaf': 'La. School for the Deaf', 'LA School For Deaf': 'La. School for the Deaf', 'Red. Seton': 'Redeemer-Seton',
+    'Redeemer Seton': 'Redeemer-Seton', 'Jones – Hodge': 'Jonesboro-Hodge', 'Hamilton Christ.': 'Hamilton Christian',
+    'Assembly Christ.': 'Assembly Christian', 'Episcopal, BR': 'Episcopal', 'Karr': 'Edna Karr',
+    'Byrd': 'C.E. Byrd', 'Rummel': 'Archbishop Rummel', 'Shaw': 'Archbishop Shaw',
+    'Loyola College Prep': 'Loyola Prep', 'Xavier': 'Xavier Prep', 'Famerville': 'Farmerville',
+    'Mt. Herman': 'Mt. Hermon', 'B.T. Washington-SH': 'Booker T. Washington - Shr.', 'B.T. Wash. SH': 'Booker T. Washington - Shr.',
+    'Hosanna': 'Hosanna Christian',
     "Lafayet t e": "Lafayette", "French Set t lement": "French Settlement", "Oak dale": "Oakdale",
     "H.L Bourgeois": "H.L. Bourgeois", "l e Platte": "Ville Platte", "Hackberrry": "Hackberry",
     "Harrsisonburg": "Harrisonburg", "Crecsent City": "Crescent City", "Glen Okas": "Glen Oaks",
@@ -518,7 +535,7 @@ NAME_FIX = {
 
 def _pdf_clean(name):
     name = re.sub(r"(\w)\u00ed(s)\b", r"\1'\2", name)  # "St. Mary\u00eds" (mis-encoded apostrophe)
-    name = re.sub(r"\s+inn\.?$|\s*\(Forfeit\)$", "", name)
+    name = re.sub(r"(?i)\s+inn\.?$|\s*\(forfeit\)$", "", name)
     name = re.sub(r"(\w) s\b", r"\1's", name)  # "St. Joseph s" -> "St. Joseph's"
     name = re.sub(r"\s+(SO|PK)$", "", name)
     name = re.sub(r"\s*\((\d+\s*in\.?|\d+in)\)", "", name)
