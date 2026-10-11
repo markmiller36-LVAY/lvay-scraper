@@ -1,0 +1,131 @@
+# Boys soccer 2015-16 LHSAA playoff brackets, read from the scanned LHSAA bracket PDF
+# (lhsaa.org/siteuploads/editorimg/file/Soccer/2016_LHSAA_boys_soccer_bracket.pdf).
+# g|seed|team A|score|seed|team B|score   (Bye = no opponent, seed 99). Higher seed is home.
+#Division I
+1|1|St. Paul's||99|Bye|
+2|16|Dutchtown|3|17|Barbe|0
+3|9|Lafayette|4|24|Baton Rouge|1
+4|8|New Iberia||99|Bye|
+5|5|St. Amant||99|Bye|
+6|12|Catholic - B.R.|3|21|Pineville|0
+7|13|Sulphur|3|20|West Monroe|0
+8|4|Jesuit||99|Bye|
+9|3|Acadiana||99|Bye|
+10|14|Brother Martin|2|19|East Ascension|0
+11|11|Caddo Magnet|1|22|Hammond|0
+12|6|C.E. Byrd||99|Bye|
+13|7|Denham Springs||99|Bye|
+14|10|Grace King|4|23|Fontainebleau|0
+15|15|Northshore|1|18|Destrehan|2
+16|2|Mandeville||99|Bye|
+17|1|St. Paul's|7|16|Dutchtown|0
+18|9|Lafayette|1|8|New Iberia|3
+19|5|St. Amant|1|12|Catholic - B.R.|2
+20|13|Sulphur|1|4|Jesuit|3
+21|3|Acadiana|2|14|Brother Martin|1
+22|11|Caddo Magnet|0|6|C.E. Byrd|2
+23|7|Denham Springs|1|10|Grace King|3
+24|18|Destrehan|1|2|Mandeville|2
+25|1|St. Paul's|2|8|New Iberia|0
+26|12|Catholic - B.R.|2|4|Jesuit|0
+27|3|Acadiana|2|6|C.E. Byrd|0
+28|10|Grace King|1|2|Mandeville|0
+29|1|St. Paul's|3|12|Catholic - B.R.|0
+30|3|Acadiana|0|10|Grace King|0
+31|1|St. Paul's|3|3|Acadiana|0
+#Division II
+1|1|St. Thomas More||99|Bye|
+2|16|Terrebonne|4|17|Westgate|1
+3|9|East Jefferson|1|24|Salmen|0
+4|8|Lakeshore||99|Bye|
+5|5|Beau Chene||99|Bye|
+6|12|Ruston|4|21|Central|0
+7|13|Tioga|1|20|Benton|0
+8|4|Alexandria||99|Bye|
+9|3|Neville||99|Bye|
+10|14|Ouachita Parish|0|19|West Jefferson|4
+11|11|Benjamin Franklin|3|22|Helen Cox|1
+12|6|Holy Cross||99|Bye|
+13|7|Riverdale||99|Bye|
+14|10|Woodlawn - B.R.|8|23|Carencro|0
+15|15|Central Lafourche|2|18|Live Oak|1
+16|2|Captain Shreve||99|Bye|
+17|1|St. Thomas More|3|16|Terrebonne|0
+18|9|East Jefferson|1|8|Lakeshore|0
+19|5|Beau Chene|4|12|Ruston|0
+20|13|Tioga|0|4|Alexandria|1
+21|3|Neville|3|19|West Jefferson|1
+22|11|Benjamin Franklin|0|6|Holy Cross|2
+23|7|Riverdale|0|10|Woodlawn - B.R.|7
+24|15|Central Lafourche|0|2|Captain Shreve|4
+25|1|St. Thomas More|4|9|East Jefferson|1
+26|5|Beau Chene|2|4|Alexandria|1
+27|3|Neville|1|6|Holy Cross|2
+28|10|Woodlawn - B.R.|1|2|Captain Shreve|0
+29|1|St. Thomas More|5|5|Beau Chene|0
+30|6|Holy Cross|1|10|Woodlawn - B.R.|0
+31|1|St. Thomas More|1|6|Holy Cross|0
+#Division III
+1|1|St. Louis Catholic||99|Bye|
+2|16|Abbeville|8|17|DeRidder|2
+3|9|Episcopal|8|24|Grant|0
+4|8|North Vermilion||99|Bye|
+5|5|Leesville||99|Bye|
+6|12|Lusher Charter|7|21|New Orleans Military & Maritime|0
+7|13|Parkview Baptist|2|20|North DeSoto|0
+8|4|University Lab||99|Bye|
+9|3|E.D. White||99|Bye|
+10|14|Morgan City|0|19|International|0
+11|11|St. Martinville|2|22|Opelousas|1
+12|6|Bolton||99|Bye|
+13|7|Teurlings Catholic||99|Bye|
+14|10|Lutcher|3|23|Pearl River|0
+15|15|Loyola Prep|1|18|St. Michael|2
+16|2|Vandebilt Catholic||99|Bye|
+17|1|St. Louis Catholic|8|16|Abbeville|0
+18|9|Episcopal|1|8|North Vermilion|0
+19|5|Leesville|1|12|Lusher Charter|0
+20|13|Parkview Baptist|0|4|University Lab|3
+21|3|E.D. White|8|14|Morgan City|0
+22|11|St. Martinville|1|6|Bolton|3
+23|7|Teurlings Catholic|2|10|Lutcher|1
+24|18|St. Michael|0|2|Vandebilt Catholic|6
+25|1|St. Louis Catholic|4|9|Episcopal|0
+26|5|Leesville|0|4|University Lab|4
+27|3|E.D. White|1|6|Bolton|1
+28|7|Teurlings Catholic|0|2|Vandebilt Catholic|2
+29|1|St. Louis Catholic|3|4|University Lab|0
+30|3|E.D. White|1|2|Vandebilt Catholic|0
+31|1|St. Louis Catholic|3|3|E.D. White|2
+#Division IV
+1|1|Catholic - N.I.||99|Bye|
+2|16|Pope John Paul II|1|17|St. Charles Catholic|2
+3|9|St. Frederick|3|24|Calvary Baptist|1
+4|8|Lafayette Christian||99|Bye|
+5|5|Northlake Christian||99|Bye|
+6|12|Glenmora|0|21|Dunham|2
+7|13|Rapides|2|20|Grace Christian|1
+8|4|Holy Savior Menard||99|Bye|
+9|3|Episcopal of Acadiana||99|Bye|
+10|14|Riverside Academy|3|19|Runnels|1
+11|11|St. Thomas Aquinas|7|22|Ascension Episcopal|0
+12|6|Haynes Academy||99|Bye|
+13|7|Westminster Christian||99|Bye|
+14|10|Evangel Christian|5|23|St. Martin's Episcopal|2
+15|15|Metairie Park Country Day|4|18|Opelousas Catholic|0
+16|2|Isidore Newman||99|Bye|
+17|1|Catholic - N.I.|3|17|St. Charles Catholic|1
+18|9|St. Frederick|1|8|Lafayette Christian|3
+19|5|Northlake Christian|3|21|Dunham|0
+20|13|Rapides|0|4|Holy Savior Menard|5
+21|3|Episcopal of Acadiana|7|14|Riverside Academy|1
+22|11|St. Thomas Aquinas|0|6|Haynes Academy|1
+23|7|Westminster Christian|5|10|Evangel Christian|3
+24|15|Metairie Park Country Day|1|2|Isidore Newman|4
+25|1|Catholic - N.I.|3|8|Lafayette Christian|0
+26|5|Northlake Christian|3|4|Holy Savior Menard|0
+27|3|Episcopal of Acadiana|2|6|Haynes Academy|1
+28|7|Westminster Christian|1|2|Isidore Newman|4
+29|1|Catholic - N.I.|2|5|Northlake Christian|3
+30|3|Episcopal of Acadiana|1|2|Isidore Newman|3
+31|5|Northlake Christian|2|2|Isidore Newman|1

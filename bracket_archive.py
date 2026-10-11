@@ -61,6 +61,10 @@ def _scan_pdf_files():
     if not os.path.isdir(PDF_DIR):
         return
     for fname in sorted(os.listdir(PDF_DIR)):
+        p = re.match(r"^([a-z_]+)_(\d{4})\.psv$", fname)
+        if p:
+            PDF_SEASONS.setdefault(p.group(1), {})[int(p.group(2))] = fname
+            continue
         m = re.match(r"^([a-z_]+)_pdf\.txt$", fname)
         if not m:
             continue
@@ -328,8 +332,8 @@ def pdf_slots(sport, season):
     if fname.endswith(".psv"):
         # g|seedA|A|setsA|seedB|B|setsB ; lower seed is home
         for line in lines:
-            if line.startswith("#Division"):
-                label = line[1:].strip()
+            if line.startswith("#") and not line.startswith("# ") and len(line) > 1:
+                label = re.sub(r"^Class ([1-5]A)$", r"\1", line[1:].strip())
                 out[label] = []
                 continue
             if not line.strip() or line.startswith("#"):
@@ -461,10 +465,27 @@ NAME_FIX = {
     "Catholic, N.I.": "Catholic - N.I.", "Catholic, NI": "Catholic - N.I.", "Catholic N.I.": "Catholic - N.I.",
     "Catholic, P.C.": "Catholic - P.C.", "Catholic P.C.": "Catholic - P.C.", "Country Day": "Metairie Park Country Day",
     "Evangel Christaian": "Evangel Christian", "St. Pauls's": "St. Paul's", "Evangel": "Evangel Christian",
+    "Menard": "Holy Savior Menard", "St. Edmund's": "St. Edmund", "St. Michael's": "St. Michael the Archangel",
+    "St. Michael": "St. Michael the Archangel", "Acad. S. H. (N.O.)": "Acad. of Sacred Heart - N.O.",
+    "Hannan": "Archbishop Hannan", "Arch. Hannan": "Archbishop Hannan", "Mt. Carmel Acad.": "Mt. Carmel",
+    "O. P. Walker": "O.P. Walker", "Walker, O.P.": "O.P. Walker", "St. Charles Cath.": "St. Charles Catholic",
+    "St. Joseph's": "St. Joseph's Academy", "St. Joe's Academy": "St. Joseph's Academy", "St. Martin's": "St. Martin's Episcopal",
+    "St. Mary's Acad.": "St. Mary's Academy", "Delhi High Charter": "Delhi Charter", "Assembly Chris.": "Assembly Christian",
+    "Assembly Chrs.": "Assembly Christian", "Cohen, W.L.": "Cohen College Prep", "Ellender": "A.J. Ellender",
+    "Ehret, John": "John Ehret", "Lusher": "Lusher Charter", "Westminster": "Westminster Christian",
+    "Westminster Chris.": "Westminster Christian", "Westminster Academy": "Westminster Christian",
+    "Washington, B.T.": "Booker T. Washington", "Booker T. Wash.": "Booker T. Washington",
+    "Landry/Walker": "Lord Beaconsfield Landry", "Byrd C.E.": "C.E. Byrd", "Chapelle": "Archbishop Chapelle",
+    "Our Lady": "Academy of Our Lady", "North Vermillion": "North Vermilion", "Catholic": "Catholic - B.R.",
+    "Catholic B.R.": "Catholic - B.R.", "Central": "Central - B.R.", "Peabody Magnet": "Peabody",
+    "Episcopal - B.R.": "Episcopal", "Woodlawn, Shrev.": "Woodlawn - Shrev.", "Northwood, Shreve": "Northwood - Shrev.",
+    "Northwood": "Northwood - Shrev.", "Capitol for Girls": "Capitol",
 }
 
 
 def _pdf_clean(name):
+    name = re.sub(r"(\w) s\b", r"\1's", name)  # "St. Joseph s" -> "St. Joseph's"
+    name = re.sub(r"\s+(SO|PK)$", "", name)
     name = re.sub(r"\s*\((\d+\s*in\.?|\d+in)\)", "", name)
     name = re.sub(r"\s*\{[^}]*\}|-Closed$", "", name)
     name = re.sub(r"\s*\(BR\)$", " - B.R.", name)
@@ -517,9 +538,9 @@ def known_names(sport):
 def canonical_name(name, known, by_key=None):
     """Map a PDF spelling onto the name the archive already uses for that school."""
     name = _pdf_clean(re.sub(r"\s+", " ", (name or "").replace("’", "'")).strip())
-    if name in NAME_FIX:
-        return NAME_FIX[name]
     by_key = by_key or {_key(n): n for n in known}
+    if name in NAME_FIX:
+        return by_key.get(_key(NAME_FIX[name]), NAME_FIX[name])
     hit = by_key.get(_key(name))
     if hit:
         return hit

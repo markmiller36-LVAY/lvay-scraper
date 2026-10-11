@@ -1,0 +1,131 @@
+# Girls soccer 2015-16 LHSAA playoff brackets, read from the scanned LHSAA bracket PDF
+# (lhsaa.org/siteuploads/editorimg/file/Soccer/2016_LHSAA_girls_soccer_bracket.pdf).
+# g|seed|team A|score|seed|team B|score   (Bye = no opponent, seed 99). Higher seed is home.
+#Division I
+1|1|C.E. Byrd||99|Bye|
+2|16|Pineville|3|17|Destrehan|1
+3|9|St. Amant|6|24|Denham Springs|0
+4|8|Fontainebleau||99|Bye|
+5|5|Acadiana||99|Bye|
+6|12|Lafayette|5|21|Natchitoches Central|0
+7|13|Sulphur|0|20|Caddo Magnet|1
+8|4|St. Scholastica||99|Bye|
+9|3|Mt. Carmel||99|Bye|
+10|14|New Iberia|1|19|Northshore|2
+11|11|Dominican|1|22|Baton Rouge|0
+12|6|East Ascension||99|Bye|
+13|7|Mandeville||99|Bye|
+14|10|Barbe|1|23|West Monroe|0
+15|15|Dutchtown|0|18|Comeaux|1
+16|2|St. Joseph's Academy||99|Bye|
+17|1|C.E. Byrd|8|16|Pineville|1
+18|9|St. Amant|0|8|Fontainebleau|2
+19|5|Acadiana|3|12|Lafayette|2
+20|20|Caddo Magnet|0|4|St. Scholastica|2
+21|3|Mt. Carmel|1|19|Northshore|0
+22|11|Dominican|0|6|East Ascension|1
+23|7|Mandeville|3|10|Barbe|3
+24|18|Comeaux|1|2|St. Joseph's Academy|5
+25|1|C.E. Byrd|2|8|Fontainebleau|0
+26|5|Acadiana|1|4|St. Scholastica|2
+27|3|Mt. Carmel|1|6|East Ascension|0
+28|10|Barbe|2|2|St. Joseph's Academy|0
+29|1|C.E. Byrd|2|4|St. Scholastica|2
+30|3|Mt. Carmel|1|10|Barbe|0
+31|1|C.E. Byrd|1|3|Mt. Carmel|2
+#Division II
+1|1|St. Thomas More||99|Bye|
+2|16|Terrebonne|2|17|Captain Shreve|3
+3|9|Neville|3|24|Central|0
+4|8|Carencro||99|Bye|
+5|5|Alexandria||99|Bye|
+6|12|Ruston|6|21|Helen Cox|1
+7|13|Sam Houston|1|20|De La Salle|0
+8|4|Lakeshore||99|Bye|
+9|3|Parkway||99|Bye|
+10|14|Beau Chene|6|19|Academy of Our Lady|1
+11|11|Benton|4|22|Haughton|0
+12|6|West Ouachita||99|Bye|
+13|7|East Jefferson||99|Bye|
+14|10|Central Lafourche|4|23|Cabrini|2
+15|15|Live Oak|3|18|South Terrebonne|0
+16|2|Benjamin Franklin||99|Bye|
+17|1|St. Thomas More|8|17|Captain Shreve|0
+18|9|Neville|1|8|Carencro|3
+19|5|Alexandria|2|12|Ruston|0
+20|13|Sam Houston|0|4|Lakeshore|5
+21|3|Parkway|7|14|Beau Chene|0
+22|11|Benton|1|6|West Ouachita|3
+23|7|East Jefferson|1|10|Central Lafourche|2
+24|15|Live Oak|1|2|Benjamin Franklin|7
+25|1|St. Thomas More|8|8|Carencro|0
+26|5|Alexandria|0|4|Lakeshore|3
+27|3|Parkway|2|6|West Ouachita|0
+28|10|Central Lafourche|1|2|Benjamin Franklin|6
+29|1|St. Thomas More|1|4|Lakeshore|1
+30|3|Parkway|0|2|Benjamin Franklin|3
+31|4|Lakeshore|0|2|Benjamin Franklin|3
+#Division III
+1|1|Vandebilt Catholic||99|Bye|
+2|16|Lutcher|3|17|North DeSoto|0
+3|9|Teurlings Catholic|8|24|Minden|0
+4|8|Leesville||99|Bye|
+5|5|St. Louis Catholic||99|Bye|
+6|12|St. Michael the Archangel|2|21|West Feliciana|0
+7|13|Parkview Baptist|2|20|Pearl River|1
+8|4|Loyola Prep||99|Bye|
+9|3|University Lab||99|Bye|
+10|14|Bolton|1|19|Erath|2
+11|11|DeRidder|5|22|St. Martinville|0
+12|6|E.D. White||99|Bye|
+13|7|Episcopal||99|Bye|
+14|10|Ursuline Academy|6|23|Morgan City|0
+15|15|Lusher Charter|4|18|Belle Chasse|1
+16|2|Acad. of Sacred Heart - N.O.||99|Bye|
+17|1|Vandebilt Catholic|7|16|Lutcher|0
+18|9|Teurlings Catholic|6|8|Leesville|1
+19|5|St. Louis Catholic|1|12|St. Michael the Archangel|0
+20|13|Parkview Baptist|0|4|Loyola Prep|8
+21|3|University Lab|5|19|Erath|0
+22|11|DeRidder|0|6|E.D. White|4
+23|7|Episcopal|3|10|Ursuline Academy|5
+24|15|Lusher Charter|0|2|Acad. of Sacred Heart - N.O.|8
+25|1|Vandebilt Catholic|3|9|Teurlings Catholic|0
+26|5|St. Louis Catholic|0|4|Loyola Prep|1
+27|3|University Lab|1|6|E.D. White|3
+28|10|Ursuline Academy|1|2|Acad. of Sacred Heart - N.O.|2
+29|1|Vandebilt Catholic|2|4|Loyola Prep|0
+30|6|E.D. White|1|2|Acad. of Sacred Heart - N.O.|3
+31|1|Vandebilt Catholic|3|2|Acad. of Sacred Heart - N.O.|1
+#Division IV
+1|1|Catholic - N.I.||99|Bye|
+2|16|Ouachita Christian|1|17|Grace Christian|4
+3|9|Northlake Christian|5|24|St. Thomas Aquinas|1
+4|8|Episcopal of Acadiana||99|Bye|
+5|5|Isidore Newman||99|Bye|
+6|12|Holy Savior Menard|2|21|Sterlington|0
+7|13|Evangel Christian|4|20|Lafayette Christian|2
+8|4|St. Frederick||99|Bye|
+9|3|Archbishop Hannan||99|Bye|
+10|14|Opelousas Catholic|1|19|St. Charles Catholic|0
+11|11|Louise McGehee|1|22|Catholic - P.C.|0
+12|6|Metairie Park Country Day||99|Bye|
+13|7|Ascension Episcopal||99|Bye|
+14|10|Riverside Academy|5|23|St. Martin's Episcopal|2
+15|15|Runnels|2|18|Haynes Academy|1
+16|2|Pope John Paul II||99|Bye|
+17|1|Catholic - N.I.|4|17|Grace Christian|0
+18|9|Northlake Christian|5|8|Episcopal of Acadiana|1
+19|5|Isidore Newman|8|12|Holy Savior Menard|0
+20|13|Evangel Christian|0|4|St. Frederick|8
+21|3|Archbishop Hannan|4|14|Opelousas Catholic|0
+22|11|Louise McGehee|0|6|Metairie Park Country Day|3
+23|7|Ascension Episcopal|4|10|Riverside Academy|2
+24|15|Runnels|0|2|Pope John Paul II|3
+25|1|Catholic - N.I.|1|9|Northlake Christian|0
+26|5|Isidore Newman|3|4|St. Frederick|1
+27|3|Archbishop Hannan|3|6|Metairie Park Country Day|1
+28|7|Ascension Episcopal|2|2|Pope John Paul II|7
+29|1|Catholic - N.I.|0|5|Isidore Newman|1
+30|3|Archbishop Hannan|1|2|Pope John Paul II|0
+31|5|Isidore Newman|5|3|Archbishop Hannan|1
