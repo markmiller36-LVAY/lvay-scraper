@@ -1,0 +1,51 @@
+# Boys basketball 2012-13 brackets read by eye where the PDF's text layer was broken
+# (lhsaa.org/siteuploads/editorimg/file/Boys' Basketball/2013_LHSAA_Boys_BB_Brackets.pdf).
+# Brackets here replace the same label from boys_basketball_pdf.txt.
+# g|seed|team A|score|seed|team B|score
+#Class 1A
+1|1|Christian Life|70|32|Ascension Catholic|36
+2|16|La. New Tech - Plain Dealing|49|17|Hamilton Christian|35
+3|9|East Iberville|52|24|Varnado|49
+4|8|Houma Christian|80|25|Montgomery|55
+5|5|Westminster Christian|83|28|West St. John|73
+6|12|St. Martin's Episcopal|55|21|White Castle|80
+7|13|Ascension Episcopal|37|20|Pointe Coupee Central|64
+8|4|Metairie Park Country Day|72|29|St. Mary|25
+9|3|North Central|90|30|Archbishop Hannan|54
+10|14|Mangham|48|19|Delhi Charter|54
+11|11|Northwood - Lena|44|22|Block|45
+12|6|Delhi|126|27|Ridgewood|80
+13|7|Arcadia|67|26|Oberlin|36
+14|10|Elton|47|23|Opelousas Catholic|79
+15|15|Southern Lab|64|18|Grambling|55
+16|2|Central Catholic|85|31|Tensas|47
+17|1|Christian Life|53|16|La. New Tech - Plain Dealing|43
+18|9|East Iberville|68|8|Houma Christian|85
+19|5|Westminster Christian|77|21|White Castle|85
+20|20|Pointe Coupee Central|43|4|Metairie Park Country Day|62
+21|3|North Central|68|19|Delhi Charter|60
+22|22|Block|50|6|Delhi|80
+23|7|Arcadia|60|23|Opelousas Catholic|48
+24|15|Southern Lab|78|2|Central Catholic|85
+25|1|Christian Life|52|8|Houma Christian|32
+26|21|White Castle|51|4|Metairie Park Country Day|55
+27|3|North Central|73|6|Delhi|48
+28|7|Arcadia|64|2|Central Catholic|44
+29|1|Christian Life|41|4|Metairie Park Country Day|43
+30|3|North Central|48|7|Arcadia|54
+31|4|Metairie Park Country Day|60|7|Arcadia|54
+# First-round games the text parse missed (seed printed against the name), from the same PDF.
+#PATCH Class 5A
+1|14|Mandeville|71|19|Acadiana|64
+#PATCH Class 4A
+1|5|East Jefferson|80|28|St. Michael the Archangel|35
+2|14|Vandebilt Catholic|65|19|Helen Cox|64
+#PATCH Class 3A
+1|14|St. James|67|19|North Vermilion|56
+#PATCH Class 2A
+1|14|Rosepine|56|19|Many|55
+#PATCH Class B
+1|14|Summerfield|52|19|Bell City|45
+#PATCH Class C
+2|5|Elizabeth|70|28|St. Joseph's - Plaucheville|24
+5|14|Johnson Bayou|62|19|Plainview|56

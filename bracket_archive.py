@@ -56,6 +56,15 @@ PDF_SEASONS = {"volleyball": {2010: "volleyball_2010_2011.txt", 2011: "volleybal
                               2015: "volleyball_2015.psv"}}
 
 
+def _add_pdf_file(sport, season, fname):
+    files = PDF_SEASONS.setdefault(sport, {}).get(season)
+    files = [files] if isinstance(files, str) else list(files or [])
+    if fname not in files:
+        files.append(fname)
+    # compact .txt first, then .psv files, whose sections replace or patch brackets
+    PDF_SEASONS[sport][season] = sorted(files, key=lambda f: (f.endswith(".psv"), f))
+
+
 def _scan_pdf_files():
     """Add {sport}_pdf.txt files ("#YYYY|Label" sections) to PDF_SEASONS."""
     if not os.path.isdir(PDF_DIR):
@@ -63,7 +72,7 @@ def _scan_pdf_files():
     for fname in sorted(os.listdir(PDF_DIR)):
         p = re.match(r"^([a-z_]+)_(\d{4})\.psv$", fname)
         if p:
-            PDF_SEASONS.setdefault(p.group(1), {})[int(p.group(2))] = fname
+            _add_pdf_file(p.group(1), int(p.group(2)), fname)
             continue
         m = re.match(r"^([a-z_]+)_pdf\.txt$", fname)
         if not m:
@@ -72,7 +81,7 @@ def _scan_pdf_files():
             for line in src:
                 h = re.match(r"^#(\d{4})\|", line)
                 if h:
-                    PDF_SEASONS.setdefault(m.group(1), {})[int(h.group(1))] = fname
+                    _add_pdf_file(m.group(1), int(h.group(1)), fname)
 
 
 _scan_pdf_files()
@@ -322,27 +331,48 @@ def _slot(g, a, a_sets, b, b_sets, a_home, b_home):
 
 
 def pdf_slots(sport, season):
-    """{"Division I": [slots]} for a season transcribed from LHSAA bracket PDFs."""
-    fname = (PDF_SEASONS.get(sport) or {}).get(int(season))
-    if not fname:
+    """{"Division I": [slots]} for a season transcribed from LHSAA bracket PDFs.
+
+    A season can come from several files: the compact .txt first, then .psv files.
+    A "#Label" section in a .psv replaces that bracket; "#PATCH Label" replaces
+    only the slots with the same game number."""
+    files = (PDF_SEASONS.get(sport) or {}).get(int(season))
+    if not files:
         return {}
-    out, label = {}, None
+    files = [files] if isinstance(files, str) else files
+    out = {}
+    for fname in files:
+        brackets, patches = _pdf_file_slots(fname, season)
+        out.update(brackets)
+        for label, slots in patches.items():
+            by_g = {s["g"]: s for s in out.get(label, [])}
+            for slot in slots:
+                by_g[slot["g"]] = slot
+            out[label] = [by_g[g] for g in sorted(by_g)]
+    return out
+
+
+def _pdf_file_slots(fname, season):
+    out, patches, label = {}, {}, None
     with open(os.path.join(PDF_DIR, fname), encoding="utf-8") as src:
         lines = src.read().splitlines()
     if fname.endswith(".psv"):
         # g|seedA|A|setsA|seedB|B|setsB ; lower seed is home
+        target = out
         for line in lines:
             if line.startswith("#") and not line.startswith("# ") and len(line) > 1:
-                label = re.sub(r"^Class ([1-5]A)$", r"\1", line[1:].strip())
-                out[label] = []
+                head = line[1:].strip()
+                target = patches if head.startswith("PATCH ") else out
+                label = re.sub(r"^Class ([1-5]A)$", r"\1", re.sub(r"^PATCH\s+", "", head))
+                target[label] = []
                 continue
             if not line.strip() or line.startswith("#"):
                 continue
             g, sa, a, xa, sb, b, xb = line.split("|")
             ha = b != "Bye" and a != "Bye" and int(sa) < int(sb)
             hb = b != "Bye" and a != "Bye" and int(sb) < int(sa)
-            out[label].append(_slot(g, a, xa, b, xb, ha, hb))
-        return out
+            target[label].append(_slot(g, a, xa, b, xb, ha, hb))
+        return out, patches
     # compact: "N name|name|..." then "#YYYY-D" (volleyball) or "#YYYY|Label" blocks
     # of "g a sets b sets home" ("-" = blank, B = bye, home 1 = a, 2 = b)
     names = []
@@ -368,7 +398,7 @@ def pdf_slots(sport, season):
         g, a, xa, b, xb, home = (line.split(" ") + [""] * 6)[:6]
         name = lambda i: "Bye" if i in ("B", "-", "") else names[int(i)]
         out[label].append(_slot(g, name(a), xa, name(b), xb, int(home or 0) & 1, int(home or 0) & 2))
-    return out
+    return out, patches
 
 
 def build_season(sport, season, pause=0.5, fetcher=None):

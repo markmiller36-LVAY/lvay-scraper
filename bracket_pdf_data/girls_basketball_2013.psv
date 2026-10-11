@@ -1,0 +1,110 @@
+# Girls basketball 2012-13 brackets read by eye where the PDF's text layer was broken
+# (lhsaa.org/siteuploads/editorimg/file/Girls' Basketball/2013_LHSAA_Girls_BB_Brackets.pdf).
+# Brackets here replace the same label from girls_basketball_pdf.txt.
+# g|seed|team A|score|seed|team B|score
+#Class 4A
+1|1|Warren Easton|93|32|Washington-Marion|36
+2|16|Broadmoor|46|17|A.J. Ellender|42
+3|9|Alexandria|57|24|Wossman|34
+4|8|Helen Cox|73|25|Franklin Parish|29
+5|5|St. Thomas More|92|28|Peabody|40
+6|12|Bastrop|42|21|Cabrini|45
+7|13|Leesville|81|20|Belaire|75
+8|4|Neville|32|29|Benton|17
+9|3|Vandebilt Catholic|63|30|West Ouachita|25
+10|14|Breaux Bridge|34|19|Huntington|42
+11|11|McDonogh #35|71|22|Ursuline Academy|32
+12|6|Salmen|88|27|Grant|33
+13|7|DeRidder|64|26|Teurlings Catholic|53
+14|10|St. Louis Catholic|56|23|Fair Park|50
+15|15|Franklinton|40|18|Northside|49
+16|2|St. Michael the Archangel|62|31|Woodlawn - Shrev.|34
+17|1|Warren Easton|65|16|Broadmoor|46
+18|9|Alexandria|49|8|Helen Cox|57
+19|5|St. Thomas More|69|21|Cabrini|43
+20|13|Leesville|67|4|Neville|74
+21|3|Vandebilt Catholic|75|19|Huntington|58
+22|11|McDonogh #35|33|6|Salmen|61
+23|7|DeRidder|61|10|St. Louis Catholic|43
+24|18|Northside|27|2|St. Michael the Archangel|54
+25|1|Warren Easton|64|8|Helen Cox|59
+26|5|St. Thomas More|43|4|Neville|38
+27|3|Vandebilt Catholic||6|Salmen|
+28|7|DeRidder|39|2|St. Michael the Archangel|52
+29|1|Warren Easton|50|5|St. Thomas More|55
+30|6|Salmen|63|2|St. Michael the Archangel|34
+31|5|St. Thomas More|39|6|Salmen|40
+#Class B
+1|1|Lacassine|93|32|Lafayette Christian|8
+2|16|Grand Lake|44|17|Acad. of Sacred Heart - G.C.|51
+3|9|Hornbeck|53|24|Dodson|28
+4|8|Converse|74|25|Singer|32
+5|5|Glenmora|66|28|Oak Hill|53
+6|12|Rapides|52|21|Weston|46
+7|13|Holden|45|20|Midland|61
+8|4|Hathaway|59|29|Stanley|27
+9|3|Florien|85|30|Simpson|49
+10|14|Summerfield|48|19|Pitkin|42
+11|11|Bell City|36|22|Monterey|27
+12|6|Anacoco|47|27|Quitman|26
+13|7|Castor|51|26|Simsboro|33
+14|10|Negreet|72|23|Hicks|53
+15|15|Doyline|46|18|Grace Christian|32
+16|2|Fairview|93|31|Zwolle|31
+17|1|Lacassine|33|17|Acad. of Sacred Heart - G.C.|18
+18|9|Hornbeck|29|8|Converse|39
+19|5|Glenmora|45|12|Rapides|46
+20|20|Midland|24|4|Hathaway|51
+21|3|Florien|61|14|Summerfield|31
+22|11|Bell City|29|6|Anacoco|52
+23|7|Castor|39|10|Negreet|42
+24|15|Doyline|25|2|Fairview|108
+25|1|Lacassine|61|8|Converse|22
+26|12|Rapides|35|4|Hathaway|72
+27|3|Florien|65|6|Anacoco|52
+28|10|Negreet|39|2|Fairview|100
+29|1|Lacassine|52|4|Hathaway|32
+30|3|Florien|46|2|Fairview|88
+31|1|Lacassine|38|2|Fairview|71
+#Class 1A
+1|1|West St. John|89|32|Houma Christian|19
+2|16|White Castle|66|17|Opelousas Catholic|46
+3|9|Metairie Park Country Day|40|24|Gueydan|31
+4|8|Hanson Memorial|56|25|Ascension Catholic|52
+5|5|Tensas|79|28|Elton|49
+6|12|East Iberville|53|21|Basile|43
+7|13|Mt. Hermon|48|20|Ouachita Christian|44
+8|4|Central Catholic|65|29|Delhi Charter|34
+9|3|North Central|55|30|St. John|23
+10|14|Oak Grove|63|19|Sacred Heart|56
+11|11|Southern Lab|51|22|Westminster Christian|36
+12|6|Merryville|77|27|Mangham|53
+13|7|Arcadia|43|26|St. Mary|36
+14|10|St. Edmund|54|23|Block|50
+15|15|La. New Tech - Plain Dealing|59|18|St. Martin's Episcopal|49
+16|2|Vermilion Catholic|57|31|Cedar Creek|45
+17|1|West St. John|76|16|White Castle|39
+18|9|Metairie Park Country Day|43|8|Hanson Memorial|47
+19|5|Tensas|84|12|East Iberville|68
+20|13|Mt. Hermon|38|4|Central Catholic|59
+21|3|North Central|74|14|Oak Grove|36
+22|11|Southern Lab|60|6|Merryville|44
+23|7|Arcadia|48|10|St. Edmund|53
+24|15|La. New Tech - Plain Dealing|43|2|Vermilion Catholic|65
+25|1|West St. John|60|8|Hanson Memorial|46
+26|5|Tensas|43|4|Central Catholic|59
+27|3|North Central|72|11|Southern Lab|61
+28|10|St. Edmund|40|2|Vermilion Catholic|67
+29|1|West St. John|66|4|Central Catholic|58
+30|3|North Central|31|2|Vermilion Catholic|44
+31|1|West St. John|52|2|Vermilion Catholic|54
+# First-round games the text parse missed (seed printed against the name), from the same PDF.
+#PATCH Class 5A
+1|14|Mt. Carmel|61|19|C.E. Byrd|46
+#PATCH Class 3A
+1|14|South Beauregard|61|19|St. Mary's Academy|40
+#PATCH Class 2A
+1|14|Mansfield|46|19|Iota|29
+#PATCH Class C
+5|14|Claiborne Christian|33|19|Pleasant Hill|35
+8|10|Epps|54|23|St. Joseph's - Plaucheville|31
