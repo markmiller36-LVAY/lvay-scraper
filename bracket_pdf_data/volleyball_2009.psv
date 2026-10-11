@@ -1,0 +1,163 @@
+# Volleyball 2009 LHSAA playoff brackets, read from the scanned LHSAA bracket PDF
+# (lhsaa.org/siteuploads/editorimg/file/Volleyball/2009_LHSAA_Volleyball_Playoff_Bracket.pdf).
+# g|seed|team A|sets|seed|team B|sets   (Bye = no opponent, seed 99). Lower seed is home.
+#Division I
+1|1|St. Joseph's Academy||99|Bye|
+2|16|New Iberia|1|17|H.L. Bourgeois|3
+3|9|Barbe|3|24|Grace King|0
+4|8|Archbishop Chapelle||99|Bye|
+5|5|Terrebonne||99|Bye|
+6|12|Destrehan|3|21|Bonnabel|1
+7|13|Slidell|3|20|Denham Springs|2
+8|4|Dominican||99|Bye|
+9|3|Fontainebleau||99|Bye|
+10|14|St. Amant|3|19|Sulphur|0
+11|11|Lafayette|3|22|Covington|0
+12|6|Mandeville||99|Bye|
+13|7|Comeaux||99|Bye|
+14|10|St. Scholastica|3|23|Zachary|0
+15|15|Dutchtown|3|18|Carencro|2
+16|2|Mt. Carmel||99|Bye|
+17|1|St. Joseph's Academy|3|17|H.L. Bourgeois|0
+18|9|Barbe|0|8|Archbishop Chapelle|3
+19|5|Terrebonne|3|12|Destrehan|0
+20|13|Slidell|0|4|Dominican|3
+21|3|Fontainebleau|3|14|St. Amant|0
+22|11|Lafayette|1|6|Mandeville|3
+23|7|Comeaux|1|10|St. Scholastica|3
+24|15|Dutchtown|0|2|Mt. Carmel|3
+25|1|St. Joseph's Academy|3|8|Archbishop Chapelle|0
+26|5|Terrebonne|3|4|Dominican|2
+27|3|Fontainebleau|3|6|Mandeville|0
+28|10|St. Scholastica|1|2|Mt. Carmel|3
+29|1|St. Joseph's Academy|3|5|Terrebonne|0
+30|3|Fontainebleau|1|2|Mt. Carmel|3
+31|1|St. Joseph's Academy|3|2|Mt. Carmel|0
+#Division II
+1|1|St. Thomas More||99|Bye|
+2|16|Belle Chasse|0|17|A.J. Ellender|3
+3|9|Sam Houston|3|24|McDonogh #35|0
+4|8|Central - B.R.||99|Bye|
+5|5|Breaux Bridge||99|Bye|
+6|12|Morgan City|3|21|Westgate|1
+7|13|Pearl River|3|20|Leesville|2
+8|4|Cabrini||99|Bye|
+9|3|Chalmette||99|Bye|
+10|14|Glen Oaks|3|19|Woodlawn - B.R.|0
+11|11|Broadmoor|3|22|Edna Karr|1
+12|6|Vandebilt Catholic||99|Bye|
+13|7|Live Oak||99|Bye|
+14|10|O.P. Walker|3|23|East Jefferson|0
+15|15|McKinley|2|18|Northside|3
+16|2|Assumption||99|Bye|
+17|1|St. Thomas More|3|17|A.J. Ellender|0
+18|9|Sam Houston|3|8|Central - B.R.|0
+19|5|Breaux Bridge|3|12|Morgan City|2
+20|13|Pearl River|0|4|Cabrini|3
+21|3|Chalmette|3|14|Glen Oaks|0
+22|11|Broadmoor|1|6|Vandebilt Catholic|3
+23|7|Live Oak|1|10|O.P. Walker|3
+24|18|Northside|0|2|Assumption|3
+25|1|St. Thomas More|0|9|Sam Houston|3
+26|5|Breaux Bridge|1|4|Cabrini|3
+27|3|Chalmette|2|6|Vandebilt Catholic|3
+28|10|O.P. Walker|0|2|Assumption|3
+29|9|Sam Houston||4|Cabrini|
+30|6|Vandebilt Catholic|0|2|Assumption|3
+31|4|Cabrini|1|2|Assumption|3
+#Division III
+1|1|Notre Dame||99|Bye|
+2|16|Westlake|3|17|Crowley|0
+3|9|Parkview Baptist|3|24|Albany|0
+4|8|Lutcher||99|Bye|
+5|5|St. Michael the Archangel||99|Bye|
+6|12|Rayne|3|21|Loranger|0
+7|13|Riverdale|3|20|Livonia|0
+8|4|E.D. White||99|Bye|
+9|3|St. Louis Catholic||99|Bye|
+10|14|Redemptorist|3|19|Baker|0
+11|11|Teurlings Catholic|3|22|John McDonogh|0
+12|6|West Feliciana||99|Bye|
+13|7|Cecilia||99|Bye|
+14|10|Ben Franklin|3|23|Sarah T. Reed|0
+15|15|Jennings|3|18|Brusly|1
+16|2|Ursuline Academy||99|Bye|
+17|1|Notre Dame|3|16|Westlake|0
+18|9|Parkview Baptist|1|8|Lutcher|3
+19|5|St. Michael the Archangel|3|12|Rayne|0
+20|13|Riverdale|0|4|E.D. White|3
+21|3|St. Louis Catholic|3|14|Redemptorist|2
+22|11|Teurlings Catholic|0|6|West Feliciana|3
+23|7|Cecilia|3|10|Ben Franklin|1
+24|15|Jennings|0|2|Ursuline Academy|3
+25|1|Notre Dame|3|8|Lutcher|0
+26|5|St. Michael the Archangel|0|4|E.D. White|3
+27|3|St. Louis Catholic|3|6|West Feliciana|0
+28|7|Cecilia|2|2|Ursuline Academy|3
+29|1|Notre Dame|3|4|E.D. White|1
+30|3|St. Louis Catholic|1|2|Ursuline Academy|3
+31|1|Notre Dame|1|2|Ursuline Academy|3
+#Division IV
+1|1|Louise McGehee||99|Bye|
+2|16|Riverside Academy|3|17|St. Charles Catholic|2
+3|9|Episcopal|3|24|Mansfield|0
+4|8|University Lab||99|Bye|
+5|5|Acad. of Sacred Heart - N.O.||99|Bye|
+6|12|Lusher Charter|1|21|Berwick|3
+7|13|Iota|3|20|Fisher|0
+8|4|Catholic - N.I.||99|Bye|
+9|3|Isidore Newman||99|Bye|
+10|14|Pope John Paul II|3|19|Haynes Academy|0
+11|11|John Curtis Christian|3|22|Loyola Prep|0
+12|6|De La Salle||99|Bye|
+13|7|St. Thomas Aquinas||99|Bye|
+14|10|Dunham|3|23|Port Allen|0
+15|15|Jefferson|1|18|Westminster Christian|3
+16|2|Northlake Christian||99|Bye|
+17|1|Louise McGehee|3|16|Riverside Academy|0
+18|9|Episcopal|2|8|University Lab|3
+19|5|Acad. of Sacred Heart - N.O.|3|21|Berwick|0
+20|13|Iota|0|4|Catholic - N.I.|3
+21|3|Isidore Newman|3|14|Pope John Paul II|0
+22|11|John Curtis Christian|3|6|De La Salle|0
+23|7|St. Thomas Aquinas|1|10|Dunham|3
+24|18|Westminster Christian|0|2|Northlake Christian|3
+25|1|Louise McGehee|3|8|University Lab|2
+26|5|Acad. of Sacred Heart - N.O.|3|4|Catholic - N.I.|0
+27|3|Isidore Newman|1|11|John Curtis Christian|3
+28|10|Dunham|1|2|Northlake Christian|3
+29|1|Louise McGehee|3|5|Acad. of Sacred Heart - N.O.|0
+30|11|John Curtis Christian|1|2|Northlake Christian|3
+31|1|Louise McGehee|1|2|Northlake Christian|3
+#Division V
+1|1|Episcopal of Acadiana||99|Bye|
+2|16|Hosanna Christian|0|17|Delcambre|3
+3|9|Ascension Catholic|3|24|Ascension Christian|0
+4|8|White Castle||99|Bye|
+5|5|Northside Christian||99|Bye|
+6|12|Ascension Episcopal|3|21|South Plaquemines|0
+7|13|Hamilton Christian|3|20|False River|1
+8|4|Catholic - P.C.||99|Bye|
+9|3|Houma Christian||99|Bye|
+10|14|First Baptist Christian|3|19|Bethel Christian|1
+11|11|St. Martin's Episcopal|3|22|Bethany Christian|2
+12|6|Central Catholic||99|Bye|
+13|7|Ecole Classique||99|Bye|
+14|10|Archbishop Hannan|3|23|Patrick Taylor - Science/Tech.|1
+15|15|St. John|3|18|West St. John|1
+16|2|Metairie Park Country Day||99|Bye|
+17|1|Episcopal of Acadiana|3|17|Delcambre|0
+18|9|Ascension Catholic|3|8|White Castle|1
+19|5|Northside Christian|2|12|Ascension Episcopal|3
+20|13|Hamilton Christian|1|4|Catholic - P.C.|3
+21|3|Houma Christian|3|14|First Baptist Christian|0
+22|11|St. Martin's Episcopal|1|6|Central Catholic|3
+23|7|Ecole Classique|3|10|Archbishop Hannan|2
+24|15|St. John|0|2|Metairie Park Country Day|3
+25|1|Episcopal of Acadiana|3|9|Ascension Catholic|0
+26|12|Ascension Episcopal|1|4|Catholic - P.C.|3
+27|3|Houma Christian|3|6|Central Catholic|1
+28|7|Ecole Classique|0|2|Metairie Park Country Day|3
+29|1|Episcopal of Acadiana|3|4|Catholic - P.C.|1
+30|3|Houma Christian|0|2|Metairie Park Country Day|3
+31|1|Episcopal of Acadiana|0|2|Metairie Park Country Day|3
