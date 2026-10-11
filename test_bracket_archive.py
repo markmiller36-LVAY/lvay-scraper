@@ -160,5 +160,23 @@ class BracketTests(unittest.TestCase):
             self.assertEqual([got[f"Division {r}"] for r in ba.ROMAN], expect, season)
 
 
+    def test_all_pdf_seasons_are_clean_brackets(self):
+        for sport, seasons in ba.PDF_SEASONS.items():
+            for season in seasons:
+                brackets = ba.pdf_slots(sport, season)
+                self.assertTrue(brackets, (sport, season))
+                for label, slots in brackets.items():
+                    games = ba.bracket_games(slots)
+                    phases = [g["phase"] for g in games]
+                    self.assertEqual(phases.count("State Championship"), 1, (sport, season, label))
+                    teams = {t for g in games for t in (g["a"], g["b"])}
+                    self.assertEqual(len(games), len(teams) - 1, (sport, season, label))
+                    lost = set()
+                    for g in sorted(games, key=lambda x: x["round"]):
+                        self.assertTrue(g["winner"], (sport, season, label, g))
+                        self.assertFalse({g["a"], g["b"]} & lost, (sport, season, label, g))
+                        lost.add(g["b"] if g["winner"] == g["a"] else g["a"])
+
+
 if __name__ == "__main__":
     unittest.main()

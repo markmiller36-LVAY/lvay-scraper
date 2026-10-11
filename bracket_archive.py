@@ -55,6 +55,24 @@ PDF_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bracket_pdf_
 PDF_SEASONS = {"volleyball": {2010: "volleyball_2010_2011.txt", 2011: "volleyball_2010_2011.txt",
                               2015: "volleyball_2015.psv"}}
 
+
+def _scan_pdf_files():
+    """Add {sport}_pdf.txt files ("#YYYY|Label" sections) to PDF_SEASONS."""
+    if not os.path.isdir(PDF_DIR):
+        return
+    for fname in sorted(os.listdir(PDF_DIR)):
+        m = re.match(r"^([a-z_]+)_pdf\.txt$", fname)
+        if not m:
+            continue
+        with open(os.path.join(PDF_DIR, fname), encoding="utf-8") as src:
+            for line in src:
+                h = re.match(r"^#(\d{4})\|", line)
+                if h:
+                    PDF_SEASONS.setdefault(m.group(1), {})[int(h.group(1))] = fname
+
+
+_scan_pdf_files()
+
 _LOCK = threading.Lock()
 STATE = {"status": "idle", "sport": None, "seasons": [], "progress": {},
          "started_at": None, "finished_at": None, "error": None}
@@ -321,7 +339,8 @@ def pdf_slots(sport, season):
             hb = b != "Bye" and a != "Bye" and int(sb) < int(sa)
             out[label].append(_slot(g, a, xa, b, xb, ha, hb))
         return out
-    # compact: "N name|name|..." then "#YYYY-D" blocks of "g a sets b sets home"
+    # compact: "N name|name|..." then "#YYYY-D" (volleyball) or "#YYYY|Label" blocks
+    # of "g a sets b sets home" ("-" = blank, B = bye, home 1 = a, 2 = b)
     names = []
     for line in lines:
         if line.startswith("N "):
@@ -331,6 +350,13 @@ def pdf_slots(sport, season):
         if m:
             label = f"Division {ROMAN[int(m.group(2)) - 1]}" if int(m.group(1)) == int(season) else None
             if label:
+                out[label] = []
+            continue
+        m = re.match(r"^#(\d{4})\|(.+)$", line)
+        if m:
+            label = m.group(2).strip() if int(m.group(1)) == int(season) else None
+            if label:
+                label = re.sub(r"^Class ([1-5]A)$", r"\1", label)
                 out[label] = []
             continue
         if label is None or not line.strip() or line.startswith("#"):
@@ -390,7 +416,19 @@ def first_season(sport=None):
 
 def build_pdf_season(sport, season):
     brackets, champions = {}, {}
+    known = known_names(sport)
+    by_key = {_key(n): n for n in known}
+    known_set, unmatched, renamed = set(known), set(), {}
     for label, slots in pdf_slots(sport, season).items():
+        for s in slots:
+            for side in ("a", "b"):
+                if not _is_bye(s[side]):
+                    raw = s[side]
+                    s[side] = canonical_name(raw, known, by_key)
+                    if s[side] != raw:
+                        renamed[raw] = s[side]
+                    if known_set and s[side] not in known_set:
+                        unmatched.add(s[side])
         games = bracket_games(slots)
         if not games:
             continue
@@ -406,10 +444,101 @@ def build_pdf_season(sport, season):
         "brackets": list(brackets), "champions": champions,
         "games": sum(len(g) for g in brackets.values()),
         "schools": season_schools(brackets),
+        "renamed": renamed, "unmatched": sorted(unmatched),
     }
     save_season(sport, season, out)
     STATE["progress"][str(season)] = f"done: {len(brackets)} brackets, {out['games']} games (PDF)"
     return out
+
+
+# ── name matching for PDF seasons ──
+
+# PDF spellings that the automatic matcher can't resolve (or would resolve wrongly).
+NAME_FIX = {
+    "Delhi": "Delhi", "Delhi High": "Delhi", "Episcopal, B.R.": "Episcopal", "Episcopal B.R.": "Episcopal",
+    "W.L. Cohen": "Cohen College Prep", "Newman": "Isidore Newman", "McGehee": "Louise McGehee",
+    "Sacred Heart, N.O.": "Acad. of Sacred Heart - N.O.", "Sacred Heart, G.C.": "Acad. of Sacred Heart - G.C.",
+    "Catholic, N.I.": "Catholic - N.I.", "Catholic, NI": "Catholic - N.I.", "Catholic N.I.": "Catholic - N.I.",
+    "Catholic, P.C.": "Catholic - P.C.", "Catholic P.C.": "Catholic - P.C.", "Country Day": "Metairie Park Country Day",
+    "Evangel Christaian": "Evangel Christian", "St. Pauls's": "St. Paul's", "Evangel": "Evangel Christian",
+}
+
+
+def _pdf_clean(name):
+    name = re.sub(r"\s*\((\d+\s*in\.?|\d+in)\)", "", name)
+    name = re.sub(r"\s*\{[^}]*\}|-Closed$", "", name)
+    name = re.sub(r"\s*\(BR\)$", " - B.R.", name)
+    name = re.sub(r"\s*\(SH\)$", " - Shrev.", name)
+    return re.sub(r"\s+", " ", name).strip()
+
+
+def _key(name):
+    return re.sub(r"[^a-z0-9]", "", (name or "").lower())
+
+
+def _toks(name):
+    return [t.replace("'", "") for t in re.split(r"[\s,.\-]+", (name or "").lower().replace("’", "'")) if t]
+
+
+def _subseq(short, full):
+    if not short or not full or short[0] != full[0]:
+        return False
+    i = 0
+    for ch in full:
+        if i < len(short) and ch == short[i]:
+            i += 1
+    return i == len(short)
+
+
+def abbrev_match(short, full):
+    a, b = _toks(short), _toks(full)
+    if not a or len(a) > len(b) or not _subseq(a[0], b[0]):
+        return False
+    j = 1
+    for t in a[1:]:
+        while j < len(b) and not _subseq(t, b[j]):
+            j += 1
+        if j >= len(b):
+            return False
+        j += 1
+    return True
+
+
+def known_names(sport):
+    names = set()
+    for info in load(sport).get("seasons", {}).values():
+        if "PDF" in str(info.get("source") or ""):
+            continue
+        for school in info.get("schools", []):
+            names.add(clean_name(school.get("school")))
+    return sorted(n for n in names if n)
+
+
+def canonical_name(name, known, by_key=None):
+    """Map a PDF spelling onto the name the archive already uses for that school."""
+    name = _pdf_clean(re.sub(r"\s+", " ", (name or "").replace("’", "'")).strip())
+    if name in NAME_FIX:
+        return NAME_FIX[name]
+    by_key = by_key or {_key(n): n for n in known}
+    hit = by_key.get(_key(name))
+    if hit:
+        return hit
+    flip = re.match(r"^([^,]+),\s*([^,]+)$", name)  # "Curtis, John" -> "John Curtis"
+    if flip and _key(flip.group(2)) not in {"br", "no", "ni", "pc", "gc", "vp", "shrev", "shreve", "la"}:
+        hit = by_key.get(_key(flip.group(2) + " " + flip.group(1)))
+        if hit:
+            return hit
+        cands = [n for n in known if abbrev_match(flip.group(2) + " " + flip.group(1), n)]
+        if len(cands) == 1:
+            return cands[0]
+    alt = re.sub(r",\s*", " - ", name)  # "Woodlawn, B.R." -> "Woodlawn - B.R."
+    hit = by_key.get(_key(alt))
+    if hit:
+        return hit
+    cands = [n for n in known if abbrev_match(name, n)]
+    if len(cands) == 1:
+        return cands[0]
+    return name
 
 
 def parse_seasons(text, current_season, sport=None):
