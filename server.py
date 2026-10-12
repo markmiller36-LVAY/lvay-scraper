@@ -2759,6 +2759,75 @@ if os.environ.get("DB_PATH", "/data/lvay_v2.db").startswith("/data"):
     _resume_timer.start()
 
 
+# ── Y'ALL SEARCH (TEST) ─────────────────────────────────────
+# Plain-English football history questions answered from the archive with
+# fixed templates (no AI). Every question is logged so we can see what fans
+# ask that no template covers yet. Oct 12, 2026.
+import yall_search  # noqa: E402
+
+
+def _yall_log(question, result):
+    try:
+        conn = sqlite3.connect(DB_PATH, timeout=5)
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS yall_questions ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, asked_at TEXT, "
+            "question TEXT, status TEXT, intent TEXT, teams TEXT)"
+        )
+        conn.execute(
+            "INSERT INTO yall_questions (asked_at, question, status, intent,"
+            " teams) VALUES (?, ?, ?, ?, ?)",
+            (
+                datetime.now().isoformat(timespec="seconds"),
+                question[:300],
+                result.get("status", ""),
+                result.get("intent") or "",
+                ", ".join(result.get("teams") or []),
+            ),
+        )
+        conn.commit()
+        conn.close()
+    except Exception as exc:  # logging must never break the answer
+        print(f"[yall] log failed: {exc}")
+
+
+@app.route("/api/yall")
+def yall_question():
+    question = request.args.get("q", "")
+    result = yall_search.answer(question)
+    if question.strip():
+        _yall_log(question.strip(), result)
+    return jsonify(result)
+
+
+@app.route("/api/yall/log")
+def yall_question_log():
+    """Recent questions (newest first). Needs the PIPELINE_TOKEN as ?key=."""
+    if not _has_valid_pipeline_token():
+        return jsonify({"status": "unauthorized"}), 401
+    only = request.args.get("only", "")  # "missed" = no answer given
+    limit = min(int(request.args.get("limit", 200) or 200), 1000)
+    try:
+        conn = sqlite3.connect(DB_PATH, timeout=5)
+        conn.row_factory = sqlite3.Row
+        sql = "SELECT * FROM yall_questions"
+        if only == "missed":
+            sql += " WHERE status != 'ok'"
+        rows = conn.execute(
+            sql + " ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+        conn.close()
+    except sqlite3.OperationalError:
+        rows = []
+    return jsonify({"count": len(rows), "questions": [dict(r) for r in rows]})
+
+
+# Warm the search index after boot so the first fan doesn't wait.
+_yall_warm = threading.Timer(30, yall_search.get_answerer)
+_yall_warm.daemon = True
+_yall_warm.start()
+
+
 # ── ENTRY POINT ──────────────────────────────────────────────
 
 if __name__ == "__main__":
