@@ -202,7 +202,8 @@ function lvay_ys_render() {
 .lvay-ys-out{margin-top:20px}
 .lvay-ys-card{border-left:6px solid #008584;background:#f7f9f9;padding:18px 20px;border-radius:4px}
 .lvay-ys-card.miss{border-color:#c9a227;background:#fffbea}
-.lvay-ys-ans{font-size:20px;line-height:1.45;margin:0}
+.lvay-ys-ans{font-size:20px;line-height:1.45;margin:0;font-weight:700;color:#111}
+.lvay-ys-try[hidden]{display:none}
 .lvay-ys-how{font-family:'Teko',sans-serif;font-size:17px;color:#5b6b6b;margin:10px 0 0;text-transform:uppercase;letter-spacing:.5px}
 .lvay-ys-tablewrap{overflow-x:auto;margin-top:16px}
 .lvay-ys table{width:100%;border-collapse:collapse;font-size:15px;min-width:560px}
@@ -257,6 +258,7 @@ function lvay_ys_render() {
   function show(j){
     if(j.coverage) cov.textContent='Covers: '+j.coverage+'.';
     var miss=j.status!=='ok';
+    tryBox.hidden=true;
     var h='<div class="lvay-ys-card'+(miss?' miss':'')+'"><p class="lvay-ys-ans">'+esc(j.answer)+'</p>';
     if(j.interpreted_as) h+='<p class="lvay-ys-how">Searched: '+esc(j.interpreted_as)+'</p>';
     h+='</div>';
@@ -289,7 +291,7 @@ function lvay_ys_render() {
   form.addEventListener('submit',syncClear);
   tryBox.addEventListener('click',function(){setTimeout(syncClear,0);});
   out.addEventListener('click',function(){setTimeout(syncClear,0);});
-  clr.addEventListener('click',function(){input.value='';syncClear();input.focus();
+  clr.addEventListener('click',function(){input.value='';syncClear();input.focus();tryBox.hidden=false;out.innerHTML='';
     try{var u=new URL(location.href);u.searchParams.delete('q');history.replaceState(null,'',u);}catch(e){}});
   try{var start=new URL(location.href).searchParams.get('q');if(start){input.value=start;syncClear();ask();}}catch(e){}
 })();
