@@ -169,7 +169,7 @@ function lvay_ys_render() {
 	?>
 <div class="lvay-ys" id="lvay-ys">
   <div class="lvay-ys-head">
-    <h1>Hey <span>Y&#8217;all</span></h1>
+    <h1>&ldquo;Hey <span>Y&#8217;all</span>&hellip;&rdquo;</h1>
     <p>Ask anything about Louisiana high school football history, 1990 to today, or about the LHSAA rules.</p>
   </div>
   <form class="lvay-ys-form" autocomplete="off">
@@ -200,11 +200,11 @@ function lvay_ys_render() {
 .lvay-ys-chip{font-family:'Teko',sans-serif;font-size:17px;line-height:1;padding:7px 10px 4px;border:1px solid #cfd8d8;background:#f4f8f8;border-radius:20px;cursor:pointer;color:#0b4f4e}
 .lvay-ys-chip:hover{background:#e3f0f0;border-color:#008584}
 .lvay-ys-out{margin-top:20px}
-.lvay-ys-card{border-left:6px solid #008584;background:#f7f9f9;padding:18px 20px;border-radius:4px}
+.lvay-ys-card{border:1.5px solid #1E7D53;background:#E1F1E8;padding:16px 18px;border-radius:10px}
 .lvay-ys-card.miss{border-color:#c9a227;background:#fffbea}
 .lvay-ys-ans{font-size:20px;line-height:1.45;margin:0;font-weight:700;color:#111}
 .lvay-ys-try[hidden]{display:none}
-.lvay-ys-how{font-family:'Teko',sans-serif;font-size:17px;color:#5b6b6b;margin:10px 0 0;text-transform:uppercase;letter-spacing:.5px}
+.lvay-ys-how{font-family:'Teko',sans-serif;font-size:17px;color:#1E7D53;margin:10px 0 0;text-transform:uppercase;letter-spacing:.5px}
 .lvay-ys-tablewrap{overflow-x:auto;margin-top:16px}
 .lvay-ys table{width:100%;border-collapse:collapse;font-size:15px;min-width:560px}
 .lvay-ys th{font-family:'Teko',sans-serif;font-size:17px;text-align:left;background:#111;color:#fff;padding:6px 10px 3px;font-weight:400;letter-spacing:.5px}
