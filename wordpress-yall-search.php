@@ -213,7 +213,7 @@ function lvay_ys_render() {
 .lvay-ys-try.lvay-ys-samples{display:block;margin:16px 0 4px}
 .lvay-ys-samples[hidden]{display:none!important}
 .lvay-ys-samples-h{font-family:'Teko',sans-serif;font-size:23px;letter-spacing:.5px;text-transform:uppercase;color:#111;margin:0 0 8px;line-height:1}
-.lvay-ys-samples-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 28px}
+.lvay-ys-samples-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 24px}
 .lvay-ys-sgh{font-family:'Teko',sans-serif;font-size:19px;letter-spacing:.5px;text-transform:uppercase;color:#008584;line-height:1.05;margin:0 0 4px;border-bottom:1px solid #d5e3e3;padding-bottom:3px}
 .lvay-ys a.lvay-ys-sq{display:block;font-family:'PT Serif',Georgia,serif;font-size:15.5px;line-height:1.35;color:#111;text-decoration:none;padding:3px 0 3px 14px;position:relative}
 .lvay-ys a.lvay-ys-sq:before{content:'\201C';position:absolute;left:0;top:2px;color:#008584;font-weight:700}
@@ -254,13 +254,9 @@ function lvay_ys_render() {
   var form=root.querySelector('form'), input=form.q, out=root.querySelector('.lvay-ys-out'),
       tryBox=root.querySelector('.lvay-ys-try'), cov=root.querySelector('.lvay-ys-cov');
   var SAMPLES=[
-    ['Cross-Decade Comparisons',['1997 Evangel vs 2024 Karr. Who gave up the least amount of points?','2018 Calvary Baptist, 1995 Edna Karr, 2007 Many','Ruston 2018 vs Ruston 2023. Who scored more?']],
-    ['How a Team Fared Against a Class or Division',['What is the Many Tigers record vs Select schools?','West Monroe record vs 5A teams in the playoffs']],
-    ['Head-to-Head',['Ruston vs West Monroe','Karr vs Curtis']],
-    ['Every Team in Louisiana',['Last time a team scored 40+ in 5 straight games','Most points scored in a single game']],
-    ['Points & Streaks',['When is the last time West Monroe gave up 50?','Longest winning streak for John Curtis']],
-    ['Class & Select History',['How long has Evangel been 5A?','When did Select start?']],
-    ['LHSAA Rules in Plain English',['Is there a mercy rule?','Do incoming freshmen have to live in the district?']]];
+    ['Cross-Decade Comparisons',['1997 Evangel vs 2024 Karr. Who gave up the least amount of points?']],
+    ['How a Team Fared Against a Class or Division',['What is the Many Tigers record vs Select schools?']],
+    ['Head-to-Head',['Ruston vs West Monroe']]];
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function chips(list,box){box.innerHTML='';list.forEach(function(t){var b=document.createElement('button');b.type='button';b.className='lvay-ys-chip';b.textContent=t;b.onclick=function(){input.value=t;ask();};box.appendChild(b);});}
   function samples(){
