@@ -182,6 +182,28 @@ class HandbookTests(unittest.TestCase):
                          "head_to_head")
 
 
+class StreakAndCompareTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.a = y.Answerer(y.build_games(ARCHIVE))
+
+    def test_all_teams_scoring_streak(self):
+        r = self.a.answer("last time a team scored 20+ in 2 straight games")
+        self.assertEqual(r["intent"], "points_streak")
+        self.assertIn("West Monroe", r["answer"])
+        self.assertTrue(r["table"]["rows"])
+
+    def test_season_compare_two_schools(self):
+        r = self.a.answer("West Monroe 2019 vs West Monroe 2021")
+        self.assertEqual(r["intent"], "compare_seasons")
+        self.assertEqual(r["table"]["cols"][1:],
+                         ["West Monroe 2019", "West Monroe 2021"])
+
+    def test_year_range_is_not_a_compare(self):
+        r = self.a.answer("West Monroe record between 2019 and 2021")
+        self.assertEqual(r["intent"], "record")
+
+
 class NoteTests(unittest.TestCase):
     def test_note_only_when_pertinent(self):
         a = y.Answerer(y.build_games(ARCHIVE))

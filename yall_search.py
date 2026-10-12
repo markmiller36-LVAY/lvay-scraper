@@ -36,6 +36,11 @@ ARCHIVE_PATH = os.path.join(HERE, "football_archives_greenlit.json.gz")
 SEASON_2025_PATH = os.path.join(HERE, "football_2025_clean.json")
 
 EXAMPLES = [
+    "Ruston vs West Monroe",
+    "How long has Evangel been 5A?",
+    "Last time a team scored 40+ in 5 straight games",
+    "West Monroe 2009 vs Neville 2019",
+    "Ruston 2018 vs Ruston 2023",
     "When is the last time West Monroe had 50 points put on them?",
     "When is the last time Neville scored 60?",
     "West Monroe vs Neville",
@@ -458,6 +463,7 @@ class TeamIndex:
         self.schools = sorted(set(school_names))
         self.variants = {}          # tuple(tokens) -> set(official names)
         self.school_set = set(self.schools)
+        self.exact = {tuple(_norm(n).split()): n for n in self.schools}
         for name in self.schools:
             for variant in self._variants(name):
                 self.variants.setdefault(variant, set()).add(name)
@@ -556,6 +562,10 @@ class TeamIndex:
                 found.append({"names": sorted(names), "text": best[0],
                               "start": start, "fuzzy": True})
 
+        for match in found:
+            key = tuple(match["text"].split())
+            if len(match["names"]) > 1 and key in self.exact:
+                match["names"] = [self.exact[key]]
         found.sort(key=lambda m: m["start"])
         # Prefer real schools over opponent-only names when ambiguous.
         for match in found:
@@ -680,6 +690,57 @@ def _extract_filters(q):
         f["playoffs"] = False
         f["labels"].append("regular season")
     return f, q
+
+
+NUM_WORDS = {"two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+             "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11,
+             "twelve": 12, "fifteen": 15, "twenty": 20, "thirty": 30,
+             "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70}
+
+
+def _scoring_streak_q(q):
+    """'scored 40+ in 5 straight games' -> {points, games, strict, allowed,
+    longest} or None."""
+    if not re.search(r"\b(in a row|straight|consecutive|streak|"
+                     r"back to back)\b", q):
+        return None
+    if not re.search(r"\b(points?|pts|scor\w*|put up|hung|hang|dropp?\w*|"
+                     r"gave up|give up|allow\w*|surrender\w*)\b", q):
+        return None
+    q2 = re.sub(r"\b(" + "|".join(NUM_WORDS) + r")\b",
+                lambda m: str(NUM_WORDS[m.group(1)]), q)
+    games_m = re.search(r"\b(\d{1,2})\s*(?:straight|consecutive|games?|"
+                        r"weeks?|in a row)\b", q2)
+    longest = bool(re.search(r"\b(longest|most|record)\b", q))
+    if not games_m:
+        if not longest:
+            return None
+        rest = q2   # "longest streak of scoring 50" -> any run, longest first
+    else:
+        rest = q2[:games_m.start()] + " " + q2[games_m.end():]
+    pts_m = re.search(r"\b(over|more than|above|at least)?\s*(\d{1,3})"
+                      r"\s*\+?", rest)
+    if not pts_m:
+        return None
+    points = int(pts_m.group(2))
+    games = int(games_m.group(1)) if games_m else 2
+    if not (2 <= games <= 30) or not (0 < points <= 120):
+        return None
+    allowed = bool(re.search(r"\b(gave up|give up|giving up|allow\w*|"
+                             r"surrender\w*|put on|on them|scored on|"
+                             r"against them)\b", q))
+    return {"points": points, "games": games,
+            "strict": pts_m.group(1) in ("over", "more than", "above"),
+            "allowed": allowed,
+            "longest": longest}
+
+
+def _question_tokens(question):
+    """Same tokens TeamIndex.find uses, so positions line up."""
+    out = []
+    for raw in re.sub(r"[^A-Za-z0-9.&'’\-\s]", " ", question).split():
+        out.extend(_norm(raw).split())
+    return out
 
 
 def _history_question(q):
@@ -944,6 +1005,10 @@ class Answerer:
         for t in teams:  # strip team names so they can't trigger keywords
             q = re.sub(rf"\b{re.escape(t['text'])}\b", " ", q, count=1)
 
+        pairs = self._season_pairs(question, teams, q)
+        if pairs:
+            return self._compare_seasons(base, pairs)
+
         hist = _history_question(q)
         if hist and teams:
             team = teams[0]["names"][0]
@@ -974,6 +1039,16 @@ class Answerer:
                 return faq
 
         filters, q = _extract_filters(q)
+        streak_q = _scoring_streak_q(q)
+        if streak_q:
+            scope = [t["names"][0] for t in teams
+                     if t["names"][0] in self.by_school]
+            if not re.search(r"\b(all teams|any team|a team|anybody|anyone|"
+                             r"which team|what team|who)\b", q) and scope:
+                scope = scope[:1]
+            else:
+                scope = None
+            return self._points_streak(base, streak_q, scope, filters)
         number = _extract_number(q)
         intent = detect_intent(q, len(teams), number)
 
@@ -1029,6 +1104,195 @@ class Answerer:
                     n=number) + scope,
                 "answer": text,
                 "rows": [g.as_row() for g in rows][:25]}
+
+    # ── scoring streaks ("40+ in 5 straight games", all teams) ──
+    def _points_streak(self, base, sq, scope, filters):
+        n, pts = sq["games"], sq["points"]
+        side = "pa" if sq["allowed"] else "pf"
+
+        def hit(g):
+            v = getattr(g, side)
+            return v > pts if sq["strict"] else v >= pts
+
+        runs = []
+        for school in (scope or self.by_school):
+            games = _apply_filters(self.by_school.get(school, []), filters)
+            cur = []
+            for g in games + [None]:
+                if g is not None and hit(g):
+                    cur.append(g)
+                    continue
+                if len(cur) >= n:
+                    runs.append((school, cur))
+                cur = []
+        thr = f"more than {pts}" if sq["strict"] else f"{pts}+"
+        verb = "gave up" if sq["allowed"] else "scored"
+        who = scope[0] if scope else "a team"
+        label = (f"{who} {verb} {thr} points in {n}+ straight games"
+                 + (f" ({', '.join(filters['labels'])})"
+                    if filters["labels"] else ""))
+        if not runs:
+            return {**base, "matched": True, "status": "ok",
+                    "intent": "points_streak", "teams": scope or [],
+                    "interpreted_as": label,
+                    "answer": f"I can't find {who} that {verb} {thr} "
+                              f"points in {n} straight games in our "
+                              f"records ({self.coverage()})."}
+
+        def end_key(r):
+            return r[1][-1].sort_key
+
+        if sq["longest"]:
+            runs.sort(key=lambda r: (len(r[1]), end_key(r)), reverse=True)
+        else:
+            runs.sort(key=end_key, reverse=True)
+
+        def span(gs):
+            a, b = gs[0], gs[-1]
+            return (f"{_fmt_date(a.date) or a.season} to "
+                    f"{_fmt_date(b.date) or b.season}")
+
+        school, gs = runs[0]
+        avg = sum(getattr(g, side) for g in gs) / len(gs)
+        lead = ("The longest run" if sq["longest"] else "The last time")
+        text = (f"{lead}: {school} {verb} {thr} points in {len(gs)} "
+                f"straight games, {span(gs)} ({avg:.1f} a game). "
+                f"It has happened {len(runs)} time"
+                f"{'s' if len(runs) != 1 else ''} in our records "
+                f"({self.first_season}\u2013{self.last_season}).")
+        rows = []
+        for school, gs in runs[:20]:
+            avg = sum(getattr(g, side) for g in gs) / len(gs)
+            seasons = sorted({g.season for g in gs})
+            rows.append([school,
+                         str(seasons[0]) if len(seasons) == 1
+                         else f"{seasons[0]}\u2013{seasons[-1]}",
+                         _fmt_date(gs[0].date), _fmt_date(gs[-1].date),
+                         str(len(gs)), f"{avg:.1f}"])
+        return {**base, "matched": True, "status": "ok",
+                "intent": "points_streak", "teams": scope or [],
+                "interpreted_as": label, "answer": text,
+                "table": {"cols": ["Team", "Season", "From", "To",
+                                   "Games", "Pts per game" if side == "pf"
+                                   else "Allowed per game"],
+                          "rows": rows}}
+
+    # ── season vs season ("West Monroe 2009 vs Neville 2019") ──
+    def _season_pairs(self, question, teams, q):
+        if re.search(r"\b(between|since|from|through|thru|until|before|"
+                     r"after|to)\b", q):
+            return None
+        toks = _question_tokens(question)
+        years = [(i, int(t)) for i, t in enumerate(toks)
+                 if re.fullmatch(r"(19|20)\d\d", t)
+                 and self.first_season <= int(t) <= self.last_season]
+        found = [(t["start"], t["names"][0]) for t in teams
+                 if t["names"][0] in self.by_school]
+        if not found or not years:
+            return None
+        compare_word = re.search(r"\b(compare\w*|better|stack\w*|vs|"
+                                 r"versus|or|and)\b", q)
+        if len(years) < 2 and not (len(found) >= 2 and re.search(
+                r"\b(compare\w*|better|stack\w*)\b", q)):
+            return None
+        if not compare_word:
+            return None
+        if len(found) == 1:
+            pairs = [(found[0][1], y) for _, y in years]
+        elif len(found) == len(years):
+            pairs = [(t, y) for (_, t), (_, y) in zip(found, years)]
+        elif len(years) == 1:
+            pairs = [(t, years[0][1]) for _, t in found]
+        else:
+            pairs = []
+            for pos, y in years:
+                before = [t for s, t in found if s < pos]
+                pairs.append((before[-1] if before else found[0][1], y))
+        seen, out = set(), []
+        for p in pairs:
+            if p not in seen:
+                seen.add(p)
+                out.append(p)
+        return out[:4] if len(out) >= 2 else None
+
+    def _season_stats(self, team, season):
+        gs = [g for g in self.by_school.get(team, []) if g.season == season]
+        if not gs:
+            return None
+        reg = [g for g in gs if not g.playoff]
+        po = [g for g in gs if g.playoff]
+        pf, pa = sum(g.pf for g in gs), sum(g.pa for g in gs)
+        n = len(gs)
+        wins = [g for g in gs if g.result == "W"]
+        big = max(wins, key=lambda g: g.pf - g.pa) if wins else None
+        rec = self.history.get(team, {}).get(season, {})
+        cls = rec.get("class", "")
+        br = bracket_label(season, cls, rec.get("track"), rec.get("division"))
+        last_po = po[-1] if po else None
+        return {
+            "label": f"{team} {season}",
+            "record": _fmt_record(*_record(gs)),
+            "regular": _fmt_record(*_record(reg)),
+            "class": cls + (f" ({br})" if br and br != f"Class {cls}" else ""),
+            "pf": pf, "pa": pa, "ppg": pf / n, "oppg": pa / n,
+            "diff": pf - pa, "shutouts": sum(1 for g in gs if g.pa == 0),
+            "playoffs": (_fmt_record(*_record(po)) +
+                         (f" (last: {last_po.result} {last_po.pf}-"
+                          f"{last_po.pa} vs {last_po.opponent})"
+                          if last_po else "")) if po else "Didn't make it",
+            "big": (f"{big.pf}-{big.pa} vs {big.opponent}" if big else "\u2014"),
+            "games": n,
+        }
+
+    def _compare_seasons(self, base, pairs):
+        stats, missing = [], []
+        for team, season in pairs:
+            st = self._season_stats(team, season)
+            (stats.append(st) if st else missing.append(f"{team} {season}"))
+        if len(stats) < 2:
+            have = ", ".join(s["label"] for s in stats) or "either season"
+            return {**base, "matched": True, "status": "ok",
+                    "intent": "compare_seasons",
+                    "teams": sorted({t for t, _ in pairs}),
+                    "interpreted_as": "Season comparison",
+                    "answer": f"I don't have games for "
+                              f"{' or '.join(missing)} in our records "
+                              f"({self.coverage()}), so I can only show "
+                              f"{have}."}
+
+        def sign(v):
+            return f"+{v}" if v > 0 else str(v)
+
+        parts = [f"{s['label']} went {s['record']}, scoring "
+                 f"{s['ppg']:.1f} and allowing {s['oppg']:.1f} a game"
+                 for s in stats]
+        best = max(stats, key=lambda s: s["diff"] / s["games"])
+        text = ("; ".join(parts) + ". "
+                f"{best['label']} had the best point differential "
+                f"({sign(best['diff'])} over {best['games']} games).")
+        if missing:
+            text += f" No games found for {', '.join(missing)}."
+        rows = [
+            ["Record", *[s["record"] for s in stats]],
+            ["Regular season", *[s["regular"] for s in stats]],
+            ["Class", *[s["class"] or "\u2014" for s in stats]],
+            ["Points scored", *[f"{s['pf']} ({s['ppg']:.1f} a game)"
+                                for s in stats]],
+            ["Points allowed", *[f"{s['pa']} ({s['oppg']:.1f} a game)"
+                                 for s in stats]],
+            ["Point differential", *[sign(s["diff"]) for s in stats]],
+            ["Shutouts", *[str(s["shutouts"]) for s in stats]],
+            ["Biggest win", *[s["big"] for s in stats]],
+            ["Playoffs", *[s["playoffs"] for s in stats]],
+        ]
+        return {**base, "matched": True, "status": "ok",
+                "intent": "compare_seasons",
+                "teams": sorted({t for t, _ in pairs}),
+                "interpreted_as": "Season comparison: " +
+                " vs ".join(s["label"] for s in stats),
+                "answer": text,
+                "table": {"cols": ["", *[s["label"] for s in stats]],
+                          "rows": rows, "first_col_bold": True}}
 
     def _faq(self, base, question):
         entry = rules_faq.match(_norm(question))
