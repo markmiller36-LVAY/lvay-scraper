@@ -456,6 +456,17 @@ def _norm(text):
     return " ".join(text.split())
 
 
+# Names fans commonly use that the automatic short forms don't produce.
+SHORT_NAMES = {
+    "Karr": "Edna Karr", "Curtis": "John Curtis Christian",
+    "Newman": "Isidore Newman", "St Aug": "St. Augustine",
+    "St. Aug": "St. Augustine", "Ehret": "John Ehret",
+    "STM": "St. Thomas More", "LCA": "Lafayette Christian",
+    "OCS": "Ouachita Christian", "Ouachita": "Ouachita Parish",
+    "Teurlings": "Teurlings Catholic", "Landry": "Lord Beaconsfield Landry",
+}
+
+
 class TeamIndex:
     """Maps normalized name variants -> list of official school names."""
 
@@ -464,6 +475,10 @@ class TeamIndex:
         self.variants = {}          # tuple(tokens) -> set(official names)
         self.school_set = set(self.schools)
         self.exact = {tuple(_norm(n).split()): n for n in self.schools}
+        for short, full in SHORT_NAMES.items():
+            if full in self.school_set:
+                key = tuple(_norm(short).split())
+                self.variants.setdefault(key, set()).add(full)
         for name in self.schools:
             for variant in self._variants(name):
                 self.variants.setdefault(variant, set()).add(name)
@@ -1041,7 +1056,7 @@ class Answerer:
 
         pairs = self._season_pairs(question, teams, q)
         if pairs:
-            return self._compare_seasons(base, pairs)
+            return self._compare_seasons(base, pairs, q)
 
         hist = _history_question(q)
         if hist and teams:
@@ -1391,7 +1406,7 @@ class Answerer:
             "games": n,
         }
 
-    def _compare_seasons(self, base, pairs):
+    def _compare_seasons(self, base, pairs, q=""):
         stats, missing = [], []
         for team, season in pairs:
             st = self._season_stats(team, season)
@@ -1413,10 +1428,25 @@ class Answerer:
         parts = [f"{s['label']} went {s['record']}, scoring "
                  f"{s['ppg']:.1f} and allowing {s['oppg']:.1f} a game"
                  for s in stats]
-        best = max(stats, key=lambda s: s["diff"] / s["games"])
-        text = ("; ".join(parts) + ". "
-                f"{best['label']} had the best point differential "
-                f"({sign(best['diff'])} over {best['games']} games).")
+        text = "; ".join(parts) + ". "
+        allowed_q = re.search(r"\b(gave up|give up|given up|allow\w*|"
+                              r"defen[cs]e|surrender\w*)\b", q)
+        if allowed_q:
+            fewest = not re.search(r"\b(most|more|worst)\b", q)
+            pick = (min if fewest else max)(stats, key=lambda s: s["oppg"])
+            text = (f"{pick['label']} gave up the {'fewest' if fewest else 'most'}"
+                    f" points: {pick['oppg']:.1f} a game ({pick['pa']} in "
+                    f"{pick['games']} games). " + text)
+        elif re.search(r"\b(scor\w*|points|offen[cs]e)\b", q):
+            most = not re.search(r"\b(least|fewest|less|worst)\b", q)
+            pick = (max if most else min)(stats, key=lambda s: s["ppg"])
+            text = (f"{pick['label']} scored the {'most' if most else 'fewest'}"
+                    f": {pick['ppg']:.1f} points a game ({pick['pf']} in "
+                    f"{pick['games']} games). " + text)
+        else:
+            best = max(stats, key=lambda s: s["diff"] / s["games"])
+            text += (f"{best['label']} had the best point differential "
+                     f"({sign(best['diff'])} over {best['games']} games).")
         if missing:
             text += f" No games found for {', '.join(missing)}."
         rows = [

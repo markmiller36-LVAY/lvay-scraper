@@ -203,6 +203,13 @@ class StreakAndCompareTests(unittest.TestCase):
         r = self.a.answer("2019 West Monroe, 2021 Neville")
         self.assertEqual(r["intent"], "compare_seasons")
 
+    def test_compare_verdict_follows_question(self):
+        r = self.a.answer("West Monroe 2019 vs West Monroe 2021. Who gave up the least points?")
+        self.assertEqual(r["intent"], "compare_seasons")
+        self.assertIn("gave up the fewest points", r["answer"])
+        r = self.a.answer("West Monroe 2019 vs West Monroe 2021 who scored more")
+        self.assertIn("scored the most", r["answer"])
+
     def test_year_range_is_not_a_compare(self):
         r = self.a.answer("West Monroe record between 2019 and 2021")
         self.assertEqual(r["intent"], "record")
