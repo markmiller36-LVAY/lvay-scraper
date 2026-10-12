@@ -104,6 +104,9 @@ SYNONYMS = {
     "calculated": ["determine", "determined", "determining"],
     "figured": ["determine", "determined", "determining"],
     "semester": ["semesters", "consecutive", "length", "eligibility"],
+    "freshman": ["9th", "grade", "first", "choice"],
+    "freshmen": ["9th", "grade", "first", "choice"],
+    "incoming": ["9th", "entering", "first"],
 }
 
 
@@ -143,7 +146,8 @@ _SYN = _syn_table()
 HEADER_RE = re.compile(
     r"^.{0,90}?2026-2027 LHSAA Handbook\s*\|\s*[A-Za-z ()&]+?\s+(\d{1,3})\b"
     r"(?:\s+[A-Z][A-Z &()]+(?=\s))?")
-RULE_RE = re.compile(r"(?:(?<=\s)|^)(\d{1,2}(?:\.\d{1,2}){1,4})\s+(?=[A-Z(\"“])")
+RULE_RE = re.compile(r"(?:(?<=\s)|^)(\d{1,2}(?:\.\d{1,2}){1,4})\s+"
+                     r"(?=[A-Z(\"“]|\d{1,2}(?:st|nd|rd|th)\b)")
 
 
 GLOSSARY_RE = re.compile(
