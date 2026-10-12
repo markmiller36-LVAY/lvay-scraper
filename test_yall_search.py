@@ -13,11 +13,11 @@ def g(school, opp, score, date, phase="Regular Season", ha="H", dist=False):
 
 ARCHIVE = {"seasons": {
     "2019": {"schools": [
-        {"school": "West Monroe", "games": [
+        {"school": "West Monroe", "class_": "5A", "games": [
             g("West Monroe", "Neville", "28-52", "10/11/2019", dist=True),
             g("West Monroe", "Ruston", "35-0", "10/18/2019", ha="A"),
         ]},
-        {"school": "Neville", "games": [
+        {"school": "Neville", "class_": "4A", "games": [
             g("Neville", "West Monroe", "52-28", "10/11/2019", ha="A"),
         ]},
         {"school": "Woodlawn - Shrev.", "games": [
@@ -104,6 +104,17 @@ class YallSearchTests(unittest.TestCase):
         r = self.ask("Who was West Monroe's quarterback")
         self.assertEqual(r["status"], "no_template")
         self.assertTrue(r["examples"])
+
+
+class OpponentClassTests(unittest.TestCase):
+    def test_record_vs_class(self):
+        a = y.Answerer(y.build_games(ARCHIVE))
+        r = a.answer("Whats Neville all time record vs 5A teams?")
+        self.assertEqual(r["intent"], "record")
+        self.assertIn("vs 5A opponents", r["filters"])
+        self.assertIn("1-0", r["answer"])  # beat 5A West Monroe in 2019
+        r = a.answer("West Monroe record against 4A")
+        self.assertIn("0-1", r["answer"])  # lost to 4A Neville in 2019
 
 
 if __name__ == "__main__":

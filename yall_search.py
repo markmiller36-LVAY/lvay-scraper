@@ -54,6 +54,7 @@ class Game:
     __slots__ = (
         "season", "date", "school", "opponent", "pf", "pa", "result",
         "phase", "week", "home_away", "is_district", "playoff", "forfeit",
+        "opp_class",
     )
 
     def __init__(self, **kw):
@@ -73,6 +74,7 @@ class Game:
             "opponent": self.opponent,
             "score": f"{self.pf}-{self.pa}",
             "result": self.result,
+            "opp_class": self.opp_class or "",
             "where": {"H": "Home", "A": "Away", "N": "Neutral"}.get(
                 (self.home_away or "").upper(), ""),
             "phase": self.phase,
@@ -118,9 +120,27 @@ def _week_number(value):
     return int(match.group()) if match else 0
 
 
+def _clean_class(value):
+    """'Class 5A' / '5a' / 'B' -> '5A' / 'B' ('' when unknown)."""
+    text = str(value or "").upper().replace("CLASS", "").strip()
+    return text if re.fullmatch(r"[1-5]A|B|C", text) else ""
+
+
 def build_games(archive, season_2025_rows=None):
     """Turn the archive JSON (+ optional 2025 rows) into Game objects."""
     games = []
+    # (season, normalized school) -> that school's class that season, so
+    # every game knows the OPPONENT'S class at the time ("vs 5A teams").
+    class_of = {}
+    for season, data in (archive or {}).get("seasons", {}).items():
+        for school in data.get("schools", []):
+            if school.get("class_"):
+                class_of[(str(season), _norm(school["school"]))] = \
+                    _clean_class(school["class_"])
+    for g in season_2025_rows or []:
+        if g.get("class_"):
+            class_of[(str(g.get("season") or 2025), _norm(g.get("school")))] \
+                = _clean_class(g["class_"])
     for season, data in (archive or {}).get("seasons", {}).items():
         try:
             year = int(season)
@@ -146,6 +166,10 @@ def build_games(archive, season_2025_rows=None):
                     is_district=bool(g.get("is_district")),
                     playoff=phase != "Regular Season",
                     forfeit=bool(g.get("forfeit")),
+                    opp_class=(_clean_class(g.get("opp_class"))
+                               or class_of.get((str(season),
+                                                _norm(g.get("opponent"))),
+                                               "")),
                 ))
     for g in season_2025_rows or []:
         score = _parse_score(g.get("score"))
@@ -165,6 +189,8 @@ def build_games(archive, season_2025_rows=None):
             is_district="(d)" in str(g.get("district") or ""),
             playoff=False,
             forfeit=False,
+            opp_class=class_of.get((str(g.get("season") or 2025),
+                                    _norm(g.get("opponent"))), ""),
         ))
     games.sort(key=lambda game: game.sort_key)
     return games
@@ -346,7 +372,21 @@ class TeamIndex:
 def _extract_filters(q):
     """Season range, home/away, district, playoffs. Returns (filters, q')."""
     f = {"min_season": None, "max_season": None, "where": None,
-         "district": False, "playoffs": None, "labels": []}
+         "district": False, "playoffs": None, "opp_class": None,
+         "labels": []}
+
+    # Opponent's class: "vs 5A teams", "against Class 4A", "5A opponents".
+    cls = r"(?:class\s*)?([1-5]a)\b"
+    m = (re.search(r"\b(?:vs|versus|against|over|to|beat|beating|played|"
+                   r"playing|with)\s+(?:all\s+|other\s+)?" + cls, q)
+         or re.search(r"\b" + cls + r"\s*(?:teams?|schools?|opponents?|"
+                      r"opposition|competition|programs?|foes)\b", q)
+         or re.search(r"\bclass\s+([bc])\s*(?:teams?|schools?|"
+                      r"opponents?)\b", q))
+    if m:
+        f["opp_class"] = m.group(1).upper()
+        f["labels"].append(f"vs {f['opp_class']} opponents")
+        q = q.replace(m.group(0), " ")
 
     m = re.search(r"\bbetween (19\d\d|20\d\d) and (19\d\d|20\d\d)\b", q)
     if m:
@@ -404,6 +444,8 @@ def _apply_filters(games, f):
         if f["playoffs"] is True and not g.playoff:
             continue
         if f["playoffs"] is False and g.playoff:
+            continue
+        if f["opp_class"] and g.opp_class != f["opp_class"]:
             continue
         out.append(g)
     return out
@@ -494,6 +536,8 @@ def detect_intent(q, team_count, number):
         return "last_loss"
     if last and _has(q, r"won|win|wins|victory"):
         return "last_win"
+    if _has(q, r"beat|beaten|beats|defeat|defeated|lost to|lose to"):
+        return "record"
     if _has(q, r"record|how many wins|how many games|all time|alltime|"
                r"wins|won"):
         return "record"
@@ -617,6 +661,7 @@ class Answerer:
             games = [g for g in games if _opp_matches(g, other)]
 
         handler = getattr(self, f"_a_{intent}")
+        self._labels = filters["labels"]
         text, rows = handler(team, other[0] if other else None, games,
                              number)
         scope = f" ({', '.join(filters['labels'])})" if filters["labels"] \
@@ -843,7 +888,10 @@ class Answerer:
         seasons = sorted({g.season for g in games})
         span = (str(seasons[0]) if len(seasons) == 1
                 else f"{seasons[0]}–{seasons[-1]}")
-        return (f"{team} is {_fmt_record(w, l, t)} ({span}).",
+        extra = [x for x in getattr(self, "_labels", [])
+                 if not re.match(r"^(since|before|\d{4})", x)]
+        detail = ", ".join([span] + extra)
+        return (f"{team} is {_fmt_record(w, l, t)} ({detail}).",
                 list(reversed(games)))
 
 
