@@ -56,3 +56,16 @@ ADD	fix-1990-0019	1990	1990-09-21	Redemptorist	LA.EB-029	34	Parkview Baptist	LA.
 DROP	481569	1990								Not a Louisiana game: Atkins 42 Clinton 7 is Clinton, Arkansas (AP Arkansas scores, Sep 15 1990)
 CODE	481570	1990	1990-09-14	Sunset	LA.SL-014					Lafayette Advertiser box score Sep 15 1990: Sunset (La.) 9 Delcambre 6, not Dallas Sunset (Tex.)
 SCORE	458741	1990	1990-09-21	False River	LA.PO-003	47	Prairie View	LA.EB-?	20	Monroe News-Star box score Sep 22 1990 (14-13-20-0 = 47; AP had 48)
+DATE	458337	1990	1990-09-28							Town Talk story + box score Bolton 27 Winnfield 0 (Bolton 5-0, Sam Houston next week), Sep 29 1990
+DATE	458604	1990	1990-09-28							Town Talk box score Bunkie 34 Breaux Bridge 19, Sep 29 1990
+DATE	458456	1990	1990-09-28							1990 week 5 newspapers (Alexandria Town Talk local scores + summaries, Shreveport Times summaries, AP lists), Sep 29 1990; game played week 5
+SCORE	458650	1990	1990-09-28	Avoyelles	LA.AV-003	34	Plaisance	LA.SL-015	14	Town Talk box score Sep 29 1990 (Plaisance TD + TD/2-pt = 14; AP had 15)
+SCORE	458677	1990	1990-09-28	Rosepine	LA.VN-002	37	Northwood	LA.CO-006	6	Town Talk box score Sep 29 1990 (Northwood TD, run failed = 6; AP had 7)
+CODE	458677	1990	1990-09-28	Northwood	LA.RA-007			LA.CO-006		Town Talk local game: Rosepine beat Northwood (Lena); Northwood (Shreveport) lost 21-0 at Springhill that night (Shreveport Times box score)
+DATE	458333	1990	1990-10-05							Shreveport Times city scores Oct 6 1990; game played week 6
+DATE	458216	1990	1990-10-05							Shreveport Times city scores Oct 6 1990; game played week 6
+DATE	458332	1990	1990-10-05							1990 week 6 newspapers (Shreveport Times city + state scores, Alexandria Town Talk summaries), Oct 6 1990; game played week 6
+DATE	458341	1990	1990-10-05							Town Talk box score Sam Houston 21 Bolton 19, Oct 6 1990; game played week 6
+DATE	458472	1990	1990-10-05							Town Talk box score Bunkie 18 Marksville 16, Oct 6 1990; game played week 6
+DROP	671717	1990								Duplicate of Ville Platte 28 Bunkie 21 (game 1663692); Ville Platte played Crowley Oct 5 1990
+CODE	481558	1990	1990-10-05	Sunset	LA.SL-014					Sunset (La.) 28 Teurlings 0, not Dallas Sunset (Tex.) (Shreveport Times state scores, Town Talk, Oct 6 1990)
