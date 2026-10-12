@@ -102,6 +102,8 @@ class YallSearchTests(unittest.TestCase):
 
     def test_unknown_wording_falls_back(self):
         r = self.ask("Who was West Monroe's quarterback")
+        self.assertEqual(r["intent"], "player_stats")
+        r = self.ask("What does West Monroe think about the weather")
         self.assertEqual(r["status"], "no_template")
         self.assertTrue(r["examples"])
 
@@ -303,3 +305,30 @@ class StateTitleTests(unittest.TestCase):
     def test_district_title_not_state(self):
         r = self.a.answer("West Monroe district championships")
         self.assertNotEqual(r.get("intent"), "state_titles")
+
+
+class LogFollowupTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.a = y.Answerer(y.build_games(ARCHIVE), titles={})
+
+    def test_averages(self):
+        r = self.a.answer("how many points has West Monroe averaged per game")
+        self.assertEqual(r["intent"], "averages")
+        self.assertIn("points a game", r["answer"])
+
+    def test_alltime_wins_and_pct(self):
+        r = self.a.answer("What school has the most wins all time")
+        self.assertEqual(r["intent"], "alltime_wins")
+        r = self.a.answer("which school has the best winning percentage")
+        self.assertEqual(r["intent"], "alltime_pct")
+
+    def test_playoff_apps(self):
+        r = self.a.answer("How many times has West Monroe made the playoffs?")
+        self.assertEqual(r["intent"], "playoff_apps")
+
+    def test_best_team_and_superdome(self):
+        r = self.a.answer("What has been the best West Monroe team?")
+        self.assertEqual(r["intent"], "best_season")
+        r = self.a.answer("When was the last state championship game not played in the Super Dome?")
+        self.assertIn("2020", r["answer"])

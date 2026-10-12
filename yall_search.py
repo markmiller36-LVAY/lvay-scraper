@@ -258,6 +258,15 @@ FACTS = [
      "COVID: the cycle that began in 2019 ran three seasons "
      "(2019\u20132021). The recent reclass years are 2017, 2019, 2022 and "
      "2024, and the next cycle starts in 2026."),
+    ("Where the state championship games are played",
+     r"\bsuper ?dome\b|\bprep classic\b|\bwhere (are|is|were|was) (the )?"
+     r"(state )?(championship|title|finals?)\b",
+     "The LHSAA football title games (the Prep Classic) have been played in "
+     "the Superdome in New Orleans since 1981, with two exceptions: 2005, "
+     "when Hurricane Katrina damage moved them to Independence Stadium in "
+     "Shreveport, and 2020, when COVID moved them to Turpin Stadium at "
+     "Northwestern State in Natchitoches. So 2020 is the most recent time "
+     "the finals weren't in the Dome."),
     ("How many playoff brackets there are",
      r"\bhow many\b.*\b(brackets?|divisions?|classes|classifications?|"
      r"state champions?|champions)\b",
@@ -803,6 +812,28 @@ TITLE_RE = re.compile(
     r"championship games?|championships?|titles?)\b")
 
 
+STATS_RE = re.compile(
+    r"\b(yards?|yds|touchdowns?|tds|tackles?|sacks?|interceptions?|"
+    r"receptions?|catches|carries|completions?|rushing|passing|receiving|"
+    r"quarterbacks?|qbs?|running backs?|receivers?|mvp|all ?state|"
+    r"winningest)\b|\b(coach|cosch|coaches)\b.*\b(wins?|eins|record|"
+    r"leaders?|most|career)\b|\b(career|all ?time) (wins?|eins|leaders?)"
+    r"\b.*\b(coach|cosch)")
+PLAYOFF_APPS_RE = re.compile(
+    r"\b(playoffs?|post ?season)\b.*\b(appearances?|trips?|berths?)\b|"
+    r"\b(how many times|how often|how many years|how many seasons|"
+    r"number of times|times)\b.*\b(made|make|reached|reach|been to|gone to|"
+    r"go to|went to|qualif\w*|in)\b.*\b(playoffs?|post ?season)\b|"
+    r"\b(made|make|reached|missed) (the )?(playoffs?|post ?season)\b")
+SPLIT_CHANGE_RE = re.compile(
+    r"\b(before|after|since|pre|post)\b.*\b(split|select)\b|"
+    r"\b(split|select)\b.*\b(before|after|benefit\w*|helped|hurt|"
+    r"changed?|difference)\b|\b(benefit\w*|helped|hurt|changed?)\b.*"
+    r"\b(split|select)\b")
+ALLTIME_RE = re.compile(r"\b(all ?time|total|overall|ever|history|career|"
+                        r"most wins (since|from)|in our records)\b")
+
+
 def _title_question(q):
     """Return 'titles' / 'runner_up' / None for a normalized question."""
     if not TITLE_RE.search(q):
@@ -936,6 +967,9 @@ def _has(q, pattern):
 
 
 def detect_intent(q, team_count, number):
+    if _has(q, r"average|averaged|averages|averaging|avg|per game|ppg|"
+               r"a game on average"):
+        return "averages"
     """Return an intent name from normalized question text."""
     last = _has(q, r"last time|last|most recent|latest|when")
 
@@ -984,7 +1018,8 @@ def detect_intent(q, team_count, number):
         if _has(q, SCORED_WORDS + r"|points|pts"):
             return "scored_n"
 
-    if _has(q, r"best season|most wins"):
+    if _has(q, r"best season|most wins|best\s+team|greatest\s+team|best year|"
+               r"best ever|greatest season"):
         return "best_season"
     if _has(q, r"worst season|most losses"):
         return "worst_season"
@@ -1095,9 +1130,42 @@ class Answerer:
         for t in teams:  # strip team names so they can't trigger keywords
             q = re.sub(rf"\b{re.escape(t['text'])}\b", " ", q, count=1)
 
+        if STATS_RE.search(q) and not handbook_search.HANDBOOK_TRIGGERS.search(
+                _norm(question).replace("coach", "")):
+            return {**base, "status": "no_data", "intent": "player_stats",
+                    "teams": [t["names"][0] for t in teams],
+                    "answer": "Hey Y'all doesn't have player stats or coaching "
+                              "records yet \u2014 just team scores, records, "
+                              "classes and state titles. Try a team question "
+                              "like the examples below.",
+                    "examples": EXAMPLES}
+
         pairs = self._season_pairs(question, teams, q)
         if pairs:
             return self._compare_seasons(base, pairs, q)
+
+        if re.search(r"\bsuper ?dome\b|\bprep classic\b", q):
+            fact = match_fact(q)
+            if fact:
+                return {**base, "matched": True, "status": "ok",
+                        "intent": "fact", "teams": [], "filters": [],
+                        "interpreted_as": "LHSAA history: " + fact[0],
+                        "answer": fact[1]}
+
+        if SPLIT_CHANGE_RE.search(q) and re.search(
+                r"\b(win|wins|winning|record|percentage|pct|benefit\w*|"
+                r"helped|hurt|better|worse|fared?|done|did)\b", q):
+            return self._split_change(base, teams, q)
+
+        if not teams and re.search(r"\bwin(ning)? (percentage|pct|percent)\b",
+                                   q) and not SPLIT_CHANGE_RE.search(q):
+            filters, _ = _extract_filters(q)
+            return self._alltime_wins(base, filters, q)
+
+        if teams and PLAYOFF_APPS_RE.search(q):
+            ans = self._playoff_apps(base, teams[0]["names"][0], q)
+            if ans:
+                return ans
 
         tq = _title_question(q)
         if tq and (self.titles.get("st") or self.titles.get("ru")):
@@ -1111,7 +1179,8 @@ class Answerer:
             if team in self.history:
                 return self._class_history(base, team, hist, q)
 
-        lead_early = (not teams) and _leaders_q(q, False)
+        lead_early = (not teams) and (_leaders_q(q, False) or re.search(
+            r"\bwin(ning)? (percentage|pct)\b", q))
         hb_q = handbook_search.HANDBOOK_TRIGGERS.search(_norm(question))
         if hb_q and not lead_early and not _history_question(q) and not re.search(
                 r"\b(last time|record|vs|versus|beat|streak|scored|"
@@ -1147,6 +1216,9 @@ class Answerer:
                 filters["labels"] = [f"{filters['own_class']} teams" if
                                      x.startswith("vs ") and "opponents" in x
                                      else x for x in filters["labels"]]
+            if (lead_q["metric"] == "wins" and ALLTIME_RE.search(q)
+                    and not re.search(r"\b(season|year)\b", q)):
+                return self._alltime_wins(base, filters, q)
             led = self._leaders(base, lead_q, filters)
             if led:
                 return led
@@ -1580,6 +1652,210 @@ class Answerer:
                 "answer": text}
 
     # ── class / Select history ──
+    # ── all-time wins / win percentage (all teams) ──
+    def _alltime_wins(self, base, filters, q):
+        pct = bool(re.search(r"\b(percentage|pct|percent)\b", q))
+        tally, small = [], []
+        for school, gs in self.by_school.items():
+            gs = [g for g in _apply_filters(gs, filters) if not g.forfeit]
+            w, l, t = _record(gs)
+            n = w + l + t
+            if not n:
+                continue
+            row = (school, w, l, t, (w + t / 2) / n)
+            (small if pct and n < 100 else tally).append(row)
+        tally = tally or small
+        if not tally:
+            return {**base, "status": "no_data",
+                    "answer": "I don't have any games that match that."}
+        key = (lambda x: (-x[4], -x[1])) if pct else (lambda x: (-x[1], -x[4]))
+        tally.sort(key=key)
+        seasons = sorted({g.season for g in self.games})
+        span = (f"{filters['min_season'] or seasons[0]}–"
+                f"{filters['max_season'] or seasons[-1]}")
+        top = tally[0]
+        lead = (f"{top[0]} has the best winning percentage in our records "
+                f"({span}): {top[4]:.3f} ({_fmt_record(*top[1:4])})."
+                if pct else
+                f"{top[0]} has the most wins in our records ({span}): "
+                f"{top[1]} ({_fmt_record(*top[1:4])}).")
+        rows = [[s, str(w), _fmt_record(w, l, t), f"{p:.3f}"]
+                for s, w, l, t, p in tally[:15]]
+        return {**base, "matched": True, "status": "ok",
+                "intent": "alltime_pct" if pct else "alltime_wins",
+                "teams": [], "filters": filters["labels"],
+                "interpreted_as": ("Best all-time winning percentage" if pct
+                                   else "Most all-time wins") + f", {span}",
+                "answer": lead,
+                "note": "Our game records start in 1990, so this is wins "
+                        "since 1990, not each school's full history."
+                        + (" Schools need 100+ games to rank." if pct
+                           else ""),
+                "table": {"cols": ["School", "Wins", "Record", "Win %"],
+                          "rows": rows, "first_col_bold": True}}
+
+    # ── playoff appearances ──
+    def _playoff_apps(self, base, team, q):
+        gs = self.by_school.get(team)
+        if not gs:
+            return None
+        filters, _ = _extract_filters(q)
+        filters["playoffs"] = None
+        gs = _apply_filters(gs, filters)
+        po = [g for g in gs if g.playoff]
+        by = {}
+        for g in po:
+            by.setdefault(g.season, []).append(g)
+        all_seasons = sorted({g.season for g in gs})
+        last_po = max((s for s in self.titles_po_seasons()), default=None)
+        seasons_cov = [s for s in all_seasons if last_po and s <= last_po]
+        missed = [s for s in seasons_cov if s not in by]
+        span = (f"{seasons_cov[0]}–{seasons_cov[-1]}" if seasons_cov
+                else "")
+        if not by:
+            txt = f"{team} has no playoff games in our records ({span})."
+            return {**base, "matched": True, "status": "ok",
+                    "intent": "playoff_apps", "teams": [team],
+                    "filters": filters["labels"], "answer": txt,
+                    "interpreted_as": f"{team} playoff appearances"}
+        st = set(self.titles.get("st", {}).get(team, []))
+        ru = set(self.titles.get("ru", {}).get(team, []))
+        rows, best = [], None
+        for s in sorted(by, reverse=True):
+            g_s = sorted(by[s], key=lambda g: g.sort_key)
+            w, l, t = _record(g_s)
+            last = g_s[-1]
+            finish = ("State champion" if s in st else
+                      "Runner-up" if s in ru else
+                      f"Lost to {last.opponent} {last.pf}-{last.pa}"
+                      if last.result == "L" else "")
+            rows.append([str(s), _fmt_record(w, l, t), finish])
+            if best is None or w > best[1]:
+                best = (s, w)
+        w, l, t = _record(po)
+        n = len(by)
+        txt = (f"{team} has made the playoffs {n} time{'s' if n != 1 else ''}"
+               f" in our records ({span}), most recently in {max(by)}. "
+               f"Playoff record: {_fmt_record(w, l, t)}.")
+        if best and best[1]:
+            txt += (f" Deepest run: {best[0]} ({best[1]} playoff "
+                    f"win{'s' if best[1] != 1 else ''}"
+                    + (", state champions" if best[0] in st else "") + ").")
+        if missed and len(missed) <= 8:
+            txt += f" Missed: {_year_list(missed)}."
+        return {**base, "matched": True, "status": "ok",
+                "intent": "playoff_apps", "teams": [team],
+                "filters": filters["labels"],
+                "interpreted_as": f"{team} playoff appearances",
+                "answer": txt,
+                "note": "Playoff games are in our records through the 2024 "
+                        "season; the 2025 playoffs aren't loaded yet.",
+                "table": {"cols": ["Season", "Playoff record", "Finish"],
+                          "rows": rows}}
+
+    def titles_po_seasons(self):
+        if not hasattr(self, "_po_seasons"):
+            self._po_seasons = {g.season for g in self.games if g.playoff}
+        return self._po_seasons
+
+    # ── before vs after the 2013 select split ──
+    def _split_change(self, base, teams, q):
+        cut = SELECT_SPLIT_SEASON
+
+        def pct(gs):
+            gs = [g for g in gs if not g.forfeit]
+            w, l, t = _record(gs)
+            n = w + l + t
+            return ((w + t / 2) / n if n else None), (w, l, t), n
+
+        def side(team):
+            h = self.history.get(team, {})
+            tr = [h[s]["track"] for s in sorted(h) if s >= cut and
+                  h[s].get("track")]
+            if not tr:
+                return ""
+            return "Select" if tr[-1] == "select" else "Non-Select"
+
+        first = min(g.season for g in self.games)
+        last = max(g.season for g in self.games)
+        note = (f"Before = {first}–{cut - 1}; after = {cut}–{last}, "
+                f"when the LHSAA split the playoffs into Select and "
+                f"Non-Select. Win % counts ties as half a win.")
+        if teams:
+            team = teams[0]["names"][0]
+            gs = self.by_school.get(team, [])
+            b = pct([g for g in gs if g.season < cut])
+            a = pct([g for g in gs if g.season >= cut])
+            if b[0] is None or a[0] is None:
+                return {**base, "status": "no_data", "teams": [team],
+                        "answer": f"I don't have enough games for {team} on "
+                                  f"both sides of the {cut} split."}
+            diff = (a[0] - b[0]) * 100
+            word = "better" if diff > 0 else "worse"
+            txt = (f"{team} won {b[0]:.1%} of its games before the split "
+                   f"({_fmt_record(*b[1])}) and {a[0]:.1%} since "
+                   f"({_fmt_record(*a[1])}) — {abs(diff):.1f} points "
+                   f"{word}.")
+            if side(team):
+                txt += f" They've played on the {side(team)} side."
+            return {**base, "matched": True, "status": "ok",
+                    "intent": "split_change", "teams": [team],
+                    "filters": [], "note": note, "answer": txt,
+                    "interpreted_as": f"{team} win % before vs after the "
+                                      f"{cut} split"}
+        out = []
+        for school, gs in self.by_school.items():
+            b = pct([g for g in gs if g.season < cut])
+            a = pct([g for g in gs if g.season >= cut])
+            if b[0] is None or a[0] is None or b[2] < 60 or a[2] < 60:
+                continue
+            out.append((school, b, a, a[0] - b[0]))
+        if not out:
+            return None
+        hurt = bool(re.search(r"\b(hurt|worst|worse|lost the most|"
+                              r"suffered|declined?)\b", q))
+        out.sort(key=lambda x: x[3], reverse=not hurt)
+        top = out[0]
+        groups = {}
+        for school, b, a, d in out:
+            groups.setdefault(side(school) or "Unknown", []).append(d)
+        avg = {k: sum(v) / len(v) * 100 for k, v in groups.items()
+               if k != "Unknown"}
+        txt = (f"{top[0]} {'dropped' if hurt else 'improved'} the most: "
+               f"{top[1][0]:.1%} before the split, {top[2][0]:.1%} after "
+               f"({top[3] * 100:+.1f} points).")
+        if avg:
+            txt += " On average, " + " and ".join(
+                f"{k} schools changed {v:+.1f} points"
+                for k, v in sorted(avg.items())) + "."
+        rows = [[s, side(s), f"{b[0]:.3f} ({_fmt_record(*b[1])})",
+                 f"{a[0]:.3f} ({_fmt_record(*a[1])})", f"{d * 100:+.1f}"]
+                for s, b, a, d in out[:15]]
+        return {**base, "matched": True, "status": "ok",
+                "intent": "split_change", "teams": [],
+                "filters": [], "answer": txt,
+                "note": note + " Schools need 60+ games on each side.",
+                "interpreted_as": "Win % change after the 2013 split, all "
+                                  "teams",
+                "table": {"cols": ["School", "Side", f"Before {cut}",
+                                   f"{cut} on", "Change"],
+                          "rows": rows, "first_col_bold": True}}
+
+    def _a_averages(self, team, other, games, n):
+        gs = [g for g in games if not g.forfeit]
+        if not gs:
+            return f"No games found for {team} for that.", []
+        pf = sum(g.pf for g in gs)
+        pa = sum(g.pa for g in gs)
+        seasons = sorted({g.season for g in gs})
+        span = (str(seasons[0]) if len(seasons) == 1
+                else f"{seasons[0]}–{seasons[-1]}")
+        vs = f" against {other}" if other else ""
+        return (f"{team} has averaged {pf / len(gs):.1f} points a game{vs} "
+                f"({span}, {len(gs)} games) and allowed "
+                f"{pa / len(gs):.1f}. Record: {_fmt_record(*_record(gs))}.",
+                list(reversed(gs)))
+
     # ── state championships ──
     def _title_game(self, team, year, won):
         """The state final from our game records, if we have that season."""
@@ -2130,6 +2406,7 @@ INTENT_LABELS = {
     "last_win": "{team} most recent win",
     "last_loss": "{team} most recent loss",
     "record": "{team} record",
+    "averages": "{team} points per game",
     "class_history": "{team} class history",
     "track_history": "{team} Select/Non-Select history",
 }
