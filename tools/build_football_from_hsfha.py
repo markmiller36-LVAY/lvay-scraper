@@ -74,11 +74,14 @@ FIXES = ROOT / "tools" / "hsfha_fixes.tsv"
 def apply_fixes(R, path=FIXES):
     """Corrections from newspapers (Mark's clippings), kept in tools/hsfha_fixes.tsv so
     they survive rebuilds. SCORE = set the final (team/opp may be in either order),
-    DATE = move the game, ADD = a game HSFHA does not have. Source goes into notes."""
+    DATE = move the game, ADD = a game HSFHA does not have, DROP = remove a game that
+    was not played (duplicate or bogus), CODE = the game has the wrong school: the side
+    whose code is opp_code becomes team/team_code. Source goes into notes."""
     if not Path(path).exists():
         return
     byid = {x["id"]: x for x in R}
     n = Counter()
+    drop = set()
     for f in csv.DictReader(open(path, encoding="utf-8"), delimiter="\t"):
         a, gid = f["action"], f["game_id"]
         note = "Corrected from newspaper: " + f["source"]
@@ -106,7 +109,27 @@ def apply_fixes(R, path=FIXES):
         x = byid.get(gid)
         if not x:
             print("fix not applied, game not found:", gid); continue
-        if a == "DATE":
+        if a == "DROP":
+            drop.add(gid); n[a] += 1
+            continue
+        if a == "CODE":
+            new = None
+            for y in R:
+                if y["season"] == x["season"]:
+                    for side in ("team", "opp"):
+                        if y[side + "_code"] == f["team_code"] and y[side + "_org"]:
+                            new = {k[len(side):]: y[k] for k in y if k.startswith(side + "_")}
+            hit = False
+            for side in ("team", "opp"):
+                if x[side + "_code"] == f["opp_code"]:
+                    x[side], x[side + "_code"] = f["team"], f["team_code"]
+                    for k, v in (new or {}).items():
+                        if k not in ("_code", "_score", "_dec", "_site"):
+                            x[side + k] = v
+                    hit = True
+            if not hit:
+                print("CODE fix not applied, code not in game:", gid); continue
+        elif a == "DATE":
             x["date"] = f["date"]
         elif a == "SCORE":
             ts, os_ = int(f["team_score"]), int(f["opp_score"])
@@ -117,6 +140,8 @@ def apply_fixes(R, path=FIXES):
             x["opp_dec"] = "L" if ts > os_ else "W" if ts < os_ else "T"
         x["notes"] = (x["notes"] + "; " if x["notes"] else "") + note
         n[a] += 1
+    if drop:
+        R[:] = [x for x in R if x["id"] not in drop]
     print("newspaper fixes applied:", dict(n))
 
 

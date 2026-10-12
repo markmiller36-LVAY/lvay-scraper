@@ -9,3 +9,40 @@ DATE	458905	1990	1990-08-31							AP Friday Night Results Aug 31 1990 + Shrevepo
 DATE	458800	1990	1990-08-31							AP Friday Night Results Aug 31 1990 + Shreveport-area paper
 DATE	458909	1990	1990-08-31							AP Friday Night Results Aug 31 1990 + Shreveport-area paper
 ADD	fix-1990-0001	1990	1990-08-31	Springfield	LA.LV-005	20	Bishop Sullivan	LA.EB-014	7	The Daily Star (Hammond), Sep 2 1990, p21, Area Results
+DATE	458810	1990	1990-09-07							1990 week 2 newspapers (Daily Star Hammond, Shreveport Times, Lafayette Advertiser, Alexandria Town Talk), Sep 8-9 1990; game played week 2
+DATE	458801	1990	1990-09-07							1990 week 2 newspapers (Daily Star Hammond, Shreveport Times, Lafayette Advertiser, Alexandria Town Talk), Sep 8-9 1990; game played week 2
+DATE	1954928	1990	1990-09-07							1990 week 2 newspapers (Daily Star Hammond, Shreveport Times, Lafayette Advertiser, Alexandria Town Talk), Sep 8-9 1990; game played week 2
+DATE	458806	1990	1990-09-07							1990 week 2 newspapers (Daily Star Hammond, Shreveport Times, Lafayette Advertiser, Alexandria Town Talk), Sep 8-9 1990; game played week 2
+DATE	458691	1990	1990-09-07							1990 week 2 newspapers (Daily Star Hammond, Shreveport Times, Lafayette Advertiser, Alexandria Town Talk), Sep 8-9 1990; game played week 2
+DATE	458802	1990	1990-09-07							1990 week 2 newspapers (Daily Star Hammond, Shreveport Times, Lafayette Advertiser, Alexandria Town Talk), Sep 8-9 1990; game played week 2
+SCORE	458923	1990	1990-09-07	Huntington	LA.CO-004	30	Green Oaks	LA.CO-011	7	Box score, Shreveport paper Sep 8 1990
+SCORE	406300	1990	1990-09-07	East Marion	MS.MI-004	54	Varnado	LA.WO-005	12	The Daily Star (Hammond) Sep 1990, week 2 scores
+SCORE	458918	1990	1990-09-07	Baker	LA.EB-015	27	Acadiana	LA.LY-001	0	Lafayette Advertiser local scores + district standings point totals (AP had 29)
+SCORE	459004	1990	1990-09-07	Erath	LA.VM-003	27	Vermilion Catholic	LA.VM-001	21	Lafayette Advertiser local scores + district standings point totals (AP had 37)
+SCORE	459021	1990	1990-09-07	Lake Arthur	LA.JD-003	22	Delcambre	LA.VM-006	7	Lafayette Advertiser district standings (HSFHA had winner flipped)
+ADD	fix-1990-0002	1990	1990-09-07	Rueben McCall	LA.MA-003	49	Grambling Lab	LA.LN-002	32	Week 2 newspaper scores, Sep 1990
+ADD	fix-1990-0003	1990	1990-09-07	Northeast	LA.EB-023	28	Rosenwald	LA.PO-005	14	The Daily Star (Hammond) Sep 1990, week 2 scores
+ADD	fix-1990-0004	1990	1990-09-07	Sacred Heart	LA.EV-001	41	Central Catholic	LA.SM-001	0	Lafayette Advertiser district standings Sep 1990 (point totals confirm)
+ADD	fix-1990-0005	1990	1990-09-07	Teurlings Catholic	LA.LY-003	33	North Vermilion	LA.VM-004	18	Lafayette Advertiser district standings Sep 1990 (point totals confirm)
+ADD	fix-1990-0006	1990	1990-09-07	River Oaks	LA.OU-011	29	Trinity Heights Christian	LA.CO-015	0	Shreveport-area scores Sep 1990, week 2
+DROP	458903	1990								Not played: Bossier lost to Loyola 9-6 that night (box score); 7-6 was Haughton-Airline Sep 14
+CODE	459018	1990	1990-09-07	Northwood	LA.RA-007			LA.CO-006		Alexandria Town Talk local scores: Coushatta beat Northwood (Lena); Northwood (Shreveport) played Byrd
+DATE	458687	1990	1990-09-14							1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990; game played week 3
+DATE	458696	1990	1990-09-14							1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990; game played week 3
+DATE	458570	1990	1990-09-14							1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990; game played week 3
+DATE	458688	1990	1990-09-14							1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990; game played week 3
+DATE	671718	1990	1990-09-14							1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990; game played week 3
+DATE	458850	1990	1990-09-13							Lafayette Advertiser Thursday night results, Sep 13 1990
+SCORE	1663448	1990	1990-09-14	H.L. Bourgeois	LA.TR-004	45	Ponchatoula	LA.TA-002	14	1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990
+DROP	458901	1990								Not played: Haughton was 2-1 after beating Airline 7-6 Sep 14 (Shreveport Times); Bossier lost to Loyola Sep 7
+DROP	458686	1990								Duplicate of Haughton 30 Parkway 19 on Sep 7 (Haughton 2-1 after Sep 14, Shreveport Times)
+ADD	fix-1990-0007	1990	1990-09-14	Woodlawn	LA.CO-008	22	Captain Shreve	LA.CO-005	12	1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990
+ADD	fix-1990-0008	1990	1990-09-14	Woodlawn	LA.EB-008	37	Episcopal	LA.EB-007	14	1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990
+ADD	fix-1990-0009	1990	1990-09-14	Plaquemine	LA.IV-001	28	Jackson	LA.EF-004	13	1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990
+ADD	fix-1990-0010	1990	1990-09-14	Many	LA.SB-001	20	DeQuincy	LA.CC-007	19	1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990
+ADD	fix-1990-0011	1990	1990-09-14	Delhi	LA.RI-005	6	Wisner	LA.FR-004	0	1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990
+ADD	fix-1990-0012	1990	1990-09-14	Newellton	LA.TN-002	28	Crowville	LA.FR-002	8	1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990
+ADD	fix-1990-0013	1990	1990-09-14	Oak Grove	LA.WC-001	26	Tallulah	LA.MA-002	0	1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990
+ADD	fix-1990-0014	1990	1990-09-14	Oak Forest Academy	LA.TA-001	19	Bowling Green	LA.WO-002	12	1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990
+ADD	fix-1990-0015	1990	1990-09-14	River Oaks	LA.OU-011	34	Central Private	LA.EB-021	0	1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990
+ADD	fix-1990-0016	1990	1990-09-14	Bishop Sullivan	LA.EB-014	20	Livonia	LA.PO-002	13	1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990
