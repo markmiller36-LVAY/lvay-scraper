@@ -221,6 +221,19 @@ class Handbook:
         self.idf = {w: math.log(1 + n / c) for w, c in df.items()}
         self.avg = sum(sum(t.values()) for t in self.toks) / n
 
+    def rule_cards(self, rules, question=""):
+        """Cards for specific bylaw numbers, in the order given."""
+        words = _tokens(question)
+        out = []
+        for spec in rules:
+            section, _, rule = spec.rpartition("|")   # "Athletic Contests|6.3.1"
+            for c in self.chunks:
+                if c["rule"] == rule and (not section or
+                                          c["section"] == section):
+                    out.append(self._view(c, words))
+                    break
+        return out
+
     def search(self, question, limit=3):
         q = question.lower()
         sport = None

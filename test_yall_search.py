@@ -84,7 +84,7 @@ class YallSearchTests(unittest.TestCase):
     def test_common_word_school_needs_capital(self):
         self.assertEqual(self.ask("How many times has Many scored 20")
                          ["teams"], ["Many"])
-        self.assertEqual(self.ask("how many games")["status"], "no_team")
+        self.assertEqual(self.ask("how many pickles")["status"], "no_team")
 
     def test_short_name_and_year_filter(self):
         r = self.ask("John Curtis record in 2019")
@@ -156,12 +156,25 @@ class HandbookTests(unittest.TestCase):
     def test_rules_questions_use_handbook(self):
         a = y.Answerer(y.build_games(ARCHIVE))
         r = a.answer("How are power ratings calculated?")
-        self.assertEqual(r["intent"], "handbook")
+        self.assertEqual(r["intent"], "rules")   # plain-English answer
+        self.assertIn("divide by the number of games", r["answer"])
         self.assertTrue(r["handbook"][0]["rule"].startswith("14.12"))
         r = a.answer("how old can a player be")
         self.assertEqual(r["handbook"][0]["rule"], "1.6")
         r = a.answer("what is the transfer rule")
         self.assertEqual(r["handbook"][0]["rule"], "1.13")
+
+    def test_eligibility_answers_carry_ad_note(self):
+        a = y.Answerer(y.build_games(ARCHIVE))
+        r = a.answer("do incoming freshmen have to live in district")
+        self.assertEqual(r["handbook"][0]["rule"], "1.3.2")
+        self.assertIn("athletic director and head coach", r["note"])
+        self.assertFalse(a.answer("is there a mercy rule")["note"])
+
+    def test_unlisted_rules_fall_back_to_handbook(self):
+        a = y.Answerer(y.build_games(ARCHIVE))
+        r = a.answer("what are the rules for officials uniforms")
+        self.assertEqual(r["intent"], "handbook")
 
     def test_game_questions_do_not_use_handbook(self):
         a = y.Answerer(y.build_games(ARCHIVE))

@@ -29,6 +29,7 @@ import threading
 from datetime import datetime
 
 import handbook_search
+import rules_faq
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ARCHIVE_PATH = os.path.join(HERE, "football_archives_greenlit.json.gz")
@@ -953,7 +954,7 @@ class Answerer:
         if hb_q and not _history_question(q) and not re.search(
                 r"\b(last time|record|vs|versus|beat|streak|scored|"
                 r"undefeated)\b", q):
-            hb = self._handbook(base, question)
+            hb = self._faq(base, question) or self._handbook(base, question)
             if hb:
                 return hb
 
@@ -968,6 +969,9 @@ class Answerer:
                         "intent": "fact", "teams": [], "filters": [],
                         "interpreted_as": "LHSAA history: " + fact[0],
                         "answer": fact[1]}
+            faq = self._faq(base, question)
+            if faq:
+                return faq
 
         filters, q = _extract_filters(q)
         number = _extract_number(q)
@@ -1026,6 +1030,20 @@ class Answerer:
                 "answer": text,
                 "rows": [g.as_row() for g in rows][:25]}
 
+    def _faq(self, base, question):
+        entry = rules_faq.match(_norm(question))
+        if not entry:
+            return None
+        fid, title, _pats, text, rules, eligibility = entry
+        cards = handbook_search.get_handbook().rule_cards(rules, question)
+        return {**base, "matched": True, "status": "ok", "intent": "rules",
+                "teams": [], "filters": [],
+                "interpreted_as": "LHSAA rules: " + title,
+                "answer": text, "handbook": cards,
+                "note": ("Please note: " + rules_faq.ELIGIBILITY_NOTE)
+                if eligibility else "",
+                "handbook_link": handbook_search.VIEWER}
+
     def _handbook(self, base, question, min_score=3.0):
         hits = handbook_search.get_handbook().search(question, limit=3)
         if not hits or hits[0]["score"] < min_score:
@@ -1041,6 +1059,8 @@ class Answerer:
                 "answer": f"Here's what the {handbook_search.EDITION} "
                           f"says. The closest rule is {where}:",
                 "handbook": hits,
+                "note": ("Please note: " + rules_faq.ELIGIBILITY_NOTE)
+                if top["section"] in ("Eligibility", "Recruiting") else "",
                 "handbook_link": handbook_search.VIEWER}
 
     def _count_schools(self, base, what, q):
