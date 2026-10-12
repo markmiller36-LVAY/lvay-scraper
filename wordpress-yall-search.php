@@ -191,6 +191,7 @@ function lvay_ys_render() {
   <div class="lvay-ys-try lvay-ys-samples"></div>
   <div class="lvay-ys-out" aria-live="polite"></div>
   <p class="lvay-ys-note">Test version. Answers come straight from LVAY game records. <span class="lvay-ys-cov"></span></p>
+  <p class="lvay-ys-src"><b>Research:</b> LVAY game records are researched and checked against newspaper archives through <a href="https://www.newspapers.com/" target="_blank" rel="noopener">Newspapers.com</a>, along with LHSAA records and the Louisiana high school football history archives.</p>
 </div>
 <style>
 .lvay-ys{max-width:900px;margin:30px auto 60px;padding:0 16px;font-family:'PT Serif',Georgia,serif;color:#111}
@@ -235,6 +236,8 @@ function lvay_ys_render() {
 .lvay-ys tr:nth-child(even) td{background:#fafbfb}
 .lvay-ys .w{color:#0a7a3d;font-weight:700}.lvay-ys .l{color:#b3261e;font-weight:700}
 .lvay-ys-note{font-size:13px;color:#777;margin-top:26px}
+.lvay-ys-src{font-size:13px;color:#777;margin:6px 0 0;padding-top:8px;border-top:1px solid #e3e3e3}
+.lvay-ys-src a{color:#008584}
 .lvay-ys-note-box{margin-top:12px;padding:12px 16px;background:#eef7f7;border:1px dashed #008584;border-radius:4px;font-size:15px;line-height:1.5;color:#244}
 .lvay-ys-note-box b{font-family:'Teko',sans-serif;font-size:19px;font-weight:400;color:#008584;letter-spacing:.5px;text-transform:uppercase;margin-right:4px}
 .lvay-ys-rules{margin-top:14px}
