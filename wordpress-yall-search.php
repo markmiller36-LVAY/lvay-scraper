@@ -208,7 +208,7 @@ function lvay_ys_render() {
 .lvay-ys-tablewrap{overflow-x:auto;margin-top:16px}
 .lvay-ys table{width:100%;border-collapse:collapse;font-size:15px;min-width:560px}
 .lvay-ys th{font-family:'Teko',sans-serif;font-size:17px;text-align:left;background:#111;color:#fff;padding:6px 10px 3px;font-weight:400;letter-spacing:.5px}
-.lvay-ys td{padding:7px 10px;border-bottom:1px solid #e3e7e7}
+.lvay-ys td{padding:6px 10px 3px;border-bottom:1px solid #e3e7e7;font-family:'Teko',sans-serif;font-size:19px;line-height:1.2;letter-spacing:.3px}
 .lvay-ys tr:nth-child(even) td{background:#fafbfb}
 .lvay-ys .w{color:#0a7a3d;font-weight:700}.lvay-ys .l{color:#b3261e;font-weight:700}
 .lvay-ys-note{font-size:13px;color:#777;margin-top:26px}
