@@ -173,8 +173,8 @@ function lvay_ys_render() {
     <p>Ask anything about Louisiana high school football history, 1990 to today, or about the LHSAA rules.</p>
   </div>
   <form class="lvay-ys-form" autocomplete="off">
-    <input type="text" name="q" maxlength="300"
-      placeholder="When is the last time West Monroe had 50 points put on them?" aria-label="Ask a football history question">
+    <span class="lvay-ys-field"><input type="text" name="q" maxlength="300"
+      placeholder="When is the last time West Monroe had 50 points put on them?" aria-label="Ask a football history question"><button type="button" class="lvay-ys-clear" aria-label="Clear the question" title="Clear" hidden>&times;</button></span>
     <button type="submit">ASK</button>
   </form>
   <div class="lvay-ys-try"></div>
@@ -183,11 +183,16 @@ function lvay_ys_render() {
 </div>
 <style>
 .lvay-ys{max-width:900px;margin:30px auto 60px;padding:0 16px;font-family:'PT Serif',Georgia,serif;color:#111}
-.lvay-ys-head h1{font-family:'Alfa Slab One',serif;font-weight:400;font-size:34px;line-height:1.1;letter-spacing:.3px;margin:0 0 6px;text-transform:none}
+.lvay-ys-head h1{font-family:'Alfa Slab One',serif;font-weight:400;font-size:34px;line-height:1.1;letter-spacing:.3px;margin:0 0 6px;text-transform:uppercase}
 .lvay-ys-head h1 span{color:#008584}
 .lvay-ys-head p{margin:0 0 18px;font-size:17px;color:#444}
 .lvay-ys-form{display:flex;gap:8px}
 .lvay-ys-form input{flex:1;min-width:0;font-size:18px;padding:14px 16px;border:2px solid #111;border-radius:6px;font-family:inherit}
+.lvay-ys-field{position:relative;flex:1;min-width:0;display:flex}
+.lvay-ys-form .lvay-ys-field input{width:100%;padding-right:46px}
+.lvay-ys-form .lvay-ys-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;padding:0;border:0;border-radius:50%;background:#e6eded;color:#333;font:400 24px/32px Arial,sans-serif;letter-spacing:0;cursor:pointer}
+.lvay-ys-form .lvay-ys-clear:hover{background:#cfdcdc;color:#000}
+.lvay-ys-form .lvay-ys-clear[hidden]{display:none}
 .lvay-ys-form input:focus{outline:none;border-color:#008584;box-shadow:0 0 0 3px rgba(0,133,132,.2)}
 .lvay-ys-form button{font-family:'Teko',sans-serif;font-size:26px;letter-spacing:1px;padding:4px 26px 0;background:#008584;color:#fff;border:0;border-radius:6px;cursor:pointer}
 .lvay-ys-form button:hover{background:#006b6a}
@@ -278,7 +283,15 @@ function lvay_ys_render() {
     });
   }
   form.addEventListener('submit',function(e){e.preventDefault();ask();});
-  try{var start=new URL(location.href).searchParams.get('q');if(start){input.value=start;ask();}}catch(e){}
+  var clr=root.querySelector('.lvay-ys-clear');
+  function syncClear(){clr.hidden=!input.value;}
+  input.addEventListener('input',syncClear);
+  form.addEventListener('submit',syncClear);
+  tryBox.addEventListener('click',function(){setTimeout(syncClear,0);});
+  out.addEventListener('click',function(){setTimeout(syncClear,0);});
+  clr.addEventListener('click',function(){input.value='';syncClear();input.focus();
+    try{var u=new URL(location.href);u.searchParams.delete('q');history.replaceState(null,'',u);}catch(e){}});
+  try{var start=new URL(location.href).searchParams.get('q');if(start){input.value=start;syncClear();ask();}}catch(e){}
 })();
 </script>
 	<?php
