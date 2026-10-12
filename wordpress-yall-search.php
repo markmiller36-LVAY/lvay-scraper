@@ -217,7 +217,7 @@ function lvay_ys_render() {
       tryBox=root.querySelector('.lvay-ys-try'), cov=root.querySelector('.lvay-ys-cov');
   var EX=['When is the last time West Monroe had 50 points put on them?','Ruston vs West Monroe',
     'Longest winning streak for John Curtis','When was Haynesville last undefeated?',
-    'Biggest win in Southwood history','When is the last time Acadiana was shut out?'];
+    'Biggest win in Southwood history','How long has Evangel been 5A?','Is John Curtis select or non-select?'];
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function chips(list,box){box.innerHTML='';list.forEach(function(t){var b=document.createElement('button');b.type='button';b.className='lvay-ys-chip';b.textContent=t;b.onclick=function(){input.value=t;ask();};box.appendChild(b);});}
   chips(EX,tryBox);
@@ -228,13 +228,19 @@ function lvay_ys_render() {
       h+='<tr><td>'+esc(r.date||r.season)+'</td><td>'+esc(r.team)+'</td><td>'+esc(r.opponent)+(r.opp_class?' <small style="color:#888">('+esc(r.opp_class)+')</small>':'')+'</td><td class="'+c+'">'+esc(r.result)+' '+esc(r.score)+'</td><td>'+esc(r.where)+'</td><td>'+esc(r.phase)+'</td></tr>';});
     return h+'</tbody></table></div>';
   }
+  function hist(rows){
+    if(!rows||!rows.length) return '';
+    var h='<div class="lvay-ys-tablewrap"><table><thead><tr><th>Season</th><th>Class</th><th>Select / Non-Select</th><th>Playoff Division</th></tr></thead><tbody>';
+    rows.forEach(function(r){h+='<tr><td>'+esc(r.season)+'</td><td><b>'+esc(r['class'])+'</b></td><td>'+esc(r.track||(r.season<2013?'(no split yet)':''))+'</td><td>'+esc(r.division)+'</td></tr>';});
+    return h+'</tbody></table></div>';
+  }
   function show(j){
     if(j.coverage) cov.textContent='Covers: '+j.coverage+'.';
     var miss=j.status!=='ok';
     var h='<div class="lvay-ys-card'+(miss?' miss':'')+'"><p class="lvay-ys-ans">'+esc(j.answer)+'</p>';
     if(j.interpreted_as) h+='<p class="lvay-ys-how">Searched: '+esc(j.interpreted_as)+'</p>';
     h+='</div>';
-    out.innerHTML=h+table(j.rows);
+    out.innerHTML=h+table(j.rows)+hist(j.history);
     if(j.status==='ambiguous'&&j.choices){var box=document.createElement('div');box.className='lvay-ys-try';out.appendChild(box);
       var q=j.question; chips(j.choices.map(function(name){var base=name.split(' - ')[0];var re=new RegExp(base.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i');return re.test(q)?q.replace(re,name):name+' '+q;}),box);}
     if(miss&&j.examples){var b2=document.createElement('div');b2.className='lvay-ys-try';out.appendChild(b2);chips(j.examples,b2);}
