@@ -212,14 +212,13 @@ function lvay_ys_render() {
 .lvay-ys-chip:hover{background:#e3f0f0;border-color:#008584}
 .lvay-ys-try.lvay-ys-samples{display:block;margin:16px 0 4px}
 .lvay-ys-samples[hidden]{display:none!important}
-.lvay-ys-samples-h{font-family:'Teko',sans-serif;font-size:23px;letter-spacing:.5px;text-transform:uppercase;color:#111;margin:0 0 6px;line-height:1}
-.lvay-ys-samples-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.lvay-ys .lvay-ys-sample{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:10px 12px;border:1px solid #cfd8d8;background:#f7fafa;border-radius:8px;cursor:pointer;font-family:'PT Serif',Georgia,serif;color:#111;text-transform:none;letter-spacing:0;box-shadow:none;line-height:1.3}
-.lvay-ys .lvay-ys-sample:hover{border-color:#008584;background:#eef7f7}
-.lvay-ys-sample .k{font-family:'Teko',sans-serif;font-size:16px;letter-spacing:.6px;text-transform:uppercase;color:#008584;line-height:1}
-.lvay-ys-sample .q{font-weight:700;font-size:15.5px}
-.lvay-ys-sample .d{font-size:13px;color:#5b6b6b}
-.lvay-ys-tip{font-size:13.5px;color:#5b6b6b;margin:10px 0 0}
+.lvay-ys-samples-h{font-family:'Teko',sans-serif;font-size:23px;letter-spacing:.5px;text-transform:uppercase;color:#111;margin:0 0 8px;line-height:1}
+.lvay-ys-samples-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 28px}
+.lvay-ys-sgh{font-family:'Teko',sans-serif;font-size:19px;letter-spacing:.5px;text-transform:uppercase;color:#008584;line-height:1.05;margin:0 0 4px;border-bottom:1px solid #d5e3e3;padding-bottom:3px}
+.lvay-ys a.lvay-ys-sq{display:block;font-family:'PT Serif',Georgia,serif;font-size:15.5px;line-height:1.35;color:#111;text-decoration:none;padding:3px 0 3px 14px;position:relative}
+.lvay-ys a.lvay-ys-sq:before{content:'\201C';position:absolute;left:0;top:2px;color:#008584;font-weight:700}
+.lvay-ys a.lvay-ys-sq:hover{color:#008584;text-decoration:underline}
+.lvay-ys-tip{font-size:13.5px;color:#5b6b6b;margin:12px 0 0}
 .lvay-ys table.lvay-ys-cmp{min-width:0}
 .lvay-ys-cmp td.rl{color:#0b4f4e;white-space:nowrap}
 @media(max-width:600px){.lvay-ys-samples-grid{grid-template-columns:1fr}}
@@ -255,21 +254,20 @@ function lvay_ys_render() {
   var form=root.querySelector('form'), input=form.q, out=root.querySelector('.lvay-ys-out'),
       tryBox=root.querySelector('.lvay-ys-try'), cov=root.querySelector('.lvay-ys-cov');
   var SAMPLES=[
-    ['Head-to-head','Ruston vs West Monroe','Name two schools to see every meeting and the all-time series.'],
-    ['Class history','How long has Evangel been 5A?','Ask what class a school is, was in a year, or how long it has been there.'],
-    ['All teams','Last time a team scored 40+ in 5 straight games','Leave out the school name and it searches every team in Louisiana.'],
-    ['Compare seasons','2018 Calvary Baptist, 1995 Edna Karr, 2007 Many','List a year and a school for each — two, three or four seasons side by side.'],
-    ['Same school, two seasons','Ruston 2018 vs Ruston 2023','Compare any two years of the same program.'],
-    ['Points','When is the last time West Monroe gave up 50?','Ask about points scored or given up, by one team or against another.'],
-    ['Record book','Which team scored the most points in a single season?','Ask for the most, fewest or best — points, defense, wins, blowouts — across every team since 1990.'],
-    ['Rules','Is there a mercy rule?','Plain-English answers from the LHSAA Handbook.']];
+    ['Cross-Decade Comparisons',['1997 Evangel vs 2024 Karr. Who gave up the least amount of points?','2018 Calvary Baptist, 1995 Edna Karr, 2007 Many','Ruston 2018 vs Ruston 2023. Who scored more?']],
+    ['How a Team Fared Against a Class or Division',['What is the Many Tigers record vs Select schools?','West Monroe record vs 5A teams in the playoffs']],
+    ['Head-to-Head',['Ruston vs West Monroe','Karr vs Curtis']],
+    ['Every Team in Louisiana',['Last time a team scored 40+ in 5 straight games','Most points scored in a single game']],
+    ['Points & Streaks',['When is the last time West Monroe gave up 50?','Longest winning streak for John Curtis']],
+    ['Class & Select History',['How long has Evangel been 5A?','When did Select start?']],
+    ['LHSAA Rules in Plain English',['Is there a mercy rule?','Do incoming freshmen have to live in the district?']]];
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function chips(list,box){box.innerHTML='';list.forEach(function(t){var b=document.createElement('button');b.type='button';b.className='lvay-ys-chip';b.textContent=t;b.onclick=function(){input.value=t;ask();};box.appendChild(b);});}
   function samples(){
     var h='<div class="lvay-ys-samples-h">Sample Questions:</div><div class="lvay-ys-samples-grid">';
-    SAMPLES.forEach(function(s,i){h+='<button type="button" class="lvay-ys-sample" data-i="'+i+'"><span class="k">'+esc(s[0])+'</span><span class="q">'+esc(s[1])+'</span><span class="d">'+esc(s[2])+'</span></button>';});
-    tryBox.innerHTML=h+'</div><p class="lvay-ys-tip"><b>Tip:</b> tap a sample to run it, or type your own. Add a year, &ldquo;since 2010,&rdquo; &ldquo;at home,&rdquo; &ldquo;in the playoffs&rdquo; or &ldquo;vs 5A teams&rdquo; to narrow any question.</p>';
-    tryBox.querySelectorAll('.lvay-ys-sample').forEach(function(b){b.onclick=function(){input.value=SAMPLES[+b.getAttribute('data-i')][1];ask();};});
+    SAMPLES.forEach(function(g){h+='<div class="lvay-ys-sgroup"><div class="lvay-ys-sgh">'+esc(g[0])+'</div>';g[1].forEach(function(q){h+='<a href="#" class="lvay-ys-sq" data-q="'+esc(q)+'">'+esc(q)+'</a>';});h+='</div>';});
+    tryBox.innerHTML=h+'</div><p class="lvay-ys-tip"><b>Tip:</b> tap any question to run it, or type your own. Add a year, &ldquo;since 2010,&rdquo; &ldquo;at home,&rdquo; &ldquo;in the playoffs&rdquo; or &ldquo;vs 5A teams&rdquo; to narrow any question.</p>';
+    tryBox.querySelectorAll('.lvay-ys-sq').forEach(function(a){a.onclick=function(e){e.preventDefault();input.value=a.getAttribute('data-q');ask();};});
   }
   samples();
   function gtable(t){
