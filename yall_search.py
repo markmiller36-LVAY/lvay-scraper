@@ -155,6 +155,113 @@ def _clean_track_div(season, division, track):
     return (track if track in ("select", "non-select") else "", "")
 
 
+NONSELECT_DIVISIONS_SEASON = 2022  # Non-Select Division I-IV replaced 5A-1A
+
+
+def bracket_label(season, cls, track, division):
+    """The playoff bracket a school played in, named the way it was then."""
+    if season < SELECT_SPLIT_SEASON:
+        return f"Class {cls}" if cls else ""
+    if season < NONSELECT_DIVISIONS_SEASON:
+        if track == "select":
+            m = re.search(r"Division ([IV]+)", division or "")
+            return f"Division {m.group(1)} (Select)" if m else "Select"
+        return f"Class {cls}" if cls else ""
+    if division:
+        return division
+    return {"select": "Select", "non-select": "Non-Select"}.get(track, "")
+
+
+NOTES = {
+    "split": (
+        "Did you know? Until 2013, every LHSAA football school played in the "
+        "same playoff brackets by class (5A through 1A). In 2013 the LHSAA "
+        "split the playoffs: \"select\" schools (private and other "
+        "non-zoned schools) moved to their own Division I\u2013IV brackets, "
+        "while public \"non-select\" schools kept playing in Class "
+        "5A\u20131A brackets \u2014 9 brackets in all. In 2022 the "
+        "non-select side switched to Non-Select Division I\u2013IV and "
+        "select became Select Division I\u2013IV, making the 8 brackets "
+        "used today."),
+    "class": (
+        "Did you know? A school's class (5A, 4A, 3A, 2A, 1A) is set by "
+        "enrollment, and the LHSAA reclassifies schools every two years. "
+        "The one exception was COVID: the cycle that began in 2019 ran "
+        "three seasons (2019\u20132021), so the recent reclass years are "
+        "2017, 2019, 2022 and 2024, and the next cycle starts in 2026. That "
+        "is why a school can jump classes from one season to the next."),
+}
+
+
+# General LHSAA football history questions (no team needed).
+# (label, regex on the normalized question, answer)
+FACTS = [
+    ("When Class 5A was added",
+     r"\b(5a|class 5a|five a)\b.*\b(add|added|create|created|start|"
+     r"started|begin|began|first|come|came|new)\b|\b(add|added|create|"
+     r"created|start|started|first|begin|began)\b.*\b(5a|class 5a)\b|"
+     r"\bbefore 5a\b|\b(aaaa|4 ?a) (was|the) top\b|"
+     r"\b(was|were) there (a |any )?(class )?5a\b",
+     "The LHSAA added Class 5A in 1991 \u2014 Thibodaux won the first "
+     "Class 5A football state title that year. From 1970 through 1990 the "
+     "top class was AAAA (4A), with classes AAAA, AAA, AA and A. Our "
+     "records start in 1990, the last season with four classes."),
+    ("When Non-Select Divisions started",
+     r"\bnon ?select division|\bdivisions?\b.*\b(replace|replaced|"
+     r"start|started|begin|began)\b.*\bnon ?select\b|\bwhen\b.*\bnon "
+     r"?select\b.*\b(division|divisions)\b",
+     "Non-Select Division I\u2013IV started in 2022. From 2013 through "
+     "2021, non-select (public) schools still played in Class 5A\u20131A "
+     "playoff brackets; in 2022 those were replaced by Non-Select Division "
+     "I\u2013IV, and the select side became Select Division I\u2013IV. "
+     "That's why football went from 9 brackets to 8."),
+    ("When the Select/Non-Select split started",
+     r"\b(select|non ?select|split)\b.*\b(start|started|begin|began|"
+     r"happen|happened|split|first|come|came|created)\b|\bwhen\b.*\b"
+     r"(select|split)\b|\bhow long\b.*\b(select|split)\b",
+     "The LHSAA split the football playoffs in 2013. Select schools moved "
+     "to their own Division I\u2013IV brackets, while non-select (public, "
+     "zoned) schools kept playing in Class 5A\u20131A brackets \u2014 9 "
+     "brackets in all. In 2022 the non-select side switched to Non-Select "
+     "Division I\u2013IV, making the 8 brackets used today. Before 2013 "
+     "everyone played in the same class brackets."),
+    ("What select and non-select mean",
+     r"\bwhat (is|are|does)\b.*\b(select|non ?select)\b|\bdifference\b"
+     r".*\bselect\b|\bselect\b.*\bmean\b",
+     "Select schools are schools that can draw students from beyond a set "
+     "attendance zone \u2014 private and parochial schools, plus some "
+     "magnet, charter and lab schools. Non-select schools are traditional "
+     "public schools with a set attendance zone. Since 2013 they've played "
+     "in separate football playoffs, and in June 2022 the LHSAA redefined "
+     "which schools count as select, so some schools switched sides that "
+     "year."),
+    ("How reclassification works",
+     r"\breclass|\breclassification\b|\bhow (are|is|do) (classes|class)"
+     r"\b|\bhow often\b.*\bclass|\bwhat (decides|determines|sets)\b.*"
+     r"\bclass\b|\bcovid\b",
+     "A school's class (5A, 4A, 3A, 2A, 1A) is set by enrollment, and the "
+     "LHSAA reclassifies schools every two years. The one exception was "
+     "COVID: the cycle that began in 2019 ran three seasons "
+     "(2019\u20132021). The recent reclass years are 2017, 2019, 2022 and "
+     "2024, and the next cycle starts in 2026."),
+    ("How many playoff brackets there are",
+     r"\bhow many\b.*\b(brackets?|divisions?|classes|classifications?|"
+     r"state champions?|champions)\b",
+     "Today there are 8 football playoff brackets: Non-Select Division "
+     "I\u2013IV and Select Division I\u2013IV (since 2022). From 2013 to "
+     "2021 there were 9: Class 5A\u20131A plus Select Division I\u2013IV. "
+     "From 1991 to 2012 there were 5: Class 5A\u20131A. Before 1991 the "
+     "classes were AAAA, AAA, AA and A."),
+]
+
+
+def match_fact(q):
+    for label, pattern, text in FACTS:
+        if re.search(pattern, q):
+            return label, text
+    return None
+
+
 def build_season_info(archive, season_2025_rows=None):
     """(season, normalized school) -> {class, track, division, inferred}."""
     info = {}
@@ -838,6 +945,18 @@ class Answerer:
             if team in self.history:
                 return self._class_history(base, team, hist, q)
 
+        if not teams:
+            cnt = re.search(r"\bhow many (?:class )?([1-5]a|non ?select|"
+                            r"select) (?:teams?|schools?|programs?)\b", q)
+            if cnt:
+                return self._count_schools(base, cnt.group(1), q)
+            fact = match_fact(q)
+            if fact:
+                return {**base, "matched": True, "status": "ok",
+                        "intent": "fact", "teams": [], "filters": [],
+                        "interpreted_as": "LHSAA history: " + fact[0],
+                        "answer": fact[1]}
+
         filters, q = _extract_filters(q)
         number = _extract_number(q)
         intent = detect_intent(q, len(teams), number)
@@ -875,7 +994,14 @@ class Answerer:
                              number)
         scope = f" ({', '.join(filters['labels'])})" if filters["labels"] \
             else ""
+        note = ""
+        if any(filters[k] for k in ("own_track", "own_div", "opp_track",
+                                    "opp_div")):
+            note = NOTES["split"]
+        elif filters["own_class"] or filters["opp_class"]:
+            note = NOTES["class"]
         return {**base, "matched": True, "status": "ok", "intent": intent,
+                "note": note,
                 "teams": [team] + ([other[0]] if other else []),
                 "filters": filters["labels"],
                 "interpreted_as": INTENT_LABELS[intent].format(
@@ -883,6 +1009,34 @@ class Answerer:
                     n=number) + scope,
                 "answer": text,
                 "rows": [g.as_row() for g in rows][:25]}
+
+    def _count_schools(self, base, what, q):
+        m = re.search(r"\b(19\d\d|20\d\d)\b", q)
+        year = int(m.group(1)) if m else self.last_season
+        what_n = what.replace(" ", "-")
+        names = sorted(
+            school for school, seasons in self.history.items()
+            if year in seasons and (
+                seasons[year]["class"] == what.upper()
+                if re.match(r"[1-5]a", what)
+                else seasons[year]["track"] == what_n))
+        label = what.upper() if re.match(r"[1-5]a", what) else \
+            {"select": "select", "non-select": "non-select"}[what_n]
+        if not names:
+            text = f"I don't have any {label} football schools for {year}."
+            if re.match(r"5a", what) and year < 1991:
+                text += " Class 5A didn't exist until 1991."
+            elif what_n in ("select", "non-select") and \
+                    year < SELECT_SPLIT_SEASON:
+                text += (" There was no select/non-select split until "
+                         f"{SELECT_SPLIT_SEASON}.")
+        else:
+            text = (f"{len(names)} {label} football schools played in "
+                    f"{year} in our records: " + ", ".join(names) + ".")
+        return {**base, "matched": True, "status": "ok", "intent": "count",
+                "teams": [], "filters": [str(year)],
+                "interpreted_as": f"{label} schools in {year}",
+                "answer": text}
 
     # ── class / Select history ──
     def _class_history(self, base, team, hist, q):
@@ -893,9 +1047,9 @@ class Answerer:
         latest = years[-1]
         cur = seasons[latest]
         rows = [{"season": y, "class": seasons[y]["class"],
-                 "track": {"select": "Select", "non-select": "Non-Select"}.get(
-                     seasons[y]["track"], ""),
-                 "division": seasons[y]["division"]}
+                 "bracket": bracket_label(y, seasons[y]["class"],
+                                          seasons[y]["track"],
+                                          seasons[y]["division"])}
                 for y in reversed(years)]
 
         def spans(key, value=None):
@@ -932,7 +1086,14 @@ class Answerer:
                             f" — the LHSAA split football in "
                             f"{SELECT_SPLIT_SEASON}.")
                 elif t:
-                    text = f"{team} was {track_word[t]} in {year}."
+                    rec = seasons.get(year, {})
+                    br = bracket_label(year, rec.get("class"), t,
+                                       rec.get("division"))
+                    where = (f", playing in the {br} playoff bracket"
+                             if br and br not in ("Select", "Non-Select")
+                             else "")
+                    text = (f"{team} was on the {track_word[t].lower()} "
+                            f"side in {year}{where}.")
                 else:
                     text = f"I don't have {team}'s bracket for {year}."
             elif not known:
@@ -943,14 +1104,14 @@ class Answerer:
                 sp = spans("track")
                 run = [x for x in sp if x[1] == latest]
                 start = run[0][0] if run else latest
-                head = f"{team} is {track_word.get(ct, 'unknown')}"
+                head = (f"{team} is on the "
+                        f"{track_word.get(ct, 'unknown').lower()} side")
                 if want and want != ct:
-                    head += f", not {track_word[want]},"
+                    head += f", not {track_word[want].lower()},"
                 head += f" as of {latest}"
                 if start == known[0] == SELECT_SPLIT_SEASON:
                     text = (head + ", and has been every season since the "
-                            f"Select/Non-Select split began in "
-                            f"{SELECT_SPLIT_SEASON}.")
+                            f"split began in {SELECT_SPLIT_SEASON}.")
                 else:
                     text = head + f" (since {start})."
                 if len(sp) > 1:
@@ -963,8 +1124,11 @@ class Answerer:
             if year:
                 c = seasons.get(year, {}).get("class")
                 d = seasons.get(year, {}).get("division")
+                rec = seasons.get(year, {})
+                br = bracket_label(year, c, rec.get("track"), d)
                 text = (f"{team} was {c} in {year}"
-                        + (f" ({d})" if d else "") + "."
+                        + (f" and played in the {br} playoff bracket"
+                           if br else "") + "."
                         if c else f"I don't have {team}'s class for {year}.")
             elif want:
                 sp = spans("class", want)
@@ -1005,7 +1169,9 @@ class Answerer:
                 "intent": "class_history" if hist["kind"] == "class"
                 else "track_history",
                 "teams": [team], "filters": [], "interpreted_as": label,
-                "answer": text, "rows": [], "history": rows}
+                "answer": text, "rows": [], "history": rows,
+                "note": NOTES["split"] if hist["kind"] == "track"
+                else NOTES["class"]}
 
     def coverage(self):
         if self.first_season is None:

@@ -136,6 +136,30 @@ HIST = {"seasons": {
 }}
 
 
+class FactTests(unittest.TestCase):
+    def test_general_history_questions(self):
+        a = y.Answerer(y.build_games(ARCHIVE))
+        for q, want in [
+            ("When did they add 5A?", "1991"),
+            ("When did select start?", "2013"),
+            ("When did non-select divisions start?", "2022"),
+            ("What is select and non select?", "attendance zone"),
+            ("How often do they reclass?", "COVID"),
+            ("How many playoff brackets are there?", "8"),
+        ]:
+            r = a.answer(q)
+            self.assertEqual(r["intent"], "fact", q)
+            self.assertIn(want, r["answer"], q)
+
+
+class NoteTests(unittest.TestCase):
+    def test_note_only_when_pertinent(self):
+        a = y.Answerer(y.build_games(ARCHIVE))
+        self.assertFalse(a.answer("West Monroe vs Neville").get("note"))
+        self.assertTrue(a.answer("West Monroe record vs select schools")
+                        .get("note"))
+
+
 class ClassAndSelectTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -156,7 +180,10 @@ class ClassAndSelectTests(unittest.TestCase):
         self.assertEqual(r["intent"], "track_history")
         self.assertIn("Select", r["answer"])
         r = self.a.answer("what class was Evangel in 2016")
-        self.assertIn("Select Division I", r["answer"])
+        self.assertIn("Division I (Select)", r["answer"])
+        self.assertTrue(r["note"])
+        r = self.a.answer("what class was Many in 2016")
+        self.assertIn("Class 1A playoff bracket", r["answer"])
 
     def test_no_select_before_2013(self):
         r = self.a.answer("Was Evangel select in 2012?")
