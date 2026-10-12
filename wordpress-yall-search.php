@@ -206,6 +206,8 @@ function lvay_ys_render() {
 .lvay-ys tr:nth-child(even) td{background:#fafbfb}
 .lvay-ys .w{color:#0a7a3d;font-weight:700}.lvay-ys .l{color:#b3261e;font-weight:700}
 .lvay-ys-note{font-size:13px;color:#777;margin-top:26px}
+.lvay-ys-note-box{margin-top:12px;padding:12px 16px;background:#eef7f7;border:1px dashed #008584;border-radius:4px;font-size:15px;line-height:1.5;color:#244}
+.lvay-ys-note-box b{font-family:'Teko',sans-serif;font-size:19px;font-weight:400;color:#008584;letter-spacing:.5px;text-transform:uppercase;margin-right:4px}
 .lvay-ys-loading{font-family:'Teko',sans-serif;font-size:22px;color:#008584}
 @media(max-width:767px){.lvay-ys-head h1{font-size:30px}.lvay-ys-form input{font-size:16px;padding:12px}.lvay-ys-form button{font-size:22px;padding:4px 16px 0}.lvay-ys-ans{font-size:18px}}
 </style>
@@ -217,7 +219,7 @@ function lvay_ys_render() {
       tryBox=root.querySelector('.lvay-ys-try'), cov=root.querySelector('.lvay-ys-cov');
   var EX=['When is the last time West Monroe had 50 points put on them?','Ruston vs West Monroe',
     'Longest winning streak for John Curtis','When was Haynesville last undefeated?',
-    'Biggest win in Southwood history','How long has Evangel been 5A?','Is John Curtis select or non-select?'];
+    'Biggest win in Southwood history','How long has Evangel been 5A?','Is John Curtis select or non-select?','When did they add 5A?'];
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function chips(list,box){box.innerHTML='';list.forEach(function(t){var b=document.createElement('button');b.type='button';b.className='lvay-ys-chip';b.textContent=t;b.onclick=function(){input.value=t;ask();};box.appendChild(b);});}
   chips(EX,tryBox);
@@ -230,8 +232,8 @@ function lvay_ys_render() {
   }
   function hist(rows){
     if(!rows||!rows.length) return '';
-    var h='<div class="lvay-ys-tablewrap"><table><thead><tr><th>Season</th><th>Class</th><th>Select / Non-Select</th><th>Playoff Division</th></tr></thead><tbody>';
-    rows.forEach(function(r){h+='<tr><td>'+esc(r.season)+'</td><td><b>'+esc(r['class'])+'</b></td><td>'+esc(r.track||(r.season<2013?'(no split yet)':''))+'</td><td>'+esc(r.division)+'</td></tr>';});
+    var h='<div class="lvay-ys-tablewrap"><table><thead><tr><th>Season</th><th>Class</th><th>Playoff bracket</th></tr></thead><tbody>';
+    rows.forEach(function(r){h+='<tr><td>'+esc(r.season)+'</td><td><b>'+esc(r['class'])+'</b></td><td>'+esc(r.bracket||'')+'</td></tr>';});
     return h+'</tbody></table></div>';
   }
   function show(j){
@@ -240,6 +242,7 @@ function lvay_ys_render() {
     var h='<div class="lvay-ys-card'+(miss?' miss':'')+'"><p class="lvay-ys-ans">'+esc(j.answer)+'</p>';
     if(j.interpreted_as) h+='<p class="lvay-ys-how">Searched: '+esc(j.interpreted_as)+'</p>';
     h+='</div>';
+    if(j.note) h+='<div class="lvay-ys-note-box">'+esc(j.note).replace(/^Did you know\?/,'<b>Did you know?</b>')+'</div>';
     out.innerHTML=h+table(j.rows)+hist(j.history);
     if(j.status==='ambiguous'&&j.choices){var box=document.createElement('div');box.className='lvay-ys-try';out.appendChild(box);
       var q=j.question; chips(j.choices.map(function(name){var base=name.split(' - ')[0];var re=new RegExp(base.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i');return re.test(q)?q.replace(re,name):name+' '+q;}),box);}
