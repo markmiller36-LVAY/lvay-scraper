@@ -46,3 +46,13 @@ ADD	fix-1990-0013	1990	1990-09-14	Oak Grove	LA.WC-001	26	Tallulah	LA.MA-002	0	19
 ADD	fix-1990-0014	1990	1990-09-14	Oak Forest Academy	LA.TA-001	19	Bowling Green	LA.WO-002	12	1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990
 ADD	fix-1990-0015	1990	1990-09-14	River Oaks	LA.OU-011	34	Central Private	LA.EB-021	0	1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990
 ADD	fix-1990-0016	1990	1990-09-14	Bishop Sullivan	LA.EB-014	20	Livonia	LA.PO-002	13	1990 week 3 newspapers (AP list, Lafayette Advertiser scoreboard, Alexandria Town Talk summaries, Shreveport Times), Sep 15 1990
+DATE	458787	1990	1990-09-21							Town Talk box score LC-Boston 28 Bunkie 7, Sep 22 1990 (game played week 4)
+DATE	458452	1990	1990-09-21							Town Talk box score + story Winnfield 19 Tioga 0 (Winnfield 3-1), Sep 22 1990
+DATE	458568	1990	1990-09-21							1990 week 4 newspapers (Alexandria Town Talk summaries + local scores, Monroe News-Star summaries, AP state list), Sep 22 1990; game played week 4
+DATE	458573	1990	1990-09-21							1990 week 4 newspapers (Alexandria Town Talk summaries + local scores, Monroe News-Star summaries, AP state list), Sep 22 1990; game played week 4
+ADD	fix-1990-0017	1990	1990-09-21	Clinton	LA.EF-005	13	Jackson	LA.EF-004	6	1990 week 4 newspapers (Alexandria Town Talk summaries + local scores, Monroe News-Star summaries, AP state list), Sep 22 1990
+ADD	fix-1990-0018	1990	1990-09-21	E.D. White	LA.LO-001	33	Sunset	LA.SL-014	7	1990 week 4 newspapers (Alexandria Town Talk summaries + local scores, Monroe News-Star summaries, AP state list), Sep 22 1990
+ADD	fix-1990-0019	1990	1990-09-21	Redemptorist	LA.EB-029	34	Parkview Baptist	LA.EB-010	6	1990 week 4 newspapers (Alexandria Town Talk summaries + local scores, Monroe News-Star summaries, AP state list), Sep 22 1990
+DROP	481569	1990								Not a Louisiana game: Atkins 42 Clinton 7 is Clinton, Arkansas (AP Arkansas scores, Sep 15 1990)
+CODE	481570	1990	1990-09-14	Sunset	LA.SL-014					Lafayette Advertiser box score Sep 15 1990: Sunset (La.) 9 Delcambre 6, not Dallas Sunset (Tex.)
+SCORE	458741	1990	1990-09-21	False River	LA.PO-003	47	Prairie View	LA.EB-?	20	Monroe News-Star box score Sep 22 1990 (14-13-20-0 = 47; AP had 48)
