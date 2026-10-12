@@ -276,3 +276,30 @@ class ClassAndSelectTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StateTitleTests(unittest.TestCase):
+    TITLES = {"st": {"West Monroe": [1993, 2009, 2011], "Neville": [2019]},
+              "ru": {"West Monroe": [2019], "Neville": [2011]},
+              "vac": {}, "lbl": {}}
+
+    @classmethod
+    def setUpClass(cls):
+        cls.a = y.Answerer(y.build_games(ARCHIVE), titles=cls.TITLES)
+
+    def test_team_title_count(self):
+        r = self.a.answer("How many state championships has West Monroe won?")
+        self.assertEqual(r["intent"], "state_titles")
+        self.assertIn("3 football state championships", r["answer"])
+        self.assertIn("runner-up 1 time", r["answer"])
+
+    def test_title_year_and_leaders(self):
+        r = self.a.answer("Did West Monroe win state in 2019?")
+        self.assertTrue(r["answer"].startswith("No. West Monroe was state runner-up"))
+        r = self.a.answer("who has the most state titles")
+        self.assertEqual(r["intent"], "state_titles_leaders")
+        self.assertIn("West Monroe has the most", r["answer"])
+
+    def test_district_title_not_state(self):
+        r = self.a.answer("West Monroe district championships")
+        self.assertNotEqual(r.get("intent"), "state_titles")

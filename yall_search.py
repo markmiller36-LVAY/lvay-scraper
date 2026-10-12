@@ -34,6 +34,10 @@ import rules_faq
 HERE = os.path.dirname(os.path.abspath(__file__))
 ARCHIVE_PATH = os.path.join(HERE, "football_archives_greenlit.json.gz")
 SEASON_2025_PATH = os.path.join(HERE, "football_2025_clean.json")
+# State title / runner-up years by LVAY school (same data as the team-page
+# banners, snippet #142 LVAY_FBST; titles from Wikipedia's by-school list,
+# runner-ups from Mark's 1927-2025 title-game list).
+TITLES_PATH = os.path.join(HERE, "football_state_titles.json")
 
 EXAMPLES = [
     "Ruston vs West Monroe",
@@ -792,6 +796,42 @@ def _question_tokens(question):
     return out
 
 
+TITLE_RE = re.compile(
+    r"\b(state (championships?|titles?|champs?|champions?|crowns?|rings?|"
+    r"finals?|title games?|championship games?)|won (a |the )?state|"
+    r"win(s|ning)? (a |the )?state|runners? ?ups?|title games?|"
+    r"championship games?|championships?|titles?)\b")
+
+
+def _title_question(q):
+    """Return 'titles' / 'runner_up' / None for a normalized question."""
+    if not TITLE_RE.search(q):
+        return None
+    if re.search(r"\b(district|conference|parish|jamboree|classic|"
+                 r"bowl|rule|bylaw|handbook)\b", q):
+        return None
+    if re.search(r"\brunners? ?ups?\b|\blost (in )?(the )?(state|title|"
+                 r"championship)|\btitle game appearances?\b", q):
+        return "runner_up"
+    return "titles"
+
+
+def _load_titles(path=None):
+    path = path or TITLES_PATH
+    if not os.path.exists(path):
+        return {"st": {}, "ru": {}, "vac": {}, "lbl": {}}
+    with open(path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    for k in ("st", "ru", "vac", "lbl"):
+        data.setdefault(k, {})
+    return data
+
+
+def _year_list(years):
+    years = sorted(years)
+    return ", ".join(str(y) for y in years)
+
+
 def _history_question(q):
     """Is this about a school's class / Select history? -> dict or None."""
     cls = re.search(r"\b(?:class\s+)?([1-5]a)\b|\bclass\s+([bc])\b", q)
@@ -1013,8 +1053,9 @@ def _streak(games, want):
 
 
 class Answerer:
-    def __init__(self, games):
+    def __init__(self, games, titles=None):
         self.games = games
+        self.titles = titles if titles is not None else _load_titles()
         self.by_school = {}
         opponents = set()
         for g in games:
@@ -1057,6 +1098,12 @@ class Answerer:
         pairs = self._season_pairs(question, teams, q)
         if pairs:
             return self._compare_seasons(base, pairs, q)
+
+        tq = _title_question(q)
+        if tq and (self.titles.get("st") or self.titles.get("ru")):
+            ans = self._state_titles(base, tq, teams, q)
+            if ans:
+                return ans
 
         hist = _history_question(q)
         if hist and teams:
@@ -1533,6 +1580,179 @@ class Answerer:
                 "answer": text}
 
     # ── class / Select history ──
+    # ── state championships ──
+    def _title_game(self, team, year, won):
+        """The state final from our game records, if we have that season."""
+        gs = sorted(self.by_school.get(team, []), key=lambda g: g.sort_key)
+        gs = [g for g in gs if g.season == year]
+        if not gs:
+            return None
+        g = gs[-1]
+        if not g.playoff or g.result != ("W" if won else "L"):
+            return None
+        other = self.titles["ru" if won else "st"]
+        if year not in other.get(g.opponent, []):
+            return None
+        return g
+
+    def _state_titles(self, base, kind, teams, q):
+        st, ru = self.titles.get("st", {}), self.titles.get("ru", {})
+        vac = self.titles.get("vac", {})
+        m = re.search(r"\b(since|after|from)\s+(\d{4})\b", q)
+        lo = int(m.group(2)) if m else None
+        m = re.search(r"\b(before|until|through|thru)\s+(\d{4})\b", q)
+        hi = int(m.group(2)) if m else None
+        years_in_q = [int(y) for y in re.findall(r"\b(19\d\d|20\d\d)\b", q)
+                      if int(y) not in (lo, hi)]
+        one_year = years_in_q[0] if len(years_in_q) == 1 else None
+
+        def keep(y):
+            return (lo is None or y >= lo) and (hi is None or y <= hi)
+
+        span = ""
+        if lo and hi:
+            span = f" ({lo}–{hi})"
+        elif lo:
+            span = f" since {lo}"
+        elif hi:
+            span = f" through {hi}"
+        source = ("State titles come from the Louisiana state football "
+                  "champions list (back to the early 1900s, before the "
+                  "LHSAA playoff era); runner-ups from the state title "
+                  "games, 1927–2025.")
+        out = {**base, "matched": True, "status": "ok", "filters": [],
+               "note": source}
+
+        if teams:
+            team = teams[0]["names"][0]
+            wins = [y for y in st.get(team, []) if keep(y)]
+            ups = [y for y in ru.get(team, []) if keep(y)]
+            gone = [y for y in vac.get(team, []) if keep(y)]
+            out.update(intent="state_titles", teams=[team],
+                       interpreted_as=f"{team} football state "
+                                      f"championships{span}")
+            if one_year:
+                if one_year in wins:
+                    g = self._title_game(team, one_year, True)
+                    txt = f"Yes. {team} won the state championship in " \
+                          f"{one_year}"
+                    txt += (f", beating {g.opponent} {g.pf}-{g.pa}."
+                            if g else ".")
+                elif one_year in gone:
+                    txt = (f"{team} won the {one_year} state title on the "
+                           f"field, but it was later vacated.")
+                elif one_year in ups:
+                    g = self._title_game(team, one_year, False)
+                    txt = f"No. {team} was state runner-up in {one_year}"
+                    txt += (f", losing to {g.opponent} {g.pa}-{g.pf}."
+                            if g else ".")
+                else:
+                    txt = (f"No. {team} did not win or play for a state "
+                           f"championship in {one_year} in our records.")
+                out["answer"] = txt
+                return out
+            rows = []
+            for y in sorted(set(wins) | set(ups) | set(gone), reverse=True):
+                won = y in wins or y in gone
+                g = self._title_game(team, y, won)
+                res = ("State champion" if y in wins else
+                       "Champion (vacated)" if y in gone else "Runner-up")
+                if self.titles.get("lbl", {}).get(team, {}).get(str(y)):
+                    res += f" (as {self.titles['lbl'][team][str(y)]})"
+                game = (f"{'W' if won else 'L'} {g.pf}-{g.pa} vs {g.opponent}"
+                        if g else "")
+                rows.append([str(y), res, game])
+            if kind == "runner_up":
+                if ups:
+                    txt = (f"{team} has been state runner-up {len(ups)} "
+                           f"time{'s' if len(ups) != 1 else ''}{span}: "
+                           f"{_year_list(ups)}.")
+                else:
+                    txt = (f"{team} has never finished state runner-up"
+                           f"{span} in our records.")
+                if wins:
+                    txt += (f" They've won {len(wins)} state "
+                            f"championship{'s' if len(wins) != 1 else ''}.")
+            else:
+                if wins and re.search(r"\b(last|most recent|latest)\b", q):
+                    last = max(wins)
+                    g = self._title_game(team, last, True)
+                    txt = (f"{team} last won a state championship in {last}"
+                           + (f", {g.pf}-{g.pa} over {g.opponent}." if g
+                              else ".")
+                           + f" That's {len(wins)} state title"
+                           f"{'s' if len(wins) != 1 else ''}{span} in all.")
+                elif wins:
+                    n = len(wins)
+                    txt = (f"{team} has won {n} football state "
+                           f"championship{'s' if n != 1 else ''}{span}: "
+                           f"{_year_list(wins)}.")
+                    last = max(wins)
+                    g = self._title_game(team, last, True)
+                    txt += (f" Most recent: {last}" +
+                            (f", {g.pf}-{g.pa} over {g.opponent}." if g
+                             else "."))
+                else:
+                    txt = (f"{team} has not won a football state "
+                           f"championship{span} in our records.")
+                if ups:
+                    txt += (f" Also state runner-up {len(ups)} "
+                            f"time{'s' if len(ups) != 1 else ''} "
+                            f"({_year_list(ups)}).")
+            if gone:
+                txt += (f" Vacated: {_year_list(gone)} (won on the field, "
+                        f"later taken away by the LHSAA).")
+            out["answer"] = txt
+            if rows:
+                out["table"] = {"cols": ["Season", "Finish", "Title game"],
+                                "rows": rows}
+            return out
+
+        # No school named.
+        if one_year:
+            champs = sorted(t for t, ys in st.items() if one_year in ys)
+            if not champs:
+                return None
+            out.update(intent="state_titles_year", teams=[],
+                       interpreted_as=f"Football state champions, {one_year}")
+            out["answer"] = (f"{len(champs)} schools won football state "
+                             f"championships in {one_year}: "
+                             f"{', '.join(champs)}.")
+            rows = []
+            for t in champs:
+                g = self._title_game(t, one_year, True)
+                rows.append([t, f"W {g.pf}-{g.pa} vs {g.opponent}" if g
+                             else ""])
+            out["table"] = {"cols": ["Champion", "Title game"], "rows": rows,
+                            "first_col_bold": True}
+            return out
+        if not re.search(r"\b(most|who|which|what (team|school)s?|leaders?|"
+                         r"top|list|every|all)\b", q):
+            return None
+        src = ru if kind == "runner_up" else st
+        tally = sorted(((len([y for y in ys if keep(y)]), t)
+                        for t, ys in src.items()), key=lambda x: (-x[0], x[1]))
+        tally = [x for x in tally if x[0]]
+        if not tally:
+            return None
+        word = "state runner-up finishes" if kind == "runner_up" else \
+            "football state championships"
+        top = tally[0][0]
+        leaders = [t for n, t in tally if n == top]
+        out.update(intent="state_titles_leaders", teams=[],
+                   interpreted_as=f"Most {word}{span}")
+        out["answer"] = (f"{' and '.join(leaders)} "
+                         f"{'has' if len(leaders) == 1 else 'have'} the most "
+                         f"{word}{span}: {top}.")
+        rows = []
+        for n, t in tally[:15]:
+            ys = sorted(y for y in src[t] if keep(y))
+            rows.append([t, str(n), str(ys[-1])])
+        out["table"] = {"cols": ["School", "Titles" if kind == "titles" else
+                                 "Runner-up", "Most recent"],
+                        "rows": rows, "first_col_bold": True}
+        return out
+
     def _class_history(self, base, team, hist, q):
         seasons = dict(self.history[team])
         years = sorted(seasons)
