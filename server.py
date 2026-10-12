@@ -275,8 +275,22 @@ def load_football_archives():
     return _FOOTBALL_ARCHIVES
 
 
+# Oldest football season the site shows (Mark, Oct 12 2026). Older seasons stay in the
+# archive file (and Airtable) but are not served to schedules, ratings or season lists.
+FOOTBALL_DISPLAY_FROM = int(os.environ.get("FOOTBALL_DISPLAY_FROM", "2000"))
+
+
+def football_display_seasons():
+    """Archived football seasons the site may show (FOOTBALL_DISPLAY_FROM on)."""
+    return {
+        season: archive
+        for season, archive in load_football_archives().get("seasons", {}).items()
+        if str(season).isdigit() and int(season) >= FOOTBALL_DISPLAY_FROM
+    }
+
+
 def football_archive_response(season, summary_only=False, school_filter=""):
-    archive = load_football_archives().get("seasons", {}).get(str(season))
+    archive = football_display_seasons().get(str(season))
     if not archive:
         return None
     schools = archive["schools"]
@@ -308,7 +322,7 @@ def football_archive_response(season, summary_only=False, school_filter=""):
 
 def football_archive_rankings_response(season):
     """Reconstruct final regular-season ratings for a preserved archive."""
-    archive = load_football_archives().get("seasons", {}).get(str(season))
+    archive = football_display_seasons().get(str(season))
     if not archive:
         return None
 
@@ -1820,9 +1834,7 @@ def sport_seasons(sport):
             })
     conn.close()
     if sport == "football":
-        for season, archive in load_football_archives().get(
-            "seasons", {}
-        ).items():
+        for season, archive in football_display_seasons().items():
             known.setdefault(season, {
                 "season": season,
                 "source": "Airtable archive",
