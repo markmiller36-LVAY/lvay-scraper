@@ -69,3 +69,30 @@ DATE	458341	1990	1990-10-05							Town Talk box score Sam Houston 21 Bolton 19, 
 DATE	458472	1990	1990-10-05							Town Talk box score Bunkie 18 Marksville 16, Oct 6 1990; game played week 6
 DROP	671717	1990								Duplicate of Ville Platte 28 Bunkie 21 (game 1663692); Ville Platte played Crowley Oct 5 1990
 CODE	481558	1990	1990-10-05	Sunset	LA.SL-014					Sunset (La.) 28 Teurlings 0, not Dallas Sunset (Tex.) (Shreveport Times state scores, Town Talk, Oct 6 1990)
+DATE	1663692	1990	1990-10-12							Town Talk Oct 14 1990 p27 District 5-AAA "Friday's scores" Ville Platte 28 Bunkie 21; Shreveport Times Oct 13 1990 p26 state scores
+DATE	458099	1990	1990-10-12							Shreveport Times Oct 13 1990 p26 (4B) City Scores District 1-AAA Haughton 7 Minden 6
+DATE	458218	1990	1990-10-12							Shreveport Times Oct 13 1990 p26 (4B) City Scores non-district Airline 40 DeRidder 14
+DATE	458217	1990	1990-10-12							Town Talk Oct 14 1990 p27 District 5-AAA Friday's scores Eunice 28 Marksville 17; Shreveport Times Oct 13 1990 p26 state scores
+DATE	458226	1990	1990-10-12							Shreveport Times Oct 13 1990 p26 state scores LC-Boston 28 Sam Houston 21
+DROP	458330	1990								Duplicate of C.E. Byrd 34 Huntington 14 (game 1663686); played Thursday Oct 11 1990 per Shreveport Times Oct 12 1990 p25 game story
+CODE	458408	1990	1990-10-12	Northwood	LA.RA-007			LA.CO-006		Town Talk Oct 14 1990 p27 column: Northwood High in Boyce fell 21-20 to Trafton Academy; Shreveport Northwood played Bossier Thu Oct 11 (Times Oct 12 1990 p25)
+SCORE	423454	1990	1990-10-12	Carencro	LA.LY-006	26	Northside	LA.LY-010	9	Lafayette Daily Advertiser Oct 13 1990 p10 (B-2) score banner; Shreveport Times Oct 13 1990 p26 state scores
+DATE	457985	1990	1990-10-19							Shreveport Times Oct 20 1990 p14 (4B) City Scores District 1-AAA Haughton 6 Bossier 0 + game story
+DATE	458100	1990	1990-10-19							Shreveport Times Oct 20 1990 p14 state scores Eunice 21 Bunkie 14; Town Talk Oct 14 1990 p27 next week Bunkie at Eunice
+DATE	458108	1990	1990-10-19							Shreveport Times Oct 20 1990 p14 state scores Jennings 24 Sam Houston 8
+DATE	458215	1990	1990-10-20							Shreveport Times Oct 21 1990 p16 game story: Byrd 16-12 over Fair Park Saturday at Caddo Parish Stadium
+ADD	fix-1990-0020	1990	1990-10-20	Booker T. Washington	LA.CO-009	35	Huntington	LA.CO-004	20	Shreveport Times Oct 21 1990 p16 game story: BTW 35-20 over Huntington Saturday at BTW Stadium
+DROP	458101	1990								Duplicate of Airline 25 Green Oaks 0 (game 1663694); played Thursday Oct 18 1990 per Shreveport Times Oct 19 1990 p32 game story
+CODE	458322	1990	1990-10-19	Northwood	LA.RA-007			LA.CO-006		Shreveport Times Oct 20 1990 p14 state scores Northwood 20 Christian Life 12; Shreveport Northwood lost 39-7 to Mansfield that night (Times Oct 20 p14 story)
+CODE	458242	1990	1990-10-19	Plain Dealing Academy	LA.BO-007			LA.BO-006		Shreveport Times Oct 20 1990 p14 City Scores LISA section Plain Dealing 34 Grawood 14; Plain Dealing High played St. Mary's Thu Oct 18
+SCORE	458241	1990	1990-10-19	Haynesville	LA.CI-001	34	Grambling Lab	LA.LN-002	0	Shreveport Times Oct 20 1990 p14 City Scores District 2-A Haynesville 34 Grambling 0 (local list)
+DATE	458207	1990	1990-10-26							Shreveport Times Oct 27 1990 p18 state scores Crowley 40 Bunkie 6
+DATE	457986	1990	1990-10-26							Shreveport Times Oct 27 1990 p18 state scores Eunice 26 Ville Platte 13
+DATE	457922	1990	1990-10-26							Shreveport Times Oct 27 1990 p18 state scores Westlake 14 Winnfield 6
+DATE	457987	1990	1990-10-26							Shreveport Times Oct 27 1990 p18 Area Scores District 2-AAAA Airline 35 Parkway 27
+SCORE	457987	1990	1990-10-26	Airline	LA.BO-001	35	Parkway	LA.BO-002	27	Shreveport Times Oct 27 1990 p18 Area Scores (local) + Lafayette Advertiser Oct 27 1990 p11 AP list: Airline 35 Parkway 27
+SCORE	423274	1990	1990-10-26	Lafayette	LA.LY-007	28	Carencro	LA.LY-006	21	Lafayette Daily Advertiser Oct 27 1990 p11 box score Lafayette 28 Carencro 21 2OT; Shreveport Times Oct 27 1990 p18
+DROP	1663718	1990								Duplicate of Southwood 21 Byrd 13 (game 457924, moved to Thu Nov 1)
+DATE	457924	1990	1990-11-01							Shreveport Times Nov 3 1990 p23 Area Scores Thursday results Southwood 21 Byrd 13
+DROP	458009	1990								Duplicate of Green Oaks 18 Parkway 9 (game 1663720); Thursday Nov 1 per Shreveport Times Nov 3 1990 p23 Thursday results
+DROP	458089	1990								Duplicate of West Ouachita 35 St. Frederick 23 (game 1663722); Thursday Nov 1 per Shreveport Times Nov 3 1990 p23 Thursday results
