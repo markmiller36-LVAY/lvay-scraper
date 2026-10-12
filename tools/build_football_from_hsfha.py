@@ -1,12 +1,13 @@
-"""Build football seasons 2000-2009 from the HSFHA-LA scrape and merge them into the
-site archive (football_archives_greenlit.json.gz).
+"""Build football seasons from the HSFHA-LA scrape and merge them into the
+site archive (football_archives_greenlit.json.gz). Used for 2000-2009 and 1990-1999.
 
 Source: High School Football Historians Association, Louisiana section
 (hsfha.org/w/Special:LA/seasons), pulled Oct 11, 2026 as one TSV row per game
 (see tools/data_2000_2009/README.md for the columns and how it was pulled).
 
 Usage:
-  python3 tools/build_2000_2009_from_hsfha.py <hsfha.tsv> <site_names.json> [write]
+  python3 tools/build_football_from_hsfha.py <hsfha.tsv> <site_names.json> [write] [first-last]
+  (run tools/dedupe_hsfha.py on the TSV first; HSFHA lists some old games twice)
 
 site_names.json: list of every school name already in the archive (2010+), used to
 match HSFHA names to LVAY names.
@@ -36,6 +37,7 @@ CODE_NAME = {
     "LA.OR-019": "Sarah T. Reed", "LA.OR-014": "Frederick A Douglass",
     "LA.OR-016": "George Washington Carver", "LA.WO-006": "Mt. Hermon",
     "LA.SO-002": "St. Charles",
+    "LA.EB-004": "Dunham",                      # Chapel Trafton until 1995
 }
 ROUND = {"Bi-District": "1", "First round": "1", "Regional": "Regional",
          "Second round": "Regional", "Quarterfinal": "Quarterfinal",
@@ -43,8 +45,12 @@ ROUND = {"Bi-District": "1", "First round": "1", "Regional": "Regional",
 ORD = {"1": 1, "Regional": 2, "Quarterfinal": 3, "Semifinal": 4, "State Championship": 5}
 
 
+LETTERS = {"A": "1A", "AA": "2A", "AAA": "3A", "AAAA": "4A", "AAAAA": "5A"}
+
+
 def cls(c):
-    return c.replace("Class ", "") if c.startswith("Class ") else ""
+    c = c.replace("Class ", "") if c.startswith("Class ") else ""
+    return LETTERS.get(c, c)
 
 
 def dist(d):
@@ -52,13 +58,20 @@ def dist(d):
     return m.group(1) if m else ""
 
 
+def is_bowl(x):
+    # Named postseason bowl games (Shrimp Bowl, Jaycee Bowl...) are not LHSAA playoffs.
+    return x["gametype"] != "Regular" and "bowl" in x["round"].lower()
+
+
 def monday(s):
     d = date.fromisoformat(s)
     return d - timedelta(days=d.weekday())
 
 
-def main(src, names_path, write=False):
+def main(src, names_path, write=False, years=None):
     R = list(csv.DictReader(open(src, encoding="utf-8"), delimiter="\t"))
+    if years:
+        R = [x for x in R if years[0] <= int(x["season"]) <= years[1]]
     site = set(json.load(open(names_path)))
     norm = lambda s: re.sub(r"[^a-z0-9]", "", s.lower())
     site_norm = {norm(n): n for n in site}
@@ -73,7 +86,7 @@ def main(src, names_path, write=False):
     # Week 1 = first Mon-Sun week with >=25 LHSAA-vs-LHSAA regular-season games.
     cnt = Counter()
     for x in R:
-        if x["gametype"] == "Regular" and x["team_org"] == "LHSAA" and x["opp_org"] == "LHSAA":
+        if x["gametype"] == "Regular" and x["team_org"] == "LHSAA" and x["opp_org"] == "LHSAA" and x["date"]:
             cnt[(x["season"], monday(x["date"]))] += 1
     wk1 = {}
     for (s, m), n in sorted(cnt.items()):
@@ -82,7 +95,7 @@ def main(src, names_path, write=False):
     # Round for unlabeled LHSAA playoff games: same season + class + week as labeled ones.
     lab = {}
     for x in R:
-        if x["gametype"] != "Regular" and x["round"] in ROUND and x["team_org"] == "LHSAA":
+        if x["gametype"] != "Regular" and x["round"] in ROUND and x["team_org"] == "LHSAA" and x["date"]:
             lab[(x["season"], cls(x["team_class"]), monday(x["date"]))] = ROUND[x["round"]]
 
     rows = defaultdict(list)   # (season, school) -> games
@@ -95,15 +108,16 @@ def main(src, names_path, write=False):
             skipped += 1
             continue
         s = x["season"]
-        post = x["gametype"] != "Regular"
+        bowl = is_bowl(x)
+        post = x["gametype"] != "Regular" and not bowl
         if post:
             wk = ROUND.get(x["round"])
             if wk is None and x["team_org"] == "LHSAA":
-                wk = lab.get((s, cls(x["team_class"]), monday(x["date"])))
+                wk = lab.get((s, cls(x["team_class"]), monday(x["date"]))) if x["date"] else None
             wk = wk or "1"
         else:
-            wk = max((monday(x["date"]) - wk1[s]).days // 7 + 1, 0)
-        d = date.fromisoformat(x["date"])
+            wk = max((monday(x["date"]) - wk1[s]).days // 7 + 1, 0) if x["date"] else 0
+        d = date.fromisoformat(x["date"]) if x["date"] else None
         for side, other in (("team", "opp"), ("opp", "team")):
             code = x[side + "_code"]
             if not code.startswith("LA."):
@@ -144,7 +158,7 @@ def main(src, names_path, write=False):
             if yy != s:
                 continue
             c, dd = ident[(s, name)]
-            gs.sort(key=lambda g: (g["d"], ORD.get(str(g["week"]), 0)))
+            gs.sort(key=lambda g: (g["d"] or date(int(s), 12, 31), ORD.get(str(g["week"]), 0)))
             games = []
             for g in gs:
                 internal = g["opponent"] in names_this
@@ -152,7 +166,7 @@ def main(src, names_path, write=False):
                             and g["oclass"] == c and g["odist"] == dd)
                 games.append({
                     "week": g["week"], "phase": g["phase"],
-                    "game_date": f"{g['d'].month}/{g['d'].day}/{g['d'].year}",
+                    "game_date": f"{g['d'].month}/{g['d'].day}/{g['d'].year}" if g["d"] else "",
                     "opponent": g["opponent"], "home_away": g["ha"], "result": g["r"],
                     "score": g["score"], "opp_division": "", "opp_class": g["oclass"],
                     "is_district": is_d, "opponent_internal": internal,
@@ -190,4 +204,6 @@ def main(src, names_path, write=False):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], len(sys.argv) > 3 and sys.argv[3] == "write")
+    yr = next((a for a in sys.argv[3:] if "-" in a), None)
+    main(sys.argv[1], sys.argv[2], "write" in sys.argv[3:],
+         tuple(int(v) for v in yr.split("-")) if yr else None)

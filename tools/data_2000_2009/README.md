@@ -7,7 +7,7 @@
   code (LA.xx-nnn), site (h/a/n, from `team`'s side), scores, decisions (W/L/T, X = adjusted), association,
   class, district, coach, venue, city, overtime, notes.
 - `site_names_2010_2024.json` — school names already in the archive, used to match HSFHA names.
-- Build: `python3 tools/build_2000_2009_from_hsfha.py tools/data_2000_2009/hsfha_la_football_2000_2009.tsv tools/data_2000_2009/site_names_2010_2024.json write`
+- Build: `python3 tools/dedupe_hsfha.py tools/data_2000_2009/hsfha_la_football_2000_2009.tsv tools/data_2000_2009/hsfha_la_football_2000_2009_dedup.tsv`, then `python3 tools/build_football_from_hsfha.py tools/data_2000_2009/hsfha_la_football_2000_2009_dedup.tsv tools/data_2000_2009/site_names_2010_2024.json write 2000-2009`
 - Same games, one row per team, live in Airtable base "LVAY Football History 2000–2009" (app0mNACSri2Kchhz).
 - Rules: canceled/unplayed games dropped (56); forfeits kept with no score (`forfeit: "FF"`); 2005 4A final
   (Bastrop 41–12 Breaux Bridge, title later vacated) keeps the on-field result; non-LHSAA Louisiana schools
