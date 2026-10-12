@@ -225,7 +225,7 @@ function lvay_ys_render() {
     if(!rows||!rows.length) return '';
     var h='<div class="lvay-ys-tablewrap"><table><thead><tr><th>Date</th><th>Team</th><th>Opponent</th><th>Result</th><th>Where</th><th>Game</th></tr></thead><tbody>';
     rows.forEach(function(r){var c=r.result==='W'?'w':(r.result==='L'?'l':'');
-      h+='<tr><td>'+esc(r.date||r.season)+'</td><td>'+esc(r.team)+'</td><td>'+esc(r.opponent)+'</td><td class="'+c+'">'+esc(r.result)+' '+esc(r.score)+'</td><td>'+esc(r.where)+'</td><td>'+esc(r.phase)+'</td></tr>';});
+      h+='<tr><td>'+esc(r.date||r.season)+'</td><td>'+esc(r.team)+'</td><td>'+esc(r.opponent)+(r.opp_class?' <small style="color:#888">('+esc(r.opp_class)+')</small>':'')+'</td><td class="'+c+'">'+esc(r.result)+' '+esc(r.score)+'</td><td>'+esc(r.where)+'</td><td>'+esc(r.phase)+'</td></tr>';});
     return h+'</tbody></table></div>';
   }
   function show(j){
