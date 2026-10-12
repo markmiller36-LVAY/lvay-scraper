@@ -68,6 +68,58 @@ def monday(s):
     return d - timedelta(days=d.weekday())
 
 
+FIXES = ROOT / "tools" / "hsfha_fixes.tsv"
+
+
+def apply_fixes(R, path=FIXES):
+    """Corrections from newspapers (Mark's clippings), kept in tools/hsfha_fixes.tsv so
+    they survive rebuilds. SCORE = set the final (team/opp may be in either order),
+    DATE = move the game, ADD = a game HSFHA does not have. Source goes into notes."""
+    if not Path(path).exists():
+        return
+    byid = {x["id"]: x for x in R}
+    n = Counter()
+    for f in csv.DictReader(open(path, encoding="utf-8"), delimiter="\t"):
+        a, gid = f["action"], f["game_id"]
+        note = "Corrected from newspaper: " + f["source"]
+        if a == "ADD":
+            if gid in byid:
+                continue
+            aff = {}
+            for x in R:
+                if x["season"] == f["season"]:
+                    for side in ("team", "opp"):
+                        if x[side + "_org"]:
+                            aff[x[side + "_code"]] = (x[side + "_org"], x[side + "_class"], x[side + "_district"], x[side + "_coach"])
+            ts, os_ = int(f["team_score"]), int(f["opp_score"])
+            row = {k: "" for k in R[0]}
+            row.update(id=gid, season=f["season"], date=f["date"], gametype="Regular", played="1",
+                       count_in_regular="1", exhibition="0", team=f["team"], team_code=f["team_code"],
+                       opp=f["opp"], opp_code=f["opp_code"], team_score=str(ts), opp_score=str(os_),
+                       team_dec="W" if ts > os_ else "L" if ts < os_ else "T",
+                       opp_dec="L" if ts > os_ else "W" if ts < os_ else "T", notes=note)
+            for side in ("team", "opp"):
+                o, c, d, coach = aff.get(row[side + "_code"], ("", "", "", ""))
+                row.update({side + "_org": o, side + "_class": c, side + "_district": d, side + "_coach": coach})
+            R.append(row); byid[gid] = row; n[a] += 1
+            continue
+        x = byid.get(gid)
+        if not x:
+            print("fix not applied, game not found:", gid); continue
+        if a == "DATE":
+            x["date"] = f["date"]
+        elif a == "SCORE":
+            ts, os_ = int(f["team_score"]), int(f["opp_score"])
+            if x["team_code"] != f["team_code"]:
+                ts, os_ = os_, ts
+            x["team_score"], x["opp_score"], x["played"] = str(ts), str(os_), "1"
+            x["team_dec"] = "W" if ts > os_ else "L" if ts < os_ else "T"
+            x["opp_dec"] = "L" if ts > os_ else "W" if ts < os_ else "T"
+        x["notes"] = (x["notes"] + "; " if x["notes"] else "") + note
+        n[a] += 1
+    print("newspaper fixes applied:", dict(n))
+
+
 def fill_missing_affiliations(R):
     """HSFHA has no class/district for some school-seasons (54 schools in 1990, a few
     later). Fill them from the same school's nearest season (1 year away, then 2) in the
@@ -99,6 +151,7 @@ def fill_missing_affiliations(R):
 
 def main(src, names_path, write=False, years=None):
     R = list(csv.DictReader(open(src, encoding="utf-8"), delimiter="\t"))
+    apply_fixes(R)
     fill_missing_affiliations(R)
     if years:
         R = [x for x in R if years[0] <= int(x["season"]) <= years[1]]

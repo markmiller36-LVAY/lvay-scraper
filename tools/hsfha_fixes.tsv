@@ -1,0 +1,11 @@
+action	game_id	season	date	team	team_code	team_score	opp	opp_code	opp_score	source
+SCORE	459024	1990	1990-08-31	Parkway	LA.BO-002	21	C.E. Byrd	LA.CO-001	7	AP Friday Night Results (Daily Star, Hammond, Sep 2 1990 p21; Lafayette); Shreveport-area City Scores
+SCORE	459054	1990	1990-08-31	North Caddo	LA.CO-010	22	Farmerville	LA.UN-001	20	Box score (north Louisiana paper, Sep 1990); AP had Farmerville 28-0
+SCORE	1663433	1990	1990-08-31	West Feliciana	LA.WF-001	17	Kentwood	LA.TA-004	6	The Daily Star (Hammond), Sep 2 1990, p21, Area Results
+DATE	458902	1990	1990-08-31							AP Friday Night Results Aug 31 1990 + Shreveport-area paper
+DATE	481551	1990	1990-08-31							AP Friday Night Results Aug 31 1990 + Shreveport-area paper
+DATE	458805	1990	1990-08-31							AP Friday Night Results Aug 31 1990 + Shreveport-area paper
+DATE	458905	1990	1990-08-31							AP Friday Night Results Aug 31 1990 + Shreveport-area paper
+DATE	458800	1990	1990-08-31							AP Friday Night Results Aug 31 1990 + Shreveport-area paper
+DATE	458909	1990	1990-08-31							AP Friday Night Results Aug 31 1990 + Shreveport-area paper
+ADD	fix-1990-0001	1990	1990-08-31	Springfield	LA.LV-005	20	Bishop Sullivan	LA.EB-014	7	The Daily Star (Hammond), Sep 2 1990, p21, Area Results
