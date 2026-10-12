@@ -117,5 +117,62 @@ class OpponentClassTests(unittest.TestCase):
         self.assertIn("0-1", r["answer"])  # lost to 4A Neville in 2019
 
 
+HIST = {"seasons": {
+    str(y): {"schools": [
+        {"school": "Evangel Christian", "class_": c, "division": d,
+         "track": tr, "games": [g("Evangel Christian", "Many", "35-7",
+                                  f"9/6/{y}")]},
+        {"school": "Many", "class_": "1A", "division": "", "track": "",
+         "games": [g("Many", "Evangel Christian", "7-35", f"9/6/{y}",
+                     ha="A")]},
+    ]}
+    for y, c, d, tr in [
+        (2012, "2A", "", ""), (2013, "3A", "", ""),
+        (2016, "5A", "Division I", ""), (2019, "4A", "Division Ii", ""),
+        (2022, "4A", "Select Division II", "select"),
+        (2023, "5A", "Select Division I", "select"),
+        (2024, "5A", "Select Division I", "select"),
+    ]
+}}
+
+
+class ClassAndSelectTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.a = y.Answerer(y.build_games(HIST))
+
+    def test_how_long_in_class(self):
+        r = self.a.answer("how long has Evangel been 5A???")
+        self.assertEqual(r["intent"], "class_history")
+        self.assertIn("5A since 2023", r["answer"])
+        self.assertTrue(r["history"])
+
+    def test_class_in_year(self):
+        r = self.a.answer("what class was Evangel in 2012")
+        self.assertIn("was 2A in 2012", r["answer"])
+
+    def test_select_history(self):
+        r = self.a.answer("Is Evangel select or non select?")
+        self.assertEqual(r["intent"], "track_history")
+        self.assertIn("Select", r["answer"])
+        r = self.a.answer("what class was Evangel in 2016")
+        self.assertIn("Select Division I", r["answer"])
+
+    def test_no_select_before_2013(self):
+        r = self.a.answer("Was Evangel select in 2012?")
+        self.assertIn("no Select/Non-Select split", r["answer"])
+
+    def test_own_class_filter_is_not_history(self):
+        r = self.a.answer("Evangel record when they were 4A")
+        self.assertEqual(r["intent"], "record")
+        self.assertIn("2-0", r["answer"])
+
+    def test_opponent_and_own_track_filters(self):
+        r = self.a.answer("Evangel record as a select school")
+        self.assertIn("while Select", r["filters"])
+        r = self.a.answer("Many record vs select schools")
+        self.assertIn("0-", r["answer"])
+
+
 if __name__ == "__main__":
     unittest.main()

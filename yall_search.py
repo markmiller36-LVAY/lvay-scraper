@@ -54,7 +54,8 @@ class Game:
     __slots__ = (
         "season", "date", "school", "opponent", "pf", "pa", "result",
         "phase", "week", "home_away", "is_district", "playoff", "forfeit",
-        "opp_class",
+        "opp_class", "opp_track", "opp_div",
+        "own_class", "own_track", "own_div",
     )
 
     def __init__(self, **kw):
@@ -75,6 +76,7 @@ class Game:
             "score": f"{self.pf}-{self.pa}",
             "result": self.result,
             "opp_class": self.opp_class or "",
+            "opp_track": self.opp_track or "",
             "where": {"H": "Home", "A": "Away", "N": "Neutral"}.get(
                 (self.home_away or "").upper(), ""),
             "phase": self.phase,
@@ -126,21 +128,94 @@ def _clean_class(value):
     return text if re.fullmatch(r"[1-5]A|B|C", text) else ""
 
 
-def build_games(archive, season_2025_rows=None):
+SELECT_SPLIT_SEASON = 2013   # LHSAA split football playoffs Select/Non-Select
+ROMAN = {"1": "I", "2": "II", "3": "III", "4": "IV",
+         "i": "I", "ii": "II", "iii": "III", "iv": "IV"}
+
+
+def _clean_track_div(season, division, track):
+    """Return (track, division) e.g. ('select', 'Select Division I')."""
+    division = str(division or "").strip()
+    track = str(track or "").strip().lower()
+    m = re.match(r"^(?:(non-select|select)\s+)?division\s+([ivx]+)\b",
+                 division, re.I)
+    if m:
+        kind = (m.group(1) or "").lower()
+        if not kind and season < 2022:
+            kind = "select"  # 2016-2020 archive: "Division I" = Select
+        num = m.group(2).upper()
+        if not track and kind:
+            track = kind
+        label = (("Non-Select" if kind == "non-select" else "Select")
+                 + f" Division {num}") if kind else ""
+        return (track if track in ("select", "non-select") else "", label)
+    if division.lower().startswith("class") and SELECT_SPLIT_SEASON <= \
+            season < 2022 and not track:
+        track = "non-select"  # 2016-2020: class brackets = Non-Select
+    return (track if track in ("select", "non-select") else "", "")
+
+
+def build_season_info(archive, season_2025_rows=None):
+    """(season, normalized school) -> {class, track, division, inferred}."""
+    info = {}
+    for season, data in (archive or {}).get("seasons", {}).items():
+        try:
+            year = int(season)
+        except ValueError:
+            continue
+        for school in data.get("schools", []):
+            track, div = _clean_track_div(year, school.get("division"),
+                                          school.get("track"))
+            info[(year, _norm(school["school"]))] = {
+                "school": school["school"],
+                "class": _clean_class(school.get("class_")),
+                "track": track, "division": div, "inferred": False}
+    db = None
+    try:
+        import school_database as db  # current-cycle alignment (2024-26)
+    except Exception:
+        db = None
+    for g in season_2025_rows or []:
+        year = int(g.get("season") or 2025)
+        key = (year, _norm(g.get("school")))
+        if key in info:
+            continue
+        track, div = "", ""
+        if db is not None:
+            try:
+                rec = db.get_school(g.get("school"), sport="football",
+                                    season=year) or {}
+            except Exception:
+                rec = {}
+            track, div = _clean_track_div(year, rec.get("division"),
+                                          rec.get("track"))
+        info[key] = {"school": g.get("school"),
+                     "class": _clean_class(g.get("class_")),
+                     "track": track, "division": div, "inferred": False}
+    # Fill Select/Non-Select gaps (2013+) from the same school's nearest
+    # known season. Before 2013 there was no split, so leave it blank.
+    by_school = {}
+    for (year, name), rec in info.items():
+        by_school.setdefault(name, {})[year] = rec
+    for name, seasons in by_school.items():
+        known = {y: r["track"] for y, r in seasons.items() if r["track"]}
+        for year, rec in seasons.items():
+            if rec["track"] or year < SELECT_SPLIT_SEASON or not known:
+                continue
+            near = min(known, key=lambda y: (abs(y - year), -y))
+            rec["track"], rec["inferred"] = known[near], True
+    return info
+
+
+def build_games(archive, season_2025_rows=None, info=None):
     """Turn the archive JSON (+ optional 2025 rows) into Game objects."""
     games = []
-    # (season, normalized school) -> that school's class that season, so
-    # every game knows the OPPONENT'S class at the time ("vs 5A teams").
-    class_of = {}
-    for season, data in (archive or {}).get("seasons", {}).items():
-        for school in data.get("schools", []):
-            if school.get("class_"):
-                class_of[(str(season), _norm(school["school"]))] = \
-                    _clean_class(school["class_"])
-    for g in season_2025_rows or []:
-        if g.get("class_"):
-            class_of[(str(g.get("season") or 2025), _norm(g.get("school")))] \
-                = _clean_class(g["class_"])
+    if info is None:
+        info = build_season_info(archive, season_2025_rows)
+    blank = {"class": "", "track": "", "division": ""}
+
+    def who(year, name):
+        return info.get((int(year), _norm(name)), blank)
     for season, data in (archive or {}).get("seasons", {}).items():
         try:
             year = int(season)
@@ -167,9 +242,12 @@ def build_games(archive, season_2025_rows=None):
                     playoff=phase != "Regular Season",
                     forfeit=bool(g.get("forfeit")),
                     opp_class=(_clean_class(g.get("opp_class"))
-                               or class_of.get((str(season),
-                                                _norm(g.get("opponent"))),
-                                               "")),
+                               or who(year, g.get("opponent"))["class"]),
+                    opp_track=who(year, g.get("opponent"))["track"],
+                    opp_div=who(year, g.get("opponent"))["division"],
+                    own_class=who(year, school["school"])["class"],
+                    own_track=who(year, school["school"])["track"],
+                    own_div=who(year, school["school"])["division"],
                 ))
     for g in season_2025_rows or []:
         score = _parse_score(g.get("score"))
@@ -189,8 +267,18 @@ def build_games(archive, season_2025_rows=None):
             is_district="(d)" in str(g.get("district") or ""),
             playoff=False,
             forfeit=False,
-            opp_class=class_of.get((str(g.get("season") or 2025),
-                                    _norm(g.get("opponent"))), ""),
+            opp_class=who(int(g.get("season") or 2025),
+                          g.get("opponent"))["class"],
+            opp_track=who(int(g.get("season") or 2025),
+                          g.get("opponent"))["track"],
+            opp_div=who(int(g.get("season") or 2025),
+                        g.get("opponent"))["division"],
+            own_class=who(int(g.get("season") or 2025),
+                          g.get("school"))["class"],
+            own_track=who(int(g.get("season") or 2025),
+                          g.get("school"))["track"],
+            own_div=who(int(g.get("season") or 2025),
+                        g.get("school"))["division"],
         ))
     games.sort(key=lambda game: game.sort_key)
     return games
@@ -373,7 +461,59 @@ def _extract_filters(q):
     """Season range, home/away, district, playoffs. Returns (filters, q')."""
     f = {"min_season": None, "max_season": None, "where": None,
          "district": False, "playoffs": None, "opp_class": None,
-         "labels": []}
+         "own_class": None, "own_track": None, "own_div": None,
+         "opp_track": None, "opp_div": None, "labels": []}
+
+    TRACK = r"(non ?select|select)"
+    DIV = r"(?:\s+(?:division|div)\s+(iv|i{1,3}|[1-4]))?"
+
+    def div_label(track, num):
+        kind = "Non-Select" if track.startswith("non") else "Select"
+        return f"{kind} Division {ROMAN[num.lower()]}" if num else kind
+
+    # The team's OWN class / bracket that season:
+    # "when they were 2A", "as a 5A school", "while in Class 3A",
+    # "as a select school", "when they were Non-Select Division II".
+    own = (r"\b(?:when|while)\s+(?:they|it|we)?\s*(?:was|were|are|is|"
+           r"played|played in)?\s*(?:in\s+)?(?:an?\s+)?")
+    m = (re.search(own + r"(?:class\s+)?([1-5]a|b|c)\b", q)
+         or re.search(r"\bas (?:an?\s+)?(?:class\s+)?([1-5]a|b|c)\b"
+                      r"(?:\s+(?:team|school|program))?", q)
+         or re.search(r"\b(?:while |when )?in (?:class\s+)?([1-5]a)\b", q))
+    if m:
+        f["own_class"] = m.group(1).upper()
+        f["labels"].append(f"while {f['own_class']}")
+        q = q.replace(m.group(0), " ")
+    m = (re.search(own + TRACK + DIV + r"\b", q)
+         or re.search(r"\bas (?:an?\s+)?" + TRACK + DIV +
+                      r"(?:\s+(?:team|school|program))?\b", q))
+    if m:
+        f["own_track"] = "non-select" if m.group(1).startswith("non") \
+            else "select"
+        if m.group(2):
+            f["own_div"] = div_label(f["own_track"], m.group(2))
+        f["labels"].append("while " + div_label(f["own_track"],
+                                                m.group(2) or ""))
+        q = q.replace(m.group(0), " ")
+
+    # Opponent's bracket: "vs select schools", "against Non-Select teams",
+    # "vs Select Division I teams".
+    opp_lead = (r"\b(?:vs|versus|against|over|to|beat|beating|played|"
+                r"playing|with)\s+(?:all\s+|other\s+)?")
+    opp_tail = (r"(?:\s*(?:teams?|schools?|opponents?|opposition|"
+                r"competition|programs?|foes))?")
+    m = (re.search(opp_lead + TRACK + DIV + opp_tail + r"\b", q)
+         or re.search(r"\b" + TRACK + DIV + r"\s*(?:teams?|schools?|"
+                      r"opponents?|opposition|competition|programs?)\b", q))
+    if m:
+        f["opp_track"] = "non-select" if m.group(1).startswith("non") \
+            else "select"
+        if m.group(2):
+            f["opp_div"] = div_label(f["opp_track"], m.group(2))
+        f["labels"].append("vs " + div_label(f["opp_track"],
+                                             m.group(2) or "")
+                           + " opponents")
+        q = q.replace(m.group(0), " ")
 
     # Opponent's class: "vs 5A teams", "against Class 4A", "5A opponents".
     cls = r"(?:class\s*)?([1-5]a)\b"
@@ -430,6 +570,50 @@ def _extract_filters(q):
     return f, q
 
 
+def _history_question(q):
+    """Is this about a school's class / Select history? -> dict or None."""
+    cls = re.search(r"\b(?:class\s+)?([1-5]a)\b|\bclass\s+([bc])\b", q)
+    trk = re.search(r"\b(non ?select|select)\b", q)
+    asks = re.search(
+        r"\b(what|which) (class|classification|division|bracket)\b|"
+        r"\bclass(ification)? history\b|\bhow long\b|"
+        r"\bhow many (years|seasons)\b|\bsince when\b|"
+        r"\bwhen did\b.*\b(become|became|move|moved|go|went|join|"
+        r"switch|switched|drop|dropped|leave|left)\b|"
+        r"\bmove[ds]? (up|down)\b|\breclass|"
+        r"\b(is|are|was|were)\b(?!.*\b(record|win|won|lost|beat|score|"
+        r"points?|game)).*\b(select|non ?select|[1-5]a)\b"
+        r"(?:\s+(?:in|during)\s+(?:19|20)\d\d)?\s*$|"
+        r"\bselect or non ?select\b|\bnon ?select or select\b", q)
+    if not asks:
+        return None
+    explicit = re.search(
+        r"\b(what|which) (class|classification|division|bracket)\b|"
+        r"\bclass(ification)? history\b|\bhow long\b|"
+        r"\bhow many (years|seasons)\b|\bsince when\b|\breclass|"
+        r"\bmove[ds]? (up|down)\b|\bwhen did\b|"
+        r"\bselect or non ?select\b|\bnon ?select or select\b", q)
+    if not explicit and re.search(
+            r"\b(record|wins?|won|lost|loss|losses|beat|beaten|score[ds]?|"
+            r"points?|games?|streak|shut ?out|undefeated|playoffs?)\b", q):
+        return None  # "Rayville record when they were 2A" is a filter
+    # "how many years has X gone undefeated" is NOT a class question.
+    generic = re.search(r"\b(what|which) (class|classification|division|"
+                        r"bracket)\b|\bclass(ification)? history\b|"
+                        r"\breclass|\bmove[ds]? (up|down)\b", q)
+    if not (cls or trk or generic):
+        return None
+    if trk and not cls:
+        return {"kind": "track",
+                "track": "non-select" if trk.group(1).startswith("non")
+                and "or" not in q else ("select" if "or" not in q
+                                        else None)}
+    if re.search(r"\b(division|bracket)\b", q) and not cls:
+        return {"kind": "track", "track": None}
+    return {"kind": "class",
+            "cls": (cls.group(1) or cls.group(2)).upper() if cls else None}
+
+
 def _apply_filters(games, f):
     out = []
     for g in games:
@@ -446,6 +630,16 @@ def _apply_filters(games, f):
         if f["playoffs"] is False and g.playoff:
             continue
         if f["opp_class"] and g.opp_class != f["opp_class"]:
+            continue
+        if f["own_class"] and g.own_class != f["own_class"]:
+            continue
+        if f["own_track"] and g.own_track != f["own_track"]:
+            continue
+        if f["own_div"] and g.own_div != f["own_div"]:
+            continue
+        if f["opp_track"] and g.opp_track != f["opp_track"]:
+            continue
+        if f["opp_div"] and g.opp_div != f["opp_div"]:
             continue
         out.append(g)
     return out
@@ -605,6 +799,14 @@ class Answerer:
             self.by_school.setdefault(g.school, []).append(g)
             opponents.add(g.opponent)
         self.index = TeamIndex(self.by_school.keys(), opponents)
+        # school -> {season: {"class", "track", "division"}} from its games
+        self.history = {}
+        for g in games:
+            seasons = self.history.setdefault(g.school, {})
+            if g.season not in seasons:
+                seasons[g.season] = {"class": g.own_class or "",
+                                     "track": g.own_track or "",
+                                     "division": g.own_div or ""}
         seasons = sorted({g.season for g in games})
         self.first_season = seasons[0] if seasons else None
         self.last_season = seasons[-1] if seasons else None
@@ -629,6 +831,13 @@ class Answerer:
         q = _norm(question)
         for t in teams:  # strip team names so they can't trigger keywords
             q = re.sub(rf"\b{re.escape(t['text'])}\b", " ", q, count=1)
+
+        hist = _history_question(q)
+        if hist and teams:
+            team = teams[0]["names"][0]
+            if team in self.history:
+                return self._class_history(base, team, hist, q)
+
         filters, q = _extract_filters(q)
         number = _extract_number(q)
         intent = detect_intent(q, len(teams), number)
@@ -674,6 +883,129 @@ class Answerer:
                     n=number) + scope,
                 "answer": text,
                 "rows": [g.as_row() for g in rows][:25]}
+
+    # ── class / Select history ──
+    def _class_history(self, base, team, hist, q):
+        seasons = dict(self.history[team])
+        years = sorted(seasons)
+        m = re.search(r"\b(19\d\d|20\d\d)\b", q)
+        year = int(m.group(1)) if m else None
+        latest = years[-1]
+        cur = seasons[latest]
+        rows = [{"season": y, "class": seasons[y]["class"],
+                 "track": {"select": "Select", "non-select": "Non-Select"}.get(
+                     seasons[y]["track"], ""),
+                 "division": seasons[y]["division"]}
+                for y in reversed(years)]
+
+        def spans(key, value=None):
+            out, start, prev = [], None, None
+            for y in years:
+                v = seasons[y][key]
+                hit = (v == value) if value is not None else bool(v)
+                if hit and start is not None and y == prev + 1 and (
+                        value is not None or v == seasons[prev][key]):
+                    prev = y
+                    continue
+                if start is not None:
+                    out.append((start, prev, seasons[start][key]))
+                start, prev = (y, y) if hit else (None, None)
+            if start is not None:
+                out.append((start, prev, seasons[start][key]))
+            return out
+
+        def fmt(span):
+            a, b = span[0], span[1]
+            return str(a) if a == b else f"{a}–{b}"
+
+        def nyears(sp):
+            return sum(b - a + 1 for a, b, _ in sp)
+
+        track_word = {"select": "Select", "non-select": "Non-Select"}
+        if hist["kind"] == "track":
+            want = hist.get("track")
+            known = [y for y in years if seasons[y]["track"]]
+            if year:
+                t = seasons.get(year, {}).get("track")
+                if year < SELECT_SPLIT_SEASON:
+                    text = (f"There was no Select/Non-Select split in {year}"
+                            f" — the LHSAA split football in "
+                            f"{SELECT_SPLIT_SEASON}.")
+                elif t:
+                    text = f"{team} was {track_word[t]} in {year}."
+                else:
+                    text = f"I don't have {team}'s bracket for {year}."
+            elif not known:
+                text = (f"I don't have Select/Non-Select data for {team} "
+                        f"(the split started in {SELECT_SPLIT_SEASON}).")
+            else:
+                ct = seasons[latest]["track"]
+                sp = spans("track")
+                run = [x for x in sp if x[1] == latest]
+                start = run[0][0] if run else latest
+                head = f"{team} is {track_word.get(ct, 'unknown')}"
+                if want and want != ct:
+                    head += f", not {track_word[want]},"
+                head += f" as of {latest}"
+                if start == known[0] == SELECT_SPLIT_SEASON:
+                    text = (head + ", and has been every season since the "
+                            f"Select/Non-Select split began in "
+                            f"{SELECT_SPLIT_SEASON}.")
+                else:
+                    text = head + f" (since {start})."
+                if len(sp) > 1:
+                    text += " History: " + " · ".join(
+                        f"{track_word[v]} {fmt((a, b))}"
+                        for a, b, v in sp) + "."
+            label = f"{team} Select/Non-Select history"
+        else:
+            want = hist.get("cls")
+            if year:
+                c = seasons.get(year, {}).get("class")
+                d = seasons.get(year, {}).get("division")
+                text = (f"{team} was {c} in {year}"
+                        + (f" ({d})" if d else "") + "."
+                        if c else f"I don't have {team}'s class for {year}.")
+            elif want:
+                sp = spans("class", want)
+                if not sp:
+                    text = (f"{team} hasn't been {want} in our records "
+                            f"({years[0]}–{latest}). It is {cur['class']} "
+                            f"as of {latest}.")
+                elif sp[-1][1] == latest:
+                    run = sp[-1]
+                    n = run[1] - run[0] + 1
+                    text = (f"{team} has been {want} since {run[0]}: "
+                            f"{n} straight season{'s' if n != 1 else ''} "
+                            f"through {latest}.")
+                    if len(sp) > 1:
+                        text += (f" In all, {nyears(sp)} seasons in {want} "
+                                 f"since {years[0]}: "
+                                 + ", ".join(fmt(x) for x in sp) + ".")
+                else:
+                    text = (f"{team} is {cur['class']} as of {latest}, not "
+                            f"{want}. It was {want} for {nyears(sp)} "
+                            f"season{'s' if nyears(sp) != 1 else ''}: "
+                            + ", ".join(fmt(x) for x in sp)
+                            + f" (last in {sp[-1][1]}).")
+            else:
+                sp = spans("class")
+                text = (f"{team} is {cur['class']}"
+                        + (f" ({cur['division']})" if cur["division"]
+                           else "")
+                        + f" as of {latest}. Class history since "
+                        f"{years[0]}: "
+                        + " · ".join(f"{v} {fmt((a, b))}" for a, b, v in sp)
+                        + ".")
+            label = f"{team} class history" + (f" ({want})" if want else "")
+        if latest == self.last_season and not year:
+            text += (f" (Our records end with {latest}; the 2026 "
+                     "reclassification isn't in yet.)")
+        return {**base, "matched": True, "status": "ok",
+                "intent": "class_history" if hist["kind"] == "class"
+                else "track_history",
+                "teams": [team], "filters": [], "interpreted_as": label,
+                "answer": text, "rows": [], "history": rows}
 
     def coverage(self):
         if self.first_season is None:
@@ -918,6 +1250,8 @@ INTENT_LABELS = {
     "last_win": "{team} most recent win",
     "last_loss": "{team} most recent loss",
     "record": "{team} record",
+    "class_history": "{team} class history",
+    "track_history": "{team} Select/Non-Select history",
 }
 
 
