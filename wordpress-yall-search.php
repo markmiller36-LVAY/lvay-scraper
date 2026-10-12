@@ -170,7 +170,7 @@ function lvay_ys_render() {
 <div class="lvay-ys" id="lvay-ys">
   <div class="lvay-ys-head">
     <h1>Hey <span>Y&#8217;all</span></h1>
-    <p>Ask anything about Louisiana high school football history, 1990 to today.</p>
+    <p>Ask anything about Louisiana high school football history, 1990 to today, or about the LHSAA rules.</p>
   </div>
   <form class="lvay-ys-form" autocomplete="off">
     <input type="text" name="q" maxlength="300"
@@ -183,7 +183,7 @@ function lvay_ys_render() {
 </div>
 <style>
 .lvay-ys{max-width:900px;margin:30px auto 60px;padding:0 16px;font-family:'PT Serif',Georgia,serif;color:#111}
-.lvay-ys-head h1{font-family:'Alfa Slab One',serif;font-size:42px;line-height:1.05;margin:0 0 6px;text-transform:uppercase}
+.lvay-ys-head h1{font-family:'Alfa Slab One',serif;font-weight:400;font-size:34px;line-height:1.1;letter-spacing:.3px;margin:0 0 6px;text-transform:none}
 .lvay-ys-head h1 span{color:#008584}
 .lvay-ys-head p{margin:0 0 18px;font-size:17px;color:#444}
 .lvay-ys-form{display:flex;gap:8px}
@@ -208,8 +208,15 @@ function lvay_ys_render() {
 .lvay-ys-note{font-size:13px;color:#777;margin-top:26px}
 .lvay-ys-note-box{margin-top:12px;padding:12px 16px;background:#eef7f7;border:1px dashed #008584;border-radius:4px;font-size:15px;line-height:1.5;color:#244}
 .lvay-ys-note-box b{font-family:'Teko',sans-serif;font-size:19px;font-weight:400;color:#008584;letter-spacing:.5px;text-transform:uppercase;margin-right:4px}
+.lvay-ys-rules{margin-top:14px}
+.lvay-ys-rule{border:1px solid #dfe6e6;border-radius:4px;padding:12px 16px;margin-bottom:10px;background:#fff}
+.lvay-ys-rule-h{font-family:'Teko',sans-serif;font-size:19px;color:#0b4f4e;text-transform:uppercase;letter-spacing:.4px;display:flex;justify-content:space-between;gap:10px}
+.lvay-ys-rule-h span{color:#888;white-space:nowrap}
+.lvay-ys-rule p{margin:6px 0 8px;font-size:15px;line-height:1.5;color:#222}
+.lvay-ys-rule a{font-family:'Teko',sans-serif;font-size:18px;color:#008584;text-decoration:none}
+.lvay-ys-rules-src{font-size:12.5px;color:#777;margin:4px 0 0}
 .lvay-ys-loading{font-family:'Teko',sans-serif;font-size:22px;color:#008584}
-@media(max-width:767px){.lvay-ys-head h1{font-size:30px}.lvay-ys-form input{font-size:16px;padding:12px}.lvay-ys-form button{font-size:22px;padding:4px 16px 0}.lvay-ys-ans{font-size:18px}}
+@media(max-width:767px){.lvay-ys-head h1{font-size:28px}.lvay-ys-form input{font-size:16px;padding:12px}.lvay-ys-form button{font-size:22px;padding:4px 16px 0}.lvay-ys-ans{font-size:18px}}
 </style>
 <script>
 (function(){
@@ -219,7 +226,7 @@ function lvay_ys_render() {
       tryBox=root.querySelector('.lvay-ys-try'), cov=root.querySelector('.lvay-ys-cov');
   var EX=['When is the last time West Monroe had 50 points put on them?','Ruston vs West Monroe',
     'Longest winning streak for John Curtis','When was Haynesville last undefeated?',
-    'Biggest win in Southwood history','How long has Evangel been 5A?','Is John Curtis select or non-select?','When did they add 5A?'];
+    'Biggest win in Southwood history','How long has Evangel been 5A?','Is John Curtis select or non-select?','When did they add 5A?','How are power ratings calculated?'];
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function chips(list,box){box.innerHTML='';list.forEach(function(t){var b=document.createElement('button');b.type='button';b.className='lvay-ys-chip';b.textContent=t;b.onclick=function(){input.value=t;ask();};box.appendChild(b);});}
   chips(EX,tryBox);
@@ -236,6 +243,12 @@ function lvay_ys_render() {
     rows.forEach(function(r){h+='<tr><td>'+esc(r.season)+'</td><td><b>'+esc(r['class'])+'</b></td><td>'+esc(r.bracket||'')+'</td></tr>';});
     return h+'</tbody></table></div>';
   }
+  function rules(list){
+    if(!list||!list.length) return '';
+    var h='<div class="lvay-ys-rules">';
+    list.forEach(function(r){h+='<div class="lvay-ys-rule"><div class="lvay-ys-rule-h">'+(r.rule?'Bylaw '+esc(r.rule)+' &middot; ':'')+esc(r.section)+(r.title&&r.rule?' &middot; '+esc(r.title):(r.rule?'':' &middot; '+esc(r.title)))+'<span>Page '+esc(r.page)+'</span></div><p>'+esc(r.excerpt)+'</p><a href="'+esc(r.link)+'" target="_blank" rel="noopener">Read it in the official LHSAA Handbook &rsaquo;</a></div>';});
+    return h+'<p class="lvay-ys-rules-src">Source: 2026&ndash;2027 LHSAA Handbook. Always check the official handbook for the full rule.</p></div>';
+  }
   function show(j){
     if(j.coverage) cov.textContent='Covers: '+j.coverage+'.';
     var miss=j.status!=='ok';
@@ -243,7 +256,7 @@ function lvay_ys_render() {
     if(j.interpreted_as) h+='<p class="lvay-ys-how">Searched: '+esc(j.interpreted_as)+'</p>';
     h+='</div>';
     if(j.note) h+='<div class="lvay-ys-note-box">'+esc(j.note).replace(/^Did you know\?/,'<b>Did you know?</b>')+'</div>';
-    out.innerHTML=h+table(j.rows)+hist(j.history);
+    out.innerHTML=h+table(j.rows)+hist(j.history)+rules(j.handbook);
     if(j.status==='ambiguous'&&j.choices){var box=document.createElement('div');box.className='lvay-ys-try';out.appendChild(box);
       var q=j.question; chips(j.choices.map(function(name){var base=name.split(' - ')[0];var re=new RegExp(base.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i');return re.test(q)?q.replace(re,name):name+' '+q;}),box);}
     if(miss&&j.examples){var b2=document.createElement('div');b2.className='lvay-ys-try';out.appendChild(b2);chips(j.examples,b2);}

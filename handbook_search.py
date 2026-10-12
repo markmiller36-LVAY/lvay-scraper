@@ -258,6 +258,12 @@ class Handbook:
                 tt = set(_tokens(c["title"]))
                 if any(g & tt for g in groups.values()):
                     score *= 1.4
+            # Rules that START by talking about the asked thing ("14.12.2 A
+            # team's power rating shall be…") beat ones that mention it late.
+            lead = " ".join(_tokens(c["text"][:90]))
+            if len(words) >= 2 and any(
+                    f"{x} {y}" in lead for x, y in zip(words, words[1:])):
+                score *= 1.5
             if sport and c["section"] == sport:
                 score *= 1.8
             elif c["section"] in SPORTS.values() and (
