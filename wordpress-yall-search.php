@@ -261,7 +261,7 @@ function lvay_ys_render() {
     ['Compare seasons','2018 Calvary Baptist, 1995 Edna Karr, 2007 Many','List a year and a school for each — two, three or four seasons side by side.'],
     ['Same school, two seasons','Ruston 2018 vs Ruston 2023','Compare any two years of the same program.'],
     ['Points','When is the last time West Monroe gave up 50?','Ask about points scored or given up, by one team or against another.'],
-    ['Streaks & records','Longest winning streak for John Curtis','Also try biggest win, undefeated seasons or shutouts.'],
+    ['Record book','Which team scored the most points in a single season?','Ask for the most, fewest or best — points, defense, wins, blowouts — across every team since 1990.'],
     ['Rules','Is there a mercy rule?','Plain-English answers from the LHSAA Handbook.']];
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function chips(list,box){box.innerHTML='';list.forEach(function(t){var b=document.createElement('button');b.type='button';b.className='lvay-ys-chip';b.textContent=t;b.onclick=function(){input.value=t;ask();};box.appendChild(b);});}

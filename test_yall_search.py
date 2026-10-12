@@ -208,6 +208,16 @@ class StreakAndCompareTests(unittest.TestCase):
         self.assertEqual(r["intent"], "record")
 
 
+class LeaderTests(unittest.TestCase):
+    def test_season_and_game_leaders(self):
+        a = y.Answerer(y.build_games(ARCHIVE))
+        r = a.answer("which team scored the most points in a single game")
+        self.assertEqual(r["intent"], "game_leaders")
+        self.assertIn("Neville 52", r["answer"])
+        r = a.answer("best point differential in a season")
+        self.assertIsNotNone(r)   # too few games here: falls back, no crash
+
+
 class NoteTests(unittest.TestCase):
     def test_note_only_when_pertinent(self):
         a = y.Answerer(y.build_games(ARCHIVE))

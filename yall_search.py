@@ -735,6 +735,40 @@ def _scoring_streak_q(q):
             "longest": longest}
 
 
+def _leaders_q(q, has_year):
+    """All-teams leaderboards: 'which team scored the most points in a
+    season', 'best defense', 'most wins', 'most points in a game'."""
+    if not re.search(r"\b(most|highest|fewest|least|best|worst|top|lowest|"
+                     r"biggest|largest|record|led|leaders?|leading)\b", q):
+        return None
+    allowed = bool(re.search(r"\b(allow\w*|gave up|give up|given up|"
+                             r"surrender\w*|against|defen[cs]\w*)\b", q))
+    if re.search(r"\b(differential|margin|blowouts?|lopsided)\b", q):
+        metric = "diff"
+    elif re.search(r"\b(wins|won|victories)\b", q):
+        metric = "wins"
+    elif re.search(r"\b(points?|pts|scor\w*|offen[cs]\w*|defen[cs]\w*)"
+                   r"\b", q):
+        metric = "pa" if allowed else "pf"
+    else:
+        return None
+    best_def = bool(re.search(r"\b(best|top|fewest|least|lowest)\b", q)) \
+        and metric == "pa"
+    worst_off = bool(re.search(r"\b(fewest|least|lowest|worst)\b", q)) \
+        and metric == "pf"
+    per_game = bool(re.search(r"\b(per game|average|avg|ppg)\b", q))
+    if re.search(r"\b(single game|one game|in a game|a game ever|"
+                 r"game|blowouts?|lopsided)\b", q) and not re.search(
+                     r"\b(season|year)\b", q) and not per_game:
+        scope = "game"
+    else:
+        scope = "season"
+    if metric == "pa" and scope == "season":
+        per_game = per_game or best_def   # fairest for defense
+    return {"metric": metric, "scope": scope, "per_game": per_game,
+            "ascending": best_def or worst_off}
+
+
 def _question_tokens(question):
     """Same tokens TeamIndex.find uses, so positions line up."""
     out = []
@@ -1015,8 +1049,9 @@ class Answerer:
             if team in self.history:
                 return self._class_history(base, team, hist, q)
 
+        lead_early = (not teams) and _leaders_q(q, False)
         hb_q = handbook_search.HANDBOOK_TRIGGERS.search(_norm(question))
-        if hb_q and not _history_question(q) and not re.search(
+        if hb_q and not lead_early and not _history_question(q) and not re.search(
                 r"\b(last time|record|vs|versus|beat|streak|scored|"
                 r"undefeated)\b", q):
             hb = self._faq(base, question) or self._handbook(base, question)
@@ -1028,17 +1063,31 @@ class Answerer:
                             r"select) (?:teams?|schools?|programs?)\b", q)
             if cnt:
                 return self._count_schools(base, cnt.group(1), q)
-            fact = match_fact(q)
+            fact = None if lead_early else match_fact(q)
             if fact:
                 return {**base, "matched": True, "status": "ok",
                         "intent": "fact", "teams": [], "filters": [],
                         "interpreted_as": "LHSAA history: " + fact[0],
                         "answer": fact[1]}
-            faq = self._faq(base, question)
+            faq = None if lead_early else self._faq(base, question)
             if faq:
                 return faq
 
         filters, q = _extract_filters(q)
+        lead_q = None
+        if not teams or re.search(r"\b(which|what) (team|school)|\bwho\b",
+                                  q):
+            lead_q = _leaders_q(q, filters["min_season"] is not None)
+        if lead_q and not _scoring_streak_q(q):
+            if filters["opp_class"]:      # "which 5A team" = its own class
+                filters["own_class"], filters["opp_class"] = \
+                    filters["opp_class"], None
+                filters["labels"] = [f"{filters['own_class']} teams" if
+                                     x.startswith("vs ") and "opponents" in x
+                                     else x for x in filters["labels"]]
+            led = self._leaders(base, lead_q, filters)
+            if led:
+                return led
         streak_q = _scoring_streak_q(q)
         if streak_q:
             scope = [t["names"][0] for t in teams
@@ -1176,6 +1225,103 @@ class Answerer:
                                    "Games", "Pts per game" if side == "pf"
                                    else "Allowed per game"],
                           "rows": rows}}
+
+    # ── statewide leaders ──
+    def _leaders(self, base, lq, filters):
+        scope_lbl = (f" ({', '.join(filters['labels'])})"
+                     if filters["labels"] else "")
+        if lq["scope"] == "game":
+            games = []
+            for school, gs in self.by_school.items():
+                games.extend(_apply_filters(gs, filters))
+            key = {"pf": lambda g: g.pf, "pa": lambda g: g.pf,
+                   "diff": lambda g: g.pf - g.pa,
+                   "wins": lambda g: g.pf}[lq["metric"]]
+            # each game appears twice (both teams) — keep the winner's side
+            games = [g for g in games if g.pf >= g.pa and not g.forfeit
+                     and g.pf + g.pa > 2]
+            games.sort(key=lambda g: (key(g), g.sort_key), reverse=True)
+            top = games[:15]
+            if not top:
+                return None
+            g = top[0]
+            what = ("biggest margin" if lq["metric"] == "diff"
+                    else "most points by one team")
+            text = (f"The {what} in a game in our records{scope_lbl}: "
+                    f"{_line(g)}"
+                    + (f" (won by {g.pf - g.pa})." if lq["metric"] == "diff"
+                       else f" ({g.pf} points)."))
+            return {**base, "matched": True, "status": "ok",
+                    "intent": "game_leaders", "teams": [], "filters":
+                    filters["labels"],
+                    "interpreted_as": f"All teams: {what} in a game"
+                    + scope_lbl,
+                    "answer": text, "rows": [x.as_row() for x in top]}
+
+        seasons = {}
+        for school, gs in self.by_school.items():
+            for g in _apply_filters(gs, filters):
+                if g.forfeit or g.pf + g.pa <= 2:
+                    continue   # forfeits (1-0) would skew points
+                seasons.setdefault((school, g.season), []).append(g)
+        need = 9 if (lq["per_game"] or lq["ascending"]) else 5
+        stats = []
+        for (school, season), gs in seasons.items():
+            if len(gs) < need:
+                continue   # too few games recorded to rank fairly
+            w, l, t = _record(gs)
+            pf, pa = sum(g.pf for g in gs), sum(g.pa for g in gs)
+            stats.append({"team": school, "season": season, "n": len(gs),
+                          "w": w, "l": l, "t": t, "pf": pf, "pa": pa,
+                          "ppg": pf / len(gs), "oppg": pa / len(gs),
+                          "diff": pf - pa,
+                          "cls": self.history.get(school, {})
+                          .get(season, {}).get("class", "")})
+        if not stats:
+            return None
+        m, pg = lq["metric"], lq["per_game"]
+        field = {"pf": "ppg" if pg else "pf", "pa": "oppg" if pg else "pa",
+                 "diff": "diff", "wins": "w"}[m]
+        rev = not lq["ascending"]
+        stats.sort(key=lambda x: (x[field], -x["l"] if m == "wins" else 0,
+                                  x["season"]), reverse=rev)
+        top = stats[:15]
+        names = {"pf": ("fewest points" if lq["ascending"] else
+                        "most points") + (" per game" if pg else ""),
+                 "pa": ("fewest points allowed" if lq["ascending"] else
+                        "most points allowed") + (" per game" if pg else ""),
+                 "diff": "best point differential", "wins": "most wins"}
+        what = names[m]
+        x = top[0]
+
+        def val(r):
+            return {"ppg": f"{r['ppg']:.1f} a game",
+                    "oppg": f"{r['oppg']:.1f} allowed a game",
+                    "pf": f"{r['pf']} points", "pa": f"{r['pa']} allowed",
+                    "diff": f"+{r['diff']}" if r["diff"] > 0
+                    else str(r["diff"]),
+                    "w": f"{r['w']} wins"}[field]
+
+        text = (f"The {what} in a season in our records{scope_lbl}: "
+                f"{x['team']} {x['season']}, {val(x)} "
+                f"({_fmt_record(x['w'], x['l'], x['t'])} in {x['n']} games).")
+        if self.last_season in {r["season"] for r in top}:
+            text += (f" Note: {self.last_season} counts the regular season "
+                     "only so far.")
+        rows = [[str(i + 1), r["team"], str(r["season"]), r["cls"] or "",
+                 _fmt_record(r["w"], r["l"], r["t"]), str(r["pf"]),
+                 f"{r['ppg']:.1f}", str(r["pa"]), f"{r['oppg']:.1f}",
+                 (f"+{r['diff']}" if r["diff"] > 0 else str(r["diff"]))]
+                for i, r in enumerate(top)]
+        return {**base, "matched": True, "status": "ok",
+                "intent": "season_leaders", "teams": [],
+                "filters": filters["labels"],
+                "interpreted_as": f"All teams: {what} in a season"
+                + scope_lbl,
+                "answer": text,
+                "table": {"cols": ["#", "Team", "Season", "Class", "Record",
+                                   "Pts", "Per game", "Allowed", "Per game",
+                                   "Diff"], "rows": rows}}
 
     # ── season vs season ("West Monroe 2009 vs Neville 2019") ──
     def _season_pairs(self, question, teams, q):
