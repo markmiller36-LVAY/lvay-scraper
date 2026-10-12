@@ -67,7 +67,7 @@ class Game:
         "season", "date", "school", "opponent", "pf", "pa", "result",
         "phase", "week", "home_away", "is_district", "playoff", "forfeit",
         "opp_class", "opp_track", "opp_div",
-        "own_class", "own_track", "own_div",
+        "own_class", "own_track", "own_div", "own_dist",
     )
 
     def __init__(self, **kw):
@@ -337,6 +337,41 @@ def build_season_info(archive, season_2025_rows=None):
     return info
 
 
+def _dist_key(cls, dist):
+    cls, dist = str(cls or "").strip(), str(dist or "").strip()
+    if not cls or not dist or dist in ("0", "None"):
+        return ""
+    return f"{dist}-{cls}"
+
+
+def build_district_champs(games):
+    """District champions from district game results, the same rule the
+    team pages use: best regular-season district win % within the season's
+    class + district, ties share it, the district needs 2+ schools."""
+    rec = {}
+    for g in games:
+        if not g.is_district or g.playoff or not g.own_dist or g.forfeit:
+            continue
+        r = rec.setdefault((g.season, g.own_dist), {}).setdefault(
+            g.school, [0, 0, 0])
+        r["WLT".index(g.result)] += 1 if g.result in "WLT" else 0
+    champs = {}
+    for (season, dist), teams in rec.items():
+        if len(teams) < 2:
+            continue
+        pct = {t: (w + x / 2) / (w + l + x) for t, (w, l, x) in teams.items()
+               if w + l + x}
+        if not pct:
+            continue
+        best = max(pct.values())
+        win = sorted(t for t, p in pct.items() if p == best)
+        for t in win:
+            champs.setdefault(t, {})[season] = {
+                "district": dist, "record": teams[t],
+                "shared": [o for o in win if o != t]}
+    return champs
+
+
 def build_games(archive, season_2025_rows=None, info=None):
     """Turn the archive JSON (+ optional 2025 rows) into Game objects."""
     games = []
@@ -378,6 +413,8 @@ def build_games(archive, season_2025_rows=None, info=None):
                     own_class=who(year, school["school"])["class"],
                     own_track=who(year, school["school"])["track"],
                     own_div=who(year, school["school"])["division"],
+                    own_dist=_dist_key(school.get("class_"),
+                                       school.get("district")),
                 ))
     for g in season_2025_rows or []:
         score = _parse_score(g.get("score"))
@@ -409,6 +446,8 @@ def build_games(archive, season_2025_rows=None, info=None):
                           g.get("school"))["track"],
             own_div=who(int(g.get("season") or 2025),
                         g.get("school"))["division"],
+            own_dist=_dist_key(g.get("class_"), re.sub(
+                r"\D", "", str(g.get("district") or ""))),
         ))
     games.sort(key=lambda game: game.sort_key)
     return games
@@ -836,6 +875,11 @@ ALLTIME_RE = re.compile(r"\b(all ?time|total|overall|ever|history|career|"
 
 def _title_question(q):
     """Return 'titles' / 'runner_up' / None for a normalized question."""
+    if re.search(r"\bdistrict\b", q) and re.search(
+            r"\b(champ\w*|titles?|crowns?|won (the )?district|"
+            r"win (the )?district)\b", q) and not re.search(
+            r"\b(rule|bylaw|handbook|forms?|certif\w*|deadline|fine)\b", q):
+        return "district"
     if not TITLE_RE.search(q):
         return None
     if re.search(r"\b(district|conference|parish|jamboree|classic|"
@@ -1091,6 +1135,7 @@ class Answerer:
     def __init__(self, games, titles=None):
         self.games = games
         self.titles = titles if titles is not None else _load_titles()
+        self.dist_champs = build_district_champs(games)
         self.by_school = {}
         opponents = set()
         for g in games:
@@ -1168,7 +1213,11 @@ class Answerer:
                 return ans
 
         tq = _title_question(q)
-        if tq and (self.titles.get("st") or self.titles.get("ru")):
+        if tq == "district":
+            ans = self._district_titles(base, teams, q)
+            if ans:
+                return ans
+        elif tq and (self.titles.get("st") or self.titles.get("ru")):
             ans = self._state_titles(base, tq, teams, q)
             if ans:
                 return ans
@@ -1855,6 +1904,136 @@ class Answerer:
                 f"({span}, {len(gs)} games) and allowed "
                 f"{pa / len(gs):.1f}. Record: {_fmt_record(*_record(gs))}.",
                 list(reversed(gs)))
+
+    # ── district championships (from district game results) ──
+    def _district_titles(self, base, teams, q):
+        dc = self.dist_champs
+        m = re.search(r"\b(since|after|from)\s+(\d{4})\b", q)
+        lo = int(m.group(2)) if m else None
+        m = re.search(r"\b(before|until|through|thru)\s+(\d{4})\b", q)
+        hi = int(m.group(2)) if m else None
+        yrs = [int(y) for y in re.findall(r"\b(19\d\d|20\d\d)\b", q)
+               if int(y) not in (lo, hi)]
+        one = yrs[0] if len(yrs) == 1 else None
+
+        def keep(y):
+            return (lo is None or y >= lo) and (hi is None or y <= hi)
+
+        seasons = sorted({g.season for g in self.games})
+        first, last = (lo or seasons[0]), (hi or seasons[-1])
+        span = f"{first}–{last}"
+        note = ("District titles here are figured from district game "
+                "results, the same way as the team pages: the best district "
+                "win % in the regular season wins it, and ties share it. "
+                "Official LHSAA tiebreakers can differ. Our records cover "
+                f"{seasons[0]}–{seasons[-1]}.")
+        out = {**base, "matched": True, "status": "ok", "filters": [],
+               "note": note}
+
+        def drec(d):
+            return _fmt_record(*d["record"])
+
+        if teams:
+            team = teams[0]["names"][0]
+            mine = {y: d for y, d in dc.get(team, {}).items() if keep(y)}
+            out.update(intent="district_titles", teams=[team],
+                       interpreted_as=f"{team} district championships, "
+                                      f"{span}")
+            if one:
+                d = dc.get(team, {}).get(one)
+                if d:
+                    txt = (f"Yes. {team} won District {d['district']} in "
+                           f"{one} ({drec(d)} in district)")
+                    txt += (f", sharing it with {', '.join(d['shared'])}."
+                            if d["shared"] else ".")
+                else:
+                    gs = [g for g in self.by_school.get(team, [])
+                          if g.season == one]
+                    dist = next((g.own_dist for g in gs if g.own_dist), "")
+                    winners = [t for t, ys in dc.items()
+                               if one in ys and ys[one]["district"] == dist]
+                    txt = f"No. {team} did not win its district in {one}."
+                    if winners:
+                        txt += (f" District {dist} went to "
+                                f"{' and '.join(sorted(winners))} "
+                                f"({drec(dc[winners[0]][one])}).")
+                out["answer"] = txt
+                return out
+            if not mine:
+                out["answer"] = (f"{team} has no district championships in "
+                                 f"our records ({span}).")
+                return out
+            ys = sorted(mine)
+            n = len(ys)
+            lastd = mine[ys[-1]]
+            shared = sum(1 for y in ys if mine[y]["shared"])
+            if re.search(r"\b(last|most recent|latest)\b", q):
+                txt = (f"{team} last won a district championship in {ys[-1]} "
+                       f"(District {lastd['district']}, {drec(lastd)}). "
+                       f"That's {n} in our records ({span}).")
+            else:
+                txt = (f"{team} has won {n} district "
+                       f"championship{'s' if n != 1 else ''} in our records "
+                       f"({span}): {_year_list(ys)}. Most recent: {ys[-1]} "
+                       f"(District {lastd['district']}, {drec(lastd)}).")
+            if shared:
+                txt += f" {shared} of them were shared."
+            out["answer"] = txt
+            out["table"] = {"cols": ["Season", "District", "District record",
+                                     "Shared with"],
+                            "rows": [[str(y), mine[y]["district"],
+                                      drec(mine[y]),
+                                      ", ".join(mine[y]["shared"])]
+                                     for y in reversed(ys)]}
+            return out
+
+        if one:
+            rows = {}
+            for t, ys in dc.items():
+                if one in ys:
+                    d = ys[one]
+                    rows.setdefault(d["district"], []).append((t, d))
+            if not rows:
+                return None
+
+            def dsort(k):
+                n, _, c = k.partition("-")
+                return ({"5A": 0, "4A": 1, "3A": 2, "2A": 3, "1A": 4}.get(
+                    c, 9), int(n) if n.isdigit() else 99)
+            table = [[k, " & ".join(t for t, _ in sorted(v)),
+                      drec(v[0][1])] for k, v in sorted(rows.items(),
+                                                        key=lambda x:
+                                                        dsort(x[0]))]
+            out.update(intent="district_titles_year", teams=[],
+                       interpreted_as=f"District champions, {one}")
+            out["answer"] = (f"Here are the {len(table)} football district "
+                             f"champions for {one}.")
+            out["table"] = {"cols": ["District", "Champion",
+                                     "District record"],
+                            "rows": table, "first_col_bold": True}
+            return out
+
+        if not re.search(r"\b(most|who|which|what (team|school)s?|leaders?|"
+                         r"top|list|every|all)\b", q):
+            return None
+        tally = sorted(((len([y for y in ys if keep(y)]), t)
+                        for t, ys in dc.items()), key=lambda x: (-x[0], x[1]))
+        tally = [x for x in tally if x[0]]
+        if not tally:
+            return None
+        top = tally[0][0]
+        leaders = [t for n, t in tally if n == top]
+        out.update(intent="district_titles_leaders", teams=[],
+                   interpreted_as=f"Most district championships, {span}")
+        out["answer"] = (f"{' and '.join(leaders)} "
+                         f"{'has' if len(leaders) == 1 else 'have'} the most "
+                         f"district championships ({span}): {top}.")
+        out["table"] = {"cols": ["School", "District titles", "Most recent"],
+                        "rows": [[t, str(n), str(max(y for y in dc[t]
+                                                     if keep(y)))]
+                                 for n, t in tally[:15]],
+                        "first_col_bold": True}
+        return out
 
     # ── state championships ──
     def _title_game(self, team, year, won):

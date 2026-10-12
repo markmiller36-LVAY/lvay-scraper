@@ -332,3 +332,18 @@ class LogFollowupTests(unittest.TestCase):
         self.assertEqual(r["intent"], "best_season")
         r = self.a.answer("When was the last state championship game not played in the Super Dome?")
         self.assertIn("2020", r["answer"])
+
+
+class DistrictTitleTests(unittest.TestCase):
+    def test_district_champs_from_district_games(self):
+        a = y.Answerer(y.build_games(ARCHIVE), titles={})
+        champs = y.build_district_champs(a.games)
+        r = a.answer("How many district championships does West Monroe have?")
+        self.assertEqual(r["intent"], "district_titles")
+        n = len(champs.get("West Monroe", {}))
+        if n:
+            self.assertIn(f"won {n} district", r["answer"])
+        else:
+            self.assertIn("no district championships", r["answer"])
+        r = a.answer("what is the district champion reporting deadline")
+        self.assertNotEqual(r.get("intent"), "district_titles")
