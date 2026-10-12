@@ -258,7 +258,7 @@ function lvay_ys_render() {
     ['Head-to-head','Ruston vs West Monroe','Name two schools to see every meeting and the all-time series.'],
     ['Class history','How long has Evangel been 5A?','Ask what class a school is, was in a year, or how long it has been there.'],
     ['All teams','Last time a team scored 40+ in 5 straight games','Leave out the school name and it searches every team in Louisiana.'],
-    ['Two schools, two seasons','West Monroe 2009 vs Neville 2019','Put a year after each school to compare their seasons side by side.'],
+    ['Compare seasons','2018 Calvary Baptist, 1995 Edna Karr, 2007 Many','List a year and a school for each — two, three or four seasons side by side.'],
     ['Same school, two seasons','Ruston 2018 vs Ruston 2023','Compare any two years of the same program.'],
     ['Points','When is the last time West Monroe gave up 50?','Ask about points scored or given up, by one team or against another.'],
     ['Streaks & records','Longest winning streak for John Curtis','Also try biggest win, undefeated seasons or shutouts.'],
