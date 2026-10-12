@@ -1195,7 +1195,7 @@ class Answerer:
         if len(years) < 2 and not (len(found) >= 2 and re.search(
                 r"\b(compare\w*|better|stack\w*)\b", q)):
             return None
-        if not compare_word:
+        if not compare_word and len(years) < 2:
             return None
         if len(found) == 1:
             pairs = [(found[0][1], y) for _, y in years]
@@ -1233,7 +1233,8 @@ class Answerer:
             "label": f"{team} {season}",
             "record": _fmt_record(*_record(gs)),
             "regular": _fmt_record(*_record(reg)),
-            "class": cls + (f" ({br})" if br and br != f"Class {cls}" else ""),
+            "class": cls + (f" \u00b7 {br}" if br and br != f"Class {cls}"
+                            else ""),
             "pf": pf, "pa": pa, "ppg": pf / n, "oppg": pa / n,
             "diff": pf - pa, "shutouts": sum(1 for g in gs if g.pa == 0),
             "playoffs": (_fmt_record(*_record(po)) +

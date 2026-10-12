@@ -199,6 +199,10 @@ class StreakAndCompareTests(unittest.TestCase):
         self.assertEqual(r["table"]["cols"][1:],
                          ["West Monroe 2019", "West Monroe 2021"])
 
+    def test_year_first_list_without_vs(self):
+        r = self.a.answer("2019 West Monroe, 2021 Neville")
+        self.assertEqual(r["intent"], "compare_seasons")
+
     def test_year_range_is_not_a_compare(self):
         r = self.a.answer("West Monroe record between 2019 and 2021")
         self.assertEqual(r["intent"], "record")

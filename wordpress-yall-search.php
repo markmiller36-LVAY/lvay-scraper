@@ -16,7 +16,7 @@ function lvay_ys_table() {
 }
 
 add_action( 'init', function () {
-	if ( get_option( 'lvay_ys_db' ) === '1' ) {
+	if ( get_option( 'lvay_ys_db' ) === '2' ) {
 		return;
 	}
 	global $wpdb;
@@ -31,10 +31,11 @@ add_action( 'init', function () {
 		teams varchar(200) NOT NULL DEFAULT '',
 		answer text NULL,
 		visitor varchar(12) NOT NULL DEFAULT '',
+		who varchar(120) NOT NULL DEFAULT '',
 		PRIMARY KEY  (id),
 		KEY asked_at (asked_at)
 	) " . $wpdb->get_charset_collate() . ';' );
-	update_option( 'lvay_ys_db', '1', false );
+	update_option( 'lvay_ys_db', '2', false );
 } );
 
 add_action( 'rest_api_init', function () {
@@ -81,8 +82,17 @@ function lvay_ys_log_save( $req ) {
 		'teams'    => mb_substr( sanitize_text_field( (string) $req->get_param( 'teams' ) ), 0, 200 ),
 		'answer'   => mb_substr( sanitize_text_field( (string) $req->get_param( 'answer' ) ), 0, 600 ),
 		'visitor'  => $who,
+		'who'      => lvay_ys_who(),
 	) );
 	return array( 'saved' => true );
+}
+
+function lvay_ys_who() {
+	$u = wp_get_current_user();
+	if ( ! $u || ! $u->ID ) {
+		return 'Guest';
+	}
+	return mb_substr( $u->display_name . ' (@' . $u->user_login . ')', 0, 120 );
 }
 
 function lvay_ys_log_rows( $limit = 300, $only = '' ) {
@@ -91,7 +101,7 @@ function lvay_ys_log_rows( $limit = 300, $only = '' ) {
 	$where = 'missed' === $only ? "WHERE status <> 'ok'" : '';
 	$t     = lvay_ys_table();
 	return $wpdb->get_results( $wpdb->prepare(
-		"SELECT id, asked_at, question, status, intent, teams, answer, visitor FROM $t $where ORDER BY id DESC LIMIT %d",
+		"SELECT id, asked_at, who, question, status, intent, teams, answer, visitor FROM $t $where ORDER BY id DESC LIMIT %d",
 		$limit
 	), ARRAY_A );
 }
@@ -120,11 +130,12 @@ add_shortcode( 'lvay_yall_log', function () {
     <a href="<?php echo esc_url( add_query_arg( 'only', 'missed', $base ) ); ?>"<?php echo $only ? ' class="on"' : ''; ?>>Not answered</a>
   </p>
   <div class="lvay-ysl-wrap"><table>
-    <thead><tr><th>When (CT)</th><th>Question</th><th>Result</th><th>Read as</th><th>Team(s)</th><th>Answer given</th></tr></thead>
+    <thead><tr><th>When (CT)</th><th>Who</th><th>Question</th><th>Result</th><th>Read as</th><th>Team(s)</th><th>Answer given</th></tr></thead>
     <tbody>
     <?php foreach ( $rows as $r ) : $ok = 'ok' === $r['status']; ?>
       <tr class="<?php echo $ok ? 'ok' : 'miss'; ?>">
         <td><?php echo esc_html( mysql2date( 'M j, g:i a', $r['asked_at'] ) ); ?></td>
+        <td><?php echo esc_html( $r['who'] ? $r['who'] : 'Guest' ); ?></td>
         <td><a href="/yall-test/?q=<?php echo rawurlencode( $r['question'] ); ?>"><?php echo esc_html( $r['question'] ); ?></a></td>
         <td><?php echo $ok ? 'Answered' : esc_html( ucwords( str_replace( '_', ' ', $r['status'] ?: 'error' ) ) ); ?></td>
         <td><?php echo esc_html( str_replace( '_', ' ', $r['intent'] ) ); ?></td>
@@ -132,7 +143,7 @@ add_shortcode( 'lvay_yall_log', function () {
         <td class="ans"><?php echo esc_html( $r['answer'] ); ?></td>
       </tr>
     <?php endforeach; ?>
-    <?php if ( ! $rows ) : ?><tr><td colspan="6">No questions yet.</td></tr><?php endif; ?>
+    <?php if ( ! $rows ) : ?><tr><td colspan="7">No questions yet.</td></tr><?php endif; ?>
     </tbody>
   </table></div>
 </div>
@@ -167,7 +178,7 @@ add_filter( 'wp_robots', function ( $robots ) {
 function lvay_ys_render() {
 	ob_start();
 	?>
-<div class="lvay-ys" id="lvay-ys">
+<div class="lvay-ys" id="lvay-ys" data-nonce="<?php echo esc_attr( wp_create_nonce( 'wp_rest' ) ); ?>">
   <div class="lvay-ys-head">
     <h1>&ldquo;Hey <span>Y&#8217;all</span>&hellip;&rdquo;</h1>
     <p>Ask anything about Louisiana high school football history, 1990 to today, or about the LHSAA rules.</p>
@@ -177,7 +188,7 @@ function lvay_ys_render() {
       placeholder="When is the last time West Monroe had 50 points put on them?" aria-label="Ask a football history question"><button type="button" class="lvay-ys-clear" aria-label="Clear the question" title="Clear" hidden>Clear</button></span>
     <button type="submit">ASK</button>
   </form>
-  <div class="lvay-ys-try"></div>
+  <div class="lvay-ys-try lvay-ys-samples"></div>
   <div class="lvay-ys-out" aria-live="polite"></div>
   <p class="lvay-ys-note">Test version. Answers come straight from LVAY game records. <span class="lvay-ys-cov"></span></p>
 </div>
@@ -199,6 +210,19 @@ function lvay_ys_render() {
 .lvay-ys-try{margin:12px 0 4px;display:flex;flex-wrap:wrap;gap:6px}
 .lvay-ys-chip{font-family:'Teko',sans-serif;font-size:17px;line-height:1;padding:7px 10px 4px;border:1px solid #cfd8d8;background:#f4f8f8;border-radius:20px;cursor:pointer;color:#0b4f4e}
 .lvay-ys-chip:hover{background:#e3f0f0;border-color:#008584}
+.lvay-ys-try.lvay-ys-samples{display:block;margin:16px 0 4px}
+.lvay-ys-samples[hidden]{display:none!important}
+.lvay-ys-samples-h{font-family:'Teko',sans-serif;font-size:23px;letter-spacing:.5px;text-transform:uppercase;color:#111;margin:0 0 6px;line-height:1}
+.lvay-ys-samples-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.lvay-ys .lvay-ys-sample{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:10px 12px;border:1px solid #cfd8d8;background:#f7fafa;border-radius:8px;cursor:pointer;font-family:'PT Serif',Georgia,serif;color:#111;text-transform:none;letter-spacing:0;box-shadow:none;line-height:1.3}
+.lvay-ys .lvay-ys-sample:hover{border-color:#008584;background:#eef7f7}
+.lvay-ys-sample .k{font-family:'Teko',sans-serif;font-size:16px;letter-spacing:.6px;text-transform:uppercase;color:#008584;line-height:1}
+.lvay-ys-sample .q{font-weight:700;font-size:15.5px}
+.lvay-ys-sample .d{font-size:13px;color:#5b6b6b}
+.lvay-ys-tip{font-size:13.5px;color:#5b6b6b;margin:10px 0 0}
+.lvay-ys table.lvay-ys-cmp{min-width:0}
+.lvay-ys-cmp td.rl{color:#0b4f4e;white-space:nowrap}
+@media(max-width:600px){.lvay-ys-samples-grid{grid-template-columns:1fr}}
 .lvay-ys-out{margin-top:20px}
 .lvay-ys-card{border:1.5px solid #1E7D53;background:#E1F1E8;padding:16px 18px;border-radius:10px}
 .lvay-ys-card.miss{border-color:#c9a227;background:#fffbea}
@@ -230,12 +254,32 @@ function lvay_ys_render() {
   var root=document.getElementById('lvay-ys'); if(!root) return;
   var form=root.querySelector('form'), input=form.q, out=root.querySelector('.lvay-ys-out'),
       tryBox=root.querySelector('.lvay-ys-try'), cov=root.querySelector('.lvay-ys-cov');
-  var EX=['When is the last time West Monroe had 50 points put on them?','Ruston vs West Monroe',
-    'Longest winning streak for John Curtis','When was Haynesville last undefeated?',
-    'Biggest win in Southwood history','How long has Evangel been 5A?','Is John Curtis select or non-select?','When did they add 5A?','How are power ratings calculated?'];
+  var SAMPLES=[
+    ['Head-to-head','Ruston vs West Monroe','Name two schools to see every meeting and the all-time series.'],
+    ['Class history','How long has Evangel been 5A?','Ask what class a school is, was in a year, or how long it has been there.'],
+    ['All teams','Last time a team scored 40+ in 5 straight games','Leave out the school name and it searches every team in Louisiana.'],
+    ['Two schools, two seasons','West Monroe 2009 vs Neville 2019','Put a year after each school to compare their seasons side by side.'],
+    ['Same school, two seasons','Ruston 2018 vs Ruston 2023','Compare any two years of the same program.'],
+    ['Points','When is the last time West Monroe gave up 50?','Ask about points scored or given up, by one team or against another.'],
+    ['Streaks & records','Longest winning streak for John Curtis','Also try biggest win, undefeated seasons or shutouts.'],
+    ['Rules','Is there a mercy rule?','Plain-English answers from the LHSAA Handbook.']];
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function chips(list,box){box.innerHTML='';list.forEach(function(t){var b=document.createElement('button');b.type='button';b.className='lvay-ys-chip';b.textContent=t;b.onclick=function(){input.value=t;ask();};box.appendChild(b);});}
-  chips(EX,tryBox);
+  function samples(){
+    var h='<div class="lvay-ys-samples-h">Sample Questions:</div><div class="lvay-ys-samples-grid">';
+    SAMPLES.forEach(function(s,i){h+='<button type="button" class="lvay-ys-sample" data-i="'+i+'"><span class="k">'+esc(s[0])+'</span><span class="q">'+esc(s[1])+'</span><span class="d">'+esc(s[2])+'</span></button>';});
+    tryBox.innerHTML=h+'</div><p class="lvay-ys-tip"><b>Tip:</b> tap a sample to run it, or type your own. Add a year, &ldquo;since 2010,&rdquo; &ldquo;at home,&rdquo; &ldquo;in the playoffs&rdquo; or &ldquo;vs 5A teams&rdquo; to narrow any question.</p>';
+    tryBox.querySelectorAll('.lvay-ys-sample').forEach(function(b){b.onclick=function(){input.value=SAMPLES[+b.getAttribute('data-i')][1];ask();};});
+  }
+  samples();
+  function gtable(t){
+    if(!t||!t.rows||!t.rows.length) return '';
+    var h='<div class="lvay-ys-tablewrap"><table'+(t.first_col_bold?' class="lvay-ys-cmp"':'')+'><thead><tr>';
+    t.cols.forEach(function(c){h+='<th>'+esc(c)+'</th>';});
+    h+='</tr></thead><tbody>';
+    t.rows.forEach(function(r){h+='<tr>'+r.map(function(v,i){return '<td'+(i===0&&t.first_col_bold?' class="rl"':'')+'>'+esc(v)+'</td>';}).join('')+'</tr>';});
+    return h+'</tbody></table></div>';
+  }
   function table(rows){
     if(!rows||!rows.length) return '';
     var h='<div class="lvay-ys-tablewrap"><table><thead><tr><th>Date</th><th>Team</th><th>Opponent</th><th>Result</th><th>Where</th><th>Game</th></tr></thead><tbody>';
@@ -263,14 +307,15 @@ function lvay_ys_render() {
     if(j.interpreted_as) h+='<p class="lvay-ys-how">Searched: '+esc(j.interpreted_as)+'</p>';
     h+='</div>';
     if(j.note) h+='<div class="lvay-ys-note-box">'+esc(j.note).replace(/^(Did you know\?|Please note:)/,'<b>$1</b>')+'</div>';
-    out.innerHTML=h+table(j.rows)+hist(j.history)+rules(j.handbook);
+    out.innerHTML=h+gtable(j.table)+table(j.rows)+hist(j.history)+rules(j.handbook);
     if(j.status==='ambiguous'&&j.choices){var box=document.createElement('div');box.className='lvay-ys-try';out.appendChild(box);
       var q=j.question; chips(j.choices.map(function(name){var base=name.split(' - ')[0];var re=new RegExp(base.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i');return re.test(q)?q.replace(re,name):name+' '+q;}),box);}
     if(miss&&j.examples){var b2=document.createElement('div');b2.className='lvay-ys-try';out.appendChild(b2);chips(j.examples,b2);}
   }
   function logQ(q,j){
-    try{fetch('/wp-json/lvay/v1/yall-log',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,
-      body:JSON.stringify({q:q,status:j.status||'',intent:j.intent||'',teams:(j.teams||[]).join(', '),answer:j.answer||''})});}catch(e){}
+    var body=JSON.stringify({q:q,status:j.status||'',intent:j.intent||'',teams:(j.teams||[]).join(', '),answer:j.answer||''});
+    try{fetch('/wp-json/lvay/v1/yall-log',{method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':root.dataset.nonce||''},keepalive:true,body:body})
+      .then(function(r){if(r.status===403){fetch('/wp-json/lvay/v1/yall-log',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'omit',body:body});}});}catch(e){}
   }
   function ask(){
     var q=input.value.trim(); if(!q) return;
