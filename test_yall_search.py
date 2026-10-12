@@ -152,6 +152,23 @@ class FactTests(unittest.TestCase):
             self.assertIn(want, r["answer"], q)
 
 
+class HandbookTests(unittest.TestCase):
+    def test_rules_questions_use_handbook(self):
+        a = y.Answerer(y.build_games(ARCHIVE))
+        r = a.answer("How are power ratings calculated?")
+        self.assertEqual(r["intent"], "handbook")
+        self.assertTrue(r["handbook"][0]["rule"].startswith("14.12"))
+        r = a.answer("how old can a player be")
+        self.assertEqual(r["handbook"][0]["rule"], "1.6")
+        r = a.answer("what is the transfer rule")
+        self.assertEqual(r["handbook"][0]["rule"], "1.13")
+
+    def test_game_questions_do_not_use_handbook(self):
+        a = y.Answerer(y.build_games(ARCHIVE))
+        self.assertEqual(a.answer("West Monroe vs Neville")["intent"],
+                         "head_to_head")
+
+
 class NoteTests(unittest.TestCase):
     def test_note_only_when_pertinent(self):
         a = y.Answerer(y.build_games(ARCHIVE))

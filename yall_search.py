@@ -28,6 +28,8 @@ import re
 import threading
 from datetime import datetime
 
+import handbook_search
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ARCHIVE_PATH = os.path.join(HERE, "football_archives_greenlit.json.gz")
 SEASON_2025_PATH = os.path.join(HERE, "football_2025_clean.json")
@@ -228,13 +230,15 @@ FACTS = [
     ("What select and non-select mean",
      r"\bwhat (is|are|does)\b.*\b(select|non ?select)\b|\bdifference\b"
      r".*\bselect\b|\bselect\b.*\bmean\b",
-     "Select schools are schools that can draw students from beyond a set "
-     "attendance zone \u2014 private and parochial schools, plus some "
-     "magnet, charter and lab schools. Non-select schools are traditional "
-     "public schools with a set attendance zone. Since 2013 they've played "
-     "in separate football playoffs, and in June 2022 the LHSAA redefined "
-     "which schools count as select, so some schools switched sides that "
-     "year."),
+     "The LHSAA Handbook (Glossary) defines select schools as private "
+     "schools, plus public schools with a state- or parish-approved "
+     "designation as a lab school, magnet school, approved charter school, "
+     "parish-wide open-enrollment school, Recovery School District "
+     "application-based school, tuition-based school, or a school with "
+     "academic or other admission criteria. Non-select schools are the "
+     "rest \u2014 traditional public schools that draw from a set "
+     "attendance zone. Since 2013 they've played in separate football "
+     "playoffs."),
     ("How reclassification works",
      r"\breclass|\breclassification\b|\bhow (are|is|do) (classes|class)"
      r"\b|\bhow often\b.*\bclass|\bwhat (decides|determines|sets)\b.*"
@@ -945,6 +949,14 @@ class Answerer:
             if team in self.history:
                 return self._class_history(base, team, hist, q)
 
+        hb_q = handbook_search.HANDBOOK_TRIGGERS.search(_norm(question))
+        if hb_q and not _history_question(q) and not re.search(
+                r"\b(last time|record|vs|versus|beat|streak|scored|"
+                r"undefeated)\b", q):
+            hb = self._handbook(base, question)
+            if hb:
+                return hb
+
         if not teams:
             cnt = re.search(r"\bhow many (?:class )?([1-5]a|non ?select|"
                             r"select) (?:teams?|schools?|programs?)\b", q)
@@ -961,6 +973,10 @@ class Answerer:
         number = _extract_number(q)
         intent = detect_intent(q, len(teams), number)
 
+        if not teams:   # no school named: maybe it's a rules question
+            hb = self._handbook(base, question, min_score=6.0)
+            if hb:
+                return hb
         if not teams:
             return {**base, "status": "no_team", "intent": intent,
                     "answer": "I couldn't tell which school you're asking "
@@ -1009,6 +1025,23 @@ class Answerer:
                     n=number) + scope,
                 "answer": text,
                 "rows": [g.as_row() for g in rows][:25]}
+
+    def _handbook(self, base, question, min_score=3.0):
+        hits = handbook_search.get_handbook().search(question, limit=3)
+        if not hits or hits[0]["score"] < min_score:
+            return None
+        top = hits[0]
+        where = (f"Bylaw {top['rule']}" if top["rule"] else top["title"]) + \
+            (f" ({top['section']}" + (f" — {top['title']}"
+                                      if top["title"] and top["rule"]
+                                      else "") + f", page {top['page']})")
+        return {**base, "matched": True, "status": "ok",
+                "intent": "handbook", "teams": [], "filters": [],
+                "interpreted_as": "LHSAA Handbook search",
+                "answer": f"Here's what the {handbook_search.EDITION} "
+                          f"says. The closest rule is {where}:",
+                "handbook": hits,
+                "handbook_link": handbook_search.VIEWER}
 
     def _count_schools(self, base, what, q):
         m = re.search(r"\b(19\d\d|20\d\d)\b", q)
