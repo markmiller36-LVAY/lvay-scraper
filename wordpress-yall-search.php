@@ -174,7 +174,7 @@ function lvay_ys_render() {
   </div>
   <form class="lvay-ys-form" autocomplete="off">
     <span class="lvay-ys-field"><input type="text" name="q" maxlength="300"
-      placeholder="When is the last time West Monroe had 50 points put on them?" aria-label="Ask a football history question"><button type="button" class="lvay-ys-clear" aria-label="Clear the question" title="Clear" hidden>&times;</button></span>
+      placeholder="When is the last time West Monroe had 50 points put on them?" aria-label="Ask a football history question"><button type="button" class="lvay-ys-clear" aria-label="Clear the question" title="Clear" hidden>Clear</button></span>
     <button type="submit">ASK</button>
   </form>
   <div class="lvay-ys-try"></div>
@@ -189,8 +189,8 @@ function lvay_ys_render() {
 .lvay-ys-form{display:flex;gap:8px}
 .lvay-ys-form input{flex:1;min-width:0;font-size:18px;padding:14px 16px;border:2px solid #111;border-radius:6px;font-family:inherit}
 .lvay-ys-field{position:relative;flex:1;min-width:0;display:flex}
-.lvay-ys-form .lvay-ys-field input{width:100%;padding-right:46px}
-.lvay-ys-form .lvay-ys-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;padding:0;border:0;border-radius:50%;background:#e6eded;color:#333;font:400 24px/32px Arial,sans-serif;letter-spacing:0;cursor:pointer}
+.lvay-ys-form .lvay-ys-field input{width:100%;padding-right:84px}
+.lvay-ys-form .lvay-ys-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);height:32px;padding:3px 12px 0;border:0;border-radius:16px;background:#e6eded;color:#333;font:400 19px/29px 'Teko',sans-serif;letter-spacing:.8px;text-transform:uppercase;cursor:pointer}
 .lvay-ys-form .lvay-ys-clear:hover{background:#cfdcdc;color:#000}
 .lvay-ys-form .lvay-ys-clear[hidden]{display:none}
 .lvay-ys-form input:focus{outline:none;border-color:#008584;box-shadow:0 0 0 3px rgba(0,133,132,.2)}
