@@ -1,0 +1,111 @@
+Woodlawn 30, Southwood 18
+Captain Shreve 39, Parkway 19
+Ruston 21, Ouachita 16
+Minden 25, North Caddo 6
+Mansfield 39, Northwood 6
+Haughton 6, Bossier 0
+West Ouachita 6, Loyola 0
+Springhill 21, Benton 7
+Homer 47, St. Frederick 13
+Many 28, North DeSoto 0
+Sarepta 19, Montgomery 7
+Ringgold 40, Evangel 12
+Cedar Creek 60, Bernice 20
+Cotton Valley 38, Arcadia 20
+Haynesville 34, Grambling 0
+Natchitoches 37, Jonesboro-Hodge 33
+Trinity Heights 21, Glenbrook 6
+Plain Dealing 34, Grawood 14
+Abbeville 48, Grant 13
+Acadiana 28, Northside 14
+Albany 45, Varnado 28
+Alexandria 40, Pineville 7
+Amite 63, Northshore 0
+Baker 20, Capitol 0
+Barbe 40, DeRidder 14
+Belle Chasse 30, St. Martin's 25
+Block 21, Avoyelles 2
+Bolton 35, Tioga 0
+Breaux Bridge 27, St. Martinville 4
+Broadmoor 54, Port Allen 7
+Buras 20, Redeemer 0
+Carroll 26, Rayville 21
+Catholic-BR 43, E. Ascension 7
+Catholic-NI 28, Berwick 8
+Catholic-PC 37, Livonia 13
+Cecilia 21, Church Point 12
+Chapel Trafton 34, E. Iberville 12
+Claiborne Acad 55, Acadiana Prep 6
+Clinton 43, St. Helena 16
+Comeaux 14, Franklin 13
+Covington 43, Mandeville 13
+Delhi 34, Tallulah 7
+Delta 20, Mangham 13
+Denham Springs 45, Central-BR 0
+DeQuincy 26, S. Beauregard 18
+Destrehan 38, Ellender 0
+E. St. John 17, Riverdale 7
+E.D. White 31, Jeanerette 14
+Ecole Classique 43, Lutheran 8
+Erath 14, Welsh 10
+Eunice 21, Bunkie 14
+Ferriday 68, Jena 0
+Fisher 34, Newman 32
+Fortier 22, BTW-New Orleans 7
+Franklinton 15, Jackson 14
+Ganus 24, Boothville-Venice 16
+Gilbert 46, Davidson 6
+Gueydan 12, Basile 37
+H.L. Bourgeois 42, Grace King 8
+Hammond 42, Bogalusa 16
+Higgins 20, Bonnabel 14
+Independence 26, Jewel Sumner 24
+Jennings 24, Sam Houston 8
+John Ehret 56, E. Jefferson 0
+Kaplan 35, Notre Dame 14
+Kinder 28, St. Louis 8
+Lafayette 22, Opelousas 12
+Lee 20, Istrouma 7
+Leesville 18, Sulphur 16
+Loranger 28, Kentwood 25
+Lutcher 36, St. James 0
+McCall 32, Vidalia 8
+McDonogh 35 6, Warren Easton 2
+McKinley 14, Zachary 12
+Menard 33, Oakdale 26
+N. Vermilion 26, Central Cath 0
+New Iberia 21, Carencro 9
+Newellton 46, Waterproof 0
+Northwood 20, Christian Life 12
+O.P. Walker 37, Cohen 0
+Oberlin 53, Elton 7
+Opelousas Cath 54, Teurlings 0
+Ouachita Christ 55, Crowville 20
+Pickering 34, Buckeye 12
+Plaisance 44, Mamou 6
+Plaquemine 31, Donaldsonville 21
+Port Barre 19, Sunset 13
+Ridgewood 28, Port Sulphur 14
+Riverside 27, Crescent City 0
+Rosenwald 38, Redemptorist 22
+S. Lafourche 35, Hahnville 16
+S. Terrebonne 20, Assumption 13
+Sacred Heart 13, St. Edmund 12
+Silliman 34, A.B. Ware 6
+Slidell 44, Ponchatoula 0
+St. Amant 21, Tara 13
+St. Augustine 28, Rummel 17
+St. Charles 41, Brusly 0
+St. Paul's 57, Salmen 22
+St. Thomas More 26, Morgan City 22
+Thibodaux 16, C. Lafourche 7
+University 48, St. John-Plaq 7
+Vandebilt 14, Patterson 8
+Vermilion Cath 20, Hanson 0
+Vinton 19, Iowa 0
+W. Feliciana 32, Sicily Island 0
+W. Jefferson 47, Chalmette 22
+W. St. John 28, Springfield 0
+Westlake 24, Wash-Marion 20
+Winnsboro 21, Caldwell 0
+Woodlawn-BR 35, Walker 7
