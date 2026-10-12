@@ -1,5 +1,5 @@
 /**
- * LVAY — Y'all Search (TEST) [lvay_yall_search]
+ * LVAY — Hey Y'all Search (TEST) [lvay_yall_search]
  * Plain-English football history questions, answered from the LVAY archive
  * by https://lvay-scraper.onrender.com/api/yall (templates, no AI).
  * Test page: /yall-test/ (kept out of search engines). Oct 12, 2026.
@@ -169,7 +169,7 @@ function lvay_ys_render() {
 	?>
 <div class="lvay-ys" id="lvay-ys">
   <div class="lvay-ys-head">
-    <h1>Ask <span>Y&#8217;all</span></h1>
+    <h1>Hey <span>Y&#8217;all</span></h1>
     <p>Ask anything about Louisiana high school football history, 1990 to today.</p>
   </div>
   <form class="lvay-ys-form" autocomplete="off">
