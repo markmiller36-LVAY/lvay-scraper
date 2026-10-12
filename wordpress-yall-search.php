@@ -3,7 +3,156 @@
  * Plain-English football history questions, answered from the LVAY archive
  * by https://lvay-scraper.onrender.com/api/yall (templates, no AI).
  * Test page: /yall-test/ (kept out of search engines). Oct 12, 2026.
+ *
+ * Question log (Oct 12, 2026): every question asked on the page is saved in
+ * the WordPress table {prefix}lvay_yall_log. Admins see it at
+ * /mission-control/yall-questions/ ([lvay_yall_log]) or as JSON from
+ * GET /wp-json/lvay/v1/yall-log (admins only).
  */
+
+function lvay_ys_table() {
+	global $wpdb;
+	return $wpdb->prefix . 'lvay_yall_log';
+}
+
+add_action( 'init', function () {
+	if ( get_option( 'lvay_ys_db' ) === '1' ) {
+		return;
+	}
+	global $wpdb;
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	$t = lvay_ys_table();
+	dbDelta( "CREATE TABLE $t (
+		id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+		asked_at datetime NOT NULL,
+		question varchar(300) NOT NULL,
+		status varchar(20) NOT NULL DEFAULT '',
+		intent varchar(40) NOT NULL DEFAULT '',
+		teams varchar(200) NOT NULL DEFAULT '',
+		answer text NULL,
+		visitor varchar(12) NOT NULL DEFAULT '',
+		PRIMARY KEY  (id),
+		KEY asked_at (asked_at)
+	) " . $wpdb->get_charset_collate() . ';' );
+	update_option( 'lvay_ys_db', '1', false );
+} );
+
+add_action( 'rest_api_init', function () {
+	register_rest_route( 'lvay/v1', '/yall-log', array(
+		array(
+			'methods'             => 'POST',
+			'permission_callback' => '__return_true',
+			'callback'            => 'lvay_ys_log_save',
+		),
+		array(
+			'methods'             => 'GET',
+			'permission_callback' => function () {
+				return current_user_can( 'edit_users' );
+			},
+			'callback'            => function ( $req ) {
+				return rest_ensure_response( lvay_ys_log_rows(
+					(int) $req->get_param( 'limit' ),
+					(string) $req->get_param( 'only' )
+				) );
+			},
+		),
+	) );
+} );
+
+function lvay_ys_log_save( $req ) {
+	$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+	$who = substr( md5( $ip . wp_salt( 'auth' ) ), 0, 12 );
+	$key = 'lvay_ys_rl_' . $who;
+	$n   = (int) get_transient( $key );
+	if ( $n >= 60 ) {
+		return new WP_REST_Response( array( 'saved' => false ), 429 );
+	}
+	set_transient( $key, $n + 1, HOUR_IN_SECONDS );
+	$q = trim( sanitize_text_field( (string) $req->get_param( 'q' ) ) );
+	if ( '' === $q ) {
+		return array( 'saved' => false );
+	}
+	global $wpdb;
+	$wpdb->insert( lvay_ys_table(), array(
+		'asked_at' => current_time( 'mysql' ),
+		'question' => mb_substr( $q, 0, 300 ),
+		'status'   => mb_substr( sanitize_key( (string) $req->get_param( 'status' ) ), 0, 20 ),
+		'intent'   => mb_substr( sanitize_key( (string) $req->get_param( 'intent' ) ), 0, 40 ),
+		'teams'    => mb_substr( sanitize_text_field( (string) $req->get_param( 'teams' ) ), 0, 200 ),
+		'answer'   => mb_substr( sanitize_text_field( (string) $req->get_param( 'answer' ) ), 0, 600 ),
+		'visitor'  => $who,
+	) );
+	return array( 'saved' => true );
+}
+
+function lvay_ys_log_rows( $limit = 300, $only = '' ) {
+	global $wpdb;
+	$limit = $limit > 0 ? min( $limit, 2000 ) : 300;
+	$where = 'missed' === $only ? "WHERE status <> 'ok'" : '';
+	$t     = lvay_ys_table();
+	return $wpdb->get_results( $wpdb->prepare(
+		"SELECT id, asked_at, question, status, intent, teams, answer, visitor FROM $t $where ORDER BY id DESC LIMIT %d",
+		$limit
+	), ARRAY_A );
+}
+
+add_shortcode( 'lvay_yall_log', function () {
+	if ( ! current_user_can( 'edit_users' ) ) {
+		return '';
+	}
+	$only = isset( $_GET['only'] ) && 'missed' === $_GET['only'] ? 'missed' : '';
+	$rows = lvay_ys_log_rows( 500, $only );
+	$all  = lvay_ys_log_rows( 2000, '' );
+	$miss = 0;
+	foreach ( $all as $r ) {
+		if ( 'ok' !== $r['status'] ) {
+			$miss++;
+		}
+	}
+	$base = get_permalink();
+	ob_start();
+	?>
+<div class="lvay-ysl">
+  <p class="lvay-ysl-kick"><a href="/mission-control/">&lsaquo; Mission Control</a></p>
+  <h1>Search Questions</h1>
+  <p class="lvay-ysl-sum"><?php echo (int) count( $all ); ?> questions logged &middot; <?php echo (int) $miss; ?> not answered.
+    <a href="<?php echo esc_url( $base ); ?>"<?php echo $only ? '' : ' class="on"'; ?>>All</a>
+    <a href="<?php echo esc_url( add_query_arg( 'only', 'missed', $base ) ); ?>"<?php echo $only ? ' class="on"' : ''; ?>>Not answered</a>
+  </p>
+  <div class="lvay-ysl-wrap"><table>
+    <thead><tr><th>When (CT)</th><th>Question</th><th>Result</th><th>Read as</th><th>Team(s)</th><th>Answer given</th></tr></thead>
+    <tbody>
+    <?php foreach ( $rows as $r ) : $ok = 'ok' === $r['status']; ?>
+      <tr class="<?php echo $ok ? 'ok' : 'miss'; ?>">
+        <td><?php echo esc_html( mysql2date( 'M j, g:i a', $r['asked_at'] ) ); ?></td>
+        <td><a href="/yall-test/?q=<?php echo rawurlencode( $r['question'] ); ?>"><?php echo esc_html( $r['question'] ); ?></a></td>
+        <td><?php echo $ok ? 'Answered' : esc_html( ucwords( str_replace( '_', ' ', $r['status'] ?: 'error' ) ) ); ?></td>
+        <td><?php echo esc_html( str_replace( '_', ' ', $r['intent'] ) ); ?></td>
+        <td><?php echo esc_html( $r['teams'] ); ?></td>
+        <td class="ans"><?php echo esc_html( $r['answer'] ); ?></td>
+      </tr>
+    <?php endforeach; ?>
+    <?php if ( ! $rows ) : ?><tr><td colspan="6">No questions yet.</td></tr><?php endif; ?>
+    </tbody>
+  </table></div>
+</div>
+<style>
+.lvay-ysl{max-width:1380px;margin:30px auto 60px;padding:0 16px;font-family:'PT Serif',Georgia,serif}
+.lvay-ysl-kick a{font-family:'Teko',sans-serif;font-size:18px;color:#008584;text-decoration:none}
+.lvay-ysl h1{font-family:'Alfa Slab One',serif;font-size:36px;margin:4px 0 6px;text-transform:uppercase}
+.lvay-ysl-sum{font-size:16px;color:#444}
+.lvay-ysl-sum a{font-family:'Teko',sans-serif;font-size:17px;margin-left:10px;padding:4px 10px 1px;border:1px solid #cfd8d8;border-radius:16px;text-decoration:none;color:#0b4f4e}
+.lvay-ysl-sum a.on{background:#008584;border-color:#008584;color:#fff}
+.lvay-ysl-wrap{overflow-x:auto;margin-top:14px}
+.lvay-ysl table{width:100%;border-collapse:collapse;font-size:14px;min-width:900px}
+.lvay-ysl th{font-family:'Teko',sans-serif;font-size:17px;font-weight:400;text-align:left;background:#111;color:#fff;padding:6px 10px 3px;position:sticky;top:0}
+.lvay-ysl td{padding:7px 10px;border-bottom:1px solid #e3e7e7;vertical-align:top}
+.lvay-ysl tr.miss td{background:#fffbea}
+.lvay-ysl td.ans{color:#555;max-width:420px}
+</style>
+	<?php
+	return ob_get_clean();
+} );
 
 add_shortcode( 'lvay_yall_search', 'lvay_ys_render' );
 
@@ -90,6 +239,10 @@ function lvay_ys_render() {
       var q=j.question; chips(j.choices.map(function(name){var base=name.split(' - ')[0];var re=new RegExp(base.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i');return re.test(q)?q.replace(re,name):name+' '+q;}),box);}
     if(miss&&j.examples){var b2=document.createElement('div');b2.className='lvay-ys-try';out.appendChild(b2);chips(j.examples,b2);}
   }
+  function logQ(q,j){
+    try{fetch('/wp-json/lvay/v1/yall-log',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,
+      body:JSON.stringify({q:q,status:j.status||'',intent:j.intent||'',teams:(j.teams||[]).join(', '),answer:j.answer||''})});}catch(e){}
+  }
   function ask(){
     var q=input.value.trim(); if(!q) return;
     out.innerHTML='<p class="lvay-ys-loading">Digging through the archives&hellip;</p>';
@@ -97,7 +250,8 @@ function lvay_ys_render() {
     fetch(API+encodeURIComponent(q)).then(function(r){
       if(r.status===429) throw new Error('slow');
       return r.json();
-    }).then(show).catch(function(e){
+    }).then(function(j){show(j);logQ(q,j);}).catch(function(e){
+      logQ(q,{status:'error',answer:e.message==='slow'?'rate limited':'server not reachable'});
       out.innerHTML='<div class="lvay-ys-card miss"><p class="lvay-ys-ans">'+(e.message==='slow'?'Too many questions too fast. Give it a minute.':'The search server is waking up. Try again in a few seconds.')+'</p></div>';
     });
   }
