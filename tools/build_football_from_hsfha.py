@@ -68,8 +68,38 @@ def monday(s):
     return d - timedelta(days=d.weekday())
 
 
+def fill_missing_affiliations(R):
+    """HSFHA has no class/district for some school-seasons (54 schools in 1990, a few
+    later). Fill them from the same school's nearest season (1 year away, then 2) in the
+    same class system (letters through 1990, 5A-1A from 1991), when it was LHSAA then."""
+    era = lambda y: y <= 1990
+    known = {}
+    for x in R:
+        for side in ("team", "opp"):
+            if x[side + "_org"] == "LHSAA" and x[side + "_class"]:
+                known[(int(x["season"]), x[side + "_code"])] = (x[side + "_class"], x[side + "_district"])
+    filled = set()
+    for x in R:
+        y = int(x["season"])
+        for side in ("team", "opp"):
+            code = x[side + "_code"]
+            if x[side + "_org"] or not code.startswith("LA."):
+                continue
+            for dy in (-1, 1, -2, 2):
+                k = (y + dy, code)
+                if k in known and era(y + dy) == era(y):
+                    x[side + "_org"] = "LHSAA"
+                    x[side + "_class"], x[side + "_district"] = known[k]
+                    filled.add((y, x[side], y + dy))
+                    break
+    by = Counter(f[0] for f in filled)
+    print("class/district filled from a nearby season:", dict(sorted(by.items())))
+    return filled
+
+
 def main(src, names_path, write=False, years=None):
     R = list(csv.DictReader(open(src, encoding="utf-8"), delimiter="\t"))
+    fill_missing_affiliations(R)
     if years:
         R = [x for x in R if years[0] <= int(x["season"]) <= years[1]]
     site = set(json.load(open(names_path)))
