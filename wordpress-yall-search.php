@@ -262,7 +262,7 @@ function lvay_ys_render() {
     var h='<div class="lvay-ys-card'+(miss?' miss':'')+'"><p class="lvay-ys-ans">'+esc(j.answer)+'</p>';
     if(j.interpreted_as) h+='<p class="lvay-ys-how">Searched: '+esc(j.interpreted_as)+'</p>';
     h+='</div>';
-    if(j.note) h+='<div class="lvay-ys-note-box">'+esc(j.note).replace(/^Did you know\?/,'<b>Did you know?</b>')+'</div>';
+    if(j.note) h+='<div class="lvay-ys-note-box">'+esc(j.note).replace(/^(Did you know\?|Please note:)/,'<b>$1</b>')+'</div>';
     out.innerHTML=h+table(j.rows)+hist(j.history)+rules(j.handbook);
     if(j.status==='ambiguous'&&j.choices){var box=document.createElement('div');box.className='lvay-ys-try';out.appendChild(box);
       var q=j.question; chips(j.choices.map(function(name){var base=name.split(' - ')[0];var re=new RegExp(base.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i');return re.test(q)?q.replace(re,name):name+' '+q;}),box);}
