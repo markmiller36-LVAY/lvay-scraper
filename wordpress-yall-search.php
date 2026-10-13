@@ -219,6 +219,8 @@ function lvay_ys_render() {
 .lvay-ys a.lvay-ys-sq{display:block;font-family:'PT Serif',Georgia,serif;font-size:15.5px;line-height:1.35;color:#111;text-decoration:none;padding:3px 0 3px 14px;position:relative}
 .lvay-ys a.lvay-ys-sq:before{content:'\201C';position:absolute;left:0;top:2px;color:#008584;font-weight:700}
 .lvay-ys a.lvay-ys-sq:hover{color:#008584;text-decoration:underline}
+.lvay-ys-sgh{font-weight:700;font-size:21px;color:#006b6a;-webkit-text-stroke:.3px #006b6a;border-bottom:2px solid #b9d6d6}
+.lvay-ys a.lvay-ys-sq{font-weight:700;color:#111}
 .lvay-ys-tip{font-size:13.5px;color:#5b6b6b;margin:12px 0 0}
 .lvay-ys table.lvay-ys-cmp{min-width:0}
 .lvay-ys-cmp td.rl{color:#0b4f4e;white-space:nowrap}
