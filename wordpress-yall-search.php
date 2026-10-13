@@ -38,6 +38,47 @@ add_action( 'init', function () {
 	update_option( 'lvay_ys_db', '2', false );
 } );
 
+/* Oct 13, 2026: same-site proxy for the Hey Y'all search API, so visitors never
+   talk to onrender.com directly (blocked networks, cold starts). Retries once,
+   caches each answer for 10 minutes. */
+function lvay_ys_proxy( WP_REST_Request $r ) {
+	$q = trim( (string) $r->get_param( 'q' ) );
+	$q = mb_substr( $q, 0, 300 );
+	if ( '' === $q ) {
+		return new WP_REST_Response( array( 'answer' => 'Type a question about Louisiana high school football history.' ), 200 );
+	}
+	$key    = 'lvay_ys_a_' . md5( strtolower( $q ) );
+	$cached = get_transient( $key );
+	if ( is_array( $cached ) ) {
+		return new WP_REST_Response( $cached, 200 );
+	}
+	$url = 'https://lvay-scraper.onrender.com/api/yall?q=' . rawurlencode( $q );
+	for ( $i = 0; $i < 2; $i++ ) {
+		$res = wp_remote_get( $url, array( 'timeout' => 20 ) );
+		if ( ! is_wp_error( $res ) ) {
+			$code = (int) wp_remote_retrieve_response_code( $res );
+			if ( 429 === $code ) {
+				return new WP_REST_Response( array( 'status' => 'rate_limited' ), 429 );
+			}
+			if ( 200 === $code ) {
+				$j = json_decode( wp_remote_retrieve_body( $res ), true );
+				if ( is_array( $j ) ) {
+					set_transient( $key, $j, 10 * MINUTE_IN_SECONDS );
+					return new WP_REST_Response( $j, 200 );
+				}
+			}
+		}
+	}
+	return new WP_REST_Response( array( 'status' => 'unavailable' ), 503 );
+}
+add_action( 'rest_api_init', function () {
+	register_rest_route( 'lvay/v1', '/yall', array(
+		'methods'             => 'GET',
+		'permission_callback' => '__return_true',
+		'callback'            => 'lvay_ys_proxy',
+	) );
+} );
+
 add_action( 'rest_api_init', function () {
 	register_rest_route( 'lvay/v1', '/yall-log', array(
 		array(
@@ -258,7 +299,7 @@ function lvay_ys_render() {
 </style>
 <script>
 (function(){
-  var API='https://lvay-scraper.onrender.com/api/yall?q=';
+  var API='/wp-json/lvay/v1/yall?q=',API2='https://lvay-scraper.onrender.com/api/yall?q=';
   var root=document.getElementById('lvay-ys'); if(!root) return;
   var form=root.querySelector('form'), input=form.q, out=root.querySelector('.lvay-ys-out'),
       tryBox=root.querySelector('.lvay-ys-try'), cov=root.querySelector('.lvay-ys-cov');
@@ -351,10 +392,18 @@ function lvay_ys_render() {
     var q=input.value.trim(); if(!q) return;
     out.innerHTML='<p class="lvay-ys-loading">Digging through the archives&hellip;</p>';
     try{var u=new URL(location.href);u.searchParams.set('q',q);history.replaceState(null,'',u);}catch(e){}
-    fetch(API+encodeURIComponent(q)).then(function(r){
-      if(r.status===429) throw new Error('slow');
-      return r.json();
-    }).then(function(j){show(j);logQ(q,j);}).catch(function(e){
+    var tries=0;
+    function get(){tries++;var base=tries===3?API2:API;
+      return fetch(base+encodeURIComponent(q)).then(function(r){
+        if(r.status===429) throw new Error('slow');
+        if(!r.ok) throw new Error('down');
+        return r.json();
+      }).catch(function(e){
+        if(e.message==='slow'||tries>=3) throw e;
+        out.innerHTML='<p class="lvay-ys-loading">Waking up the search server&hellip; hang tight.</p>';
+        return new Promise(function(ok){setTimeout(ok,tries*4000)}).then(get);
+      });}
+    get().then(function(j){show(j);logQ(q,j);}).catch(function(e){
       logQ(q,{status:'error',answer:e.message==='slow'?'rate limited':'server not reachable'});
       out.innerHTML='<div class="lvay-ys-card miss"><p class="lvay-ys-ans">'+(e.message==='slow'?'Too many questions too fast. Give it a minute.':'The search server is waking up. Try again in a few seconds.')+'</p></div>';
     });
