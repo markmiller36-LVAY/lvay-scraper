@@ -39,6 +39,10 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .stat{display:flex;align-items:center;gap:8px;min-width:0}
 .stat select{width:auto;min-width:118px;padding:5px 8px;background:#fff;border-color:#fff}
+.slwrap{position:relative;display:flex;flex-direction:column;justify-content:center;padding-bottom:13px}
+.slwrap input[type=range]{margin:0}
+.ticks{position:absolute;left:0;right:0;bottom:-1px;height:13px;pointer-events:none}
+.ticks span{position:absolute;transform:translateX(-50%);font-family:var(--teko);font-size:13px;font-weight:500;line-height:1;color:#fff;opacity:.9;white-space:nowrap;font-variant-numeric:tabular-nums}
 .stat input[type=range]{width:170px;accent-color:#000;padding:0;background:none;border:0;cursor:pointer}
 .stat input[type=range]:disabled{opacity:.45;cursor:default}
 .sv{font-size:13px;font-weight:800;color:#fff;white-space:nowrap;font-variant-numeric:tabular-nums;min-width:118px}
@@ -222,7 +226,8 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
   /* phones: stat picker + slider live in their own bar at the bottom of the screen */
   .find .stat{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;flex-wrap:nowrap;gap:10px;align-items:center;background:var(--teal);border-radius:10px;padding:9px 12px;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:3}
   .find .stat select{flex:0 0 auto;min-width:0;width:auto}
-  .find .stat input[type=range]{flex:1 1 auto;width:auto;min-width:0}
+  .find .stat .slwrap{flex:1 1 auto;min-width:0}
+  .find .stat input[type=range]{width:100%;min-width:0}
   .find .stat .sv{flex:0 0 auto;min-width:0;font-size:16px}
   .pad{display:none}
   .summary{bottom:calc(env(safe-area-inset-bottom,0px) + 72px)!important;right:12px!important}
@@ -271,7 +276,7 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
       <label for="fs" class="vh">Stat</label>
       <select id="fs"><option value="" disabled>Select Stat</option><option value="w" selected>Wins</option><option value="pf">Points scored</option><option value="pa">Points against</option></select>
       <label for="sr" class="vh">Stat level</label>
-      <input type="range" id="sr" min="0" max="0" value="0" step="1" disabled>
+      <div class="slwrap"><input type="range" id="sr" min="0" max="0" value="0" step="1" disabled><div class="ticks" id="sticks" aria-hidden="true"></div></div>
       <span id="sv" class="sv"></span>
     </div>
     <span class="count" id="count"></span>
@@ -918,11 +923,21 @@ $("summary").addEventListener("click",e=>{
   const a=e.target.closest("[data-sel]");if(a){select(+a.dataset.sel);return;}
   const tr=e.target.closest("tr[data-id]");if(tr)select(+tr.dataset.id);
 });
+/* number labels under the slider: every value for Wins, about five evenly spaced values for points */
+function drawTicks(){
+  const box=$("sticks");if(!box)return;
+  if(!statKey||statLevels.length<2){box.innerHTML="";return;}
+  const n=statLevels.length,idx=new Set();
+  if(n<=10)for(let i=0;i<n;i++)idx.add(i);
+  else{const k=4;for(let j=0;j<=k;j++)idx.add(Math.round(j*(n-1)/k));}
+  box.innerHTML=[...idx].sort((a,b)=>a-b).map(i=>`<span style="left:calc(8px + (100% - 16px) * ${(i/(n-1)).toFixed(4)})">${statLevels[i]}</span>`).join("");
+}
 function setupStat(){
   statKey=$("fs").value;const sr=$("sr");
   if(!statKey){statLevels=[];statIdx=0;sr.max=0;sr.value=0;sr.disabled=true;return;}
   statLevels=[...new Set(SCHOOLS.filter(s=>s.gp!=null).map(statVal))].sort((a,b)=>statKey==="pa"?b-a:a-b);
   statIdx=0;sr.min=0;sr.max=statLevels.length-1;sr.value=0;sr.disabled=false;
+  drawTicks();
 }
 $("fs").addEventListener("change",()=>{setupStat();sel=null;render();});
 setupStat(); /* opens on Wins, slider at the left so every team shows */
