@@ -100,3 +100,83 @@ DATE	457990	1990	1990-10-19							Alexandria Town Talk Oct 21 1990 p29 District 
 DATE	457994	1990	1990-10-26							Lake Charles American Press Oct 27 1990 p13 Westlake-Winnfield story: Sam Houston's 21-8 upset of Washington-Marion that night; W-M played LC-Boston Nov 2 (Times Nov 3 p23)
 DROP	458067	1990								Miscoded copy of O.P. Walker vs Nicholls (game 1663560); Walker (Livingston) played Broadmoor that night (Shreveport Times Nov 3 1990 p23: Broadmoor 32 Walker 20)
 DATE	457929	1990	1990-11-16							Daily Iberian Nov 18 1990 p21 Friday recap: Baker eliminated New Iberia 28-21 in Class AAAA regional (Fri Nov 16); NISH beat East St. John Nov 9
+ADD	fix-1997-0001	1997	1997-09-04	Fair Park	LA.CO-014	44	Booker T. Washington	LA.CO-009	27	Shreveport Times, Sun Sep 7 1997, p64 (14D), Thursday's Results; Hammond Daily Star, Sun Sep 7 1997, p20, Week #1 Prep Football Results (AP)
+ADD	fix-1997-0002	1997	1997-09-04	Wossman	LA.OU-007	26	Bastrop	LA.MO-001	20	Shreveport Times, Sun Sep 7 1997, p64, Thursday's Results; Monroe News-Star, Sat Sep 6 1997, p44, District standings (Wossman 1-0 26-20, Bastrop 0-1 20-26); Hammond Daily Star, Sep 7 1997, p20 (AP)
+ADD	fix-1997-0003	1997	1997-09-04	Caldwell Parish	LA.CW-001	22	LaSalle	LA.LA-002	17	Shreveport Times, Sun Sep 7 1997, p64, Thursday's Results; Monroe News-Star, Sat Sep 6 1997, p44, District standings (Caldwell 22-17, LaSalle 17-22)
+ADD	fix-1997-0004	1997	1997-09-04	Rayville	LA.RI-004	16	Oak Grove	LA.WC-001	14	Hammond Daily Star, Sun Sep 7 1997, p20, Thursday's Results (AP); Monroe News-Star, Sat Sep 6 1997, p44, District standings (Rayville 16-14, Oak Grove 14-16)
+ADD	fix-1997-0005	1997	1997-09-04	Winnsboro	LA.FR-003	50	Delhi	LA.RI-005	0	Hammond Daily Star, Sun Sep 7 1997, p20, Thursday's Results (AP); Monroe News-Star, Sat Sep 6 1997, p44, District standings (Winnsboro 50-0, Delhi 0-50)
+ADD	fix-1997-0006	1997	1997-09-05	Lakeview	LA.NA-003	33	Bernice	LA.UN-003	0	Shreveport Times, Sun Sep 7 1997, p64, District 2-A Friday's Results; Monroe News-Star, Sat Sep 6 1997, p44, District standings (Bernice 0-1 0-33)
+ADD	fix-1997-0007	1997	1997-09-05	Delta	LA.MO-003	16	Waterproof	LA.TN-004	0	Shreveport Times, Sun Sep 7 1997, p64, District 2-A Friday's Results; Monroe News-Star, Sat Sep 6 1997, p44, District standings (Delta 16-0, Waterproof 0-16)
+ADD	fix-1997-0008	1997	1997-09-05	Plain Dealing	LA.BO-006	28	North DeSoto	LA.DE-001	6	Shreveport Times, Sun Sep 7 1997, p64, District 1-A Friday's Results; Shreveport Times, Sun Sep 7 1997, p52, High School Friday's Results (AP)
+ADD	fix-1997-0009	1997	1997-09-05	Logansport	LA.DE-002	48	Ringgold	LA.BI-002	8	Shreveport Times, Sun Sep 7 1997, p64, District 3-A Friday's Results; Shreveport Times, Sun Sep 7 1997, p52, High School Friday's Results (AP)
+ADD	fix-1997-0010	1997	1997-09-04	Northwood	LA.RA-007	22	Bolton JV		20	Shreveport Times, Sun Sep 7 1997, p64, District 3-A Thursday's Results (Northwood-Lena 22, Bolton JV 20); Hammond Daily Star, Sun Sep 7 1997, p20 (AP)
+DROP	450165	1997								Not played: Airline beat Bossier 22-6 and Benton beat Loyola 34-7 that night (Shreveport Times, Sun Sep 7 1997, p64; Monroe News-Star, Sat Sep 6 1997, p44 State scores)
+SCORE	450201	1997	1997-09-05	Homer	LA.CI-002	42	North Caddo	LA.CO-010	13	Shreveport Times, Sun Sep 7 1997, p64, District 1-3A and 1-2A Friday's Results (local list; AP had 42-14)
+DROP	450026	1997								Not played: Byrd lost to West Monroe 42-7 and BTW beat Woodlawn 25-12 that night (Shreveport Times, Sun Sep 14 1997, p44; Hammond Daily Star, Sep 14 1997, p18 AP); copy of Sep 19 entry
+DROP	450031	1997								Not played: Benton beat North DeSoto 48-6 that night (Shreveport Times, Sun Sep 14 1997, p44; Hammond Daily Star, Sep 14 1997, p18 AP); copy of Week 1 Benton-Loyola
+DATE	481429	1997	1997-09-12							Shreveport Times, Sun Sep 14 1997, p44, District 3-A Friday's Results (Logansport 61, Tenaha, Texas 58); Logansport played Arcadia Oct 3
+SCORE	449894	1997	1997-09-19	Airline	LA.BO-001	38	Haughton	LA.BO-004	6	Shreveport Times, Sun Sep 21 1997, p54, District 1-5A and 2-4A Friday's Results; Hammond Daily Star, Sep 21 1997, p26 (AP)
+SCORE	406916	1997	1997-09-19	West Monroe	LA.OU-002	29	Warren Central	MS.WR-006	0	Shreveport Times, Sun Sep 21 1997, p54, District 2-5A Friday's Results; Hammond Daily Star, Sep 21 1997, p26 (AP)
+SCORE	450017	1997	1997-09-18	Cotton Valley	LA.WR-007	16	Sibley	LA.WR-002	12	Shreveport Times, Sun Sep 21 1997, p54, District 1-2A Thursday's Result and District 1-A results (local list; AP had 22-12)
+SCORE	449965	1997	1997-09-19	Mansfield	LA.DE-003	27	North DeSoto	LA.DE-001	9	Shreveport Times, Sun Sep 21 1997, p54, District 1-2A Friday's Results (local list; AP had 29-7)
+DATE	481431	1997	1997-09-19							Shreveport Times, Sun Sep 21 1997, p54, District 1-5A Friday's Results (Marshall, TX 20, Southwood 14); Hammond Daily Star, Sep 21 1997, p26 (AP)
+DROP	449898	1997								Not played: Benton beat Minden 21-7 and Mansfield beat North DeSoto that night (Shreveport Times, Sun Sep 21 1997, p54); copy of Week 2 Benton-North DeSoto
+SCORE	1660590	1997	1997-09-19	Jewel Sumner	LA.TA-002	21	Albany	LA.LV-004	2	Hammond Daily Star, Sun Sep 21 1997, p26, Week #3 Prep Football Results (local paper; Sumner 21, Albany 2)
+DATE	449896	1997	1997-09-26							Shreveport Times, Sun Sep 28 1997, p55, District 1-5A Friday's Results (Southwood 28, Captain Shreve 14); Hammond Daily Star Sep 28 1997 p22 (AP); Captain Shreve played Parkway Thu Sep 18
+SCORE	449795	1997	1997-09-26	Cotton Valley	LA.WR-007	60	Northwood	LA.RA-007	6	Shreveport Times, Sun Sep 28 1997, p55, District 1-A and 3-A Friday's Results (Cotton Vall. 60, Northwood-Lena 6; local list, AP had 69-6)
+CODE	407083	1997		Franklin County	MS.FR-001			MS.WK-006		Shreveport Times, Sun Sep 28 1997, p55, District 2-4A Friday's Results (Wossman 28, Franklin City, MS 0); Times Sep 21 1997 p54 schedule (Wossman at Franklin Cty, MS)
+SCORE	1660600	1997	1997-09-26	Pine	LA.WO-003	8	Loranger	LA.TA-006	6	Hammond Daily Star, Sun Sep 28 1997, p22, Week #4 Prep Football Results (local paper)
+SCORE	1660601	1997	1997-09-26	Springfield	LA.LV-005	20	Varnado	LA.WO-005	0	Hammond Daily Star, Sun Sep 28 1997, p22, Week #4 Prep Football Results (local paper)
+SCORE	449792	1997	1997-09-26	Pearl River	LA.ST-005	32	Chalmette	LA.SE-001	14	Hammond Daily Star, Sun Sep 28 1997, p22, Week #4 Prep Football Results (local paper for Pearl River)
+SCORE	449748	1997	1997-10-03	Logansport	LA.DE-002	26	Arcadia	LA.BI-001	6	Shreveport Times, Sun Oct 5 1997, p55, District 1-A and 3-A Friday's Results (local list, printed twice; AP had 24-6)
+SCORE	449529	1997	1997-10-10	Haynesville	LA.CI-001	61	Arcadia	LA.BI-001	3	Shreveport Times, Sun Oct 12 1997, p50, District 1-A Friday's Results; Hammond Daily Star, Oct 12 1997, p20 (AP) - both 61-3
+SCORE	449592	1997	1997-10-10	Evangel Christian	LA.CO-003	38	Bossier	LA.BO-005	3	Shreveport Times, Sun Oct 12 1997, p50, District 1-3A Friday's Results (local list; AP had 38-8)
+SCORE	449242	1997	1997-10-24	Haughton	LA.BO-004	15	Minden	LA.WR-001	12	Shreveport Times, Sun Oct 26 1997, p49, District 2-4A Friday's Results; Hammond Daily Star, Oct 26 1997, p16 (AP) - both 15-12
+SCORE	449304	1997	1997-10-24	Jewel Sumner	LA.TA-002	20	Springfield	LA.LV-005	12	Hammond Daily Star, Sun Oct 26 1997, p16, Week 8 Prep Football Results (local paper for Sumner)
+SCORE	449311	1997	1997-10-24	Loranger	LA.TA-006	35	St. Thomas Aquinas	LA.TA-009	6	Hammond Daily Star, Sun Oct 26 1997, p16, headline 'Wolves ravage STA' + Week 8 results (Loranger 35, St. Thomas Aquinas 6); archive had winner reversed
+CODE	449317	1997		Sam Houston	LA.CC-002			LA.EV-001		Hammond Daily Star, Sun Oct 26 1997, p16 (Eunice 43, Sam Houston 20); Sacred Heart beat Oberlin 34-8 that night (same list)
+SCORE	449340	1997	1997-10-24	Arcadia	LA.BI-001	20	Cotton Valley	LA.WR-007	14	Shreveport Times, Sun Oct 26 1997, p49, District 1-A Friday's Results + standings (Arcadia 2-1 dist after 1-1; Cotton Valley 0-3 after 0-2); AP had Cotton Valley 20-18
+SCORE	449358	1997	1997-10-24	Plain Dealing	LA.BO-006	32	Sarepta	LA.WR-005	6	Shreveport Times, Sun Oct 26 1997, p49, District 1-A Friday's Results (local list; AP had 32-8)
+CODE	449930	1997		False River	LA.PO-003			LA.SM-002		Hammond Daily Star, Sun Sep 21 1997, p26 (Hanson 34, False River 6); Franklin beat New Iberia 22-7 that night (same list)
+CODE	449570	1997		Zachary	LA.EB-003			LA.EF-004		Hammond Daily Star, Sun Oct 12 1997, p20 (Zachary 27, Lee 7); Jackson lost to University 42-6 that night (same list)
+DATE	449116	1997	1997-10-31							Hammond Daily Star, Sun Nov 2 1997, p26, Week 9 results (Barbe 31, Sulphur 6); Barbe played Comeaux Nov 7
+DATE	449115	1997	1997-11-07							Hammond Daily Star, Sun Nov 9 1997, p20, Week #10 results (Sulphur 22, Lafayette 13); Sulphur played Barbe Oct 31
+SCORE	448848	1997	1997-12-13	West Monroe	LA.OU-002	22	Archbishop Shaw	LA.JF-003	19	Monroe News-Star, Sun Dec 14 1997, p28, Class 5A championship box score (WM 0-7-7-8=22: TD+kick, TD+kick, TD+run; Shaw 0-13-6-0=19)
+SCORE	449111	1997	1997-11-06	Southwood	LA.CO-012	21	Woodlawn	LA.CO-008	14	Shreveport Times, Sun Nov 9 1997, p48, District 1-5A Thursday's Results; Hammond Daily Star, Nov 9 1997, p20 (AP) - both 21-14 on Thursday
+DROP	449007	1997								Duplicate of Thursday Nov 6 Southwood-Woodlawn game (Shreveport Times, Sun Nov 9 1997, p48 Thursday's Results)
+ADD	fix-1997-0011	1997	1997-09-12	Green Oaks	LA.CO-011	12	Loyola Prep	LA.CO-007	7	Shreveport Times, Sun Sep 14 1997, p44, District 1-3A Friday's Results; Times Sep 21 standings (Green Oaks 1-2, Loyola 1-2) only add up with this game
+ADD	fix-1997-0012	1997	1997-09-12	Arcadia	LA.BI-001	27	Lakeview	LA.NA-003	22	Shreveport Times, Sun Sep 14 1997, p44, District 1-2A Friday's Results; Times Oct 5 standings (Lakeview 3-2) only add up with this game
+ADD	fix-1997-0013	1997	1997-10-03	Lakeview	LA.NA-003	35	Ringgold	LA.BI-002	24	Shreveport Times, Sun Oct 5 1997, p55, District 1-2A and 1-A Friday's Results; Times Oct 5 standings (Lakeview 3-2, Ringgold 0-4)
+ADD	fix-1997-0014	1997	1997-09-19	Logansport	LA.DE-002	26	Shelbyville (Tex.)		7	Shreveport Times, Sun Sep 21 1997, p54, District 3-A Friday's Results; Times Oct 5 standings (Logansport 5-0)
+ADD	fix-1997-0015	1997	1997-09-05	Sarepta	LA.WR-005	24	Crowville	LA.FR-002	22	Shreveport Times, Sun Sep 7 1997, p64, District 1-A Friday's Results; Times Sep 21 standings (Sarepta 3-0)
+ADD	fix-1997-0016	1997	1997-10-24	Huntington	LA.CO-004	34	Woodlawn	LA.CO-008	25	Shreveport Times, Sun Oct 26 1997, p49, District 1-5A Friday's Result; standings Huntington 2-3 (was 1-3), Woodlawn 0-5 (was 0-4)
+ADD	fix-1997-0017	1997	1997-10-31	Arcadia	LA.BI-001	27	Plain Dealing	LA.BO-006	16	Shreveport Times, Sun Nov 2 1997, p48, District 1-A Friday's Results; Hammond Daily Star, Sun Nov 2 1997, p26 (AP)
+ADD	fix-1997-0018	1997	1997-09-04	Tara	LA.EB-020	27	Belaire	LA.EB-017	12	Hammond Daily Star, Sun Sep 7 1997, p20, Thursday's Results (AP list only; both teams had no other game that week)
+ADD	fix-1997-0019	1997	1997-09-04	Clinton	LA.EF-005	15	Southern Lab	LA.EB-009	13	Hammond Daily Star, Sun Sep 7 1997, p20, Thursday's Results (AP list only; both teams open that week)
+ADD	fix-1997-0020	1997	1997-09-05	Cedar Creek	LA.LN-003	42	Sibley	LA.WR-002	16	Monroe News-Star, Sat Sep 6 1997, p44, District 2-1A standings (Cedar Creek 1-0, 42 PF-16 PA); Shreveport Times, Sun Sep 7 1997, p64 printed Cedar Creek 47, Sibley 16
+ADD	fix-1997-0021	1997	1997-09-25	Waterproof	LA.TN-004	48	J.M. Davidson	LA.TN-003	14	Hammond Daily Star, Sun Sep 28 1997, p22, Thursday's Results (AP list only; both teams open)
+ADD	fix-1997-0022	1997	1997-10-02	Kentwood	LA.TA-004	31	West Feliciana	LA.WF-001	8	Hammond Daily Star, Sun Oct 5 1997, p22, Thursday's Results (local paper for Kentwood; both teams open)
+ADD	fix-1997-0023	1997	1997-10-09	Live Oak	LA.LV-003	19	Albany	LA.LV-004	7	Hammond Daily Star, Sun Oct 12 1997, p20, Thursday's Results (AP list; both teams open)
+ADD	fix-1997-0024	1997	1997-10-10	Parkview Baptist	LA.EB-010	27	Pointe Coupee Central	LA.PO-004	0	Hammond Daily Star, Sun Oct 12 1997, p20, Week 6 results (AP list; both teams open)
+ADD	fix-1997-0025	1997	1997-10-31	Abbeville	LA.VM-005	27	Kaplan	LA.VM-002	26	Lafayette Daily Advertiser, Sat Nov 1 1997, p23, box score (Abbeville 27, Kaplan 26, OT) + AP list; Hammond Daily Star Nov 2 p26
+ADD	fix-1997-0026	1997	1997-10-31	Amite	LA.TA-005	32	Franklinton	LA.WO-001	7	Hammond Daily Star, Sun Nov 2 1997, p26 + Lafayette Daily Advertiser, Sat Nov 1 1997, p23 (AP state scores) (Hammond is local paper)
+ADD	fix-1997-0027	1997	1997-10-31	Assumption	LA.AS-001	28	Morgan City	LA.SM-008	18	Hammond Daily Star, Sun Nov 2 1997, p26 + Lafayette Daily Advertiser, Sat Nov 1 1997, p23 (AP state scores)
+ADD	fix-1997-0028	1997	1997-10-31	Baker	LA.EB-015	28	McKinley	LA.EB-016	19	Hammond Daily Star, Sun Nov 2 1997, p26 + Lafayette Daily Advertiser, Sat Nov 1 1997, p23 (AP state scores)
+ADD	fix-1997-0029	1997	1997-11-07	Amite	LA.TA-005	35	Live Oak	LA.LV-003	6	Hammond Daily Star, Sun Nov 9 1997, p20 + Lafayette Daily Advertiser, Sat Nov 8 1997, p26 (AP state scores) (Hammond is local paper)
+ADD	fix-1997-0030	1997	1997-11-07	Brusly	LA.WB-001	24	Pointe Coupee Central	LA.PO-004	12	Hammond Daily Star, Sun Nov 9 1997, p20 + Lafayette Daily Advertiser, Sat Nov 8 1997, p26 (AP state scores)
+ADD	fix-1997-0031	1997	1997-11-07	Christian Life Academy	LA.EB-028	35	Jackson	LA.EF-004	14	Hammond Daily Star, Sun Nov 9 1997, p20 + Lafayette Daily Advertiser, Sat Nov 8 1997, p26 (AP state scores)
+ADD	fix-1997-0032	1997	1997-11-07	Eunice	LA.SL-006	31	Leesville	LA.VN-001	22	Hammond Daily Star, Sun Nov 9 1997, p20 + Lafayette Daily Advertiser, Sat Nov 8 1997, p26 (AP state scores) (Advertiser local for Eunice)
+ADD	fix-1997-0033	1997	1997-11-07	Franklin	LA.SM-002	40	Northside	LA.LY-010	18	Lafayette Daily Advertiser, Sat Nov 8 1997, p26, box score + AP list; Hammond Daily Star Nov 9 p20
+ADD	fix-1997-0034	1997	1997-11-07	Hanson Memorial	LA.SM-007	42	Westminster Christian	LA.SL-005	21	Lafayette Daily Advertiser, Sat Nov 8 1997, p26, box score + AP list; Hammond Daily Star Nov 9 p20
+ADD	fix-1997-0035	1997	1997-11-07	Iota	LA.AD-002	35	Kinder	LA.AL-001	0	Lafayette Daily Advertiser, Sat Nov 8 1997, p26, box score + AP list; Hammond Daily Star Nov 9 p20
+ADD	fix-1997-0036	1997	1997-11-07	Jeanerette	LA.II-005	36	Berwick	LA.SM-006	33	Hammond Daily Star, Sun Nov 9 1997, p20 + Lafayette Daily Advertiser, Sat Nov 8 1997, p26 (AP state scores) (Advertiser local)
+ADD	fix-1997-0037	1997	1997-11-07	Marksville	LA.AV-002	53	Ville Platte	LA.EV-003	24	Hammond Daily Star, Sun Nov 9 1997, p20 + Lafayette Daily Advertiser, Sat Nov 8 1997, p26 (AP state scores)
+ADD	fix-1997-0038	1997	1997-11-07	Notre Dame	LA.AD-001	43	Rayne	LA.AD-004	8	Hammond Daily Star, Sun Nov 9 1997, p20 + Lafayette Daily Advertiser, Sat Nov 8 1997, p26 (AP state scores) (Advertiser local)
+ADD	fix-1997-0039	1997	1997-11-07	Port Barre	LA.SL-007	41	Teurlings Catholic	LA.LY-003	14	Hammond Daily Star, Sun Nov 9 1997, p20 + Lafayette Daily Advertiser, Sat Nov 8 1997, p26 (AP state scores) (Advertiser local)
+ADD	fix-1997-0040	1997	1997-11-07	Sacred Heart	LA.EV-001	19	St. Edmund	LA.SL-002	14	Lafayette Daily Advertiser, Sat Nov 8 1997, p26, box score + AP list; Hammond Daily Star Nov 9 p20
+ADD	fix-1997-0041	1997	1997-11-07	Sam Houston	LA.CC-002	27	DeRidder	LA.BE-001	13	Hammond Daily Star, Sun Nov 9 1997, p20 + Lafayette Daily Advertiser, Sat Nov 8 1997, p26 (AP state scores)
+ADD	fix-1997-0042	1997	1997-11-07	Sterlington	LA.OU-004	27	Delta	LA.MO-003	6	Hammond Daily Star, Sun Nov 9 1997, p20 + Lafayette Daily Advertiser, Sat Nov 8 1997, p26 (AP state scores)
+ADD	fix-1997-0043	1997	1997-11-07	Washington-Marion	LA.CC-012	28	Jennings	LA.JD-001	20	Hammond Daily Star, Sun Nov 9 1997, p20 + Lafayette Daily Advertiser, Sat Nov 8 1997, p26 (AP state scores)
+ADD	fix-1997-0044	1997	1997-11-07	Westlake	LA.CC-006	47	Iowa	LA.CC-001	6	Hammond Daily Star, Sun Nov 9 1997, p20 + Lafayette Daily Advertiser, Sat Nov 8 1997, p26 (AP state scores)
+SCORE	449115	1997	1997-11-07	Sulphur	LA.CC-005	22	Lafayette	LA.LY-007	13	Lafayette Daily Advertiser, Sat Nov 8 1997, p26, box score (Sulphur 22, Lafayette 13; local paper) + AP list
+SCORE	448945	1997	1997-11-14	Kentwood	LA.TA-004	38	Port Sulphur	LA.PL-004	8	Hammond Daily Star, Sun Nov 16 1997, p22, Bi-District results (local paper for Kentwood)
