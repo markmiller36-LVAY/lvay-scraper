@@ -299,7 +299,7 @@ function lvay_ys_render() {
 </style>
 <script>
 (function(){
-  var API='/wp-json/lvay/v1/yall?q=',API2='https://lvay-scraper.onrender.com/api/yall?q=';
+  var API='https://lvay-scraper.onrender.com/api/yall?q=',API2='/wp-json/lvay/v1/yall?q=';
   var root=document.getElementById('lvay-ys'); if(!root) return;
   var form=root.querySelector('form'), input=form.q, out=root.querySelector('.lvay-ys-out'),
       tryBox=root.querySelector('.lvay-ys-try'), cov=root.querySelector('.lvay-ys-cov');
@@ -393,7 +393,7 @@ function lvay_ys_render() {
     out.innerHTML='<p class="lvay-ys-loading">Digging through the archives&hellip;</p>';
     try{var u=new URL(location.href);u.searchParams.set('q',q);history.replaceState(null,'',u);}catch(e){}
     var tries=0;
-    function get(){tries++;var base=tries===3?API2:API;
+    function get(){tries++;var base=tries===1?API:API2;
       return fetch(base+encodeURIComponent(q)).then(function(r){
         if(r.status===429) throw new Error('slow');
         if(!r.ok) throw new Error('down');
@@ -401,7 +401,7 @@ function lvay_ys_render() {
       }).catch(function(e){
         if(e.message==='slow'||tries>=3) throw e;
         out.innerHTML='<p class="lvay-ys-loading">Waking up the search server&hellip; hang tight.</p>';
-        return new Promise(function(ok){setTimeout(ok,tries*4000)}).then(get);
+        return new Promise(function(ok){setTimeout(ok,tries===1?300:4000)}).then(get);
       });}
     get().then(function(j){show(j);logQ(q,j);}).catch(function(e){
       logQ(q,{status:'error',answer:e.message==='slow'?'rate limited':'server not reachable'});
