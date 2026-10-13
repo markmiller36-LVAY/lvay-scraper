@@ -260,7 +260,7 @@ function lvay_ys_render() {
       tryBox=root.querySelector('.lvay-ys-try'), cov=root.querySelector('.lvay-ys-cov');
   var SAMPLES=[
     ['Cross-Decade Comparisons',['1997 Evangel vs 2024 Karr. Who gave up the least amount of points?']],
-    ['How a Team Fared Against a Class or Division',['What is the Many Tigers record vs Select schools?']],
+    ['Team vs Team / Class / Division',['What is the Many Tigers record vs Select schools?']],
     ['Head-to-Head',['Ruston vs West Monroe']]];
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function chips(list,box){box.innerHTML='';list.forEach(function(t){var b=document.createElement('button');b.type='button';b.className='lvay-ys-chip';b.textContent=t;b.onclick=function(){input.value=t;ask();};box.appendChild(b);});}
