@@ -261,7 +261,7 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
   <div id="stage" aria-label="3D map of Louisiana with every LHSAA football school"></div>
   <div id="labels"></div>
   <div class="tip" id="tip" hidden></div>
-  <div class="help" id="help">Drag to move · right-drag or two fingers to spin and tilt · scroll to zoom</div>
+  <div class="help" id="help">Drag to move · hold scroll wheel (or right-drag) to to spin and tilt · scroll to zoom</div>
 
   <section class="card panel find" aria-label="Filters">
     <h1>LVAY <span>Schools Map</span></h1>
@@ -581,6 +581,9 @@ const controls=new THREE.MapControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.09;controls.screenSpacePanning=false;
 controls.minDistance=3.2;controls.maxDistance=40;controls.maxPolarAngle=1.32;controls.minPolarAngle=0.05;
 controls.zoomSpeed=1.1;controls.panSpeed=1;controls.rotateSpeed=.7;
+controls.mouseButtons={LEFT:THREE.MOUSE.PAN,MIDDLE:THREE.MOUSE.ROTATE,RIGHT:THREE.MOUSE.ROTATE};
+renderer.domElement.addEventListener("mousedown",e=>{if(e.button===1)e.preventDefault();});
+renderer.domElement.addEventListener("auxclick",e=>{if(e.button===1)e.preventDefault();});
 const HOME={r:0,phi:.55,theta:0,t:new THREE.Vector3(0.3,0,0.4)};
 function homeRadius(){const w=stage.clientWidth||window.innerWidth||1280,h=stage.clientHeight||window.innerHeight||800,a=Math.max(.4,Math.min(3,w/Math.max(1,h)));return Math.min(70,Math.max(30,46/a));} /* close enough that Louisiana fills the window */
 function camFromSph(t,r,phi,theta){return new THREE.Vector3(t.x+r*Math.sin(phi)*Math.sin(theta),t.y+r*Math.cos(phi),t.z+r*Math.sin(phi)*Math.cos(theta));}
