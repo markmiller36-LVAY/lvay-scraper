@@ -216,7 +216,51 @@ add_filter( 'wp_robots', function ( $robots ) {
 	return $robots;
 } );
 
+/* Oct 13, 2026 (Mark): Hey Y'all is for signed-in members only. Guests see a
+   free-account prompt; the search box and script only load for members. */
+function lvay_ys_gate() {
+	$ret = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '/yall-test/';
+	$ret = '/' . ltrim( (string) wp_parse_url( $ret, PHP_URL_PATH ), '/' ) . ( wp_parse_url( $ret, PHP_URL_QUERY ) ? '?' . wp_parse_url( $ret, PHP_URL_QUERY ) : '' );
+	$reg = '/my-account/?register=1&return=' . rawurlencode( $ret );
+	$log = '/my-account/?return=' . rawurlencode( $ret );
+	ob_start();
+	?>
+<div class="lvay-ys lvay-ys-gated">
+  <div class="lvay-ys-head">
+    <h1>&ldquo;Hey <span>Y&#8217;all</span>&hellip;&rdquo;</h1>
+    <p>Ask anything about Louisiana high school football history, 1990 to today, or about the LHSAA rules.</p>
+  </div>
+  <div class="lvay-ys-gate">
+    <div class="lvay-ys-gate-h">Members only &mdash; free to join</div>
+    <p>Create your free LVAY account (it takes about 30 seconds) or log in to start asking Hey Y&#8217;all.</p>
+    <div class="lvay-ys-gate-b"><a class="go" href="<?php echo esc_url( $reg ); ?>">Create my free account</a><a href="<?php echo esc_url( $log ); ?>">Log in</a></div>
+    <div class="lvay-ys-gate-ex"><b>Ask things like:</b> &ldquo;1997 Evangel vs 2024 Karr. Who gave up the least amount of points?&rdquo; &middot; &ldquo;What is the Many Tigers record vs Select schools?&rdquo; &middot; &ldquo;How many state championships has Evangel won?&rdquo;</div>
+    <p class="lvay-ys-gate-s">No payments. No spam. We never sell your info.</p>
+  </div>
+</div>
+<style>
+.lvay-ys{max-width:900px;margin:30px auto 60px;padding:0 16px;font-family:'PT Serif',Georgia,serif;color:#111}
+.lvay-ys-head h1{font-family:'Alfa Slab One',serif;font-weight:400;font-size:34px;line-height:1.1;letter-spacing:.3px;margin:0 0 6px;text-transform:uppercase}
+.lvay-ys-head h1 span{color:#008584}
+.lvay-ys-head p{margin:0 0 16px;color:#333}
+.lvay-ys-gate{border:2px solid #008584;background:#eef7f7;padding:20px 22px;margin-top:6px}
+.lvay-ys-gate-h{font-family:'Teko',sans-serif;font-size:26px;letter-spacing:.5px;text-transform:uppercase;color:#006b6a;line-height:1;margin-bottom:8px}
+.lvay-ys-gate p{margin:0 0 14px;font-size:17px}
+.lvay-ys-gate-b{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.lvay-ys-gate-b a{font-family:'Teko',sans-serif;font-size:21px;letter-spacing:.6px;text-transform:uppercase;text-decoration:none;padding:8px 18px 5px;border:2px solid #008584;color:#008584;background:#fff}
+.lvay-ys-gate-b a.go{background:#008584;color:#fff}
+.lvay-ys-gate-b a:hover{background:#111;border-color:#111;color:#fff}
+.lvay-ys-gate-ex{font-size:15px;color:#333;margin-bottom:10px}
+.lvay-ys-gate .lvay-ys-gate-s{font-size:13px;color:#5b6b6b;margin:0}
+</style>
+	<?php
+	return ob_get_clean();
+}
+
 function lvay_ys_render() {
+	if ( ! is_user_logged_in() ) {
+		return lvay_ys_gate();
+	}
 	ob_start();
 	?>
 <div class="lvay-ys" id="lvay-ys" data-nonce="<?php echo esc_attr( wp_create_nonce( 'wp_rest' ) ); ?>">
