@@ -208,6 +208,8 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
 .tip{font-size:16px;letter-spacing:.02em}
 .help{font-size:15px;letter-spacing:.03em}
 .summary,.summary *{font-family:var(--sans)}
+/* site cookie-settings button (CookieYes) hidden on the map page only */
+.cky-btn-revisit-wrapper{display:none!important}
 .ftog{display:none}
 @media (max-width:820px){
   .find{gap:8px;padding:8px 10px;row-gap:8px}
@@ -223,8 +225,6 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
   .find .stat input[type=range]{flex:1 1 auto;width:auto;min-width:0}
   .find .stat .sv{flex:0 0 auto;min-width:0;font-size:16px}
   .pad{display:none}
-  /* site cookie-settings button (CookieYes): lift it above the stat bar and shrink it */
-  .cky-btn-revisit-wrapper{bottom:calc(env(safe-area-inset-bottom,0px) + 74px)!important;left:12px!important;transform:scale(.8);transform-origin:bottom left}
   .summary{bottom:calc(env(safe-area-inset-bottom,0px) + 72px)!important;right:12px!important}
   .find.open > .fld:not(.hsearch){display:flex;flex:1 1 calc(50% - 4px)}
   .find.open .count{display:block;margin-left:0}
