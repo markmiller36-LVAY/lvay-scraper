@@ -221,6 +221,8 @@ function lvay_ys_render() {
 .lvay-ys a.lvay-ys-sq:hover{color:#008584;text-decoration:underline}
 .lvay-ys-sgh{font-weight:700;font-size:21px;color:#006b6a;-webkit-text-stroke:.3px #006b6a;border-bottom:2px solid #b9d6d6}
 .lvay-ys a.lvay-ys-sq{font-weight:700;color:#111}
+.lvay-ys a.lvay-ys-team{color:inherit;text-decoration:underline;text-decoration-color:#7fbdbc;text-underline-offset:3px}
+.lvay-ys a.lvay-ys-team:hover{color:#008584;text-decoration-color:#008584}
 .lvay-ys-sgh{white-space:nowrap;overflow:hidden;text-overflow:clip;font-size:min(17px,2.1vw);letter-spacing:.3px;line-height:1.1}
 @media(max-width:600px){.lvay-ys-sgh{font-size:19px;white-space:normal}}
 .lvay-ys-tip{font-size:13.5px;color:#5b6b6b;margin:12px 0 0}
@@ -273,6 +275,32 @@ function lvay_ys_render() {
     tryBox.querySelectorAll('.lvay-ys-sq').forEach(function(a){a.onclick=function(e){e.preventDefault();input.value=a.getAttribute('data-q');ask();};});
   }
   samples();
+  /* team names in results link to that school's team page (and season) */
+  var SCH=null,SCHP=null;
+  function tnorm(x){return String(x||'').toLowerCase().replace(/&/g,' and ').replace(/[^a-z0-9]+/g,' ').trim()}
+  function tcore(x){return tnorm(x).replace(/\b(high|school|hs|the|academy|of)\b/g,' ').replace(/\bsaint\b/g,'st').replace(/\s+/g,' ').trim()}
+  function schools(){if(SCHP)return SCHP;SCHP=fetch('/wp-content/uploads/2026/09/bayou-power-board-logo-urls-2026.json').then(function(r){return r.json()}).then(function(j){SCH={};Object.keys(j||{}).forEach(function(n){SCH[tcore(n)]=n});return SCH}).catch(function(){SCH={};return SCH});return SCHP}
+  function turl(n,y){return '/teams/?school='+encodeURIComponent(tnorm(n).replace(/ /g,'-'))+'&sport=football'+(y?'&season='+y:'')}
+  function tlink(name,y){var a=document.createElement('a');a.className='lvay-ys-team';a.href=turl(name,y);a.target='_blank';a.rel='noopener';a.textContent=name;a.title=y?'Open the '+y+' '+name+' schedule':'Open the '+name+' team page';return a}
+  function linkCell(cell,season){
+    var tn=null;for(var i=0;i<cell.childNodes.length;i++){var c=cell.childNodes[i];if(c.nodeType===3&&c.nodeValue.trim()){tn=c;break}if(c.nodeType===1&&c.tagName==='B'&&c.childNodes.length===1&&c.firstChild.nodeType===3){tn=c.firstChild;break}}
+    if(!tn)return;var raw=tn.nodeValue,txt=raw.trim();if(!txt||txt.length>80)return;
+    var parts=txt.split(/\s+&\s+/),out=[],any=false;
+    parts.forEach(function(pt,i){var m=pt.match(/^(.*?)\s+((?:19|20)\d\d)$/),nm=m?m[1]:pt,yy=m?m[2]:season,k=SCH[tcore(nm)];
+      if(i)out.push(document.createTextNode(' & '));
+      if(k){out.push(tlink(nm,yy));any=true}else out.push(document.createTextNode(pt));
+      if(m&&k)out.push(document.createTextNode(' '+m[2]));});
+    if(!any)return;var lead=raw.match(/^\s*/)[0],trail=raw.match(/\s*$/)[0],par=tn.parentNode;
+    if(lead)par.insertBefore(document.createTextNode(lead),tn);out.forEach(function(nd){par.insertBefore(nd,tn)});if(trail)par.insertBefore(document.createTextNode(trail),tn);par.removeChild(tn);}
+  function linkify(box){schools().then(function(){box.querySelectorAll('table').forEach(function(t){
+    var hs=[].map.call(t.querySelectorAll('thead th'),function(th){return th.textContent.trim().toLowerCase()});
+    var si=hs.indexOf('season'),di=hs.indexOf('date');
+    t.querySelectorAll('thead th').forEach(function(th,i){if(i)linkCell(th,null)});
+    t.querySelectorAll('tbody tr').forEach(function(tr){var td=tr.children,season=null;
+      if(si>=0&&td[si]){var m=td[si].textContent.match(/(19|20)\d\d/);if(m)season=m[0]}
+      else if(di>=0&&td[di]){var m2=td[di].textContent.match(/(19|20)\d\d/);if(m2)season=m2[0]}
+      [].forEach.call(td,function(c,i){if(i!==si&&i!==di)linkCell(c,season)});});
+  })})}
   function gtable(t){
     if(!t||!t.rows||!t.rows.length) return '';
     var h='<div class="lvay-ys-tablewrap"><table'+(t.first_col_bold?' class="lvay-ys-cmp"':'')+'><thead><tr>';
@@ -309,6 +337,7 @@ function lvay_ys_render() {
     h+='</div>';
     if(j.note) h+='<div class="lvay-ys-note-box">'+esc(j.note).replace(/^(Did you know\?|Please note:)/,'<b>$1</b>')+'</div>';
     out.innerHTML=h+gtable(j.table)+table(j.rows)+hist(j.history)+rules(j.handbook);
+    linkify(out);
     if(j.status==='ambiguous'&&j.choices){var box=document.createElement('div');box.className='lvay-ys-try';out.appendChild(box);
       var q=j.question; chips(j.choices.map(function(name){var base=name.split(' - ')[0];var re=new RegExp(base.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i');return re.test(q)?q.replace(re,name):name+' '+q;}),box);}
     if(miss&&j.examples){var b2=document.createElement('div');b2.className='lvay-ys-try';out.appendChild(b2);chips(j.examples,b2);}
