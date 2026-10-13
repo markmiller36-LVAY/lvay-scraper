@@ -646,6 +646,9 @@ class TeamIndex:
 # FILTERS & NUMBERS
 # ──────────────────────────────────────────────────────────────────────────
 
+LAST_SEASON = [2025]   # set from the loaded games (Answerer.__init__)
+
+
 def _extract_filters(q):
     """Season range, home/away, district, playoffs. Returns (filters, q')."""
     f = {"min_season": None, "max_season": None, "where": None,
@@ -717,6 +720,19 @@ def _extract_filters(q):
         f["labels"].append(f"vs {f['opp_class']} opponents")
         q = q.replace(m.group(0), " ")
 
+    m = re.search(r"\b(?:in |over |during |for )?(?:the )?(?:last|past|"
+                  r"previous|recent) (\d{1,2}|two|three|four|five|six|seven|"
+                  r"eight|nine|ten|fifteen|twenty) (?:years?|seasons?)\b", q)
+    if m:
+        n = m.group(1)
+        n = int(n) if n.isdigit() else {
+            "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+            "seven": 7, "eight": 8, "nine": 9, "ten": 10, "fifteen": 15,
+            "twenty": 20}[n]
+        last = LAST_SEASON[0]
+        f["min_season"], f["max_season"] = last - n + 1, last
+        f["labels"].append(f"last {n} seasons, {last - n + 1}\u2013{last}")
+        q = q.replace(m.group(0), " ")
     m = re.search(r"\bbetween (19\d\d|20\d\d) and (19\d\d|20\d\d)\b", q)
     if m:
         a, b = sorted((int(m.group(1)), int(m.group(2))))
@@ -1014,6 +1030,9 @@ def detect_intent(q, team_count, number):
     if _has(q, r"average|averaged|averages|averaging|avg|per game|ppg|"
                r"a game on average"):
         return "averages"
+    if number is None and _has(q, r"how many points|total points|"
+                                  r"how many total points"):
+        return "averages"
     """Return an intent name from normalized question text."""
     last = _has(q, r"last time|last|most recent|latest|when")
 
@@ -1153,6 +1172,8 @@ class Answerer:
         seasons = sorted({g.season for g in games})
         self.first_season = seasons[0] if seasons else None
         self.last_season = seasons[-1] if seasons else None
+        if self.last_season:
+            LAST_SEASON[0] = self.last_season
 
     # ── public ──
     def answer(self, question):
@@ -1211,6 +1232,26 @@ class Answerer:
             ans = self._playoff_apps(base, teams[0]["names"][0], q)
             if ans:
                 return ans
+
+        rm = re.search(r"\b(first|last|most recent|latest|how many|which|what|"
+                       r"who|every|all|list)\b.*\b(\d{1,2})\s*[- ]\s*(\d{1,2})"
+                       r"\b", q)
+        if rm and not teams and re.search(r"\b(go|went|gone|finish\w*|"
+                                          r"teams?|schools?|record)\b", q):
+            ans = self._record_finder(base, int(rm.group(2)),
+                                      int(rm.group(3)), q)
+            if ans:
+                return ans
+
+        if not teams and re.fullmatch(
+                r"\s*(just|only)?\s*(for|in|over)?\s*(the)?\s*(last|past)\s+"
+                r"\w+\s+(years?|seasons?)\s*", q):
+            return {**base, "status": "no_team",
+                    "answer": "Hey Y'all doesn't remember your last question "
+                              "yet \u2014 ask it again with the school and the "
+                              "years in one question, like \u201cCaptain "
+                              "Shreve average points allowed the last 5 "
+                              "years.\u201d", "examples": EXAMPLES}
 
         tq = _title_question(q)
         if tq == "district":
@@ -1317,6 +1358,7 @@ class Answerer:
 
         handler = getattr(self, f"_a_{intent}")
         self._labels = filters["labels"]
+        self._q = q
         text, rows = handler(team, other[0] if other else None, games,
                              number)
         scope = f" ({', '.join(filters['labels'])})" if filters["labels"] \
@@ -1900,9 +1942,18 @@ class Answerer:
         span = (str(seasons[0]) if len(seasons) == 1
                 else f"{seasons[0]}–{seasons[-1]}")
         vs = f" against {other}" if other else ""
-        return (f"{team} has averaged {pf / len(gs):.1f} points a game{vs} "
-                f"({span}, {len(gs)} games) and allowed "
-                f"{pa / len(gs):.1f}. Record: {_fmt_record(*_record(gs))}.",
+        n_g = len(gs)
+        rec = _fmt_record(*_record(gs))
+        q = getattr(self, "_q", "")
+        if re.search(r"\b(against|allow\w*|gave up|give up|given up|"
+                     r"scored on|put on|on them|defen\w*)\b", q):
+            return (f"{team} has allowed {pa / n_g:.1f} points a game{vs} "
+                    f"({span}, {n_g} games) \u2014 {pa:,} in all. They scored "
+                    f"{pf / n_g:.1f} a game ({pf:,}). Record: {rec}.",
+                    list(reversed(gs)))
+        return (f"{team} has averaged {pf / n_g:.1f} points a game{vs} "
+                f"({span}, {n_g} games) \u2014 {pf:,} in all \u2014 and "
+                f"allowed {pa / n_g:.1f} ({pa:,}). Record: {rec}.",
                 list(reversed(gs)))
 
     # ── district championships (from district game results) ──
@@ -2033,6 +2084,86 @@ class Answerer:
                                                      if keep(y)))]
                                  for n, t in tally[:15]],
                         "first_col_bold": True}
+        return out
+
+    # ── "first team to go 15-0 in 5A" ──
+    def _record_finder(self, base, w, l, q):
+        filters, _ = _extract_filters(q)
+        m = re.search(r"\b(?:in|as)?\s*(?:class\s+)?([1-5]a)\b", q)
+        own = m.group(1).upper() if m else filters["own_class"]
+        track = None
+        if re.search(r"\bnon ?select\b", q):
+            track = "non-select"
+        elif re.search(r"\bselect\b", q):
+            track = "select"
+        hits = []
+        for school, gs in self.by_school.items():
+            by = {}
+            for g in _apply_filters(gs, {**filters, "own_class": None}):
+                by.setdefault(g.season, []).append(g)
+            for season, sg in by.items():
+                if own and (self.history.get(school, {}).get(season, {})
+                            .get("class") != own):
+                    continue
+                if track and (self.history.get(school, {}).get(season, {})
+                              .get("track") != track):
+                    continue
+                ww, ll, tt = _record(sg)
+                if ww == w and ll == l and tt == 0:
+                    hits.append((season, school))
+        scope = (f" in {own}" if own else "") + (
+            f" ({'Non-Select' if track == 'non-select' else 'Select'})"
+            if track else "")
+        rec = f"{w}-{l}"
+        seasons = sorted({g.season for g in self.games})
+        cov = f"{seasons[0]}–{seasons[-1]}"
+        out = {**base, "matched": True, "status": "ok",
+               "intent": "record_finder", "teams": [], "filters": [],
+               "interpreted_as": f"Teams that finished {rec}{scope}",
+               "note": f"Full seasons including playoffs, from our records "
+                       f"({cov}). The 2025 playoffs aren't loaded yet."}
+        if not hits:
+            out["answer"] = (f"No team finished {rec}{scope} in our "
+                             f"records ({cov}).")
+            return out
+        hits.sort()
+        if re.search(r"\b(last|most recent|latest)\b", q):
+            s, t = hits[-1]
+            lead = f"The most recent team to go {rec}{scope}: {t} in {s}."
+        else:
+            s, t = hits[0]
+            lead = (f"The first team to go {rec}{scope} in our records: "
+                    f"{t} in {s}.")
+            same = [x for x in hits if x[0] == s and x[1] != t]
+            if same:
+                lead = (f"The first teams to go {rec}{scope} in our records: "
+                        f"{', '.join([t] + [x[1] for x in same])} in {s}.")
+        n = len(hits)
+        if re.search(r"\bhow many\b", q):
+            lead = (f"{n} team{'s have' if n != 1 else ' has'} gone {rec}"
+                    f"{scope} in our records ({cov}). " + lead.replace(
+                        "The first", "The first one" if n == 1 else
+                        "The first"))
+        else:
+            lead += (f" It's happened {n} time{'s' if n != 1 else ''} "
+                     f"since {seasons[0]}.")
+        st = self.titles.get("st", {})
+        ru = self.titles.get("ru", {})
+        rows = []
+        for s, t in hits:
+            h = self.history.get(t, {}).get(s, {})
+            champ = s in st.get(t, [])
+            if not champ:   # closed schools aren't on the titles list
+                sg = sorted((g for g in self.by_school[t] if g.season == s),
+                            key=lambda g: g.sort_key)
+                fin = sg[-1] if sg else None
+                champ = bool(fin and fin.playoff and fin.result == "W" and
+                             s in ru.get(fin.opponent, []))
+            rows.append([str(s), t, h.get("class", ""),
+                         "State champion" if champ else ""])
+        out["answer"] = lead
+        out["table"] = {"cols": ["Season", "School", "Class", "Finish"],
+                        "rows": rows}
         return out
 
     # ── state championships ──
@@ -2556,7 +2687,7 @@ class Answerer:
         span = (str(seasons[0]) if len(seasons) == 1
                 else f"{seasons[0]}–{seasons[-1]}")
         extra = [x for x in getattr(self, "_labels", [])
-                 if not re.match(r"^(since|before|\d{4})", x)]
+                 if not re.match(r"^(since|before|last \d|\d{4})", x)]
         detail = ", ".join([span] + extra)
         return (f"{team} is {_fmt_record(w, l, t)} ({detail}).",
                 list(reversed(games)))

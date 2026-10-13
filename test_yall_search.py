@@ -347,3 +347,22 @@ class DistrictTitleTests(unittest.TestCase):
             self.assertIn("no district championships", r["answer"])
         r = a.answer("what is the district champion reporting deadline")
         self.assertNotEqual(r.get("intent"), "district_titles")
+
+
+class NewLogTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.a = y.Answerer(y.build_games(ARCHIVE), titles={})
+
+    def test_last_n_years(self):
+        f, _ = y._extract_filters("west monroe record the last 2 years")
+        self.assertEqual(f["max_season"] - f["min_season"], 1)
+
+    def test_points_scored_on_is_total(self):
+        r = self.a.answer("how many points have been scored on West Monroe")
+        self.assertEqual(r["intent"], "averages")
+        self.assertIn("allowed", r["answer"])
+
+    def test_record_finder(self):
+        r = self.a.answer("Who was the first team to go 2-0?")
+        self.assertEqual(r["intent"], "record_finder")
