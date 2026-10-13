@@ -889,6 +889,32 @@ ALLTIME_RE = re.compile(r"\b(all ?time|total|overall|ever|history|career|"
                         r"most wins (since|from)|in our records)\b")
 
 
+ROUND_NAMES = ["State Championship", "Semifinal", "Quarterfinal", "Regional",
+               "Round 1"]
+ROUND_WORDS = [
+    (0, r"state (championship|title|final)s?( game)?|title games?|"
+        r"championship games?|the dome|superdome|finals?\b"),
+    (1, r"semi ?finals?|semis|final four"),
+    (2, r"quarter ?finals?|quarters|elite eight|final eight"),
+    (3, r"regionals?|second round|2nd round|round of 16|sweet 16"),
+]
+
+
+def _round_question(q):
+    if not re.search(r"\b(made|make|reach\w*|got to|get to|been to|go to|"
+                     r"went to|played in|play in|appearances?|trips?|"
+                     r"last time|how many|times|advance\w*)\b", q):
+        return None
+    for idx, pat in ROUND_WORDS[1:] + ROUND_WORDS[:1]:
+        if re.search(rf"\b(?:{pat})", q):
+            if idx == 0 and re.search(r"\b(won|win|wins|winning|titles|"
+                                      r"championships|champions?|"
+                                      r"runners? ?ups?)\b", q):
+                return None
+            return idx
+    return None
+
+
 def _title_question(q):
     """Return 'titles' / 'runner_up' / None for a normalized question."""
     if re.search(r"\bdistrict\b", q) and re.search(
@@ -1075,6 +1101,11 @@ def detect_intent(q, team_count, number):
     if _has(q, r"most points|highest scoring"):
         return "most_scored"
 
+    if number == 0:
+        if _has(q, ALLOWED_WORDS):
+            return "shutouts_for"
+        if _has(q, SCORED_WORDS + r"|points|pts"):
+            return "shutouts_against"
     if number is not None:
         if _has(q, ALLOWED_WORDS):
             return "allowed_n"
@@ -1228,6 +1259,12 @@ class Answerer:
             filters, _ = _extract_filters(q)
             return self._alltime_wins(base, filters, q)
 
+        rnd = _round_question(q)
+        if rnd is not None and teams:
+            ans = self._round_reached(base, teams[0]["names"][0], rnd, q)
+            if ans:
+                return ans
+
         if teams and PLAYOFF_APPS_RE.search(q):
             ans = self._playoff_apps(base, teams[0]["names"][0], q)
             if ans:
@@ -1309,6 +1346,34 @@ class Answerer:
             if (lead_q["metric"] == "wins" and ALLTIME_RE.search(q)
                     and not re.search(r"\b(season|year)\b", q)):
                 return self._alltime_wins(base, filters, q)
+            if re.search(r"\b(each|every|per|by) (class|classification)"
+                         r"|\bin all (the )?classes\b|\beach of the classes\b",
+                         q) and not filters["own_class"]:
+                rows, parts, cols = [], [], None
+                for cls in ("5A", "4A", "3A", "2A", "1A"):
+                    led = self._leaders(base, lead_q,
+                                        {**filters, "own_class": cls})
+                    tb = (led or {}).get("table") or {}
+                    if not tb.get("rows"):
+                        continue
+                    cols = cols or tb["cols"]
+                    top = tb["rows"][0]
+                    rows.append([cls] + top[1:])
+                    parts.append(f"{cls}: {top[1]} {top[2]}" if not filters["min_season"] or filters["min_season"] != filters["max_season"] else f"{cls}: {top[1]}")
+                if rows:
+                    lbl = ", ".join(filters["labels"])
+                    return {**base, "matched": True, "status": "ok",
+                            "intent": "leaders_by_class", "teams": [],
+                            "filters": filters["labels"],
+                            "interpreted_as": "Leader in each class" +
+                                              (f" ({lbl})" if lbl else ""),
+                            "answer": "The leader in each class" +
+                                      (f" ({lbl})" if lbl else "") + " \u2014 " +
+                                      "; ".join(parts) + ".",
+                            "note": "Class = the school's own class that "
+                                    "season.",
+                            "table": {"cols": ["Class"] + cols[1:],
+                                      "rows": rows, "first_col_bold": True}}
             led = self._leaders(base, lead_q, filters)
             if led:
                 return led
@@ -1556,7 +1621,7 @@ class Answerer:
         toks = _question_tokens(question)
         years = [(i, int(t)) for i, t in enumerate(toks)
                  if re.fullmatch(r"(19|20)\d\d", t)
-                 and self.first_season <= int(t) <= self.last_season]
+                 and self.first_season <= int(t) <= self.last_season + 1]
         found = [(t["start"], t["names"][0]) for t in teams
                  if t["names"][0] in self.by_school]
         if not found or not years:
@@ -2164,6 +2229,114 @@ class Answerer:
         out["answer"] = lead
         out["table"] = {"cols": ["Season", "School", "Class", "Finish"],
                         "rows": rows}
+        return out
+
+    # ── playoff rounds (derived: weeks before the bracket's state final) ──
+    def _playoff_rounds(self):
+        if getattr(self, "_rounds", None) is not None:
+            return self._rounds
+        st = self.titles.get("st", {})
+        named = {"State Championship": 0, "Semifinal": 1, "Quarterfinal": 2,
+                 "Regional": 3, "Round 1": 4}
+        brk = {}
+        for g in self.games:
+            if not g.playoff or not g.date:
+                continue
+            h = self.history.get(g.school, {}).get(g.season, {})
+            key = (g.season, bracket_label(g.season, h.get("class", ""),
+                                           h.get("track", ""),
+                                           h.get("division", "")))
+            brk.setdefault(key, []).append(g)
+        rounds = {}
+        for key, gs in brk.items():
+            season = key[0]
+            champs = [g for g in gs if g.result == "W" and
+                      season in st.get(g.school, [])]
+            final = max((g.date for g in champs), default=None) or \
+                max(g.date for g in gs)
+            for g in gs:
+                if g.phase in named:
+                    idx = named[g.phase]
+                else:
+                    idx = max(0, round((final - g.date).days / 7))
+                rounds[(g.school, g.season, g.date)] = min(idx, 4)
+        self._rounds = rounds
+        return rounds
+
+    def _round_reached(self, base, team, idx, q):
+        rounds = self._playoff_rounds()
+        filters, _ = _extract_filters(q)
+        reached = {}
+        for g in _apply_filters(self.by_school.get(team, []),
+                                {**filters, "playoffs": None}):
+            if not g.playoff:
+                continue
+            r = rounds.get((g.school, g.season, g.date))
+            if r is None:
+                continue
+            if r <= idx and (g.season not in reached or
+                             r < reached[g.season][0]):
+                reached[g.season] = (r, g)
+        if idx == 0:   # title games: use the full champion/runner-up lists
+            for y in (set(self.titles.get("st", {}).get(team, [])) |
+                      set(self.titles.get("ru", {}).get(team, [])) |
+                      set(self.titles.get("vac", {}).get(team, []))):
+                if y >= (self.first_season or 1990) and y not in reached:
+                    reached[y] = (0, None)
+        name = {0: "the state championship game", 1: "the semifinals",
+                2: "the quarterfinals", 3: "the regional round"}[idx]
+        last_po = max((g.season for g in self.games if g.playoff),
+                      default=None)
+        if idx == 0 and reached:
+            last_po = max(last_po or 0, max(reached))
+        span = f"1990–{last_po}" if last_po else ""
+        out = {**base, "matched": True, "status": "ok",
+               "intent": "playoff_round", "teams": [team], "filters": [],
+               "interpreted_as": f"{team} seasons reaching {name}",
+               "note": "Playoff rounds are worked out from game dates "
+                       "(counting back from each bracket's state final), "
+                       "so a rare odd schedule can be off by a round. "
+                       "Playoff games are in our records through "
+                       f"{last_po}; the 2025 playoffs aren't loaded yet."}
+        if not reached:
+            out["answer"] = (f"{team} hasn't reached {name} in our records "
+                             f"({span}).")
+            return out
+        ys = sorted(reached)
+        last = ys[-1]
+        r, g = reached[last]
+        sts = set(self.titles.get("st", {}).get(team, []))
+        rus = set(self.titles.get("ru", {}).get(team, []))
+
+        def finish(y):
+            if y in sts:
+                return "State champions"
+            if y in rus:
+                return "State runner-up"
+            if y in set(self.titles.get("vac", {}).get(team, [])):
+                return "State champions (vacated)"
+            gs = sorted((x for x in self.by_school[team]
+                         if x.season == y and x.playoff),
+                        key=lambda x: x.sort_key)
+            if not gs:
+                return "Reached this round"
+            lastg = gs[-1]
+            rr = rounds.get((team, y, lastg.date))
+            lbl = ROUND_NAMES[rr] if rr is not None else "Playoffs"
+            return (f"Lost in the {lbl.lower()} to {lastg.opponent} "
+                    f"{lastg.pf}-{lastg.pa}")
+        n = len(ys)
+        if re.search(r"\b(how many|times|count|number)\b", q):
+            txt = (f"{team} has reached {name} {n} time"
+                   f"{'s' if n != 1 else ''} in our records ({span}), most "
+                   f"recently in {last}.")
+        else:
+            txt = (f"The last time {team} reached {name} was {last}. "
+                   f"{finish(last)}. That's {n} time{'s' if n != 1 else ''} "
+                   f"in our records ({span}).")
+        out["answer"] = txt
+        out["table"] = {"cols": ["Season", "Finish"],
+                        "rows": [[str(y), finish(y)] for y in reversed(ys)]}
         return out
 
     # ── state championships ──

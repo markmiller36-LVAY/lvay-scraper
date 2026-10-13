@@ -366,3 +366,22 @@ class NewLogTests(unittest.TestCase):
     def test_record_finder(self):
         r = self.a.answer("Who was the first team to go 2-0?")
         self.assertEqual(r["intent"], "record_finder")
+
+
+class MorningLogTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.a = y.Answerer(y.build_games(ARCHIVE), titles={})
+
+    def test_zero_points_is_shutout(self):
+        r = self.a.answer("When was the last time West Monroe gave up 0 points")
+        self.assertEqual(r["intent"], "shutouts_for")
+
+    def test_round_question(self):
+        self.assertEqual(y._round_question("when is the last time x made the semi finals"), 1)
+        self.assertEqual(y._round_question("last time x played in the title game"), 0)
+        self.assertIsNone(y._round_question("how many state championships has x won"))
+
+    def test_by_class_leaders(self):
+        r = self.a.answer("best offense in each class in 2019")
+        self.assertTrue(r["answer"])
