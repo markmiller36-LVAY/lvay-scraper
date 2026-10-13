@@ -227,10 +227,11 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
   .pad{display:none}
   .summary{bottom:calc(env(safe-area-inset-bottom,0px) + 72px)!important;right:12px!important}
   .find.open > .fld:not(.hsearch){display:flex;flex:1 1 calc(50% - 4px)}
-  /* phones: Class, District, Division right under the search box, then Area Code and Parish */
-  .find > .fld.f-cl,.find > .fld.f-di,.find > .fld.f-dv{order:3}
+  /* phones: Class, District, Division always showing in one row under the search box;
+     the Filters menu only holds Area Code, Parish, the count and Reset */
+  .find > .fld.f-cl,.find > .fld.f-di,.find > .fld.f-dv,
+  .find.open > .fld.f-cl,.find.open > .fld.f-di,.find.open > .fld.f-dv{display:flex;flex:1 1 28%;min-width:0;order:3}
   .find > .fld.f-ac,.find > .fld.f-pa{order:4}
-  .find.open > .fld.f-dv{flex-basis:100%}
   .find .count,.find .linkbtn{order:5}
   .find.open .count{display:block;margin-left:0}
   .find.open .linkbtn{display:block;margin-left:auto}
@@ -927,7 +928,7 @@ $("fs").addEventListener("change",()=>{setupStat();sel=null;render();});
 setupStat(); /* opens on Wins, slider at the left so every team shows */
 $("sr").addEventListener("input",()=>{statIdx=+$("sr").value;render();});
 $("reset").onclick=()=>{clearFilters();sel=null;closeCity();render();$("cHome").onclick();};
-["fa","fp","fc","fd","fv"].forEach(id=>$(id).addEventListener("change",()=>{const f=document.querySelector(".find");if(f.classList.contains("open")){f.classList.remove("open");$("ftog").setAttribute("aria-expanded","false");}}));
+["fa","fp"].forEach(id=>$(id).addEventListener("change",()=>{const f=document.querySelector(".find");if(f.classList.contains("open")){f.classList.remove("open");$("ftog").setAttribute("aria-expanded","false");}}));
 $("ftog").onclick=()=>{const f=document.querySelector(".find"),o=f.classList.toggle("open");$("ftog").setAttribute("aria-expanded",String(o));};
 $("rtoggle").onclick=()=>{const box=$("rtoggle").parentElement,open=box.classList.toggle("closed")===false;$("regions").hidden=!open;$("rtoggle").setAttribute("aria-expanded",String(open));};
 $("stoggle").onclick=()=>{const open=$("sbody").hidden;$("schools").classList.toggle("closed",!open);$("sbody").hidden=!open;$("stoggle").setAttribute("aria-expanded",String(open));};
