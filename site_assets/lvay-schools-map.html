@@ -227,6 +227,11 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
   .pad{display:none}
   .summary{bottom:calc(env(safe-area-inset-bottom,0px) + 72px)!important;right:12px!important}
   .find.open > .fld:not(.hsearch){display:flex;flex:1 1 calc(50% - 4px)}
+  /* phones: Class, District, Division right under the search box, then Area Code and Parish */
+  .find > .fld.f-cl,.find > .fld.f-di,.find > .fld.f-dv{order:3}
+  .find > .fld.f-ac,.find > .fld.f-pa{order:4}
+  .find.open > .fld.f-dv{flex-basis:100%}
+  .find .count,.find .linkbtn{order:5}
   .find.open .count{display:block;margin-left:0}
   .find.open .linkbtn{display:block;margin-left:auto}
   .sugg{width:100%}
@@ -255,11 +260,11 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
   <section class="card panel find" aria-label="Filters">
     <h1>LVAY <span>Schools Map</span></h1>
     <button type="button" class="ftog" id="ftog" aria-expanded="false" aria-controls="fwrap">Filters<i aria-hidden="true"></i></button>
-    <div class="fld"><label for="fa">Area code</label><select id="fa"><option value="">Area Code</option></select></div>
-    <div class="fld"><label for="fp">Parish</label><select id="fp"><option value="">Parish</option></select></div>
-    <div class="fld"><label for="fc">Class</label><select id="fc"><option value="">Class</option></select></div>
-    <div class="fld"><label for="fd">District</label><select id="fd"><option value="">District</option></select></div>
-    <div class="fld"><label for="fv">Division</label><select id="fv"><option value="">Division</option></select></div>
+    <div class="fld f-ac"><label for="fa">Area code</label><select id="fa"><option value="">Area Code</option></select></div>
+    <div class="fld f-pa"><label for="fp">Parish</label><select id="fp"><option value="">Parish</option></select></div>
+    <div class="fld f-cl"><label for="fc">Class</label><select id="fc"><option value="">Class</option></select></div>
+    <div class="fld f-di"><label for="fd">District</label><select id="fd"><option value="">District</option></select></div>
+    <div class="fld f-dv"><label for="fv">Division</label><select id="fv"><option value="">Division</option></select></div>
     <div class="fld hsearch"><label for="q">Search schools</label><input id="q" type="search" placeholder="Search school, mascot or town" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sugg"><ul class="sugg" id="sugg" role="listbox" hidden></ul></div>
     <div class="stat" title="2026 regular season so far">
       <label for="fs" class="vh">Stat</label>
