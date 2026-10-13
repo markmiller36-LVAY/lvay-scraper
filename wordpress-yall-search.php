@@ -191,7 +191,7 @@ function lvay_ys_render() {
   <div class="lvay-ys-try lvay-ys-samples"></div>
   <div class="lvay-ys-out" aria-live="polite"></div>
   <p class="lvay-ys-note">Test version. Answers come straight from LVAY game records. <span class="lvay-ys-cov"></span></p>
-  <p class="lvay-ys-src"><b>Research:</b> LVAY game records are researched and checked against newspaper archives through <a href="https://www.newspapers.com/" target="_blank" rel="noopener">Newspapers.com</a>, along with LHSAA records and the Louisiana high school football history archives.</p>
+  <p class="lvay-ys-src"><b>Research:</b> LVAY game records are researched and checked against newspaper archives through <a href="https://www.newspapers.com/" target="_blank" rel="noopener">Newspapers.com</a>, along with LHSAA records.</p>
 </div>
 <style>
 .lvay-ys{max-width:900px;margin:30px auto 60px;padding:0 16px;font-family:'PT Serif',Georgia,serif;color:#111}
