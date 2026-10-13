@@ -298,17 +298,6 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
   <div class="card selcard" id="selcard" hidden></div>
   <aside class="card panel summary" id="summary" aria-live="polite" hidden></aside>
 
-  <div class="card pad" aria-label="Camera controls">
-    <button type="button" id="cTiltUp" aria-label="Tilt toward overhead" title="Look down"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button>
-    <button type="button" id="cIn" aria-label="Zoom in" title="Zoom in">+</button>
-    <button type="button" id="cTiltDn" aria-label="Tilt toward the horizon" title="Look across"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
-    <button type="button" id="cRotL" aria-label="Spin left" title="Spin left"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v5h5"/></svg></button>
-    <button type="button" id="cHome" class="home" aria-label="Reset view" title="Reset view"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/></svg></button>
-    <button type="button" id="cRotR" aria-label="Spin right" title="Spin right"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.5-5.8"/><path d="M20 4v5h-5"/></svg></button>
-    <span></span>
-    <button type="button" id="cOut" aria-label="Zoom out" title="Zoom out">−</button>
-    <span></span>
-  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
@@ -637,13 +626,7 @@ function flyToList(list,maxClose=7){
   const r=Math.min(homeRadius(),Math.max(maxClose,ext*1.9+4));
   flyTo(new THREE.Vector3(cx,0,cz),r,Math.min(curSph().phi,1.05),null,1000);
 }
-$("cIn").onclick=()=>{const s=curSph();flyTo(controls.target.clone(),Math.max(controls.minDistance,s.radius*.68),null,null,450);};
-$("cOut").onclick=()=>{const s=curSph();flyTo(controls.target.clone(),Math.min(controls.maxDistance,s.radius/.68),null,null,450);};
-$("cRotL").onclick=()=>{const s=curSph();flyTo(controls.target.clone(),s.radius,null,s.theta-Math.PI/6,500);};
-$("cRotR").onclick=()=>{const s=curSph();flyTo(controls.target.clone(),s.radius,null,s.theta+Math.PI/6,500);};
-$("cTiltUp").onclick=()=>{const s=curSph();flyTo(controls.target.clone(),s.radius,Math.max(.05,s.phi-.22),null,450);};
-$("cTiltDn").onclick=()=>{const s=curSph();flyTo(controls.target.clone(),s.radius,Math.min(1.32,s.phi+.22),null,450);};
-$("cHome").onclick=()=>(closeCity(),flyTo(HOME.t.clone(),homeRadius(),HOME.phi,HOME.theta,1100));
+const goHome=()=>(closeCity(),flyTo(HOME.t.clone(),homeRadius(),HOME.phi,HOME.theta,1100));
 function hideHelp(){const h=$("help");if(h)h.style.opacity="0";}
 setTimeout(hideHelp,9000);
 
@@ -766,7 +749,7 @@ function pickParish(ev){
 }
 function setParish(k){
   parish=k;region="";area="";$("fa").value="";$("fp").value=k;sel=null;render();
-  if(!k){$("cHome").onclick();return;}
+  if(!k){goHome();return;}
   const pm=parishMeshes.find(m=>m.userData.k===k);
   flyTo(new THREE.Vector3(pm.userData.cx,0,pm.userData.cz),Math.min(homeRadius(),Math.max(6,pm.userData.ext*2.6+3)),Math.min(curSph().phi,1.0),null,1000);
 }
@@ -815,7 +798,7 @@ function select(id){
   flyTo(new THREE.Vector3(fx,0,fz),s.ci!=null?Math.max(4.6,CLUSTERS[s.ci].R*4.4):Math.min(curSph().radius,9),Math.min(curSph().phi,1.0),null,1100);
   const b=$("list").querySelector(`button[data-id="${id}"]`);if(b)b.scrollIntoView({block:"nearest"});
 }
-const refit=()=>{render();const m=SCHOOLS.filter(matches);if(m.length===SCHOOLS.length)$("cHome").onclick();else flyToList(m);};
+const refit=()=>{render();const m=SCHOOLS.filter(matches);if(m.length===SCHOOLS.length)goHome();else flyToList(m);};
 $("list").addEventListener("click",e=>{const b=e.target.closest("button[data-id]");if(b)select(+b.dataset.id);});
 $("regions").addEventListener("click",e=>{const b=e.target.closest(".reg");if(!b)return;region=region===b.dataset.r?"":b.dataset.r;parish="";$("fp").value="";area="";$("fa").value="";sel=null;refit();});
 $("selcard").addEventListener("click",e=>{if(e.target.id==="selx"){sel=null;render();}});
@@ -945,7 +928,7 @@ function setupStat(){
 $("fs").addEventListener("change",()=>{setupStat();sel=null;render();});
 setupStat(); /* opens on Wins, slider at the left so every team shows */
 $("sr").addEventListener("input",()=>{statIdx=+$("sr").value;render();});
-$("reset").onclick=()=>{clearFilters();sel=null;closeCity();render();$("cHome").onclick();};
+$("reset").onclick=()=>{clearFilters();sel=null;closeCity();render();goHome();};
 ["fa","fp"].forEach(id=>$(id).addEventListener("change",()=>{const f=document.querySelector(".find");if(f.classList.contains("open")){f.classList.remove("open");$("ftog").setAttribute("aria-expanded","false");}}));
 $("ftog").onclick=()=>{const f=document.querySelector(".find"),o=f.classList.toggle("open");$("ftog").setAttribute("aria-expanded",String(o));};
 $("rtoggle").onclick=()=>{const box=$("rtoggle").parentElement,open=box.classList.toggle("closed")===false;$("regions").hidden=!open;$("rtoggle").setAttribute("aria-expanded",String(open));};
