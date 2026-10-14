@@ -35,6 +35,8 @@ LVAY_NOT_PLAYING = {
     "2026": [
         # Season ended after Week 6; remaining games forfeited. Mark, Oct 13, 2026.
         "Thrive Academy",
+        # Season ended after Week 6; remaining games forfeited. Mark, Oct 14, 2026.
+        "Capitol",
     ],
 }
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}

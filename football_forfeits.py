@@ -40,6 +40,11 @@ FOOTBALL_FORFEITS = {
         {"team": "Thrive Academy", "opponent": "Southern Lab", "game_date": "10/22/2026"},
         {"team": "Thrive Academy", "opponent": "Acadiana Christian", "game_date": "10/30/2026"},
         {"team": "Thrive Academy", "opponent": "East Iberville", "game_date": "11/6/2026"},
+        # Capitol's season ended after Week 6; opponents receive forfeit wins. Mark, Oct 14, 2026.
+        {"team": "Capitol", "opponent": "East Iberville", "game_date": "10/16/2026"},
+        {"team": "Capitol", "opponent": "St. John", "game_date": "10/23/2026"},
+        {"team": "Capitol", "opponent": "White Castle", "game_date": "10/30/2026"},
+        {"team": "Capitol", "opponent": "Southern Lab", "game_date": "11/6/2026"},
     ],
 }
 

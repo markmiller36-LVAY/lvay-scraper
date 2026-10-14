@@ -45,4 +45,21 @@ def test_thrive_not_playing_in_playoffs_even_if_lhsaa_lists_it():
     conn.execute("INSERT INTO playoff_eligibility VALUES ('football','2026','Capitol','select','Select Division IV',1,'x','y')")
     out = ineligible_schools(conn, "2026")
     assert "Thrive Academy" in out
-    assert "Capitol" not in out
+    assert "Capitol" in out
+
+
+def test_capitol_forfeits_rest_of_season():
+    conn = sqlite3.connect(":memory:")
+    conn.execute("CREATE TABLE games (sport, season, school, week, game_date, opponent, score, win_loss)")
+    conn.executemany("INSERT INTO games VALUES ('football','2026',?,?,?,?,?,?)", [
+        ("Capitol", 6, "10/9/2026", "Thrive Academy", "26-24", "W"),
+        ("Capitol", 7, "10/16/2026", "East Iberville", "-", ""),
+        ("East Iberville", 7, "10/16/2026", "Capitol", "-", ""),
+        ("White Castle", 9, "10/30/2026", "Capitol", "-", ""),
+    ])
+    apply_football_forfeits(conn, "2026", today=date(2026, 10, 17))
+    row = lambda s, o: conn.execute("SELECT score, win_loss FROM games WHERE school=? AND opponent=?", (s, o)).fetchone()
+    assert row("Capitol", "East Iberville") == ("Forfeit", "L(f)")
+    assert row("East Iberville", "Capitol") == ("Forfeit", "W(f)")
+    assert row("White Castle", "Capitol") == ("Forfeit", "")
+    assert row("Capitol", "Thrive Academy") == ("26-24", "W")
