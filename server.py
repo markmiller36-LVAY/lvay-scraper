@@ -2035,6 +2035,25 @@ def preseason_school_rows(c, sport, season, school_filter=""):
             """, (sport, season)).fetchall()]
     except sqlite3.OperationalError:
         return []
+    # LHSAA's schedule report gives each school's "district-class" (e.g. 7-5A)
+    # on every game row; use it when the roster has no class/district yet.
+    if any(not r.get("class_") for r in rows):
+        try:
+            dc = {
+                row["school"]: row["dc"]
+                for row in c.execute("""
+                    SELECT school, MAX(district_class) AS dc FROM games
+                    WHERE sport=? AND season=? AND COALESCE(district_class,'')<>''
+                    GROUP BY school
+                """, (sport, season)).fetchall()
+            }
+        except sqlite3.OperationalError:
+            dc = {}
+        for r in rows:
+            if not r.get("class_") and dc.get(r["school"]):
+                district, class_ = winter_archive.split_district_class(dc[r["school"]])
+                r["class_"] = class_
+                r["district"] = r.get("district") or district
     if school_filter:
         exact = [r for r in rows if str(r["school"]).casefold() == school_filter.casefold()]
         rows = exact or [r for r in rows if school_filter.casefold() in str(r["school"]).casefold()]
@@ -2059,8 +2078,8 @@ def scraped_schedule_games(c, sport, season, school):
     try:
         rows = c.execute("""
             SELECT game_date, opponent, home_away, win_loss, score, week,
-                   opponent_class, tournament, tournament_host, location,
-                   out_of_state, is_district
+                   district_class, opponent_class, tournament, tournament_host,
+                   location, out_of_state, is_district
             FROM games WHERE sport=? AND season=? AND school=?
         """, (sport, season, school)).fetchall()
     except sqlite3.OperationalError:
@@ -2068,8 +2087,16 @@ def scraped_schedule_games(c, sport, season, school):
     for row in rows:
         g = dict(row)
         g["result"] = g.pop("win_loss", None) or ""
-        g["is_district"] = 1 if g.get("is_district") else 0
-        g["is_tournament"] = bool(str(g.get("tournament") or "").strip())
+        # LHSAA's "District or Tournament" column: D = district game, T = tournament.
+        kind = str(g.get("tournament") or "").strip().upper()
+        own = str(g.pop("district_class", None) or "").strip().upper()
+        opp = str(g.get("opponent_class") or "").strip().upper()
+        g["is_district"] = 1 if (g.get("is_district") or kind == "D") else 0
+        g["is_tournament"] = kind == "T" or bool(str(g.get("tournament_host") or "").strip())
+        if kind in ("D", "T"):
+            g["tournament"] = ""
+        if own and opp and own == opp and kind != "T":
+            g["is_district"] = 1
         games.append(g)
     return sort_schedule_games(games)
 

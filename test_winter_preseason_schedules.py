@@ -30,14 +30,14 @@ class PreseasonWinterScheduleTests(unittest.TestCase):
             CREATE TABLE games (sport TEXT, season TEXT, school TEXT, game_date TEXT,
               opponent TEXT, home_away TEXT, win_loss TEXT, score TEXT, week TEXT,
               opponent_class TEXT, tournament TEXT, tournament_host TEXT,
-              location TEXT, out_of_state TEXT, is_district INT);
-            INSERT INTO season_schools (sport, season, school, class_, district, division)
-              VALUES ('boys_basketball','2099','Bravo','1A','4','Select Division IV'),
-                     ('boys_basketball','2099','Alpha','5A','2','Non-Select Division I');
+              location TEXT, out_of_state TEXT, is_district INT, district_class TEXT);
+            INSERT INTO season_schools (sport, season, school)
+              VALUES ('boys_basketball','2099','Bravo'), ('boys_basketball','2099','Alpha');
             INSERT INTO games (sport, season, school, game_date, opponent, home_away,
-              win_loss, score, tournament, is_district)
-              VALUES ('boys_basketball','2099','Alpha','12/2/2098','Bravo','H','','','',1),
-                     ('boys_basketball','2099','Alpha','11/20/2098','Charlie','A','','','Turkey Classic',0);
+              win_loss, score, tournament, tournament_host, is_district, district_class, opponent_class)
+              VALUES ('boys_basketball','2099','Alpha','12/2/2098','Bravo','H','','','D','',0,'2-5A','2-5A'),
+                     ('boys_basketball','2099','Alpha','11/20/2098','Charlie','A','','','T','Turkey Classic',0,'2-5A','3-4A'),
+                     ('boys_basketball','2099','Bravo','12/2/2098','Alpha','A','','','D','',0,'4-1A','2-5A');
         """)
         conn.commit()
         conn.close()
@@ -59,6 +59,9 @@ class PreseasonWinterScheduleTests(unittest.TestCase):
         self.assertTrue(alpha["games"][0]["is_tournament"])
         self.assertEqual(alpha["games"][1]["is_district"], 1)
         self.assertEqual(alpha["games"][1]["result"], "")
+        self.assertEqual((alpha["class_"], alpha["district"]), ("5A", "2"))
+        self.assertFalse(alpha["games"][1]["is_tournament"])
+        self.assertEqual(alpha["games"][0]["is_district"], 0)
         one = self.client.get("/api/schedules/winter/boys_basketball?season=2099&school=Bravo").get_json()
         self.assertEqual([s["school"] for s in one["schools"]], ["Bravo"])
 
