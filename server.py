@@ -2018,6 +2018,62 @@ def schedules_volleyball():
     })
 
 
+def preseason_school_rows(c, sport, season, school_filter=""):
+    """Schools for a season that has schedules but no power ratings yet."""
+    rows = []
+    try:
+        rows = [dict(r) for r in c.execute("""
+            SELECT school, division, track, class_, district
+            FROM season_schools WHERE sport=? AND season=?
+        """, (sport, season)).fetchall()]
+        if not rows:
+            rows = [dict(r) for r in c.execute("""
+                SELECT school, '' AS division, '' AS track,
+                       MAX(class_) AS class_, MAX(district) AS district
+                FROM games WHERE sport=? AND season=? AND COALESCE(school,'')<>''
+                GROUP BY school
+            """, (sport, season)).fetchall()]
+    except sqlite3.OperationalError:
+        return []
+    if school_filter:
+        exact = [r for r in rows if str(r["school"]).casefold() == school_filter.casefold()]
+        rows = exact or [r for r in rows if school_filter.casefold() in str(r["school"]).casefold()]
+    for r in rows:
+        r.update({"power_rating": None, "rank": None, "wins": 0, "losses": 0,
+                  "ties": 0, "games_played": 0})
+
+    def dist(r):
+        try:
+            return int(str(r.get("district") or "0").split("-")[0])
+        except ValueError:
+            return 0
+    rows.sort(key=lambda r: str(r["school"]))
+    rows.sort(key=dist)
+    rows.sort(key=lambda r: str(r.get("class_") or ""), reverse=True)
+    return rows
+
+
+def scraped_schedule_games(c, sport, season, school):
+    """A school's posted LHSAA schedule straight from the scraped games table."""
+    games = []
+    try:
+        rows = c.execute("""
+            SELECT game_date, opponent, home_away, win_loss, score, week,
+                   opponent_class, tournament, tournament_host, location,
+                   out_of_state, is_district
+            FROM games WHERE sport=? AND season=? AND school=?
+        """, (sport, season, school)).fetchall()
+    except sqlite3.OperationalError:
+        return []
+    for row in rows:
+        g = dict(row)
+        g["result"] = g.pop("win_loss", None) or ""
+        g["is_district"] = 1 if g.get("is_district") else 0
+        g["is_tournament"] = bool(str(g.get("tournament") or "").strip())
+        games.append(g)
+    return sort_schedule_games(games)
+
+
 def get_sport_schedules(sport):
     conn = get_db()
     c = conn.cursor()
@@ -2045,6 +2101,13 @@ def get_sport_schedules(sport):
         """, (sport, season))
 
     school_rows = [dict(r) for r in c.fetchall()]
+    preseason = False
+    if not school_rows and int(season) >= int(resolve_season(sport)):
+        # Preseason: LHSAA schedules are posted before any power rating exists.
+        # Build the list from the season roster (or the scraped games) so the
+        # schedule pages can show the new season right away.
+        school_rows = preseason_school_rows(c, sport, season, school_filter)
+        preseason = bool(school_rows)
     if not school_rows and sport in winter_archive.SOURCES:
         archived = winter_archive_response(
             sport, season, summary_only=summary_only, school_filter=school_filter
@@ -2089,6 +2152,8 @@ def get_sport_schedules(sport):
         """, (sport, season, school))
 
         games = sort_schedule_games([dict(r) for r in c.fetchall()])
+        if not games:
+            games = scraped_schedule_games(c, sport, season, school)
         annotate_current_opponent_records(games, opponent_records)
 
         schools.append({
@@ -2114,6 +2179,7 @@ def get_sport_schedules(sport):
         "sport":   sport,
         "season":  season,
         "status":  "final" if int(season) < int(resolve_season(sport)) else ("active" if schools else "empty"),
+        "preseason": preseason,
         "count":   len(schools),
         "schools": schools
     })
