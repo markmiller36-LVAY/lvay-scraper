@@ -915,6 +915,46 @@ def _round_question(q):
     return None
 
 
+def _per_game_threshold(q):
+    """'gave up less than 10 pts a game', 'scored over 40 points per game'."""
+    m = re.search(r"\b(less than|fewer than|under|below|lower than|more than|"
+                  r"over|above|greater than|at least|(?:\d{1,2}) or (?:more|"
+                  r"less|fewer))\s*(\d{1,2})?\s*(?:\+\s*)?(?:points?|pts)?\s*"
+                  r"(?:a|per|each)\s+game\b", q)
+    if not m:
+        m2 = re.search(r"\b(\d{1,2})\s*(?:\+|or more|or less|or fewer)?\s*"
+                       r"(?:points?|pts)\s*(?:a|per|each)\s+game\b", q)
+        if not m2 or not re.search(r"\b(how many|which|what|who|list|all|"
+                                   r"every|teams?|defen[cs]es?|offen[cs]es?)"
+                                   r"\b", q):
+            return None
+        word, num = "at least", int(m2.group(1))
+        if re.search(r"\bor (less|fewer)\b", q):
+            word = "at most"
+    else:
+        word = m.group(1)
+        num = m.group(2)
+        if num is None:
+            mm = re.match(r"(\d{1,2}) or (more|less|fewer)", word)
+            if not mm:
+                return None
+            num, word = mm.group(1), ("at least" if mm.group(2) == "more"
+                                      else "at most")
+        num = int(num)
+    allowed = bool(re.search(r"\b(allow\w*|gave up|give up|given up|"
+                             r"giving up|surrender\w*|against|defen[cs]\w*|"
+                             r"held|holding|hold)\b", q))
+    if word in ("less than", "fewer than", "under", "below", "lower than"):
+        op = "lt"
+    elif word == "at most":
+        op = "le"
+    elif word == "at least":
+        op = "ge"
+    else:
+        op = "gt"
+    return {"side": "pa" if allowed else "pf", "op": op, "n": num}
+
+
 def _title_question(q):
     """Return 'titles' / 'runner_up' / None for a normalized question."""
     if re.search(r"\bdistrict\b", q) and re.search(
@@ -1289,6 +1329,13 @@ class Answerer:
                               "years in one question, like \u201cCaptain "
                               "Shreve average points allowed the last 5 "
                               "years.\u201d", "examples": EXAMPLES}
+
+        if not teams:
+            thr = _per_game_threshold(q)
+            if thr:
+                ans = self._per_game_finder(base, thr, q)
+                if ans:
+                    return ans
 
         tq = _title_question(q)
         if tq == "district":
@@ -2337,6 +2384,85 @@ class Answerer:
         out["answer"] = txt
         out["table"] = {"cols": ["Season", "Finish"],
                         "rows": [[str(y), finish(y)] for y in reversed(ys)]}
+        return out
+
+    # ── "how many defenses gave up less than 10 a game" ──
+    def _per_game_finder(self, base, thr, q):
+        filters, _ = _extract_filters(q)
+        if filters["opp_class"] and not re.search(
+                r"\b(vs|versus|against|over|beat|beating|played)\b", q):
+            filters["own_class"], filters["opp_class"] = \
+                filters["opp_class"], None
+            filters["labels"] = [f"{filters['own_class']} teams" if
+                                 x.startswith("vs ") else x
+                                 for x in filters["labels"]]
+        reg = filters["playoffs"] is False or re.search(
+            r"\bregular season\b", q)
+        if reg:
+            filters["playoffs"] = False
+        side, op, n = thr["side"], thr["op"], thr["n"]
+        test = {"lt": lambda v: v < n, "le": lambda v: v <= n,
+                "gt": lambda v: v > n, "ge": lambda v: v >= n}[op]
+        min_g = 6
+        hits = []
+        for school, gs in self.by_school.items():
+            by = {}
+            for g in _apply_filters(gs, filters):
+                if g.forfeit or g.pf + g.pa <= 2:
+                    continue
+                by.setdefault(g.season, []).append(g)
+            for season, sg in by.items():
+                if len(sg) < min_g:
+                    continue
+                h = self.history.get(school, {}).get(season, {})
+                if filters["own_class"] and h.get("class") != filters["own_class"]:
+                    continue
+                pf = sum(g.pf for g in sg)
+                pa = sum(g.pa for g in sg)
+                v = (pa if side == "pa" else pf) / len(sg)
+                if test(v):
+                    hits.append((v, season, school, sg, pf, pa))
+        opw = {"lt": "less than", "le": "at most", "gt": "more than",
+               "ge": "at least"}[op]
+        what = "gave up" if side == "pa" else "scored"
+        scope = " in the regular season" if reg else ""
+        lbl = [x for x in filters["labels"] if x != "regular season"]
+        extra = f" ({', '.join(lbl)})" if lbl else ""
+        seasons = sorted({g.season for g in self.games})
+        cov = f"{seasons[0]}–{seasons[-1]}"
+        out = {**base, "matched": True, "status": "ok",
+               "intent": "per_game_finder", "teams": [],
+               "filters": filters["labels"],
+               "interpreted_as": f"Teams that {what} {opw} {n} points a "
+                                 f"game{scope}{extra}",
+               "note": f"Season averages{scope or ' (regular season + playoffs)'}"
+                       f", teams with {min_g}+ games, forfeits left out. Our "
+                       f"records cover {cov} (2025 regular season only)."}
+        if not hits:
+            out["answer"] = (f"No team {what} {opw} {n} points a game"
+                             f"{scope}{extra} in our records ({cov}).")
+            return out
+        best_first = side == "pa"
+        hits.sort(key=lambda x: (x[0] if best_first else -x[0], x[1]))
+        top = hits[0]
+        schools = len({h[2] for h in hits})
+        out["answer"] = (
+            f"{len(hits)} team-seasons {what} {opw} {n} points a game{scope}"
+            f"{extra} in our records ({cov}) — {schools} different "
+            f"schools. Best: {top[2]} {top[1]}, {top[0]:.1f} a game "
+            f"({_fmt_record(*_record(top[3]))}).")
+        rows = []
+        for v, season, school, sg, pf, pa in hits[:40]:
+            h = self.history.get(school, {}).get(season, {})
+            rows.append([school, str(season), h.get("class", ""),
+                         _fmt_record(*_record(sg)), f"{v:.1f}",
+                         str(pa if side == "pa" else pf)])
+        out["table"] = {"cols": ["School", "Season", "Class", "Record",
+                                 "Per game", "Allowed" if side == "pa"
+                                 else "Scored"],
+                        "rows": rows, "first_col_bold": True}
+        if len(hits) > 40:
+            out["note"] += f" Showing the top 40 of {len(hits)}."
         return out
 
     # ── state championships ──

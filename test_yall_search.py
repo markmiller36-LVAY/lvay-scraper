@@ -385,3 +385,17 @@ class MorningLogTests(unittest.TestCase):
     def test_by_class_leaders(self):
         r = self.a.answer("best offense in each class in 2019")
         self.assertTrue(r["answer"])
+
+
+class PerGameFinderTests(unittest.TestCase):
+    def test_threshold_parse(self):
+        t = y._per_game_threshold("how many defenses have given up less than 10 pts a game in the regular season")
+        self.assertEqual(t, {"side": "pa", "op": "lt", "n": 10})
+        t = y._per_game_threshold("which teams scored more than 50 points a game")
+        self.assertEqual(t, {"side": "pf", "op": "gt", "n": 50})
+        self.assertIsNone(y._per_game_threshold("ruston points per game"))
+
+    def test_finder_answers(self):
+        a = y.Answerer(y.build_games(ARCHIVE), titles={})
+        r = a.answer("how many teams gave up less than 40 points a game")
+        self.assertEqual(r["intent"], "per_game_finder")
