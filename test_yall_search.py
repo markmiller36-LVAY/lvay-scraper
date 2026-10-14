@@ -399,3 +399,15 @@ class PerGameFinderTests(unittest.TestCase):
         a = y.Answerer(y.build_games(ARCHIVE), titles={})
         r = a.answer("how many teams gave up less than 40 points a game")
         self.assertEqual(r["intent"], "per_game_finder")
+
+
+class Playoffs2025Tests(unittest.TestCase):
+    def test_playoff_rows_load(self):
+        data = {"schools": [{"school": "West Monroe", "division": "Non-Select Division I",
+                             "games": [{"opponent": "Neville", "phase": "State Championship",
+                                        "result": "W", "score": "21-14", "home_away": "N", "game_date": ""}]}]}
+        rows = y.playoff_rows(data)
+        self.assertEqual(rows[0]["game_date"], "2025-12-13")
+        a = y.Answerer(y.build_games(ARCHIVE, playoffs=rows), titles={})
+        g = [g for g in a.games if g.season == 2025]
+        self.assertTrue(g and g[0].playoff and g[0].phase == "State Championship")

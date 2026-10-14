@@ -38,6 +38,22 @@ SEASON_2025_PATH = os.path.join(HERE, "football_2025_clean.json")
 # banners, snippet #142 LVAY_FBST; titles from Wikipedia's by-school list,
 # runner-ups from Mark's 1927-2025 title-game list).
 TITLES_PATH = os.path.join(HERE, "football_state_titles.json")
+# 2025 playoff games from the official LHSAA brackets, as stored on the site
+# (WordPress option lvay_fb_playoffs, the same data the team pages show).
+# Fetched once and cached next to this file.
+PLAYOFFS_2025_PATH = os.path.join(HERE, "football_2025_playoffs.json")
+PLAYOFFS_2025_URL = ("https://louisianavsallyall.com/wp-json/lvay/v1/"
+                     "fb-playoffs?season=2025")
+# The brackets carry no dates. Earlier rounds use that week's playoff Friday;
+# finals use the LHSAA's 2025 Prep Classic schedule (Superdome, Dec 11-13).
+PLAYOFF_DATES_2025 = {"Round 1": "2025-11-14", "Regional": "2025-11-21",
+                      "Quarterfinal": "2025-11-28", "Semifinal": "2025-12-05",
+                      "State Championship": "2025-12-12"}
+FINAL_DATES_2025 = {
+    "Non-Select Division IV": "2025-12-11", "Select Division IV": "2025-12-11",
+    "Select Division III": "2025-12-11", "Non-Select Division II": "2025-12-12",
+    "Non-Select Division III": "2025-12-12", "Select Division II": "2025-12-12",
+    "Non-Select Division I": "2025-12-13", "Select Division I": "2025-12-13"}
 
 EXAMPLES = [
     "Ruston vs West Monroe",
@@ -372,7 +388,54 @@ def build_district_champs(games):
     return champs
 
 
-def build_games(archive, season_2025_rows=None, info=None):
+def playoff_rows(data, season=2025, dates=None):
+    """fb-playoffs JSON ({schools:[{school, division, games:[...]}]}) ->
+    flat rows build_games understands."""
+    dates = dates or PLAYOFF_DATES_2025
+    rows = []
+    for s in (data or {}).get("schools", []):
+        for g in s.get("games", []):
+            rows.append({"school": s.get("school") or "",
+                         "opponent": g.get("opponent") or "",
+                         "season": season, "phase": g.get("phase") or "Playoffs",
+                         "win_loss": g.get("result") or "",
+                         "score": g.get("score") or "",
+                         "home_away": g.get("home_away") or "",
+                         "game_date": g.get("game_date") or (
+                             FINAL_DATES_2025.get(s.get("division") or "")
+                             if season == 2025 and g.get("phase") ==
+                             "State Championship" else None) or
+                         dates.get(g.get("phase"), ""),
+                         "division": s.get("division") or ""})
+    return rows
+
+
+def _load_playoffs_2025():
+    if os.path.exists(PLAYOFFS_2025_PATH):
+        try:
+            with open(PLAYOFFS_2025_PATH, encoding="utf-8") as fh:
+                return json.load(fh)
+        except (OSError, ValueError):
+            pass
+    try:
+        import urllib.request
+        req = urllib.request.Request(PLAYOFFS_2025_URL,
+                                     headers={"User-Agent": "lvay-scraper"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        if data.get("schools"):
+            try:
+                with open(PLAYOFFS_2025_PATH, "w", encoding="utf-8") as fh:
+                    json.dump(data, fh)
+            except OSError:
+                pass
+            return data
+    except Exception as exc:  # noqa: BLE001 - never break the search
+        print(f"[yall] 2025 playoffs not loaded: {exc}")
+    return None
+
+
+def build_games(archive, season_2025_rows=None, info=None, playoffs=None):
     """Turn the archive JSON (+ optional 2025 rows) into Game objects."""
     games = []
     if info is None:
@@ -448,6 +511,34 @@ def build_games(archive, season_2025_rows=None, info=None):
                         g.get("school"))["division"],
             own_dist=_dist_key(g.get("class_"), re.sub(
                 r"\D", "", str(g.get("district") or ""))),
+        ))
+    for g in playoffs or []:
+        score = _parse_score(g.get("score"))
+        if not score:
+            continue
+        pf, pa = score
+        yr = int(g.get("season") or 2025)
+        games.append(Game(
+            season=yr,
+            date=_parse_date(g.get("game_date")),
+            school=g.get("school") or "",
+            opponent=g.get("opponent") or "",
+            pf=pf, pa=pa,
+            result=_clean_result(g.get("win_loss"), pf, pa),
+            phase=g.get("phase") or "Playoffs",
+            week=None,
+            home_away=g.get("home_away") or "",
+            is_district=False,
+            playoff=True,
+            forfeit=False,
+            opp_class=who(yr, g.get("opponent"))["class"],
+            opp_track=who(yr, g.get("opponent"))["track"],
+            opp_div=who(yr, g.get("opponent"))["division"],
+            own_class=who(yr, g.get("school"))["class"],
+            own_track=who(yr, g.get("school"))["track"],
+            own_div=who(yr, g.get("school"))["division"] or
+            (g.get("division") or ""),
+            own_dist="",
         ))
     games.sort(key=lambda game: game.sort_key)
     return games
@@ -1642,7 +1733,8 @@ class Answerer:
         text = (f"The {what} in a season in our records{scope_lbl}: "
                 f"{x['team']} {x['season']}, {val(x)} "
                 f"({_fmt_record(x['w'], x['l'], x['t'])} in {x['n']} games).")
-        if self.last_season in {r["season"] for r in top}:
+        if (self.last_season in {r["season"] for r in top}
+                and not self.playoffs_complete()):
             text += (f" Note: {self.last_season} counts the regular season "
                      "only so far.")
         rows = [[str(i + 1), r["team"], str(r["season"]), r["cls"] or "",
@@ -1951,8 +2043,8 @@ class Answerer:
                 "filters": filters["labels"],
                 "interpreted_as": f"{team} playoff appearances",
                 "answer": txt,
-                "note": "Playoff games are in our records through the 2024 "
-                        "season; the 2025 playoffs aren't loaded yet.",
+                "note": "Playoff games are in our records through "
+                        f"{max(self.titles_po_seasons())}." + self.po_note(),
                 "table": {"cols": ["Season", "Playoff record", "Finish"],
                           "rows": rows}}
 
@@ -2233,7 +2325,7 @@ class Answerer:
                "intent": "record_finder", "teams": [], "filters": [],
                "interpreted_as": f"Teams that finished {rec}{scope}",
                "note": f"Full seasons including playoffs, from our records "
-                       f"({cov}). The 2025 playoffs aren't loaded yet."}
+                       f"({cov})." + self.po_note()}
         if not hits:
             out["answer"] = (f"No team finished {rec}{scope} in our "
                              f"records ({cov}).")
@@ -2344,7 +2436,7 @@ class Answerer:
                        "(counting back from each bracket's state final), "
                        "so a rare odd schedule can be off by a round. "
                        "Playoff games are in our records through "
-                       f"{last_po}; the 2025 playoffs aren't loaded yet."}
+                       f"{last_po}." + self.po_note()}
         if not reached:
             out["answer"] = (f"{team} hasn't reached {name} in our records "
                              f"({span}).")
@@ -2437,7 +2529,7 @@ class Answerer:
                                  f"game{scope}{extra}",
                "note": f"Season averages{scope or ' (regular season + playoffs)'}"
                        f", teams with {min_g}+ games, forfeits left out. Our "
-                       f"records cover {cov} (2025 regular season only)."}
+                       f"records cover {cov}." + self.po_note()}
         if not hits:
             out["answer"] = (f"No team {what} {opw} {n} points a game"
                              f"{scope}{extra} in our records ({cov}).")
@@ -2775,8 +2867,20 @@ class Answerer:
     def coverage(self):
         if self.first_season is None:
             return "No football history loaded."
+        if self.playoffs_complete():
+            return f"Football, {self.first_season}–{self.last_season}"
         return (f"Football, {self.first_season}–{self.last_season} "
                 f"({self.last_season} regular season only)")
+
+    def playoffs_complete(self):
+        if not hasattr(self, "_po_done"):
+            self._po_done = any(g.playoff and g.season == self.last_season
+                                for g in self.games)
+        return self._po_done
+
+    def po_note(self):
+        return ("" if self.playoffs_complete() else
+                f" The {self.last_season} playoffs aren't loaded yet.")
 
     # ── templates ──
     def _a_allowed_n(self, team, other, games, n):
@@ -3042,7 +3146,8 @@ def get_answerer():
                 if os.path.exists(SEASON_2025_PATH):
                     with open(SEASON_2025_PATH, encoding="utf-8") as fh:
                         rows = json.load(fh)
-                _ANSWERER = Answerer(build_games(archive, rows))
+                po = playoff_rows(_load_playoffs_2025())
+                _ANSWERER = Answerer(build_games(archive, rows, playoffs=po))
     return _ANSWERER
 
 
