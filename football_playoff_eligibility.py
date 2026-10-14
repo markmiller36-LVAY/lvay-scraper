@@ -29,6 +29,14 @@ REPORT_URLS = {
 NOT_PLAYING_MARKER = re.compile(r"schools\s+not\s+playing\s+in\s+the\s+playoff", re.I)
 DIVISION_RE = re.compile(r"Division\s+(IV|III|II|I)\b")
 FALLBACK_STATUSES = {"non_district_honors", "jv_only"}
+# Schools LVAY lists as not playing in the playoffs regardless of what the LHSAA
+# report says yet (e.g. a season ended early). Season -> names.
+LVAY_NOT_PLAYING = {
+    "2026": [
+        # Season ended after Week 6; remaining games forfeited. Mark, Oct 13, 2026.
+        "Thrive Academy",
+    ],
+}
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
 
@@ -159,6 +167,10 @@ def ineligible_schools(conn, season):
         ).fetchall()
     except sqlite3.OperationalError:
         rows = []
+    manual = set()
+    for name in LVAY_NOT_PLAYING.get(str(season), []):
+        manual.add(name)
+        manual.add(_canonical(name))
     if rows:
-        return {row[0] for row in rows if not row[1]}
-    return _alignment_fallback()
+        return {row[0] for row in rows if not row[1]} | manual
+    return _alignment_fallback() | manual

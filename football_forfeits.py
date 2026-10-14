@@ -35,6 +35,11 @@ FOOTBALL_FORFEITS = {
         {"team": "Carroll", "opponent": "Abramson", "game_date": "10/23/2026"},
         {"team": "Carroll", "opponent": "Sterlington", "game_date": "10/30/2026"},
         {"team": "Carroll", "opponent": "North Webster", "game_date": "11/6/2026"},
+        # Thrive Academy's season ended after Week 6; opponents receive forfeit wins. Mark, Oct 13, 2026.
+        {"team": "Thrive Academy", "opponent": "St. John", "game_date": "10/15/2026"},
+        {"team": "Thrive Academy", "opponent": "Southern Lab", "game_date": "10/22/2026"},
+        {"team": "Thrive Academy", "opponent": "Acadiana Christian", "game_date": "10/30/2026"},
+        {"team": "Thrive Academy", "opponent": "East Iberville", "game_date": "11/6/2026"},
     ],
 }
 
@@ -44,6 +49,8 @@ FOOTBALL_CANCELLED_GAMES = {
     "2026": [
         # Week 6 game cancelled; not a forfeit. Mark, Oct 10, 2026.
         {"team": "Booker T. Washington - N.O.", "opponent": "Bogalusa", "game_date": "10/9/2026"},
+        # Week 6 vs Dumas (Ark.) ruled cancelled; not a forfeit. Mark, Oct 13, 2026.
+        {"team": "General Trass", "opponent": "Dumas High School, AR", "game_date": "10/9/2026"},
     ],
 }
 
