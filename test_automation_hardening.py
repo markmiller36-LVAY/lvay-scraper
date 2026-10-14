@@ -128,6 +128,37 @@ class AutomationHardeningTests(unittest.TestCase):
             {"sport", "school", "game_date", "opponent", "season"},
         )
 
+    def test_boot_closes_runs_orphaned_by_a_restart(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = os.path.join(temp_dir, "lvay.db")
+            original_path = server.DB_PATH
+            server.DB_PATH = db_path
+            try:
+                server.init_db()
+                conn = sqlite3.connect(db_path)
+                conn.execute(
+                    "INSERT INTO pipeline_runs (started_at, status) "
+                    "VALUES ('2026-10-13T19:01:21', 'running')"
+                )
+                conn.execute(
+                    "INSERT INTO pipeline_runs (started_at, finished_at, status) "
+                    "VALUES ('2026-10-13T23:00:57', '2026-10-13T23:21:15', 'completed')"
+                )
+                conn.commit()
+                conn.close()
+                server.init_db()  # simulate the next boot
+            finally:
+                server.DB_PATH = original_path
+            conn = sqlite3.connect(db_path)
+            rows = conn.execute(
+                "SELECT status, finished_at, error FROM pipeline_runs ORDER BY id"
+            ).fetchall()
+            conn.close()
+        self.assertEqual(rows[0][0], "interrupted")
+        self.assertIsNotNone(rows[0][1])
+        self.assertIn("restarted", rows[0][2])
+        self.assertEqual(rows[1], ("completed", "2026-10-13T23:21:15", None))
+
 
 if __name__ == "__main__":
     unittest.main()

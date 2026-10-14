@@ -623,6 +623,16 @@ def init_db():
         ON CONFLICT(sport, season) DO UPDATE SET
             status='final', is_locked=1
     """)
+    # A pipeline run lives in a thread of this one web process. If the process
+    # restarted (deploy, crash, out of memory) mid-run, its row was left at
+    # 'running' forever. Nothing can still be running at boot, so close them.
+    c.execute("""
+        UPDATE pipeline_runs
+        SET status='interrupted',
+            finished_at=COALESCE(finished_at, ?),
+            error=COALESCE(error, 'Server restarted before this run finished')
+        WHERE status='running'
+    """, (datetime.now().isoformat(),))
     game_columns = {row[1] for row in c.execute("PRAGMA table_info(games)")}
     for name, definition in (
         ("source", "TEXT"),
