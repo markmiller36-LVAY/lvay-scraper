@@ -115,7 +115,7 @@ def protect_feed():
         if not _has_valid_pipeline_token():
             return jsonify({"status": "unauthorized"}), 401
         return None
-    if path in ("/api/health", "/api/status"):
+    if path in ("/api/health", "/api/status", "/api/status/runs"):
         return None
     if path.startswith("/api/") and not _has_valid_pipeline_token():
         if PUBLIC_RATE_LIMIT > 0 and _rate_limited(_client_ip()):
@@ -703,6 +703,64 @@ def status():
         "recent_scrapes":   recent,
         "latest_pipeline":  latest_pipeline,
     })
+
+
+@app.route("/api/status/runs")
+def recent_pipeline_runs():
+    """Last N automated pipeline runs (default 5) with the games each sport pulled.
+
+    Read-only summary for the WordPress Mission Control page. Each run's
+    scrape_log rows are the ones logged between its start and its finish
+    (or the next run's start while it is still running).
+    """
+    limit = max(1, min(request.args.get("limit", 5, type=int) or 5, 20))
+    conn = get_db()
+    out = []
+    try:
+        runs = [dict(r) for r in conn.execute("""
+            SELECT id, started_at, finished_at, status, active_sports, error
+            FROM pipeline_runs ORDER BY id DESC LIMIT ?
+        """, (limit,)).fetchall()]
+        newer_start = None
+        for run in runs:
+            end = run.get("finished_at") or newer_start or datetime.now().isoformat()
+            rows = conn.execute("""
+                SELECT sport, games_found, status
+                FROM scrape_log WHERE ran_at >= ? AND ran_at <= ?
+                ORDER BY id
+            """, (run["started_at"], end)).fetchall()
+            sports = {}
+            for r in rows:
+                s = sports.setdefault(r["sport"], {
+                    "sport": r["sport"], "games": 0, "runs": 0, "status": "success",
+                })
+                s["games"] += r["games_found"] or 0
+                s["runs"] += 1
+                if r["status"] != "success":
+                    s["status"] = r["status"]
+            try:
+                active = json.loads(run.get("active_sports") or "[]")
+            except (TypeError, ValueError):
+                active = []
+            out.append({
+                "id": run["id"],
+                "started_at": run["started_at"],
+                "finished_at": run.get("finished_at"),
+                "status": run["status"],
+                "error": run.get("error"),
+                "active_sports": active,
+                "sports": list(sports.values()),
+                "games": sum(
+                    s["games"] for s in sports.values()
+                    if not s["sport"].endswith("-forfeits")
+                ),
+            })
+            newer_start = run["started_at"]
+    except Exception as exc:
+        conn.close()
+        return jsonify({"status": "error", "message": str(exc)}), 500
+    conn.close()
+    return jsonify({"status": "ok", "server_time": datetime.now().isoformat(), "runs": out})
 
 
 @app.route("/api/health")
