@@ -173,6 +173,15 @@ body{background:radial-gradient(130% 100% at 50% 35%,#fbfbfb,var(--ground) 60%,#
 .card details.xl summary:focus-visible{outline:2px solid #000}
 .card details.xl ul{margin-top:6px}
 .card .pos{font-size:13px;font-weight:600;letter-spacing:.06em;background:#ececec;border-radius:4px;padding:1px 5px 0;margin-left:4px;vertical-align:2px}
+.card .recs.mk span{color:var(--sc,#c40000);font-weight:700;font-size:15px;opacity:1}
+.card details.xl small b{color:var(--ink);font-weight:700}
+.card details.xl .pos{font-size:15px;font-weight:700;letter-spacing:.06em;color:#fff;background:var(--sc,#000);border-radius:5px;padding:2px 7px 0;margin-left:6px;vertical-align:1px}
+.card .rt{background:#000;color:#fff;border-radius:8px;padding:6px 8px 8px;margin-top:4px}
+.card .rt table{color:#fff}
+.card .rt thead th{color:#fff;opacity:.75;border-bottom-color:#444}
+.card .rt tr.grp td,.card.themed .rt tr.grp td{color:#ff5a5a}
+.card .rt td.z{color:#666}
+.card .rt tfoot td{border-top-color:#555}
 /* school-colored card */
 .card .hd{display:flex;align-items:center;gap:12px;margin:-12px -14px 4px;padding:14px 14px 12px;background:var(--sc2,#000);border-bottom:5px solid var(--sc,#008584);border-radius:10px 10px 0 0}
 .card .hd img{width:64px;height:auto;flex:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
@@ -359,8 +368,8 @@ function detailHtml(D,esc){
   <h3>Offensive staff</h3>${list(D.off)}<h3>Defensive staff</h3>${list(D.def)}<h3>Support &amp; recruiting</h3>${list(D.sup)}
   <div class="fine">${esc(D.contact)}${D.team_x?` · <a href="${esc(D.team_x)}" target="_blank" rel="noopener">Team X account</a>`:""}</div>
   ${(D.camps||[]).map(c=>`<h3>Camps &amp; combines</h3><div class="camp"><b>${esc(c.n)}</b><div class="row"><span>Date</span><span>${esc(c.date)}</span></div><div class="row"><span>Fee</span><span>${esc(c.fee)}</span></div><div class="row"><span>Time</span><span>${esc(c.time)}</span></div><div class="row"><span>Where</span><span>${esc(c.where)}</span></div><div class="row"><span>Who</span><span>${esc(c.who)}</span></div><a href="${esc(c.u)}" target="_blank" rel="noopener">Combine details</a></div>`).join("")}
-${D.xfer?`<h3>Roster makeup</h3><div class="recs"><div><b>${D.xfer.n}</b><span>Portal transfers</span></div><div><b>${D.xfer.hs}</b><span>HS players</span></div></div><div class="asof">${D.xfer.four} from four-year schools · ${D.xfer.juco} from other JUCOs. Estimate: a previous college listed on the roster counts as a transfer.</div><details class="xl"><summary>See the ${D.xfer.n} transfers</summary><ul>${D.xfer.list.map(([n,p,f])=>`<li>${esc(n)} <span class="pos">${esc(p)}</span><small>from ${esc(f)}</small></li>`).join("")}</ul></details>`:""}
-  <h3>Roster by position · ${R.total} players</h3><table><thead><tr><th>Pos</th>${R.cols.map(c=>`<th>${esc(c)}</th>`).join("")}<th class="tot">Tot</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td>Total</td>${tot.map(v=>`<td>${v}</td>`).join("")}<td>${tot.reduce((a,b)=>a+b,0)}</td></tr></tfoot></table>
+${D.xfer?`<h3>Roster makeup</h3><div class="recs mk"><div><b>${D.xfer.n}</b><span>Portal transfers</span></div><div><b>${D.xfer.hs}</b><span>HS players</span></div></div><div class="asof">${D.xfer.four} from four-year schools · ${D.xfer.juco} from other JUCOs. Estimate: a previous college listed on the roster counts as a transfer.</div><details class="xl"><summary>See the ${D.xfer.n} transfers</summary><ul>${D.xfer.list.map(([n,p,f])=>`<li>${esc(n)} <span class="pos">${esc(p)}</span><small>from <b>${esc(f)}</b></small></li>`).join("")}</ul></details>`:""}
+  <h3>Roster by position · ${R.total} players</h3><div class="rt"><table><thead><tr><th>Pos</th>${R.cols.map(c=>`<th>${esc(c)}</th>`).join("")}<th class="tot">Tot</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td>Total</td>${tot.map(v=>`<td>${v}</td>`).join("")}<td>${tot.reduce((a,b)=>a+b,0)}</td></tr></tfoot></table></div>
   <div class="fine">Home states: ${esc(D.roster.home)}</div><div class="fine">Linked names go to verified X accounts. Source: ${esc(D.src)}.</div>`;
 }
 function pickCollege(i,fly=true){
