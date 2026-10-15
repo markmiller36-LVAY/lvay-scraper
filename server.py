@@ -135,6 +135,51 @@ def mark_feed_noindex(response):
     return response
 
 
+# Oct 15, 2026: public data feeds (schedules, rankings) were sent
+# uncompressed: the football schedules feed is ~1.3 MB, which takes seconds
+# on a phone. Gzip shrinks it ~30x. Data only changes when a pipeline run
+# finishes, so browsers may also reuse a copy for a few minutes.
+_CACHEABLE_FEEDS = ("/api/schedules/", "/api/rankings/", "/api/standings/",
+                    "/api/brackets/", "/api/seasons/")
+
+
+@app.after_request
+def compress_and_cache_feeds(response):
+    try:
+        if request.method != "GET" or not request.path.startswith("/api/"):
+            return response
+        if (
+            response.status_code == 200
+            and request.path.startswith(_CACHEABLE_FEEDS)
+            and "Cache-Control" not in response.headers
+            and not _has_valid_pipeline_token()
+        ):
+            response.headers["Cache-Control"] = (
+                "public, max-age=300, stale-while-revalidate=600"
+            )
+        if (
+            response.direct_passthrough
+            or response.status_code < 200
+            or response.status_code >= 300
+            or "Content-Encoding" in response.headers
+            or "gzip" not in request.headers.get("Accept-Encoding", "").lower()
+            or not (response.mimetype or "").endswith("json")
+        ):
+            return response
+        body = response.get_data()
+        if len(body) < 1024:
+            return response
+        response.set_data(gzip.compress(body, compresslevel=6))
+        response.headers["Content-Encoding"] = "gzip"
+        response.headers["Content-Length"] = str(len(response.get_data()))
+        vary = response.headers.get("Vary", "")
+        if "accept-encoding" not in vary.lower():
+            response.headers["Vary"] = (vary + ", " if vary else "") + "Accept-Encoding"
+    except Exception as exc:  # never break a feed over compression
+        print(f"[COMPRESS] skipped: {exc}")
+    return response
+
+
 DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 PIPELINE_LOCK = threading.Lock()
 PIPELINE_STATE = {
