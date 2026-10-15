@@ -3,7 +3,7 @@
 <style>
 /* Full-screen 3D board of the United States (each state an extruded tile on a gridded floor), thin teal header on top. LVAY colors. */
 :root{
-  --ground:#ececec; --ink:#000000; --muted:#5c5c5c; --rule:#d9d9d9;
+  --ground:#ececec; --ink:#000000; --muted:#3d4444; --rule:#d9d9d9;
   --teal:#008584; --tint:#e0f0f0;
   --slab:"Alfa Slab One",Rockwell,Georgia,serif;
   --teko:"Teko","Arial Narrow","Roboto Condensed",Arial,sans-serif;
@@ -124,6 +124,47 @@ body{background:radial-gradient(130% 100% at 50% 35%,#fbfbfb,var(--ground) 60%,#
   .bar .sel{font-size:19px}
   .help{display:none}
 }
+
+/* readability pass: larger, darker small text */
+.panel2{max-width:min(430px,calc(100% - 32px))}
+.card h2{font-size:22px}
+.card .nick{font-size:21px}
+.card dl{font-size:19px;gap:4px 12px}
+.card dt{font-size:14px;color:var(--ink);opacity:.7}
+.card .x{font-size:15px}
+.card h3{font-size:16px;color:var(--ink);opacity:.75}
+.card .recs b{font-size:28px}
+.card .recs span{font-size:14px}
+.card .asof{font-size:16px}
+.card .hc{font-size:22px}
+.card .hc small{font-size:16px;line-height:1.2}
+.card li{font-size:19px;line-height:1.15}
+.card li small{font-size:16px;line-height:1.15}
+.card ul{gap:6px}
+.card table{font-size:17px}
+.card thead th{font-size:13px;color:var(--ink);opacity:.7}
+.card tr.grp td{font-size:13px}
+.card td.z{color:#9a9a9a}
+.card .fine{font-size:15px;line-height:1.25}
+.camp{font-size:18px}
+.camp b{font-size:20px}
+.camp .row{grid-template-columns:58px 1fr}
+.camp .row span:first-child{font-size:13px;color:var(--ink);opacity:.7}
+.film b{font-size:19px}.film small{font-size:16px}
+.follow b{font-size:18px}.follow small{font-size:16px}
+.film-note{font-size:16px}
+.legend{font-size:18px;gap:6px 12px}
+.legend .ttl{font-size:13px;color:var(--ink);opacity:.75}
+.legend i{width:13px;height:13px}
+.cl{font-size:17px;padding:4px 7px 2px}
+.tip{font-size:19px}
+.reg span{font-size:12.5px}
+.reg small{font-size:11px;color:var(--ink);opacity:.7}
+.rtoggle{font-size:11px}
+.regions{width:64px}
+.bar select{font-size:21px}
+.help{font-size:16px}
+@media (max-width:720px){.panel2{max-width:none}.card{max-height:calc(100vh - 250px)}}
 </style>
 
 <div class="app">
