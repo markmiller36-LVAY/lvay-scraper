@@ -13,18 +13,18 @@ def at(y, mo, d, h, mi):
     return datetime(y, mo, d, h, mi, tzinfo=CT)
 
 
-def test_football_volleyball_every_4_hours_from_5am():
-    for hour in (1, 5, 9, 13, 17, 21):
+def test_football_volleyball_every_6_hours_from_5am():
+    for hour in (5, 11, 17, 23):
         assert sports_for_now(at(2026, 10, 20, hour, 0)) == FB
 
 
-def test_basketball_every_4_hours_from_6am():
-    for hour in (2, 6, 10, 14, 18, 22):
+def test_basketball_every_6_hours_from_6am():
+    for hour in (0, 6, 12, 18):
         assert sports_for_now(at(2026, 10, 20, hour, 0)) == BB
 
 
-def test_soccer_every_4_hours_from_7am():
-    for hour in (3, 7, 11, 15, 19, 23):
+def test_soccer_every_6_hours_from_7am():
+    for hour in (1, 7, 13, 19):
         assert sports_for_now(at(2026, 10, 20, hour, 0)) == SC
 
 
@@ -40,7 +40,7 @@ def test_slot_fires_when_render_starts_late():
 
 
 def test_other_hours_stay_quiet():
-    for hour in (0, 4, 8, 12, 16, 20):
+    for hour in (2, 3, 4, 8, 9, 10, 14, 15, 16, 20, 21, 22):
         assert not should_trigger_now(at(2026, 10, 16, hour, 0))  # Friday
 
 

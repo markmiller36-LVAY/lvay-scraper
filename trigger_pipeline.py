@@ -25,16 +25,16 @@ CENTRAL = ZoneInfo("America/Chicago")
 
 
 # Mark's schedule (Oct 15, 2026), Central time. Three groups take turns,
-# an hour apart, so each run stays short and the site stays quick:
-#   - football + volleyball (and baseball/softball in spring) every 4 hours
-#     from 5am: 1, 5, 9am, 1, 5, 9pm
-#   - basketball every 4 hours from 6am: 2, 6, 10am, 2, 6, 10pm
-#   - soccer every 4 hours from 7am: 3, 7, 11am, 3, 7, 11pm
+# an hour apart, every 6 hours, so the server has long quiet stretches and
+# the site stays quick:
+#   - football + volleyball (and baseball/softball in spring): 5, 11am, 5, 11pm
+#   - basketball: 6am, noon, 6pm, midnight
+#   - soccer: 7am, 1pm, 7pm, 1am
 # Sports out of season are skipped by the web service. Thursday/Friday
 # game-night refreshes (10pm-1am) come from a separate hourly scheduled task.
-PRIMARY_HOURS = {1, 5, 9, 13, 17, 21}
-BASKETBALL_HOURS = {2, 6, 10, 14, 18, 22}
-SOCCER_HOURS = {3, 7, 11, 15, 19, 23}
+PRIMARY_HOURS = {5, 11, 17, 23}
+BASKETBALL_HOURS = {0, 6, 12, 18}
+SOCCER_HOURS = {1, 7, 13, 19}
 PRIMARY_SPORTS = ["football", "volleyball", "baseball", "softball"]
 BASKETBALL_SPORTS = ["boys_basketball", "girls_basketball"]
 SOCCER_SPORTS = ["boys_soccer", "girls_soccer"]

@@ -17,8 +17,8 @@ class AutomationHardeningTests(unittest.TestCase):
         central = ZoneInfo("America/Chicago")
         for moment in (
             datetime(2026, 9, 3, 5, 0, tzinfo=central),
-            datetime(2026, 9, 3, 21, 0, tzinfo=central),
-            datetime(2026, 9, 4, 1, 0, tzinfo=central),
+            datetime(2026, 9, 3, 17, 0, tzinfo=central),
+            datetime(2026, 9, 3, 23, 0, tzinfo=central),
         ):
             self.assertEqual(
                 trigger_pipeline.sports_for_now(moment)[0], "football"
