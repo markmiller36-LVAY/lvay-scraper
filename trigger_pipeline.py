@@ -24,17 +24,20 @@ PIPELINE_TIMEOUT = int(os.environ.get("PIPELINE_TIMEOUT", "3600"))
 CENTRAL = ZoneInfo("America/Chicago")
 
 
-# Mark's schedule (Oct 15, 2026), Central time. Two groups take turns so
-# each run stays short and the site stays quick:
+# Mark's schedule (Oct 15, 2026), Central time. Three groups take turns,
+# an hour apart, so each run stays short and the site stays quick:
 #   - football + volleyball (and baseball/softball in spring) every 4 hours
-#     starting at 5am: 1, 5, 9am, 1, 5, 9pm
-#   - basketball (+ soccer) every 4 hours starting at 6am: 2, 6, 10am, 2, 6, 10pm
+#     from 5am: 1, 5, 9am, 1, 5, 9pm
+#   - basketball every 4 hours from 6am: 2, 6, 10am, 2, 6, 10pm
+#   - soccer every 4 hours from 7am: 3, 7, 11am, 3, 7, 11pm
 # Sports out of season are skipped by the web service. Thursday/Friday
 # game-night refreshes (10pm-1am) come from a separate hourly scheduled task.
 PRIMARY_HOURS = {1, 5, 9, 13, 17, 21}
-WINTER_HOURS = {2, 6, 10, 14, 18, 22}
+BASKETBALL_HOURS = {2, 6, 10, 14, 18, 22}
+SOCCER_HOURS = {3, 7, 11, 15, 19, 23}
 PRIMARY_SPORTS = ["football", "volleyball", "baseball", "softball"]
-WINTER_SPORTS = ["boys_basketball", "girls_basketball", "boys_soccer", "girls_soccer"]
+BASKETBALL_SPORTS = ["boys_basketball", "girls_basketball"]
+SOCCER_SPORTS = ["boys_soccer", "girls_soccer"]
 WINTER_MONTHS = {10, 11, 12, 1, 2, 3}
 
 
@@ -47,8 +50,15 @@ def sports_for_now(now=None):
         return None
     if now.hour in PRIMARY_HOURS:
         return list(PRIMARY_SPORTS)
-    if now.hour in WINTER_HOURS and now.month in WINTER_MONTHS:
-        return list(WINTER_SPORTS)
+    if now.month not in WINTER_MONTHS:
+        return None
+    if now.hour in BASKETBALL_HOURS:
+        # Basketball pulls start Oct 19.
+        if now.month == 10 and now.day < 19:
+            return None
+        return list(BASKETBALL_SPORTS)
+    if now.hour in SOCCER_HOURS:
+        return list(SOCCER_SPORTS)
     return None
 
 

@@ -37,7 +37,7 @@ services:
     name: lvay-pipeline-scheduler
     env: python
     # Wake every 30 minutes; trigger_pipeline.py fires football/volleyball
-    # every 4 hours from 5am and basketball every 4 hours from 6am (Central).
+    # every 4h from 5am, basketball from 6am, soccer from 7am (Central).
     schedule: "*/30 * * * *"
     buildCommand: pip install -r requirements.txt
     startCommand: python trigger_pipeline.py

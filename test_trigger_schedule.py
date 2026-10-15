@@ -5,7 +5,8 @@ from trigger_pipeline import should_trigger_now, sports_for_now
 
 CT = ZoneInfo("America/Chicago")
 FB = ["football", "volleyball", "baseball", "softball"]
-BB = ["boys_basketball", "girls_basketball", "boys_soccer", "girls_soccer"]
+BB = ["boys_basketball", "girls_basketball"]
+SC = ["boys_soccer", "girls_soccer"]
 
 
 def at(y, mo, d, h, mi):
@@ -22,6 +23,16 @@ def test_basketball_every_4_hours_from_6am():
         assert sports_for_now(at(2026, 10, 20, hour, 0)) == BB
 
 
+def test_soccer_every_4_hours_from_7am():
+    for hour in (3, 7, 11, 15, 19, 23):
+        assert sports_for_now(at(2026, 10, 20, hour, 0)) == SC
+
+
+def test_basketball_slots_wait_until_oct_19():
+    assert not should_trigger_now(at(2026, 10, 15, 6, 0))
+    assert sports_for_now(at(2026, 10, 19, 6, 0)) == BB
+
+
 def test_slot_fires_when_render_starts_late():
     assert sports_for_now(at(2026, 10, 20, 5, 9)) == FB
     assert not should_trigger_now(at(2026, 10, 20, 5, 30))
@@ -29,7 +40,7 @@ def test_slot_fires_when_render_starts_late():
 
 
 def test_other_hours_stay_quiet():
-    for hour in (0, 3, 4, 7, 8, 11, 12, 15, 16, 19, 20, 23):
+    for hour in (0, 4, 8, 12, 16, 20):
         assert not should_trigger_now(at(2026, 10, 16, hour, 0))  # Friday
 
 
