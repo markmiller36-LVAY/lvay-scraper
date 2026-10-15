@@ -164,6 +164,9 @@ body{background:radial-gradient(130% 100% at 50% 35%,#fbfbfb,var(--ground) 60%,#
 .regions{width:64px}
 .bar select{font-size:21px}
 .help{font-size:16px}
+.card a.xh{display:inline-block;vertical-align:2px;margin-left:4px;font-family:var(--teko);font-size:14px;font-weight:600;letter-spacing:.02em;line-height:1;color:#fff;background:#000;text-decoration:none;padding:3px 7px 1px;border-radius:999px}
+.card a.xh:hover{background:#008584}
+.card .hc a.xh{font-size:15px}
 @media (max-width:720px){.panel2{max-width:none}.card{max-height:calc(100vh - 250px)}}
 </style>
 
@@ -328,7 +331,7 @@ function cardHtml(s){const esc=v=>String(v).replace(/[&<>"]/g,c=>({"&":"&amp;","
   return `<button type="button" class="x" id="cx">Close</button><h2>${esc(s.n)}</h2><div class="nick">${esc(s.k)}</div><dl>${s.f&&s.f!==s.n?`<dt>School</dt><dd>${esc(s.f)}</dd>`:""}<dt>Level</dt><dd>${lvName}</dd><dt>Conference</dt><dd>${esc(s.cf)}</dd><dt>City</dt><dd>${esc(s.c)}, Texas</dd>${s.nt?`<dt>Note</dt><dd>${esc(s.nt)}</dd>`:""}${s.u?`<dt>Website</dt><dd><a class="site" href="${esc(s.u)}" target="_blank" rel="noopener">${esc(s.u.replace(/^https?:\/\/(www\.)?/,""))}</a></dd>`:""}</dl>${s.d?`<button type="button" class="film" id="filmBtn"><span class="ic"><svg viewBox="0 0 10 12" aria-hidden="true"><path d="M0 0l10 6-10 6z"/></svg></span><span><b>Send My Hudl Film</b><small>Your highlights to ${esc(s.n)}'s coaching staff</small></span><span class="arr" aria-hidden="true">›</span></button><button type="button" class="follow" id="followBtn"><span class="ic" aria-hidden="true">+</span><span><b>Follow the Staff on X</b><small>${xCount(s.d)} coaches with confirmed X accounts</small></span><span class="arr" aria-hidden="true">›</span></button><div class="film-note" id="filmNote" hidden>Coming soon.</div>`+detailHtml(s.d,esc):""}`;}
 function xCount(D){return new Set([D.hc,...D.off.map(a=>({n:a[0],x:a[2]})),...D.def.map(a=>({n:a[0],x:a[2]})),...D.sup.map(a=>({n:a[0],x:a[2]}))].filter(p=>p.x).map(p=>p.x)).size;}
 function detailHtml(D,esc){
-  const nm=(n,x)=>x?`<a href="${esc(x)}" target="_blank" rel="noopener">${esc(n)}</a>`:esc(n);
+  const nm=(n,x)=>x?`<a href="${esc(x)}" target="_blank" rel="noopener">${esc(n)}</a> <a class="xh" href="${esc(x)}" target="_blank" rel="noopener" aria-label="${esc(n)} on X">@${esc(x.split("/").pop())}</a>`:esc(n);
   const list=a=>`<ul>${a.map(([n,ti,x])=>`<li>${nm(n,x)}<small>${esc(ti)}</small></li>`).join("")}</ul>`;
   const R=D.roster;let rows="",tot=R.cols.map(()=>0);
   R.groups.forEach(([g,ps])=>{rows+=`<tr class="grp"><td colspan="${R.cols.length+2}">${esc(g)}</td></tr>`;ps.forEach(([p,c])=>{c.forEach((v,i)=>tot[i]+=v);rows+=`<tr><td>${esc(p)}</td>${c.map(v=>`<td class="${v?"":"z"}">${v||"–"}</td>`).join("")}<td class="tot">${c.reduce((a,b)=>a+b,0)}</td></tr>`;});});
