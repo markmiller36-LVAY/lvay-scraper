@@ -180,7 +180,8 @@ class FootballLiveScheduleMergeTests(unittest.TestCase):
             self.assertEqual(rows, [
                 ("Week 1", "False River Academy", "W"),
                 ("Week 2", "False River Academy", ""),
-                ("Week 7", "False River Academy", None),
+                # Week 7 was replaced by East Iberville (football_forfeits.py, Oct 14).
+                ("Week 7", "East Iberville", ""),
             ])
 
 if __name__ == "__main__":

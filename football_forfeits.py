@@ -41,7 +41,7 @@ FOOTBALL_FORFEITS = {
         {"team": "Thrive Academy", "opponent": "Acadiana Christian", "game_date": "10/30/2026"},
         {"team": "Thrive Academy", "opponent": "East Iberville", "game_date": "11/6/2026"},
         # Capitol's season ended after Week 6; opponents receive forfeit wins. Mark, Oct 14, 2026.
-        {"team": "Capitol", "opponent": "East Iberville", "game_date": "10/16/2026"},
+        # Week 7 at East Iberville is replaced by Highland Baptist (see FOOTBALL_SWAPPED_GAMES).
         {"team": "Capitol", "opponent": "St. John", "game_date": "10/23/2026"},
         {"team": "Capitol", "opponent": "White Castle", "game_date": "10/30/2026"},
         {"team": "Capitol", "opponent": "Southern Lab", "game_date": "11/6/2026"},
@@ -56,6 +56,25 @@ FOOTBALL_CANCELLED_GAMES = {
         {"team": "Booker T. Washington - N.O.", "opponent": "Bogalusa", "game_date": "10/9/2026"},
         # Week 6 vs Dumas (Ark.) ruled cancelled; not a forfeit. Mark, Oct 13, 2026.
         {"team": "General Trass", "opponent": "Dumas High School, AR", "game_date": "10/9/2026"},
+    ],
+}
+
+# Games re-arranged after LHSAA posted the schedule. Each listed school's game
+# against old_opponent becomes an unplayed game against new_opponent.
+# Mark, Oct 14, 2026: East Iberville plays Highland Baptist in Week 7 instead
+# of taking Capitol's forfeit; Highland Baptist drops its JV game with False River.
+FOOTBALL_SWAPPED_GAMES = {
+    "2026": [
+        {"school": "East Iberville", "old_opponent": "Capitol", "new_opponent": "Highland Baptist",
+         "week": 7, "game_date": "10/16/2026", "home_away": "H"},
+        {"school": "Highland Baptist", "old_opponent": "False River Academy", "new_opponent": "East Iberville",
+         "week": 7, "game_date": "10/16/2026", "home_away": "A"},
+    ],
+}
+# Games that no longer happen; the week becomes an open week for that school.
+FOOTBALL_DROPPED_GAMES = {
+    "2026": [
+        {"school": "Capitol", "opponent": "East Iberville", "game_date": "10/16/2026"},
     ],
 }
 
@@ -91,6 +110,67 @@ def _has_real_score(score):
     return len(re.findall(r"\d+", str(score or ""))) == 2
 
 
+def _week_number(value):
+    match = re.search(r"\d+", str(value or ""))
+    return int(match.group()) if match else None
+
+
+def apply_football_schedule_changes(conn, season):
+    """Apply swapped and dropped games. Returns rows changed."""
+    season = str(season)
+    swaps = FOOTBALL_SWAPPED_GAMES.get(season, [])
+    drops = FOOTBALL_DROPPED_GAMES.get(season, [])
+    if not swaps and not drops:
+        return 0
+    try:
+        rows = conn.execute(
+            "SELECT rowid, school, opponent, game_date, week FROM games "
+            "WHERE sport='football' AND season=?",
+            (season,),
+        ).fetchall()
+    except sqlite3.OperationalError:
+        return 0
+    changed = 0
+    for drop in drops:
+        day = _parse_date(drop["game_date"])
+        for rowid, school, opponent, game_date, _week in rows:
+            if (_key(school) == _key(drop["school"]) and _key(opponent) == _key(drop["opponent"])
+                    and _parse_date(game_date) in (day, None)):
+                conn.execute("DELETE FROM games WHERE rowid=?", (rowid,))
+                changed += 1
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(games)")}
+    for swap in swaps:
+        day = _parse_date(swap["game_date"])
+        mine = [r for r in rows if _key(r[1]) == _key(swap["school"])]
+        has_new = any(
+            _key(r[2]) == _key(swap["new_opponent"]) and _parse_date(r[3]) == day for r in mine
+        )
+        for rowid, school, opponent, game_date, week in mine:
+            # Only that week's game: same date, or an undated placeholder for that week.
+            if _key(opponent) != _key(swap["old_opponent"]):
+                continue
+            row_day = _parse_date(game_date)
+            if row_day != day and not (row_day is None and _week_number(week) == swap["week"]):
+                continue
+            if has_new:
+                # The new game is already on file (e.g. LHSAA posted it); drop the old one.
+                conn.execute("DELETE FROM games WHERE rowid=?", (rowid,))
+            elif "home_away" in columns:
+                conn.execute(
+                    "UPDATE games SET opponent=?, game_date=?, home_away=?, win_loss='', score='-' "
+                    "WHERE rowid=?",
+                    (swap["new_opponent"], swap["game_date"], swap["home_away"], rowid),
+                )
+            else:
+                conn.execute(
+                    "UPDATE games SET opponent=?, game_date=?, win_loss='', score='-' WHERE rowid=?",
+                    (swap["new_opponent"], swap["game_date"], rowid),
+                )
+            has_new = True
+            changed += 1
+    return changed
+
+
 def apply_football_cancellations(conn, season):
     """Mark listed cancelled games "Cancelled" on both schedules. Returns rows changed."""
     entries = FOOTBALL_CANCELLED_GAMES.get(str(season))
@@ -124,7 +204,8 @@ def apply_football_cancellations(conn, season):
 
 def apply_football_forfeits(conn, season, today=None):
     """Mark listed forfeits (and cancelled games) in the games table. Returns rows changed."""
-    cancelled = apply_football_cancellations(conn, season)
+    cancelled = apply_football_schedule_changes(conn, season)
+    cancelled += apply_football_cancellations(conn, season)
     entries = FOOTBALL_FORFEITS.get(str(season))
     if not entries:
         return cancelled
