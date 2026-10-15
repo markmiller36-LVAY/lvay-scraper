@@ -20,9 +20,11 @@ def test_off_slot_half_hours_stay_quiet():
     assert not should_trigger_now(at(2026, 10, 10, 3, 15))
 
 
-def test_game_night_half_hours_fire():
-    assert should_trigger_now(at(2026, 10, 9, 21, 31))  # Friday
-    assert should_trigger_now(at(2026, 10, 8, 18, 0))   # Thursday
+def test_no_all_day_game_day_boost():
+    assert not should_trigger_now(at(2026, 10, 9, 21, 31))  # Friday
+    assert not should_trigger_now(at(2026, 10, 8, 18, 0))   # Thursday 6pm
+    assert not should_trigger_now(at(2026, 10, 15, 4, 30))  # Thursday 4:30am
+    assert should_trigger_now(at(2026, 10, 15, 7, 2))       # regular 7am
 
 
 def test_midnight_after_game_night():

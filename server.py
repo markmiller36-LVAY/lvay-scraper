@@ -418,8 +418,15 @@ def football_archive_rankings_response(season):
 
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
+    # WAL lets public pages keep reading while a pipeline run is writing,
+    # instead of waiting on (or failing with) "database is locked".
+    conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.row_factory = sqlite3.Row
+    try:
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA busy_timeout=30000")
+    except sqlite3.Error:
+        pass
     return conn
 
 

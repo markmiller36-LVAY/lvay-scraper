@@ -16,16 +16,20 @@ class AutomationHardeningTests(unittest.TestCase):
     def test_football_peak_schedule_uses_central_time(self):
         central = ZoneInfo("America/Chicago")
         expected = [
-            datetime(2026, 9, 3, 6, 0, tzinfo=central),   # Thursday morning
-            datetime(2026, 9, 3, 14, 30, tzinfo=central), # Thursday afternoon
-            datetime(2026, 9, 3, 22, 30, tzinfo=central), # Thursday game night
+            datetime(2026, 9, 3, 7, 0, tzinfo=central),   # regular 7am
+            datetime(2026, 9, 3, 23, 0, tzinfo=central),  # regular 11pm
             datetime(2026, 9, 4, 0, 0, tzinfo=central),   # after Thursday
-            datetime(2026, 9, 4, 17, 30, tzinfo=central), # Friday afternoon
-            datetime(2026, 9, 4, 9, 0, tzinfo=central),   # Friday morning
             datetime(2026, 9, 5, 0, 0, tzinfo=central),   # after Friday
         ]
         for moment in expected:
             self.assertTrue(trigger_pipeline.should_trigger_now(moment))
+        # No all-day game-day boost (removed Oct 15, 2026).
+        for moment in (
+            datetime(2026, 9, 3, 6, 0, tzinfo=central),
+            datetime(2026, 9, 3, 14, 30, tzinfo=central),
+            datetime(2026, 9, 4, 17, 30, tzinfo=central),
+        ):
+            self.assertFalse(trigger_pipeline.should_trigger_now(moment))
         self.assertFalse(
             trigger_pipeline.should_trigger_now(
                 datetime(2026, 9, 2, 22, 30, tzinfo=central)

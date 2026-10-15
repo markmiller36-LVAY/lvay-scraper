@@ -44,11 +44,10 @@ def should_trigger_now(now=None):
     if now.month not in {8, 9, 10, 11}:
         return False
 
-    # During football season, refresh continuously on the two primary game
-    # days.  Partial score sets are intentional: each later pass replaces the
-    # in-progress snapshot as the official source publishes more finals.
-    if weekday in {3, 4} and minute in {0, 30}:
-        return True
+    # Oct 15, 2026: the all-day Thursday/Friday every-30-minutes boost is gone.
+    # Each run takes ~20 minutes, so it kept the server busy most of game day
+    # and slowed the public pages. Game-night refreshes (10pm-1am) come from
+    # the separate hourly scheduled task instead.
     # Midnight immediately following Thursday and Friday game nights.
     if weekday in {4, 5} and hour == 0 and minute == 0:
         return True
