@@ -2240,7 +2240,8 @@ def breakdown_football(school):
         """, (season, school))
         rows = [dict(r) for r in c.fetchall()]
         total = sum(r["total_pts"] for r in rows)
-        pr = round(total / len(rows), 2) if rows else 0
+        from power_rating_engine import round_half_up
+        pr = round_half_up(total / len(rows)) if rows else 0
     except Exception as e:
         conn.close()
         return jsonify({"error": str(e)}), 500

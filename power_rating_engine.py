@@ -388,7 +388,11 @@ class PowerRatingEngine:
         # Opponent quality
         style = config["opp_quality"]
         if style == "win_pct_x10":
-            gp.opp_quality = game.opponent_win_pct * 10
+            # Football: LHSAA rounds each game's opponent quality to the
+            # hundredth (half-up) before totaling, e.g. 4/6 x 10 = 6.67, not
+            # 6.6666... Verified Oct 14, 2026: this matches LHSAA's published
+            # ratings on the 28 schools that were off by 0.01.
+            gp.opp_quality = round_half_up(game.opponent_win_pct * 10)
         elif style == "win_pct_x34":
             gp.opp_quality = game.opponent_win_pct * 34
         elif style == "win_pct_x44":
