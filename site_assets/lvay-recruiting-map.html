@@ -59,8 +59,8 @@ body{background:radial-gradient(130% 100% at 50% 35%,#fbfbfb,var(--ground) 60%,#
 .card dd{margin:0}
 .card .x{all:unset;justify-self:end;margin-top:-4px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;grid-row:1}
 .card .x:focus-visible{outline:2px solid var(--teal)}
-.card .site{justify-self:start;margin-top:6px;font-size:18px;font-weight:600;letter-spacing:.04em;color:#fff;background:var(--teal);text-decoration:none;padding:5px 10px 2px;border-radius:6px}
-.card .site:hover{background:#006b6a}
+.card .site{color:var(--teal);font-weight:600;text-decoration:underline;text-underline-offset:2px;word-break:break-all}
+.card .site:hover{color:#006b6a}
 .card .site:focus-visible{outline:2px solid #000;outline-offset:2px}
 .tip{position:absolute;z-index:3;pointer-events:none;font-family:var(--teko);font-size:17px;font-weight:500;line-height:1;background:#000;color:#fff;padding:5px 8px 2px;border-radius:5px;white-space:nowrap}
 @media (max-width:720px){
@@ -233,7 +233,7 @@ function applyLevels(){
 $("legend").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.l;if(lvOn.has(k))lvOn.delete(k);else lvOn.add(k);applyLevels();});
 $("fdv").addEventListener("change",e=>{const v=e.target.value;lvOn.clear();(v?[v]:LV.map(l=>l[0])).forEach(k=>lvOn.add(k));applyLevels();});
 function cardHtml(s){const esc=v=>String(v).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));const lvName=LV.find(l=>l[0]===s.lv)[1];
-  return `<button type="button" class="x" id="cx">Close</button><h2>${esc(s.n)}</h2><div class="nick">${esc(s.k)}</div><dl>${s.f&&s.f!==s.n?`<dt>School</dt><dd>${esc(s.f)}</dd>`:""}<dt>Level</dt><dd>${lvName}</dd><dt>Conference</dt><dd>${esc(s.cf)}</dd><dt>City</dt><dd>${esc(s.c)}, Texas</dd>${s.nt?`<dt>Note</dt><dd>${esc(s.nt)}</dd>`:""}</dl>${s.u?`<a class="site" href="${esc(s.u)}" target="_blank" rel="noopener">Football site ↗</a>`:""}`;}
+  return `<button type="button" class="x" id="cx">Close</button><h2>${esc(s.n)}</h2><div class="nick">${esc(s.k)}</div><dl>${s.f&&s.f!==s.n?`<dt>School</dt><dd>${esc(s.f)}</dd>`:""}<dt>Level</dt><dd>${lvName}</dd><dt>Conference</dt><dd>${esc(s.cf)}</dd><dt>City</dt><dd>${esc(s.c)}, Texas</dd>${s.nt?`<dt>Note</dt><dd>${esc(s.nt)}</dd>`:""}${s.u?`<dt>Website</dt><dd><a class="site" href="${esc(s.u)}" target="_blank" rel="noopener">${esc(s.u.replace(/^https?:\/\/(www\.)?/,""))}</a></dd>`:""}</dl>`;}
 function pickCollege(i,fly=true){
   cSel=i;placeColleges();COLLEGES.forEach(s=>s.el.classList.toggle("on",s.i===i));
   const card=$("card");
