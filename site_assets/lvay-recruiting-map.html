@@ -63,7 +63,7 @@ body{background:radial-gradient(130% 100% at 50% 35%,#fbfbfb,var(--ground) 60%,#
 @media (max-width:720px){
   .panel2{left:10px;right:10px;max-width:none;bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
   .bar{flex-wrap:wrap;gap:8px 12px}
-  .bar select{order:3;flex:1 1 100%;font-size:18px}
+  .bar select{order:3;flex:1 1 40%;min-width:0;font-size:18px}
   .regions{right:8px;width:54px;top:calc(env(safe-area-inset-top,0px) + 112px)}
   .bar{left:10px;right:10px;top:calc(env(safe-area-inset-top,0px) + 10px);min-height:44px;padding:7px 12px}
   .bar h1{font-size:17px}
@@ -78,6 +78,8 @@ body{background:radial-gradient(130% 100% at 50% 35%,#fbfbfb,var(--ground) 60%,#
     <h1>LVAY <span>Recruiting Map</span></h1>
     <label for="fst" class="vh">State</label>
     <select id="fst"><option value="">State</option></select>
+    <label for="fdv" class="vh">Division</label>
+    <select id="fdv"><option value="">Division</option><option value="FBS">FBS</option><option value="FCS">FCS</option><option value="D2">Division II</option><option value="D3">Division III</option><option value="NAIA">NAIA</option><option value="JUCO">Junior college</option></select>
     <button type="button" id="reset">Reset</button>
   </header>
   <section class="regions" aria-label="Regions">
@@ -219,7 +221,14 @@ placeColleges();
 /* name tags, shown once you are zoomed in on the state */
 COLLEGES.forEach(s=>{const el=document.createElement("div");el.className="cl";el.textContent=s.n;el.style.display="none";el.addEventListener("click",()=>pickCollege(s.i));$("labels").appendChild(el);s.el=el;});
 $("legend").innerHTML='<span class="ttl">Texas college football</span>'+LV.map(([k,n,c])=>`<button type="button" data-l="${k}" aria-pressed="true"><i style="background:${c}"></i>${n} ${COLLEGES.filter(s=>s.lv===k).length}</button>`).join("");
-$("legend").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.l;if(lvOn.has(k))lvOn.delete(k);else lvOn.add(k);b.setAttribute("aria-pressed",String(lvOn.has(k)));if(cSel>=0&&!lvOn.has(COLLEGES[cSel].lv))pickCollege(-1,false);placeColleges();});
+function applyLevels(){
+  document.querySelectorAll("#legend button").forEach(b=>b.setAttribute("aria-pressed",String(lvOn.has(b.dataset.l))));
+  $("fdv").value=lvOn.size===1?[...lvOn][0]:"";
+  if(cSel>=0&&!lvOn.has(COLLEGES[cSel].lv))pickCollege(-1,false);
+  placeColleges();
+}
+$("legend").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.l;if(lvOn.has(k))lvOn.delete(k);else lvOn.add(k);applyLevels();});
+$("fdv").addEventListener("change",e=>{const v=e.target.value;lvOn.clear();(v?[v]:LV.map(l=>l[0])).forEach(k=>lvOn.add(k));applyLevels();});
 function cardHtml(s){const esc=v=>String(v).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));const lvName=LV.find(l=>l[0]===s.lv)[1];
   return `<button type="button" class="x" id="cx">Close</button><h2>${esc(s.n)}</h2><div class="nick">${esc(s.k)}</div><dl>${s.f&&s.f!==s.n?`<dt>School</dt><dd>${esc(s.f)}</dd>`:""}<dt>Level</dt><dd>${lvName}</dd><dt>Conference</dt><dd>${esc(s.cf)}</dd><dt>City</dt><dd>${esc(s.c)}, Texas</dd>${s.nt?`<dt>Note</dt><dd>${esc(s.nt)}</dd>`:""}</dl>`;}
 function pickCollege(i,fly=true){
@@ -369,7 +378,7 @@ renderer.domElement.addEventListener("pointermove",e=>{
   renderer.domElement.style.cursor=(ci>=0||m)?"pointer":"";
 });
 renderer.domElement.addEventListener("pointerleave",()=>{$("tip").hidden=true;if(cHov>=0){cHov=-1;placeColleges();}if(hov){hov=null;paint();}});
-$("reset").onclick=()=>{region="";pickCollege(-1,false);select(null);flyTo(HOME.t.clone(),homeRadius(),HOME.phi,HOME.theta,1100);};
+$("reset").onclick=()=>{region="";LV.forEach(l=>lvOn.add(l[0]));applyLevels();pickCollege(-1,false);select(null);flyTo(HOME.t.clone(),homeRadius(),HOME.phi,HOME.theta,1100);};
 window.addEventListener("keydown",e=>{if(e.key==="Escape")$("reset").onclick();});
 
 /* ---------- size + loop ---------- */
