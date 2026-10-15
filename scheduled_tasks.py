@@ -34,11 +34,13 @@ def get_active_sports():
         sports.append("baseball")
         sports.append("softball")
 
+    # Basketball pulls start Oct 19 each fall (Mark, Oct 2026) so early-October
+    # runs stay football-only and quick.
+    today = datetime.now()
+    if month in [11, 12, 1, 2, 3] or (month == 10 and today.day >= 19):
+        sports.extend(["boys_basketball", "girls_basketball"])
     if month in [10, 11, 12, 1, 2, 3]:
-        sports.extend([
-            "boys_basketball", "girls_basketball",
-            "boys_soccer", "girls_soccer",
-        ])
+        sports.extend(["boys_soccer", "girls_soccer"])
     return sports
 
 
