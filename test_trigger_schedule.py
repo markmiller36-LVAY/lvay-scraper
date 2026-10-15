@@ -1,48 +1,38 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from trigger_pipeline import should_trigger_now
+from trigger_pipeline import should_trigger_now, sports_for_now
 
 CT = ZoneInfo("America/Chicago")
+FB = ["football", "volleyball", "baseball", "softball"]
+BB = ["boys_basketball", "girls_basketball", "boys_soccer", "girls_soccer"]
 
 
 def at(y, mo, d, h, mi):
     return datetime(y, mo, d, h, mi, tzinfo=CT)
 
 
-def test_regular_slot_fires_when_render_starts_late():
-    assert should_trigger_now(at(2026, 10, 10, 3, 1))   # Saturday 3:01am
-    assert should_trigger_now(at(2026, 10, 10, 15, 9))
+def test_football_volleyball_every_4_hours_from_5am():
+    for hour in (1, 5, 9, 13, 17, 21):
+        assert sports_for_now(at(2026, 10, 20, hour, 0)) == FB
 
 
-def test_off_slot_half_hours_stay_quiet():
-    assert not should_trigger_now(at(2026, 10, 10, 3, 30))  # Saturday
-    assert not should_trigger_now(at(2026, 10, 10, 3, 15))
+def test_basketball_every_4_hours_from_6am():
+    for hour in (2, 6, 10, 14, 18, 22):
+        assert sports_for_now(at(2026, 10, 20, hour, 0)) == BB
 
 
-def test_no_all_day_game_day_boost():
-    assert not should_trigger_now(at(2026, 10, 9, 21, 31))  # Friday
-    assert not should_trigger_now(at(2026, 10, 8, 18, 0))   # Thursday 6pm
-    assert not should_trigger_now(at(2026, 10, 15, 4, 30))  # Thursday 4:30am
-    assert should_trigger_now(at(2026, 10, 15, 7, 2))       # regular 7am
+def test_slot_fires_when_render_starts_late():
+    assert sports_for_now(at(2026, 10, 20, 5, 9)) == FB
+    assert not should_trigger_now(at(2026, 10, 20, 5, 30))
+    assert not should_trigger_now(at(2026, 10, 20, 5, 10))
 
 
-def test_midnight_after_game_night():
-    assert should_trigger_now(at(2026, 10, 10, 0, 2))   # Sat 12:02am
-    assert not should_trigger_now(at(2026, 10, 11, 0, 0))  # Sun midnight
+def test_other_hours_stay_quiet():
+    for hour in (0, 3, 4, 7, 8, 11, 12, 15, 16, 19, 20, 23):
+        assert not should_trigger_now(at(2026, 10, 16, hour, 0))  # Friday
 
 
-def test_no_game_night_boost_out_of_season():
-    assert not should_trigger_now(at(2026, 12, 4, 21, 30))  # Friday in Dec
-    assert should_trigger_now(at(2026, 12, 4, 19, 0))       # regular 7pm
-
-
-def test_alternating_sports_by_slot():
-    from trigger_pipeline import sports_for_now
-    assert sports_for_now(at(2026, 10, 20, 3, 1)) is None    # full
-    assert sports_for_now(at(2026, 10, 20, 11, 0)) is None   # full
-    assert sports_for_now(at(2026, 10, 20, 19, 4)) is None   # full
-    assert sports_for_now(at(2026, 10, 20, 7, 0)) == ["football", "volleyball"]
-    assert sports_for_now(at(2026, 10, 20, 15, 2)) == ["football", "volleyball"]
-    assert sports_for_now(at(2026, 10, 20, 23, 0)) == ["football", "volleyball"]
-    assert sports_for_now(at(2026, 10, 17, 0, 1)) == ["football", "volleyball"]
+def test_no_basketball_slot_out_of_season():
+    assert not should_trigger_now(at(2026, 7, 10, 6, 0))
+    assert sports_for_now(at(2026, 7, 10, 5, 0)) == FB
