@@ -407,6 +407,8 @@ PARISHES.forEach(p=>{
   p.r.forEach(ring=>{for(let i=0;i<ring.length-1;i++){const a=toW(ring[i]),b=toW(ring[i+1]);seamPts.push(a[0],DEPTH+.004,a[1],b[0],DEPTH+.004,b[1]);}});
 });
 const seamGeo=new THREE.BufferGeometry();seamGeo.setAttribute("position",new THREE.Float32BufferAttribute(seamPts,3));
+/* camera focus stays over Louisiana: the board can't be dragged off the state */
+const LA_BOX=(()=>{const xs=[],zs=[];PARISHES.forEach(p=>p.r.forEach(r=>r.forEach(c=>{const [x,z]=toW(c);xs.push(x);zs.push(z);})));return {x0:Math.min(...xs),x1:Math.max(...xs),z0:Math.min(...zs),z1:Math.max(...zs)};})();
 scene.add(new THREE.LineSegments(seamGeo,new THREE.LineBasicMaterial({color:0x7d7d7d})));
 /* parish names painted flat on each tile */
 var LABELS=[];
@@ -696,7 +698,7 @@ function frame(now){
   if(tween)tween(now);
   if(!isFinite(camera.position.x+camera.position.y+camera.position.z)){tween=null;controls.target.copy(HOME.t);camera.position.copy(camFromSph(HOME.t,homeRadius(),HOME.phi,HOME.theta));}
   controls.update();
-  controls.target.x=Math.max(-22,Math.min(22,controls.target.x));controls.target.z=Math.max(-20,Math.min(18,controls.target.z));controls.target.y=0;
+  {const tx=Math.max(LA_BOX.x0,Math.min(LA_BOX.x1,controls.target.x)),tz=Math.max(LA_BOX.z0,Math.min(LA_BOX.z1,controls.target.z));const dx=tx-controls.target.x,dz=tz-controls.target.z;if(dx||dz){controls.target.x=tx;controls.target.z=tz;camera.position.x+=dx;camera.position.z+=dz;}controls.target.y=0;}
   const t=clock.getElapsedTime(),w=stage.clientWidth,h=stage.clientHeight;
   leadTags.forEach(x=>placeLabel(x.el,new THREE.Vector3(x.s.px,(x.s.py||DEPTH)+.42,x.s.pz),w,h));
   if(parish){const pm=parishMeshes.find(m=>m.userData.k===parish);if(pm)placeLabel(pLbl,new THREE.Vector3(pm.userData.cx,DEPTH+.15,pm.userData.cz),w,h);}
