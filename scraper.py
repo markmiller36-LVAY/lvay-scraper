@@ -130,10 +130,9 @@ SPORTS = {
         "base_url": "https://www.lhsaaonline.org/pr/bbpr/admin/ReportSchedule.asp",
         "referer": "https://www.lhsaaonline.org/pr/bbpr/admin/SearchBoysBasketballSchedule.asp",
         "loop_by_class": True, "season_mode": "school_year",
-        # Begin watching before the playing season so LVAY detects the first
-        # official schedules within one four-hour cycle. Rankings/exports stay
-        # gated by scheduled_tasks.py until October.
-        "active_start": "08-01", "active_end": "03-31",
+        # Basketball pulls (scrape, ratings, Sheets) start Oct 19 each fall
+        # (Mark, Oct 2026) so early-October runs stay football-only.
+        "active_start": "10-19", "active_end": "03-31",
         "current_season_selector": "1",
         "payload_template": {
             "yr": "{season}", "resultdate": "", "n": "", "h": "",
@@ -148,7 +147,7 @@ SPORTS = {
         "base_url": "https://www.lhsaaonline.org/pr/bbpr/admin/ReportSchedule.asp",
         "referer": "https://www.lhsaaonline.org/pr/bbpr/admin/SearchGirlsBasketballSchedule.asp",
         "loop_by_class": True, "season_mode": "school_year",
-        "active_start": "08-01", "active_end": "03-31",
+        "active_start": "10-19", "active_end": "03-31",
         "current_season_selector": "1",
         "payload_template": {
             "yr": "{season}", "resultdate": "", "n": "", "h": "",
@@ -793,7 +792,8 @@ def scrape_sport(sport_key: str):
     raise ValueError(f"No scraper implemented for {sport_key}")
 
 
-def run_all_sports():
+def run_all_sports(only=None):
+    """Scrape every in-window sport, or just those in `only` when given."""
     now = now_local()
 
     print(f"\n{'=' * 60}")
@@ -804,6 +804,9 @@ def run_all_sports():
     total = 0
 
     for sport_key in SPORTS:
+        if only is not None and sport_key not in only:
+            print(f"\n--- SKIPPING {sport_key.upper()} (not in this run) ---")
+            continue
         do_scrape, reason = should_scrape_sport(sport_key, now)
 
         if not do_scrape:

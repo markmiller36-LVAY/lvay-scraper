@@ -54,6 +54,21 @@ def should_trigger_now(now=None):
     return False
 
 
+# Alternate pulls so each run stays short: football and volleyball refresh in
+# every slot; basketball and soccer only in the 3am, 11am and 7pm slots
+# (every 8 hours). Midnight game-night runs are football and volleyball only.
+FULL_RUN_HOURS = {3, 11, 19}
+FAST_SPORTS = ["football", "volleyball"]
+
+
+def sports_for_now(now=None):
+    """None means every in-season sport; otherwise the subset to run."""
+    now = (now or datetime.now(CENTRAL)).astimezone(CENTRAL)
+    if now.hour in FULL_RUN_HOURS and now.minute < 10:
+        return None
+    return list(FAST_SPORTS)
+
+
 def pipeline_status():
     status_url = PIPELINE_URL.rsplit("/", 1)[0] + "/status"
     response = requests.get(
@@ -76,9 +91,12 @@ def main():
         print("[CRON] PIPELINE_TOKEN is not configured")
         return 2
 
+    sports = sports_for_now()
+    print(f"[CRON] Sports this run: {sports or 'all in season'}")
     response = requests.post(
         PIPELINE_URL,
         headers={"X-Pipeline-Token": PIPELINE_TOKEN},
+        json={"sports": sports} if sports else None,
         timeout=60,
     )
     print(f"[CRON] Pipeline trigger returned HTTP {response.status_code}")

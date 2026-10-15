@@ -35,3 +35,14 @@ def test_midnight_after_game_night():
 def test_no_game_night_boost_out_of_season():
     assert not should_trigger_now(at(2026, 12, 4, 21, 30))  # Friday in Dec
     assert should_trigger_now(at(2026, 12, 4, 19, 0))       # regular 7pm
+
+
+def test_alternating_sports_by_slot():
+    from trigger_pipeline import sports_for_now
+    assert sports_for_now(at(2026, 10, 20, 3, 1)) is None    # full
+    assert sports_for_now(at(2026, 10, 20, 11, 0)) is None   # full
+    assert sports_for_now(at(2026, 10, 20, 19, 4)) is None   # full
+    assert sports_for_now(at(2026, 10, 20, 7, 0)) == ["football", "volleyball"]
+    assert sports_for_now(at(2026, 10, 20, 15, 2)) == ["football", "volleyball"]
+    assert sports_for_now(at(2026, 10, 20, 23, 0)) == ["football", "volleyball"]
+    assert sports_for_now(at(2026, 10, 17, 0, 1)) == ["football", "volleyball"]

@@ -34,13 +34,15 @@ class FootballLiveScheduleMergeTests(unittest.TestCase):
             self.assertEqual(post.call_args.kwargs["data"]["yr"], "1")
 
     def test_winter_watchers_begin_in_august(self):
+        # Soccer still watches from August; basketball waits until Oct 19
+        # (Mark, Oct 2026).
         august = scraper.datetime(2026, 8, 13)
-        for sport in (
-            "boys_basketball", "girls_basketball",
-            "boys_soccer", "girls_soccer",
-        ):
+        for sport in ("boys_soccer", "girls_soccer"):
             with self.subTest(sport=sport):
                 self.assertEqual(scraper.should_scrape_sport(sport, august), (True, "active"))
+        for sport in ("boys_basketball", "girls_basketball"):
+            with self.subTest(sport=sport):
+                self.assertFalse(scraper.should_scrape_sport(sport, august)[0])
 
     def test_lhsaa_overlays_week_without_deleting_gap_fill(self):
         with tempfile.TemporaryDirectory() as temp_dir:

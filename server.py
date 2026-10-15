@@ -822,6 +822,15 @@ def run_full_pipeline():
             "started_at": PIPELINE_STATE["started_at"],
         }), 409
 
+    # Optional subset, e.g. {"sports": ["football", "volleyball"]} or
+    # ?sports=football,volleyball. Omitted means every in-season sport.
+    requested = (request.get_json(silent=True) or {}).get("sports")
+    if requested is None and request.args.get("sports"):
+        requested = request.args.get("sports").split(",")
+    only = None
+    if requested:
+        only = [str(sport).strip() for sport in requested if str(sport).strip()]
+
     started_at = datetime.now().isoformat()
     PIPELINE_STATE.update({
         "status": "running",
@@ -835,6 +844,8 @@ def run_full_pipeline():
         try:
             from scheduled_tasks import get_active_sports, scheduled_run
             active_sports = get_active_sports()
+            if only is not None:
+                active_sports = [sp for sp in active_sports if sp in only]
             conn = get_db()
             cursor = conn.execute("""
                 INSERT INTO pipeline_runs
@@ -847,7 +858,7 @@ def run_full_pipeline():
             run_id = cursor.lastrowid
             conn.commit()
             conn.close()
-            scheduled_run()
+            scheduled_run(only=only)
             PIPELINE_STATE["status"] = "completed"
         except Exception as exc:
             PIPELINE_STATE["status"] = "failed"

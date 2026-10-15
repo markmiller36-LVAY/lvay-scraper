@@ -44,10 +44,13 @@ def get_active_sports():
     return sports
 
 
-def scheduled_run():
+def scheduled_run(only=None):
+    """Run the pipeline for every in-season sport, or only those in `only`."""
     print(f"\n[SCHEDULER] Triggered at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     active = get_active_sports()
-    print(f"[SCHEDULER] Active sports this month: {active}")
+    if only is not None:
+        active = [sport for sport in active if sport in only]
+    print(f"[SCHEDULER] Sports this run: {active}")
 
     from pipeline_reporter import capture_snapshot
     before_snapshot = capture_snapshot(active)
@@ -56,7 +59,7 @@ def scheduled_run():
         # 1. SCRAPE
         print("[SCHEDULER] Running scraper...")
         from scraper import run_all_sports, resolve_season_year
-        run_all_sports()
+        run_all_sports(only=active)
 
         # 2. FOOTBALL
         if "football" in active:
