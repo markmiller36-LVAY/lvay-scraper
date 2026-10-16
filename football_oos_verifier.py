@@ -21,6 +21,8 @@ import requests
 from bs4 import BeautifulSoup
 from google.oauth2.service_account import Credentials
 
+from oos_class_corrections import oos_class_correction
+
 
 DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 SHEET_ID = os.environ.get(
@@ -242,6 +244,16 @@ def _truthy(value):
     return str(value or "").strip().lower() in {"1", "true", "yes", "y"}
 
 
+def _with_lock_note(notes, lock_note):
+    notes = str(notes or "")
+    if not lock_note or lock_note in notes:
+        return notes
+    if notes.upper().startswith("MANUAL OVERRIDE:"):
+        # Keep the MANUAL OVERRIDE: prefix first so the row stays manual.
+        return f"{notes} | {lock_note}"
+    return f"{lock_note} {notes}".strip()
+
+
 def _split_louisiana_schools(value):
     return [part.strip() for part in re.split(r"[;\n]+", str(value or "")) if part.strip()]
 
@@ -281,6 +293,9 @@ def import_verified_row(conn, row, record, source_url, checked_at):
     wins, losses, ties = record
     opponent = str(row.get("OOS School") or "").strip()
     classification = str(row.get("LHSAA Class") or "").strip()
+    correction = oos_class_correction(row.get("Season") or SEASON, opponent)
+    if correction:
+        classification = correction["class"]
     imported = 0
     for school in _split_louisiana_schools(row.get("Louisiana Opponent(s)")):
         conn.execute("""
@@ -359,6 +374,19 @@ def run(db_path=None, worksheet=None, session=None):
             if not team:
                 continue
             summary["checked"] += 1
+            lock_note = ""
+            correction = oos_class_correction(row.get("Season") or SEASON, team)
+            if correction:
+                lock_note = correction["note"]
+                if str(row.get("LHSAA Class") or "").strip() != correction["class"]:
+                    summary["changes"].append(
+                        f"{team}: LHSAA Class {row.get('LHSAA Class') or '—'} to {correction['class']} (locked)"
+                    )
+                row["LHSAA Class"] = correction["class"]
+                updates.append({
+                    "range": gspread.utils.rowcol_to_a1(offset, header_index["LHSAA Class"]),
+                    "values": [[correction["class"]]],
+                })
             manual_notes = str(row.get("Notes") or "").strip()
             if manual_notes.upper().startswith("MANUAL OVERRIDE:"):
                 try:
@@ -385,7 +413,7 @@ def run(db_path=None, worksheet=None, session=None):
                         "Verified By": "Manual LVAY verification",
                         "Verification Status": "Verified",
                         "Last Checked": checked_at,
-                        "Notes": manual_notes[:500],
+                        "Notes": _with_lock_note(manual_notes, lock_note)[:500],
                     }
                     for column, value in values.items():
                         updates.append({
@@ -467,7 +495,7 @@ def run(db_path=None, worksheet=None, session=None):
                 "Wins": str(wins), "Losses": str(losses), "Ties": str(ties),
                 "Games Played": games, "Record Through Date": record_through,
                 "Verified By": "LVAY OOS Verifier", "Verification Status": status,
-                "Last Checked": checked_at, "Notes": notes[:500],
+                "Last Checked": checked_at, "Notes": _with_lock_note(notes, lock_note)[:500],
             }
             for column, value in values.items():
                 updates.append({"range": gspread.utils.rowcol_to_a1(offset, header_index[column]), "values": [[value]]})

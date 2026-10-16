@@ -1665,6 +1665,46 @@ def standings_football():
                     "districts": groups, "count": sum(len(g["teams"]) for g in groups)})
 
 
+# Official LHSAA football alignment corrections for the live season roster.
+# The preseason roster (Louisiana Sportsline compilation) is stored in the
+# database and not re-imported mid-season, so a wrong division there would
+# otherwise stick.  Values follow the feed's own format ("Select Division 2").
+FOOTBALL_ROSTER_CORRECTIONS = {
+    2026: {
+        # LHSAA 2026-27 Football Post Season alignment: 4A District 5,
+        # Select Division II (the preseason compilation had Non-Select D2).
+        "Carencro": {
+            "division": "Select Division 2",
+            "track": "Select",
+            "district_class": "S2",
+        },
+        # Official: 1A District 7, Select Division IV (preseason had NS4).
+        "Hanson Memorial": {
+            "division": "Select Division 4",
+            "track": "Select",
+            "district_class": "S4",
+        },
+        # Official: 3A District 3, Select Division III (preseason had D6).
+        "Baker": {
+            "district": "3",
+        },
+    },
+}
+
+
+def football_roster_correction(season, school_name):
+    try:
+        season_key = int(season)
+    except (TypeError, ValueError):
+        return None
+    corrections = FOOTBALL_ROSTER_CORRECTIONS.get(season_key, {})
+    name = str(school_name or "").strip().casefold()
+    for corrected_name, values in corrections.items():
+        if corrected_name.casefold() == name:
+            return values
+    return None
+
+
 @app.route("/api/schedules/football")
 def schedules_football():
     requested_season = request.args.get("season")
@@ -1709,6 +1749,12 @@ def schedules_football():
 
         if roster_rows:
             schools = [dict(row) for row in roster_rows]
+            for school in schools:
+                correction = football_roster_correction(season, school.get("school"))
+                if correction:
+                    for key in ("division", "track", "district"):
+                        if key in correction:
+                            school[key] = correction[key]
         else:
             # Backward-compatible archive path for seasons created before the
             # season_schools table existed.
@@ -1799,8 +1845,11 @@ def schedules_football():
                 WHERE sport='football' AND season=? AND school=?
                 ORDER BY CAST(REPLACE(week,'Week ','') AS INTEGER)
             """, (season, school["school"])).fetchall()
+            school_correction = football_roster_correction(season, school["school"])
             for row in game_rows:
                 game = dict(row)
+                if school_correction and school_correction.get("district_class"):
+                    game["district_class"] = school_correction["district_class"]
                 parsed_game_date = parse_schedule_date(game.get("game_date"))
                 if date_filter and parsed_game_date != date_filter:
                     continue

@@ -37,6 +37,7 @@ from official_record_overrides import (
     get_record_overrides,
 )
 from district_exceptions import is_non_district_game
+from oos_class_corrections import oos_class_correction
 from jv_only_schools import is_jv_only_game
 from school_database import (
     get_school,
@@ -453,10 +454,15 @@ def load_oos_opponents(conn, season=SEASON, sport=SPORT):
         oos = {}
         for r in c.fetchall():
             key = (r["school"], r["opponent"])
+            opp_class = r["class_"] if "class_" in optional else ""
+            if str(sport).lower() == "football":
+                correction = oos_class_correction(season, r["opponent"])
+                if correction:
+                    opp_class = correction["class"]
             oos[key] = {
                 "opponent": r["opponent"],
                 "division": r["division"] if "division" in optional else "Unknown",
-                "class_": r["class_"] if "class_" in optional else "",
+                "class_": opp_class,
                 "opp_wins": r["opp_wins"],
                 "opp_losses": r["opp_losses"],
                 "opp_ties": r["opp_ties"] if "opp_ties" in optional else 0,

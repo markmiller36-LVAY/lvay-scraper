@@ -14500,9 +14500,9 @@
       "source_label": "Carencro Bears",
       "class_": "4A",
       "district": 5,
-      "track": "Non-Select",
-      "division": "Non-Select Division 2",
-      "source_division": "NS2",
+      "track": "Select",
+      "division": "Select Division 2",
+      "source_division": "S2",
       "games": [
         {
           "week": 1,
@@ -24481,7 +24481,7 @@
       "school": "Baker",
       "source_label": "Baker Buffaloes",
       "class_": "3A",
-      "district": 6,
+      "district": 3,
       "track": "Select",
       "division": "Select Division 3",
       "source_division": "S3",
@@ -44929,9 +44929,9 @@
       "source_label": "Hanson Memorial Tigers",
       "class_": "1A",
       "district": 7,
-      "track": "Non-Select",
-      "division": "Non-Select Division 4",
-      "source_division": "NS4",
+      "track": "Select",
+      "division": "Select Division 4",
+      "source_division": "S4",
       "games": [
         {
           "week": 1,
