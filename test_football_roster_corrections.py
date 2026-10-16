@@ -10,7 +10,7 @@ def test_roster_corrections_match_official_alignment():
     football = official["sports"]["football"]
     assert football["Carencro"]["division"] == "Select Division II"
     assert football["Hanson Memorial"]["division"] == "Select Division IV"
-    assert str(football["Baker"]["district"]) == "3"
+    assert str(football["Baker"]["district"]) == "6"
 
     carencro = server.football_roster_correction(2026, "carencro")
     assert carencro["division"] == "Select Division 2"
@@ -18,7 +18,7 @@ def test_roster_corrections_match_official_alignment():
     assert carencro["district_class"] == "S2"
     hanson = server.football_roster_correction(2026, "Hanson Memorial")
     assert hanson["division"] == "Select Division 4"
-    assert server.football_roster_correction(2026, "Baker")["district"] == "3"
+    assert server.football_roster_correction(2026, "Baker")["district"] == "6"
 
 
 def test_no_correction_for_other_schools_or_seasons():
@@ -32,7 +32,7 @@ def test_preseason_roster_file_is_corrected():
     by_name = {s["school"]: s for s in roster["schools"]}
     assert by_name["Carencro"]["division"] == "Select Division 2"
     assert by_name["Hanson Memorial"]["division"] == "Select Division 4"
-    assert by_name["Baker"]["district"] == 3
+    assert by_name["Baker"]["district"] == 6
 
 
 def test_oos_class_locks():

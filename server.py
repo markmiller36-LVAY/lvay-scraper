@@ -1684,9 +1684,11 @@ FOOTBALL_ROSTER_CORRECTIONS = {
             "track": "Select",
             "district_class": "S4",
         },
-        # Official: 3A District 3, Select Division III (preseason had D6).
+        # Official LHSAA 2026-27 regular season alignment (9-4-26): 3A District 6
+        # with Belaire, Glen Oaks, Helix Mentorship Academy and Istrouma,
+        # Select Division III.  (An earlier fix wrongly moved Baker to District 3.)
         "Baker": {
-            "district": "3",
+            "district": "6",
         },
     },
 }
