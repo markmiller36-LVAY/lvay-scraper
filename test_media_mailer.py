@@ -18,6 +18,7 @@ REGIONS = {"north": {"title": "North Louisiana", "schools": ["Ruston", "Neville"
 
 def test_media_slot_is_saturday_after_5am_football_run():
     assert media_mailer.is_media_slot(datetime(2026, 10, 24, 5, 40, tzinfo=CT), ["football"])
+    assert media_mailer.is_media_slot(datetime(2026, 10, 25, 5, 40, tzinfo=CT), ["football"])  # Sunday
     assert not media_mailer.is_media_slot(datetime(2026, 10, 24, 0, 5, tzinfo=CT), ["football"])
     assert not media_mailer.is_media_slot(datetime(2026, 10, 23, 5, 40, tzinfo=CT), ["football"])
     assert not media_mailer.is_media_slot(datetime(2026, 10, 24, 5, 40, tzinfo=CT), ["volleyball"])
@@ -72,3 +73,28 @@ def test_logo_falls_back_to_bundled_copy(tmp_path, monkeypatch):
     monkeypatch.setenv("MEDIA_CACHE_DIR", str(tmp_path))
     logo = media_mailer._logo()
     assert logo is not None and logo.mode == "L" and logo.width > 300
+
+
+def test_pipeline_inbox_gets_saturday_and_sunday_even_before_outlets_go_live(tmp_path, monkeypatch):
+    media = tmp_path / "media.json"
+    media.write_text(json.dumps({"regions": REGIONS, "recipients": [
+        {"id": "inbox", "name": "Inbox", "email": "lvaypipeline@example.com", "active": True,
+         "internal": True, "days": ["saturday", "sunday"],
+         "editions": [{"sport": "football", "region": "north"}]},
+        {"id": "k104", "name": "K104", "email": "fns@example.com", "active": True,
+         "days": ["saturday"], "editions": [{"sport": "football", "region": "north"}]},
+    ]}))
+    sent = []
+    monkeypatch.setattr(media_mailer, "MEDIA_LIST_PATH", media)
+    monkeypatch.setattr(media_mailer, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(media_mailer, "load_rankings", lambda sport: (2026, ROWS))
+    monkeypatch.setattr(media_mailer, "_send", lambda to, *a: sent.append(to))
+    monkeypatch.setattr(media_mailer, "_logo", lambda: None)
+    monkeypatch.setenv("REPORT_EMAIL_TO", "mark@example.com")
+    monkeypatch.setenv("MEDIA_EMAIL_LIVE", "false")
+
+    media_mailer.send_media_emails(now=datetime(2026, 10, 24, 5, 30, tzinfo=CT))  # Saturday
+    media_mailer.send_media_emails(now=datetime(2026, 10, 24, 6, 30, tzinfo=CT))  # again
+    media_mailer.send_media_emails(now=datetime(2026, 10, 25, 5, 30, tzinfo=CT))  # Sunday
+    assert sent == [["lvaypipeline@example.com"], ["mark@example.com"],
+                    ["mark@example.com"], ["lvaypipeline@example.com"]]

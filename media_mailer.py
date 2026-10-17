@@ -31,7 +31,6 @@ FONT_DIR = HERE / "assets" / "fonts"
 DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 CENTRAL = ZoneInfo("America/Chicago")
 SITE = "louisianavsallyall.com"
-SATURDAY = 5
 
 # LVAY brand colors.
 TEAL = (0, 133, 132)
@@ -371,36 +370,52 @@ def _send(to, subject, body, attachments):
     response.raise_for_status()
 
 
-def _week_key(now):
-    return now.strftime("%G-W%V")
+DAY_NAMES = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
 
-def _already_sent(conn, week, recipient_id):
+def _already_sent(conn, day, recipient_id):
     conn.execute("""CREATE TABLE IF NOT EXISTS media_sends (
-        week TEXT, recipient TEXT, sent_at TEXT, live INTEGER,
-        PRIMARY KEY (week, recipient))""")
-    return conn.execute("SELECT 1 FROM media_sends WHERE week=? AND recipient=?",
-                        (week, recipient_id)).fetchone() is not None
+        day TEXT, recipient TEXT, sent_at TEXT, live INTEGER,
+        PRIMARY KEY (day, recipient))""")
+    return conn.execute("SELECT 1 FROM media_sends WHERE day=? AND recipient=?",
+                        (day, recipient_id)).fetchone() is not None
+
+
+def _internal_body(editions):
+    missing = sorted({m for e in editions for m in e["missing"]})
+    note = (f"<p>Not in today's ratings: {html.escape(', '.join(missing))}</p>"
+            if missing else "")
+    return (f"<p>LVAY Power Ratings graphic, updated "
+            f"{html.escape(_updated_label(editions[0]['updated']))}.</p>{note}")
 
 
 def send_media_emails(now=None, force_preview=False, only=None):
-    """Draw and send every active recipient's editions. Returns a summary."""
+    """Draw and send the editions due today. Returns a summary.
+
+    A recipient's "days" (default Saturday) say when it gets an email.
+    "internal" recipients (LVAY's own inboxes) always get the real email;
+    outlets only do once MEDIA_EMAIL_LIVE=true, otherwise Mark gets a preview.
+    """
     now = (now or datetime.now(CENTRAL)).astimezone(CENTRAL)
-    live = os.environ.get("MEDIA_EMAIL_LIVE", "false").lower() == "true" and not force_preview
+    outlets_live = (os.environ.get("MEDIA_EMAIL_LIVE", "false").lower() == "true"
+                    and not force_preview)
     preview_to = [a.strip() for a in os.environ.get(
         "REPORT_EMAIL_TO", "markmiller36@gmail.com").split(",") if a.strip()][:1]
     config = load_media_list()
     rankings, summary = {}, []
+    today, weekday = now.date().isoformat(), DAY_NAMES[now.weekday()]
     conn = sqlite3.connect(DB_PATH)
     try:
-        week = _week_key(now)
         for recipient in config["recipients"]:
-            if only and recipient["id"] not in only:
+            rid = recipient["id"]
+            if only:
+                if rid not in only:
+                    continue
+            elif not recipient.get("active") or weekday not in recipient.get("days", ["saturday"]):
                 continue
-            if not recipient.get("active") and not only:
-                continue
-            if live and _already_sent(conn, week, recipient["id"]):
-                summary.append(f"{recipient['id']}: already sent {week}")
+            live = recipient.get("internal") or outlets_live
+            if live and not only and _already_sent(conn, today, rid):
+                summary.append(f"{rid}: already sent {today}")
                 continue
             editions = []
             for spec in recipient["editions"]:
@@ -411,26 +426,27 @@ def send_media_emails(now=None, force_preview=False, only=None):
                 editions.append(build_edition(sport, rows, season, spec, config["regions"]))
             editions = [e for e in editions if e["blocks"]]
             if not editions:
-                summary.append(f"{recipient['id']}: nothing rated yet")
+                summary.append(f"{rid}: nothing rated yet")
                 continue
             attachments = [{"filename": _file_name(e),
                             "content": base64.b64encode(render_png(e)).decode()}
                            for e in editions]
             sports = " & ".join(SPORT_LABEL[e["sport"]] for e in editions)
             day = editions[0]["updated"]
-            subject = f"LVAY {sports} Power Ratings — {day:%b} {day.day}"
+            subject = f"LVAY {sports} Power Ratings \u2014 {day:%b} {day.day}"
             if live:
-                _send([recipient["email"]], subject,
-                      _email_body(recipient, editions), attachments)
+                body = (_internal_body(editions) if recipient.get("internal")
+                        else _email_body(recipient, editions))
+                _send([recipient["email"]], subject, body, attachments)
                 conn.execute("INSERT OR REPLACE INTO media_sends VALUES (?,?,?,1)",
-                             (week, recipient["id"], now.isoformat()))
+                             (today, rid, now.isoformat()))
                 conn.commit()
-                summary.append(f"{recipient['id']}: sent to {recipient['email']}")
+                summary.append(f"{rid}: sent to {recipient['email']}")
             else:
                 target = f"{recipient['name']} <{recipient['email']}>"
                 _send(preview_to, "[PREVIEW] " + subject,
                       _email_body(recipient, editions, preview_for=target), attachments)
-                summary.append(f"{recipient['id']}: preview sent to {preview_to[0]}")
+                summary.append(f"{rid}: preview sent to {preview_to[0]}")
     finally:
         conn.close()
     for line in summary:
@@ -439,7 +455,7 @@ def send_media_emails(now=None, force_preview=False, only=None):
 
 
 def is_media_slot(now, sports):
-    """True right after the Saturday 5am football run."""
+    """True right after the 5am football run on Saturday or Sunday."""
     now = now.astimezone(CENTRAL)
-    return (now.weekday() == SATURDAY and 5 <= now.hour < 9
+    return (DAY_NAMES[now.weekday()] in ("saturday", "sunday") and 5 <= now.hour < 9
             and "football" in (sports or []) and 8 <= now.month <= 12)
