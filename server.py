@@ -905,6 +905,15 @@ def run_full_pipeline():
             conn.close()
             scheduled_run(only=only)
             PIPELINE_STATE["status"] = "completed"
+            # Saturday after the 5am football run: Power Ratings graphics
+            # to the outlets in media_list.json (preview-only until
+            # MEDIA_EMAIL_LIVE=true). Never fails the pipeline.
+            try:
+                from media_mailer import is_media_slot, send_media_emails
+                if is_media_slot(datetime.now().astimezone(), active_sports):
+                    send_media_emails()
+            except Exception as media_exc:
+                print(f"[MEDIA] ERROR (pipeline remains successful): {media_exc}")
         except Exception as exc:
             PIPELINE_STATE["status"] = "failed"
             PIPELINE_STATE["error"] = str(exc)
@@ -939,6 +948,37 @@ def run_full_pipeline():
         "started_at": started_at,
         "message": "Full in-season pipeline started",
     }), 202
+
+
+@app.route("/api/media/preview/<recipient_id>")
+def media_preview(recipient_id):
+    """PNG of a recipient's Saturday graphic, e.g. /api/media/preview/k104?n=0."""
+    from flask import Response
+    from media_mailer import load_media_list, load_rankings, build_edition, render_png
+    config = load_media_list()
+    recipient = next((r for r in config["recipients"] if r["id"] == recipient_id), None)
+    if recipient is None:
+        return jsonify({"error": "unknown recipient"}), 404
+    specs = recipient["editions"]
+    n = request.args.get("n", default=0, type=int)
+    if not 0 <= n < len(specs):
+        return jsonify({"error": f"edition must be 0-{len(specs) - 1}"}), 400
+    season, rows = load_rankings(specs[n]["sport"])
+    edition = build_edition(specs[n]["sport"], rows, season, specs[n], config["regions"])
+    return Response(render_png(edition), mimetype="image/png",
+                    headers={"Cache-Control": "no-store"})
+
+
+@app.route("/api/media/send", methods=["POST"])
+def media_send():
+    """Manual send. Body: {"preview": true, "only": ["k104"]}. Needs the pipeline token."""
+    if not _pipeline_authorized():
+        return jsonify({"status": "unauthorized"}), 401
+    from media_mailer import send_media_emails
+    body = request.get_json(silent=True) or {}
+    summary = send_media_emails(force_preview=body.get("preview", True) is not False,
+                                only=body.get("only"))
+    return jsonify({"status": "ok", "summary": summary})
 
 
 @app.route("/api/pipeline/status")

@@ -1,0 +1,65 @@
+{
+  "_about": "Who gets the Saturday-morning LVAY Power Ratings graphics. Set \"active\": true to start sending to a recipient. Each edition is one PNG: a \"region\" edition shows only that region's schools; a \"top10\" edition shows the top 10 in every division statewide. Never add GeauxPreps (Mark, Oct 17, 2026).",
+  "regions": {
+    "north-louisiana": {
+      "title": "North Louisiana",
+      "schools": [
+        "Ruston", "Haughton", "West Monroe", "Airline", "Ouachita Parish",
+        "Neville", "Franklin Parish", "Sterlington", "Wossman", "West Ouachita",
+        "Tioga", "Booker T. Washington - Shr.", "Southwood", "Northside",
+        "Calvary Baptist", "Beekman Charter", "North Caddo",
+        "D'Arbonne Woods Charter", "Magnolia School of Excellence",
+        "Jena", "Union Parish", "Vidalia", "Caldwell Parish", "Bastrop",
+        "Rayville", "Richwood", "Mangham", "Oak Grove", "Jonesboro-Hodge",
+        "Haynesville", "Homer", "Ferriday", "Ringgold", "Delhi", "Lakeview",
+        "General Trass", "Arcadia", "Ouachita Christian", "Cedar Creek",
+        "St. Mary's", "Glenbrook", "Lincoln Preparatory School", "Delta Charter",
+        "Block", "Northwood - Lena", "Delhi Charter"
+      ]
+    }
+  },
+  "recipients": [
+    {
+      "id": "k104",
+      "name": "K104 Downs Law Friday Night Scoreboard Show",
+      "email": "fns@radiopeople.com",
+      "active": true,
+      "editions": [{"sport": "football", "region": "north-louisiana"}]
+    },
+    {
+      "id": "sbc-advocate",
+      "name": "Roy Lang III, Shreveport-Bossier City Advocate",
+      "email": "Roy.Lang@TheAdvocate.com",
+      "active": false,
+      "editions": [{"sport": "football", "top10": true}]
+    },
+    {
+      "id": "advocate-br",
+      "name": "Jackson Reyes, The Advocate (Baton Rouge)",
+      "email": "jackson.reyes@theadvocate.com",
+      "active": false,
+      "editions": [{"sport": "football", "top10": true}, {"sport": "volleyball", "top10": true}]
+    },
+    {
+      "id": "daily-advertiser",
+      "name": "Shannon Belt, Lafayette Daily Advertiser",
+      "email": "sbelt@gannett.com",
+      "active": false,
+      "editions": [{"sport": "football", "top10": true}, {"sport": "volleyball", "top10": true}]
+    },
+    {
+      "id": "american-press",
+      "name": "American Press sports desk (Lake Charles)",
+      "email": "sports@americanpress.com",
+      "active": false,
+      "editions": [{"sport": "football", "top10": true}, {"sport": "volleyball", "top10": true}]
+    },
+    {
+      "id": "houma-courier",
+      "name": "Houma Courier / Daily Comet",
+      "email": "news@houmatoday.com",
+      "active": false,
+      "editions": [{"sport": "football", "top10": true}]
+    }
+  ]
+}

@@ -1,0 +1,383 @@
+"""Saturday-morning Power Ratings graphics for news outlets and radio shows.
+
+After the Saturday 5am football/volleyball pipeline run, LVAY draws one PNG
+per edition in media_list.json (a region's local teams, or the statewide top
+10 in each division) and emails it to that outlet through Resend.
+
+Safety:
+  - MEDIA_EMAIL_LIVE must be "true" before anything goes to an outlet.
+    Until then every edition goes only to REPORT_EMAIL_TO as a preview.
+  - Each outlet gets at most one email per Saturday (media_sends table).
+  - Recipients come only from media_list.json in this repo.
+"""
+
+from __future__ import annotations
+
+import base64
+import html
+import io
+import json
+import os
+import sqlite3
+from datetime import datetime
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+from PIL import Image, ImageDraw, ImageFont
+
+HERE = Path(__file__).resolve().parent
+MEDIA_LIST_PATH = Path(os.environ.get("MEDIA_LIST_PATH", HERE / "media_list.json"))
+FONT_DIR = HERE / "assets" / "fonts"
+DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
+CENTRAL = ZoneInfo("America/Chicago")
+SITE = "louisianavsallyall.com"
+SATURDAY = 5
+
+# LVAY brand colors.
+TEAL = (0, 133, 132)
+BLACK = (17, 21, 24)
+INK = (17, 17, 17)
+GREY = (170, 178, 178)
+PAGE = (243, 243, 241)
+ROW_A = (246, 246, 246)
+ROW_B = (255, 255, 255)
+SUBBAR = (228, 238, 237)
+
+FOOTBALL_ORDER = [
+    "Non-Select Division I", "Non-Select Division II",
+    "Non-Select Division III", "Non-Select Division IV",
+    "Select Division I", "Select Division II",
+    "Select Division III", "Select Division IV",
+]
+VOLLEYBALL_ORDER = ["Division I", "Division II", "Division III", "Division IV", "Division V"]
+SPORT_LABEL = {"football": "Football", "volleyball": "Volleyball"}
+RATINGS_PAGE = {
+    "football": f"{SITE}/football/power-ratings/",
+    "volleyball": f"{SITE}/volleyball/power-ratings/",
+}
+
+# Shorter names for the graphic; the database keeps the official spelling.
+DISPLAY_NAMES = {
+    "Booker T. Washington - Shr.": "Booker T. Washington (Shreveport)",
+    "Booker T. Washington - N.O.": "Booker T. Washington (New Orleans)",
+    "Northwood - Lena": "Northwood-Lena",
+    "Northwood - Shrev.": "Northwood (Shreveport)",
+    "D'Arbonne Woods Charter": "D'Arbonne Woods",
+    "Lincoln Preparatory School": "Lincoln Prep",
+}
+MONTHS = ["JAN.", "FEB.", "MARCH", "APRIL", "MAY", "JUNE", "JULY",
+          "AUG.", "SEPT.", "OCT.", "NOV.", "DEC."]
+
+
+# ── Data ─────────────────────────────────────────────────────────────────
+
+def load_media_list(path=None):
+    with open(path or MEDIA_LIST_PATH, encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def load_rankings(sport):
+    """The same rows the site's Power Ratings page shows (via the API view)."""
+    from server import app
+
+    response = app.test_client().get(f"/api/rankings/{sport}")
+    data = response.get_json() or {}
+    if response.status_code != 200 or "rankings" not in data:
+        raise RuntimeError(f"{sport} rankings unavailable: {data.get('error')}")
+    rows = []
+    for row in data["rankings"]:
+        if row.get("playoff_eligible") is False:
+            continue
+        rank = row.get("division_rank") or row.get("div_rank")
+        if not rank or not row.get("division"):
+            continue
+        rows.append({
+            "school": row["school"],
+            "division": row["division"],
+            "rank": int(rank),
+            "pr": float(row.get("power_rating") or 0),
+            "calculated_at": row.get("calculated_at"),
+        })
+    return data.get("season"), rows
+
+
+def build_edition(sport, rows, season, edition, regions):
+    """Group rows into the division blocks one graphic shows."""
+    order = FOOTBALL_ORDER if sport == "football" else VOLLEYBALL_ORDER
+    if edition.get("top10"):
+        picked = [r for r in rows if r["rank"] <= 10]
+        area, subtitle, missing = "STATEWIDE", "TOP 10 IN EACH DIVISION", []
+    else:
+        region = regions[edition["region"]]
+        wanted = set(region["schools"])
+        picked = [r for r in rows if r["school"] in wanted]
+        missing = sorted(wanted - {r["school"] for r in picked})
+        area, subtitle = region["title"].upper(), "LOCAL TEAMS"
+    subtitle += (" •  RANKED WITHIN EACH SELECT / NON-SELECT DIVISION"
+                 if sport == "football" else " •  RANKED WITHIN EACH DIVISION")
+    blocks = []
+    for division in order:
+        teams = sorted((r for r in picked if r["division"] == division), key=lambda r: r["rank"])
+        if teams:
+            blocks.append((division, teams))
+    stamps = [r["calculated_at"] for r in rows if r.get("calculated_at")]
+    updated = _parse_time(max(stamps)) if stamps else datetime.now(CENTRAL)
+    return {
+        "sport": sport, "season": str(season or "")[:4], "area": area,
+        "subtitle": subtitle, "blocks": blocks, "updated": updated,
+        "missing": missing,
+    }
+
+
+def _parse_time(value):
+    try:
+        moment = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return datetime.now(CENTRAL)
+    if moment.tzinfo is None:
+        return moment.replace(tzinfo=CENTRAL)  # Render runs with TZ=America/Chicago
+    return moment.astimezone(CENTRAL)
+
+
+# ── Drawing ──────────────────────────────────────────────────────────────
+
+class _Fonts:
+    def __init__(self, scale):
+        self.scale = scale
+        self._cache = {}
+
+    def slab(self, size):
+        return self._get("AlfaSlabOne-Regular.ttf", size, None)
+
+    def sans(self, size, weight="Medium"):
+        return self._get("Oswald-Variable.ttf", size, weight)
+
+    def _get(self, name, size, weight):
+        key = (name, size, weight)
+        if key not in self._cache:
+            font = ImageFont.truetype(str(FONT_DIR / name), int(size * self.scale))
+            if weight:
+                font.set_variation_by_name(weight)
+            self._cache[key] = font
+        return self._cache[key]
+
+
+def _updated_label(moment):
+    hour = moment.strftime("%I").lstrip("0")
+    return f"{MONTHS[moment.month - 1]} {moment.day} • {hour}:{moment.strftime('%M %p')}"
+
+
+def render_png(edition, scale=2):
+    """Draw the graphic in LVAY's teal/black style and return PNG bytes."""
+    W, PAD, GAP, COL = 950, 28, 18, 437
+    HEAD, ROW, CARD_GAP = 42, 31, 20
+    HEADER_H, BAR_H, SUB_H, FOOT_H = 208, 7, 43, 96
+    f = _Fonts(scale)
+
+    # Balance the division cards between two columns, keeping their order.
+    columns, heights = [[], []], [0, 0]
+    for block in edition["blocks"]:
+        height = HEAD + ROW * len(block[1]) + 10
+        target = 0 if heights[0] <= heights[1] else 1
+        columns[target].append(block)
+        heights[target] += height + CARD_GAP
+    body_top = HEADER_H + BAR_H + SUB_H + 18
+    if not edition["blocks"]:
+        heights = [60, 60]
+    H = body_top + max(heights) + 20 + FOOT_H
+
+    s = scale
+    img = Image.new("RGB", (W * s, H * s), PAGE)
+    d = ImageDraw.Draw(img)
+
+    def box(x0, y0, x1, y1, fill, **kw):
+        d.rectangle([x0 * s, y0 * s, x1 * s, y1 * s], fill=fill, **kw)
+
+    def text(x, y, value, font, fill, anchor="la"):
+        d.text((x * s, y * s), value, font=font, fill=fill, anchor=anchor)
+
+    # Header.
+    box(0, 0, W, HEADER_H, BLACK)
+    text(34, 22, "LOUISIANA VS ALL Y’ALL", f.slab(19), TEAL)
+    text(34, 58, f"{edition['season']} LHSAA", f.slab(36), (255, 255, 255))
+    text(34, 98, f"{SPORT_LABEL[edition['sport']].upper()} POWER", f.slab(44), (255, 255, 255))
+    text(34, 146, "RATINGS", f.slab(44), TEAL)
+    d.rounded_rectangle([658 * s, 45 * s, 911 * s, 167 * s], radius=8 * s,
+                        fill=(16, 32, 33), outline=TEAL, width=2 * s)
+    text(681, 60, "UNOFFICIAL", f.sans(19, "SemiBold"), TEAL)
+    text(681, 89, "UPDATED", f.sans(13, "SemiBold"), GREY)
+    text(681, 112, _updated_label(edition["updated"]), f.sans(17, "SemiBold"), (255, 255, 255))
+    text(681, 140, edition["area"], f.sans(12, "SemiBold"), GREY)
+    box(0, HEADER_H, W, HEADER_H + BAR_H, TEAL)
+    box(0, HEADER_H + BAR_H, W, HEADER_H + BAR_H + SUB_H, SUBBAR)
+    text(34, HEADER_H + BAR_H + SUB_H / 2, edition["subtitle"], f.sans(15, "SemiBold"), INK, "lm")
+
+    # Division cards.
+    for index, blocks in enumerate(columns):
+        x = PAD + index * (COL + GAP)
+        y = body_top
+        for division, teams in blocks:
+            card_h = HEAD + ROW * len(teams) + 10
+            box(x + 2, y + 2, x + COL + 2, y + card_h + 2, (222, 222, 220))
+            box(x, y, x + COL, y + card_h, ROW_B)
+            box(x, y, x + COL, y + HEAD, BLACK)
+            text(x + 18, y + HEAD / 2, division.upper(), f.slab(17), (255, 255, 255), "lm")
+            text(x + 333, y + HEAD / 2, "RANK", f.sans(11, "SemiBold"), GREY, "lm")
+            text(x + 378, y + HEAD / 2, "PR", f.sans(11, "SemiBold"), GREY, "lm")
+            for i, team in enumerate(teams):
+                top = y + HEAD + i * ROW
+                box(x, top, x + COL, top + ROW, ROW_A if i % 2 == 0 else ROW_B)
+                mid = top + ROW / 2
+                name = DISPLAY_NAMES.get(team["school"], team["school"])
+                text(x + 18, mid, name, f.sans(15, "Medium"), INK, "lm")
+                text(x + 333, mid, f"#{team['rank']}", f.sans(16, "Bold"), TEAL, "lm")
+                text(x + 378, mid, f"{team['pr']:.2f}", f.sans(16, "Bold"), INK, "lm")
+            box(x, y, x + 6, y + card_h, TEAL)
+            y += card_h + CARD_GAP
+    if not edition["blocks"]:
+        text(W / 2, body_top + 30, "No rated teams yet this season", f.sans(18), INK, "mm")
+
+    # Footer.
+    foot = H - FOOT_H
+    box(0, foot, W, H, BLACK)
+    box(0, foot, W, foot + 5, TEAL)
+    text(34, foot + 26, "SOURCE: LOUISIANA VS ALL Y’ALL", f.slab(17), (255, 255, 255))
+    text(34, foot + 58, RATINGS_PAGE[edition["sport"]], f.sans(15, "Regular"), TEAL)
+    text(690, foot + 28, "PR = POWER RATING", f.sans(12, "SemiBold"), GREY)
+    text(690, foot + 52, "Division rank shown", f.sans(12, "Regular"), GREY)
+
+    out = io.BytesIO()
+    img.save(out, format="PNG", optimize=True)
+    return out.getvalue()
+
+
+# ── Email ────────────────────────────────────────────────────────────────
+
+def _file_name(edition):
+    area = "statewide-top-10" if edition["area"] == "STATEWIDE" else edition["area"].lower().replace(" ", "-")
+    return f"lvay-{edition['sport']}-power-ratings-{area}-{edition['updated']:%Y-%m-%d}.png"
+
+
+def _email_body(recipient, editions, preview_for=None):
+    items = "".join(
+        f"<li><b>{SPORT_LABEL[e['sport']]}</b> — "
+        f"{'Top 10 in every division' if e['area'] == 'STATEWIDE' else html.escape(e['area'].title()) + ' teams'}"
+        f" (<a href=\"https://{RATINGS_PAGE[e['sport']]}\">full ratings</a>)</li>"
+        for e in editions
+    )
+    note = ""
+    if preview_for:
+        note = (f"<p style=\"background:#fdf3f1;border:1px solid #B5432B;padding:8px\">"
+                f"<b>Preview only.</b> In live mode this goes to {html.escape(preview_for)}.")
+        missing = sorted({m for e in editions for m in e["missing"]})
+        if missing:
+            note += f"<br>Not in this week's ratings: {html.escape(', '.join(missing))}"
+        note += "</p>"
+    return (
+        f"{note}<p>Good morning,</p>"
+        f"<p>Here are this week's Louisiana vs All Y'all power ratings, updated after "
+        f"Friday night's games. The graphic is attached and free to use on air or in print "
+        f"with credit to Louisiana vs All Y'all.</p><ul>{items}</ul>"
+        f"<p>These are LVAY's own calculations using the LHSAA formula; only the LHSAA's "
+        f"official ratings decide playoff seeding.</p>"
+        f"<p>— Mark Miller, Louisiana vs All Y'all<br>"
+        f"<a href=\"https://{SITE}\">{SITE}</a></p>"
+        f"<p style=\"color:#888;font-size:12px\">Reply STOP and we'll take you off the list.</p>"
+    )
+
+
+def _send(to, subject, body, attachments):
+    import requests
+
+    api_key = os.environ.get("RESEND_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError("RESEND_API_KEY not configured")
+    sender = os.environ.get(
+        "MEDIA_EMAIL_FROM",
+        "Louisiana vs All Y'all <ratings@updates.louisianavsallyall.com>",
+    )
+    payload = {"from": sender, "to": to, "subject": subject, "html": body,
+               "attachments": attachments}
+    reply_to = os.environ.get("MEDIA_EMAIL_REPLY_TO", "").strip()
+    if reply_to:
+        payload["reply_to"] = reply_to
+    response = requests.post(
+        "https://api.resend.com/emails",
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json=payload, timeout=60,
+    )
+    response.raise_for_status()
+
+
+def _week_key(now):
+    return now.strftime("%G-W%V")
+
+
+def _already_sent(conn, week, recipient_id):
+    conn.execute("""CREATE TABLE IF NOT EXISTS media_sends (
+        week TEXT, recipient TEXT, sent_at TEXT, live INTEGER,
+        PRIMARY KEY (week, recipient))""")
+    return conn.execute("SELECT 1 FROM media_sends WHERE week=? AND recipient=?",
+                        (week, recipient_id)).fetchone() is not None
+
+
+def send_media_emails(now=None, force_preview=False, only=None):
+    """Draw and send every active recipient's editions. Returns a summary."""
+    now = (now or datetime.now(CENTRAL)).astimezone(CENTRAL)
+    live = os.environ.get("MEDIA_EMAIL_LIVE", "false").lower() == "true" and not force_preview
+    preview_to = [a.strip() for a in os.environ.get(
+        "REPORT_EMAIL_TO", "markmiller36@gmail.com").split(",") if a.strip()][:1]
+    config = load_media_list()
+    rankings, summary = {}, []
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        week = _week_key(now)
+        for recipient in config["recipients"]:
+            if only and recipient["id"] not in only:
+                continue
+            if not recipient.get("active") and not only:
+                continue
+            if live and _already_sent(conn, week, recipient["id"]):
+                summary.append(f"{recipient['id']}: already sent {week}")
+                continue
+            editions = []
+            for spec in recipient["editions"]:
+                sport = spec["sport"]
+                if sport not in rankings:
+                    rankings[sport] = load_rankings(sport)
+                season, rows = rankings[sport]
+                editions.append(build_edition(sport, rows, season, spec, config["regions"]))
+            editions = [e for e in editions if e["blocks"]]
+            if not editions:
+                summary.append(f"{recipient['id']}: nothing rated yet")
+                continue
+            attachments = [{"filename": _file_name(e),
+                            "content": base64.b64encode(render_png(e)).decode()}
+                           for e in editions]
+            sports = " & ".join(SPORT_LABEL[e["sport"]] for e in editions)
+            day = editions[0]["updated"]
+            subject = f"LVAY {sports} Power Ratings — {day:%b} {day.day}"
+            if live:
+                _send([recipient["email"]], subject,
+                      _email_body(recipient, editions), attachments)
+                conn.execute("INSERT OR REPLACE INTO media_sends VALUES (?,?,?,1)",
+                             (week, recipient["id"], now.isoformat()))
+                conn.commit()
+                summary.append(f"{recipient['id']}: sent to {recipient['email']}")
+            else:
+                target = f"{recipient['name']} <{recipient['email']}>"
+                _send(preview_to, "[PREVIEW] " + subject,
+                      _email_body(recipient, editions, preview_for=target), attachments)
+                summary.append(f"{recipient['id']}: preview sent to {preview_to[0]}")
+    finally:
+        conn.close()
+    for line in summary:
+        print(f"[MEDIA] {line}")
+    return summary
+
+
+def is_media_slot(now, sports):
+    """True right after the Saturday 5am football run."""
+    now = now.astimezone(CENTRAL)
+    return (now.weekday() == SATURDAY and 5 <= now.hour < 9
+            and "football" in (sports or []) and 8 <= now.month <= 12)
