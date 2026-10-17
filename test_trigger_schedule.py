@@ -41,7 +41,24 @@ def test_slot_fires_when_render_starts_late():
 
 def test_other_hours_stay_quiet():
     for hour in (2, 3, 4, 8, 9, 10, 14, 15, 16, 20, 21, 22):
-        assert not should_trigger_now(at(2026, 10, 16, hour, 0))  # Friday
+        assert not should_trigger_now(at(2026, 10, 20, hour, 0))  # Tuesday
+
+
+def test_game_nights_run_football_at_10pm_midnight_and_1am():
+    # Thursday Oct 15 and Friday Oct 16, 2026
+    for day in (15, 16):
+        assert sports_for_now(at(2026, 10, day, 22, 0)) == ["football"]
+        assert sports_for_now(at(2026, 10, day, 23, 0)) == FB
+    # The midnight/1am runs after those nights fall on Friday and Saturday
+    for day in (16, 17):
+        assert sports_for_now(at(2026, 10, day, 0, 0)) == ["football"]
+        assert sports_for_now(at(2026, 10, day, 1, 5)) == ["football"]
+    # Not on other nights, and not at :30
+    assert sports_for_now(at(2026, 10, 25, 0, 0)) == BB  # Sunday midnight
+    assert not should_trigger_now(at(2026, 10, 14, 22, 0))  # Wednesday
+    assert not should_trigger_now(at(2026, 10, 16, 22, 30))
+    # Not outside football season
+    assert not should_trigger_now(at(2027, 3, 4, 22, 0))
 
 
 def test_no_basketball_slot_out_of_season():

@@ -25,7 +25,7 @@ class AutomationHardeningTests(unittest.TestCase):
             )
         for moment in (
             datetime(2026, 9, 3, 14, 30, tzinfo=central),
-            datetime(2026, 9, 4, 0, 0, tzinfo=central),
+            datetime(2026, 9, 8, 0, 0, tzinfo=central),  # Tuesday (Fri/Sat midnight is a game-night run)
         ):
             self.assertFalse(trigger_pipeline.should_trigger_now(moment))
 

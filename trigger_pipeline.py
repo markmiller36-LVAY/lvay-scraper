@@ -31,7 +31,7 @@ CENTRAL = ZoneInfo("America/Chicago")
 #   - basketball: 6am, noon, 6pm, midnight
 #   - soccer: 7am, 1pm, 7pm, 1am
 # Sports out of season are skipped by the web service. Thursday/Friday
-# game-night refreshes (10pm-1am) come from a separate hourly scheduled task.
+# game nights add football runs at 10pm, midnight and 1am (see below).
 PRIMARY_HOURS = {5, 11, 17, 23}
 BASKETBALL_HOURS = {0, 6, 12, 18}
 SOCCER_HOURS = {1, 7, 13, 19}
@@ -39,6 +39,22 @@ PRIMARY_SPORTS = ["football", "volleyball", "baseball", "softball"]
 BASKETBALL_SPORTS = ["boys_basketball", "girls_basketball"]
 SOCCER_SPORTS = ["boys_soccer", "girls_soccer"]
 WINTER_MONTHS = {10, 11, 12, 1, 2, 3}
+# Football game nights (Mark, Oct 16, 2026): Thursday and Friday nights get
+# full football runs at 10pm, midnight and 1am, on top of the 11pm primary run.
+# These replace the old Claude "football refresh" task, which couldn't send the
+# pipeline token, so it never pulled new LHSAA scores. Midnight and 1am belong
+# to the night before (Friday 12am = Thursday night's games).
+GAME_NIGHT_SPORTS = ["football"]
+GAME_NIGHT_MONTHS = {8, 9, 10, 11, 12}
+THURSDAY, FRIDAY, SATURDAY = 3, 4, 5
+
+
+def is_game_night_slot(now):
+    if now.month not in GAME_NIGHT_MONTHS:
+        return False
+    if now.hour == 22 and now.weekday() in (THURSDAY, FRIDAY):
+        return True
+    return now.hour in (0, 1) and now.weekday() in (FRIDAY, SATURDAY)
 
 
 def sports_for_now(now=None):
@@ -50,6 +66,9 @@ def sports_for_now(now=None):
         return None
     if now.hour in PRIMARY_HOURS:
         return list(PRIMARY_SPORTS)
+    if is_game_night_slot(now):
+        # Game-night scores come first; basketball/soccer catch up 6 hours later.
+        return list(GAME_NIGHT_SPORTS)
     if now.month not in WINTER_MONTHS:
         return None
     if now.hour in BASKETBALL_HOURS:
