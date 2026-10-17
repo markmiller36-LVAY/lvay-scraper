@@ -162,6 +162,44 @@ class _Fonts:
         return self._cache[key]
 
 
+LOGO_URL = os.environ.get(
+    "MEDIA_LOGO_URL",
+    f"https://{SITE}/wp-content/uploads/2025/01/WHITELVAYCLEAR.png",
+)
+_LOGO = None
+
+
+def _logo():
+    """The white LVAY script logo, cropped to its edges (None if unreachable)."""
+    global _LOGO
+    if _LOGO is not None:
+        return _LOGO
+    cache = Path(os.environ.get("MEDIA_CACHE_DIR", "/data/media_cache")) / "lvay-logo.png"
+    raw = None
+    try:
+        import requests
+
+        response = requests.get(LOGO_URL, timeout=30)
+        response.raise_for_status()
+        raw = response.content
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        cache.write_bytes(raw)
+    except Exception as exc:
+        print(f"[MEDIA] Logo download failed ({exc}); using a saved copy")
+        if cache.exists():
+            raw = cache.read_bytes()
+    if raw is None:
+        bundled = HERE / "assets" / "lvay-logo-white-mask.png"
+        if not bundled.exists():
+            return None
+        _LOGO = Image.open(bundled).convert("L")
+        return _LOGO
+    alpha = Image.open(io.BytesIO(raw)).convert("RGBA").getchannel("A")
+    bounds = alpha.getbbox()
+    _LOGO = alpha.crop(bounds) if bounds else alpha
+    return _LOGO
+
+
 def _updated_label(moment):
     hour = moment.strftime("%I").lstrip("0")
     return f"{MONTHS[moment.month - 1]} {moment.day} • {hour}:{moment.strftime('%M %p')}"
@@ -171,7 +209,7 @@ def render_png(edition, scale=2):
     """Draw the graphic in LVAY's teal/black style and return PNG bytes."""
     W, PAD, GAP, COL = 950, 28, 18, 437
     HEAD, ROW, CARD_GAP = 42, 31, 20
-    HEADER_H, BAR_H, SUB_H, FOOT_H = 208, 7, 43, 96
+    HEADER_H, BAR_H, SUB_H, FOOT_H = 262, 7, 43, 96
     f = _Fonts(scale)
 
     # Balance the division cards between two columns, keeping their order.
@@ -196,18 +234,41 @@ def render_png(edition, scale=2):
     def text(x, y, value, font, fill, anchor="la"):
         d.text((x * s, y * s), value, font=font, fill=fill, anchor=anchor)
 
-    # Header.
+    def fit(value, size, max_width, make):
+        while size > 12 and d.textlength(value, font=make(size)) > max_width * s:
+            size -= 1
+        return make(size)
+
+    # Header: the LVAY script logo, the title, and where to find LVAY.
+    WHITE = (255, 255, 255)
     box(0, 0, W, HEADER_H, BLACK)
-    text(34, 22, "LOUISIANA VS ALL Y’ALL", f.slab(19), TEAL)
-    text(34, 58, f"{edition['season']} LHSAA", f.slab(36), (255, 255, 255))
-    text(34, 98, f"{SPORT_LABEL[edition['sport']].upper()} POWER", f.slab(44), (255, 255, 255))
-    text(34, 146, "RATINGS", f.slab(44), TEAL)
-    d.rounded_rectangle([658 * s, 45 * s, 911 * s, 167 * s], radius=8 * s,
+    logo = _logo()
+    if logo is not None:
+        ratio = min(205 / logo.width, 200 / logo.height)
+        mark = logo.resize((int(logo.width * ratio * s), int(logo.height * ratio * s)), Image.LANCZOS)
+        left = int((30 + (205 - logo.width * ratio) / 2) * s)
+        top = int((22 + (200 - logo.height * ratio) / 2) * s)
+        img.paste(WHITE, (left, top, left + mark.width, top + mark.height), mark)
+    else:
+        for i, word in enumerate(("LOUISIANA", "VS", "ALL Y\u2019ALL")):
+            text(132, 70 + i * 48, word, f.slab(30), WHITE if i != 1 else TEAL, "mm")
+    box(256, 32, 258, 230, (60, 66, 70))
+    title_left, title_right = 282, 700
+    text(title_left, 30, f"{edition['season']} LHSAA", f.slab(28), WHITE)
+    title = f"{SPORT_LABEL[edition['sport']].upper()} POWER"
+    text(title_left, 66, title, fit(title, 40, title_right - title_left, f.slab), WHITE)
+    text(title_left, 112, "RATINGS", f.slab(40), TEAL)
+    text(title_left, 176, "LOUISIANAVSALLYALL.COM", f.sans(19, "SemiBold"), WHITE)
+    text(title_left, 204, "@LAvsAllYall", f.sans(19, "SemiBold"), TEAL)
+    handle_end = title_left + d.textlength("@LAvsAllYall", font=f.sans(19, "SemiBold")) / s
+    text(handle_end + 12, 207, "FACEBOOK  \u00b7  INSTAGRAM  \u00b7  X  \u00b7  YOUTUBE",
+         f.sans(13, "Medium"), GREY)
+    d.rounded_rectangle([716 * s, 34 * s, 920 * s, 160 * s], radius=8 * s,
                         fill=(16, 32, 33), outline=TEAL, width=2 * s)
-    text(681, 60, "UNOFFICIAL", f.sans(19, "SemiBold"), TEAL)
-    text(681, 89, "UPDATED", f.sans(13, "SemiBold"), GREY)
-    text(681, 112, _updated_label(edition["updated"]), f.sans(17, "SemiBold"), (255, 255, 255))
-    text(681, 140, edition["area"], f.sans(12, "SemiBold"), GREY)
+    text(736, 48, "UNOFFICIAL", f.sans(19, "SemiBold"), TEAL)
+    text(736, 78, "UPDATED", f.sans(13, "SemiBold"), GREY)
+    text(736, 100, _updated_label(edition["updated"]), f.sans(17, "SemiBold"), WHITE)
+    text(736, 130, edition["area"], fit(edition["area"], 12, 170, lambda z: f.sans(z, "SemiBold")), GREY)
     box(0, HEADER_H, W, HEADER_H + BAR_H, TEAL)
     box(0, HEADER_H + BAR_H, W, HEADER_H + BAR_H + SUB_H, SUBBAR)
     text(34, HEADER_H + BAR_H + SUB_H / 2, edition["subtitle"], f.sans(15, "SemiBold"), INK, "lm")
@@ -242,7 +303,8 @@ def render_png(edition, scale=2):
     box(0, foot, W, H, BLACK)
     box(0, foot, W, foot + 5, TEAL)
     text(34, foot + 26, "SOURCE: LOUISIANA VS ALL Y’ALL", f.slab(17), (255, 255, 255))
-    text(34, foot + 58, RATINGS_PAGE[edition["sport"]], f.sans(15, "Regular"), TEAL)
+    text(34, foot + 58, RATINGS_PAGE[edition["sport"]] + "   \u2022   @LAvsAllYall",
+         f.sans(15, "Regular"), TEAL)
     text(690, foot + 28, "PR = POWER RATING", f.sans(12, "SemiBold"), GREY)
     text(690, foot + 52, "Division rank shown", f.sans(12, "Regular"), GREY)
 

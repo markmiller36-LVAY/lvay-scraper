@@ -32,7 +32,8 @@ def test_region_edition_keeps_only_local_teams_and_flags_missing():
     assert edition["updated"].hour == 5
 
 
-def test_top10_edition_and_png():
+def test_top10_edition_and_png(monkeypatch):
+    monkeypatch.setattr(media_mailer, "_logo", lambda: None)
     edition = media_mailer.build_edition("football", ROWS, 2026, {"top10": True}, REGIONS)
     assert [d for d, _ in edition["blocks"]] == ["Non-Select Division I", "Non-Select Division II"]
     assert media_mailer.render_png(edition, scale=1).startswith(b"\x89PNG")
@@ -51,6 +52,7 @@ def test_preview_mode_never_emails_the_outlet(tmp_path, monkeypatch):
     monkeypatch.setattr(media_mailer, "DB_PATH", str(tmp_path / "t.db"))
     monkeypatch.setattr(media_mailer, "load_rankings", lambda sport: (2026, ROWS))
     monkeypatch.setattr(media_mailer, "_send", lambda to, *a: sent.append(to))
+    monkeypatch.setattr(media_mailer, "_logo", lambda: None)
     monkeypatch.setenv("REPORT_EMAIL_TO", "mark@example.com,other@example.com")
 
     monkeypatch.setenv("MEDIA_EMAIL_LIVE", "false")
@@ -62,3 +64,11 @@ def test_preview_mode_never_emails_the_outlet(tmp_path, monkeypatch):
     media_mailer.send_media_emails(now=datetime(2026, 10, 24, 5, 30, tzinfo=CT))
     media_mailer.send_media_emails(now=datetime(2026, 10, 24, 6, 30, tzinfo=CT))
     assert sent == [["fns@example.com"]]  # once per Saturday, inactive skipped
+
+
+def test_logo_falls_back_to_bundled_copy(tmp_path, monkeypatch):
+    monkeypatch.setattr(media_mailer, "_LOGO", None)
+    monkeypatch.setattr(media_mailer, "LOGO_URL", "https://invalid.invalid/logo.png")
+    monkeypatch.setenv("MEDIA_CACHE_DIR", str(tmp_path))
+    logo = media_mailer._logo()
+    assert logo is not None and logo.mode == "L" and logo.width > 300
