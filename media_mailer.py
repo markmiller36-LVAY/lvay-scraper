@@ -244,10 +244,10 @@ def render_png(edition, scale=2):
     box(0, 0, W, HEADER_H, BLACK)
     logo = _logo()
     if logo is not None:
-        ratio = min(205 / logo.width, 200 / logo.height)
+        ratio = min(170 / logo.width, 160 / logo.height)  # ~20% under the full panel
         mark = logo.resize((int(logo.width * ratio * s), int(logo.height * ratio * s)), Image.LANCZOS)
-        left = int((30 + (205 - logo.width * ratio) / 2) * s)
-        top = int((22 + (200 - logo.height * ratio) / 2) * s)
+        left = int((132 - logo.width * ratio / 2) * s)
+        top = int((131 - logo.height * ratio / 2) * s)
         img.paste(WHITE, (left, top, left + mark.width, top + mark.height), mark)
     else:
         for i, word in enumerate(("LOUISIANA", "VS", "ALL Y\u2019ALL")):
