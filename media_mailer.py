@@ -60,6 +60,7 @@ DISPLAY_NAMES = {
     "Booker T. Washington - N.O.": "Booker T. Washington (New Orleans)",
     "Northwood - Lena": "Northwood-Lena",
     "Northwood - Shrev.": "Northwood (Shreveport)",
+    "Woodlawn - Shrev.": "Woodlawn (Shreveport)",
     "D'Arbonne Woods Charter": "D'Arbonne Woods",
     "Lincoln Preparatory School": "Lincoln Prep",
 }

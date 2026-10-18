@@ -51,6 +51,38 @@
         "Northwood - Lena",
         "Delhi Charter"
       ]
+    },
+    "north-louisiana-volleyball": {
+      "title": "North Louisiana",
+      "schools": [
+        "Ruston",
+        "Haughton",
+        "West Monroe",
+        "Airline",
+        "Benton",
+        "Captain Shreve",
+        "C.E. Byrd",
+        "Parkway",
+        "Bossier",
+        "Caddo Magnet",
+        "Huntington",
+        "Northwood - Shrev.",
+        "Woodlawn - Shrev.",
+        "Evangel Christian",
+        "Booker T. Washington - Shr.",
+        "Southwood",
+        "Neville",
+        "Wossman",
+        "Ouachita Parish",
+        "West Ouachita",
+        "St. Mary's",
+        "Calvary Baptist",
+        "North Caddo",
+        "Magnolia School of Excellence",
+        "Lincoln Preparatory School",
+        "Doyline",
+        "Downsville"
+      ]
     }
   },
   "recipients": [
@@ -71,7 +103,7 @@
         },
         {
           "sport": "volleyball",
-          "region": "north-louisiana"
+          "region": "north-louisiana-volleyball"
         }
       ]
     },
@@ -87,7 +119,7 @@
         },
         {
           "sport": "volleyball",
-          "region": "north-louisiana"
+          "region": "north-louisiana-volleyball"
         }
       ],
       "days": [
