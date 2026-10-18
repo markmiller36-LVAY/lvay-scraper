@@ -57,7 +57,6 @@ RATINGS_PAGE = {
 
 # Shorter names for the graphic; the database keeps the official spelling.
 DISPLAY_NAMES = {
-    "Booker T. Washington - Shr.": "Booker T. Washington (Shreveport)",
     "Booker T. Washington - N.O.": "Booker T. Washington (New Orleans)",
     "Northwood - Lena": "Northwood-Lena",
     "Northwood - Shrev.": "Northwood (Shreveport)",
@@ -204,27 +203,55 @@ def _updated_label(moment):
     return f"{MONTHS[moment.month - 1]} {moment.day} • {hour}:{moment.strftime('%M %p')}"
 
 
-def render_png(edition, scale=2):
-    """Draw the graphic in LVAY's teal/black style and return PNG bytes."""
-    W, PAD, GAP, COL = 950, 28, 18, 437
-    HEAD, ROW, CARD_GAP = 42, 31, 20
+OUTPUT_WIDTH = 2160  # 4:5 feed post, 2160 x 2700
+
+
+def render_png(edition, scale=None):
+    """Draw the graphic in LVAY's teal/black style and return PNG bytes.
+
+    Always a 4:5 feed post (2160 x 2700). The division cards stretch or
+    tighten to fill the space, and a crowded edition moves to three columns.
+    """
+    W, PAD, GAP = 950, 28, 18
+    H = W * 5 / 4
+    if scale is None:
+        scale = OUTPUT_WIDTH / W
     HEADER_H, BAR_H, SUB_H, FOOT_H = 262, 7, 43, 96
     f = _Fonts(scale)
-
-    # Balance the division cards between two columns, keeping their order.
-    columns, heights = [[], []], [0, 0]
-    for block in edition["blocks"]:
-        height = HEAD + ROW * len(block[1]) + 10
-        target = 0 if heights[0] <= heights[1] else 1
-        columns[target].append(block)
-        heights[target] += height + CARD_GAP
     body_top = HEADER_H + BAR_H + SUB_H + 18
-    if not edition["blocks"]:
-        heights = [60, 60]
-    H = body_top + max(heights) + 20 + FOOT_H
+    room = H - FOOT_H - 20 - body_top
+
+    # Card proportions; three columns use slimmer headers and gaps.
+    BASE = {2: (42, 20, 10), 3: (32, 12, 4)}
+
+    def layout(ncols, k):
+        hb, gb, pb = BASE[ncols]
+        head, row, card_gap = hb * k, 31 * k, gb * k
+        columns, heights = [[] for _ in range(ncols)], [0] * ncols
+        for block in edition["blocks"]:
+            target = heights.index(min(heights))
+            columns[target].append(block)
+            heights[target] += head + row * len(block[1]) + pb * k + card_gap
+        return columns, max(heights or [0]) - card_gap
+
+    ncols = 2
+    if layout(2, 1)[1] > room:
+        ncols = 3
+    natural = layout(ncols, 1)[1] or 1
+    k = max(0.7, min(1.6, room / natural))
+    columns, used = layout(ncols, k)
+    while used > room and k > 0.5:
+        k -= 0.02
+        columns, used = layout(ncols, k)
+    HB, GB, PB = BASE[ncols]
+    HEAD, ROW, CARD_GAP, CARD_PAD = HB * k, 31 * k, GB * k, PB * k
+    if ncols == 3:
+        PAD, GAP = 20, 12
+    COL = (W - 2 * PAD - GAP * (ncols - 1)) / ncols
+    H = W * 5 / 4
 
     s = scale
-    img = Image.new("RGB", (W * s, H * s), PAGE)
+    img = Image.new("RGB", (round(W * s), round(H * s)), PAGE)
     d = ImageDraw.Draw(img)
 
     def box(x0, y0, x1, y1, fill, **kw):
@@ -262,8 +289,8 @@ def render_png(edition, scale=2):
     handle_end = title_left + d.textlength("@LAvsAllYall", font=f.sans(19, "SemiBold")) / s
     text(handle_end + 12, 207, "FACEBOOK  \u00b7  INSTAGRAM  \u00b7  X  \u00b7  YOUTUBE",
          f.sans(13, "Medium"), GREY)
-    d.rounded_rectangle([716 * s, 34 * s, 920 * s, 160 * s], radius=8 * s,
-                        fill=(16, 32, 33), outline=TEAL, width=2 * s)
+    d.rounded_rectangle([716 * s, 34 * s, 920 * s, 160 * s], radius=round(8 * s),
+                        fill=(16, 32, 33), outline=TEAL, width=round(2 * s))
     text(736, 48, "UNOFFICIAL", f.sans(19, "SemiBold"), TEAL)
     text(736, 78, "UPDATED", f.sans(13, "SemiBold"), GREY)
     text(736, 100, _updated_label(edition["updated"]), f.sans(17, "SemiBold"), WHITE)
@@ -273,25 +300,34 @@ def render_png(edition, scale=2):
     text(34, HEADER_H + BAR_H + SUB_H / 2, edition["subtitle"], f.sans(15, "SemiBold"), INK, "lm")
 
     # Division cards.
+    if ncols == 2:
+        fs = min(k * 0.9, 1.3)
+        rank_x, pr_x, inset = COL - 104 * fs, COL - 59 * fs, 18
+    else:
+        fs = min(k * 0.95, 1.25)
+        rank_x, pr_x, inset = COL - 86 * fs, COL - 46 * fs, 14
     for index, blocks in enumerate(columns):
         x = PAD + index * (COL + GAP)
         y = body_top
         for division, teams in blocks:
-            card_h = HEAD + ROW * len(teams) + 10
+            card_h = HEAD + ROW * len(teams) + CARD_PAD
             box(x + 2, y + 2, x + COL + 2, y + card_h + 2, (222, 222, 220))
             box(x, y, x + COL, y + card_h, ROW_B)
             box(x, y, x + COL, y + HEAD, BLACK)
-            text(x + 18, y + HEAD / 2, division.upper(), f.slab(17), (255, 255, 255), "lm")
-            text(x + 333, y + HEAD / 2, "RANK", f.sans(11, "SemiBold"), GREY, "lm")
-            text(x + 378, y + HEAD / 2, "PR", f.sans(11, "SemiBold"), GREY, "lm")
+            label = division.upper()
+            if ncols == 3:
+                label = label.replace("DIVISION", "DIV.")
+            text(x + inset, y + HEAD / 2, label, fit(label, 17 * fs, rank_x - inset - 8, f.slab), (255, 255, 255), "lm")
+            text(x + rank_x, y + HEAD / 2, "RANK", f.sans(11 * fs, "SemiBold"), GREY, "lm")
+            text(x + pr_x, y + HEAD / 2, "PR", f.sans(11 * fs, "SemiBold"), GREY, "lm")
             for i, team in enumerate(teams):
                 top = y + HEAD + i * ROW
                 box(x, top, x + COL, top + ROW, ROW_A if i % 2 == 0 else ROW_B)
                 mid = top + ROW / 2
                 name = DISPLAY_NAMES.get(team["school"], team["school"])
-                text(x + 18, mid, name, f.sans(15, "Medium"), INK, "lm")
-                text(x + 333, mid, f"#{team['rank']}", f.sans(16, "Bold"), TEAL, "lm")
-                text(x + 378, mid, f"{team['pr']:.2f}", f.sans(16, "Bold"), INK, "lm")
+                text(x + inset, mid, name, fit(name, 15 * fs, rank_x - inset - 8, lambda z: f.sans(z, "Medium")), INK, "lm")
+                text(x + rank_x, mid, f"#{team['rank']}", f.sans(16 * fs, "Bold"), TEAL, "lm")
+                text(x + pr_x, mid, f"{team['pr']:.2f}", f.sans(16 * fs, "Bold"), INK, "lm")
             box(x, y, x + 6, y + card_h, TEAL)
             y += card_h + CARD_GAP
     if not edition["blocks"]:
