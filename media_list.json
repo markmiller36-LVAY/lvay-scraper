@@ -68,6 +68,10 @@
         {
           "sport": "football",
           "region": "north-louisiana"
+        },
+        {
+          "sport": "volleyball",
+          "region": "north-louisiana"
         }
       ]
     },
@@ -79,6 +83,10 @@
       "editions": [
         {
           "sport": "football",
+          "region": "north-louisiana"
+        },
+        {
+          "sport": "volleyball",
           "region": "north-louisiana"
         }
       ],
