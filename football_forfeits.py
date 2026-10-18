@@ -56,6 +56,8 @@ FOOTBALL_CANCELLED_GAMES = {
         {"team": "Booker T. Washington - N.O.", "opponent": "Bogalusa", "game_date": "10/9/2026"},
         # Week 6 vs Dumas (Ark.) ruled cancelled; not a forfeit. Mark, Oct 13, 2026.
         {"team": "General Trass", "opponent": "Dumas High School, AR", "game_date": "10/9/2026"},
+        # Week 7 stopped (gunfire near the stadium); LHSAA ruled it a no contest. Mark, Oct 17, 2026.
+        {"team": "Church Point", "opponent": "Ville Platte", "game_date": "10/16/2026"},
     ],
 }
 

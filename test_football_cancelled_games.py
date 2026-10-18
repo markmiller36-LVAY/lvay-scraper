@@ -40,3 +40,15 @@ def test_cancellation_survives_a_rescrape():
     conn.execute("UPDATE games SET score='-', win_loss='' WHERE school='Bogalusa'")
     assert apply_football_forfeits(conn, "2026") >= 1
     assert _row(conn, "Bogalusa", "Booker T. Washington - N.O.") == ("", "Cancelled")
+
+
+def test_church_point_ville_platte_no_contest_is_cancelled():
+    conn = sqlite3.connect(":memory:")
+    conn.execute("CREATE TABLE games (sport, season, school, week, game_date, opponent, score, win_loss)")
+    conn.executemany("INSERT INTO games VALUES ('football','2026',?,?,?,?,?,?)", [
+        ("Church Point", 7, "10/16/2026 7:00:00 PM", "Ville Platte", "-", ""),
+        ("Ville Platte", 7, "10/16/2026 7:00:00 PM", "Church Point", "-", ""),
+    ])
+    apply_football_forfeits(conn, "2026")
+    assert _row(conn, "Church Point", "Ville Platte") == ("", "Cancelled")
+    assert _row(conn, "Ville Platte", "Church Point") == ("", "Cancelled")
