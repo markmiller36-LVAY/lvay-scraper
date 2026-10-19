@@ -98,3 +98,18 @@ def test_pipeline_inbox_gets_saturday_and_sunday_even_before_outlets_go_live(tmp
     media_mailer.send_media_emails(now=datetime(2026, 10, 25, 5, 30, tzinfo=CT))  # Sunday
     assert sent == [["lvaypipeline@example.com"], ["mark@example.com"],
                     ["mark@example.com"], ["lvaypipeline@example.com"]]
+
+
+def test_region_shows_schools_out_of_the_playoffs_without_a_rank(monkeypatch):
+    monkeypatch.setattr(media_mailer, "_logo", lambda: None)
+    rows = ROWS + [
+        {"school": "Tioga", "division": "Non-Select Division II", "rank": None, "pr": 9.5,
+         "calculated_at": "2026-10-17T05:02:00"},
+    ]
+    edition = media_mailer.build_edition("football", rows, 2026, {"region": "north"}, REGIONS)
+    division, teams = edition["blocks"][1]
+    assert [t["school"] for t in teams] == ["Neville", "Tioga"]  # unranked last
+    assert edition["missing"] == []
+    top10 = media_mailer.build_edition("football", rows, 2026, {"top10": True}, REGIONS)
+    assert "Tioga" not in [t["school"] for _, ts in top10["blocks"] for t in ts]
+    assert media_mailer.render_png(edition, scale=1).startswith(b"\x89PNG")

@@ -63,6 +63,8 @@ DISPLAY_NAMES = {
     "Woodlawn - Shrev.": "Woodlawn (Shreveport)",
     "D'Arbonne Woods Charter": "D'Arbonne Woods",
     "Lincoln Preparatory School": "Lincoln Prep",
+    "Providence Classical Academy": "Providence Classical",
+    "Word of God Academy": "Word of God",
 }
 MONTHS = ["JAN.", "FEB.", "MARCH", "APRIL", "MAY", "JUNE", "JULY",
           "AUG.", "SEPT.", "OCT.", "NOV.", "DEC."]
@@ -85,15 +87,17 @@ def load_rankings(sport):
         raise RuntimeError(f"{sport} rankings unavailable: {data.get('error')}")
     rows = []
     for row in data["rankings"]:
-        if row.get("playoff_eligible") is False:
-            continue
-        rank = row.get("division_rank") or row.get("div_rank")
-        if not rank or not row.get("division"):
+        # Schools LHSAA lists as not playing in the playoffs have no division
+        # rank. Region graphics still show them (PR with a dash for rank);
+        # the statewide top 10 leaves them out.
+        out = row.get("playoff_eligible") is False
+        rank = None if out else (row.get("division_rank") or row.get("div_rank"))
+        if (not rank and not out) or not row.get("division"):
             continue
         rows.append({
             "school": row["school"],
             "division": row["division"],
-            "rank": int(rank),
+            "rank": int(rank) if rank else None,
             "pr": float(row.get("power_rating") or 0),
             "calculated_at": row.get("calculated_at"),
         })
@@ -104,7 +108,7 @@ def build_edition(sport, rows, season, edition, regions):
     """Group rows into the division blocks one graphic shows."""
     order = FOOTBALL_ORDER if sport == "football" else VOLLEYBALL_ORDER
     if edition.get("top10"):
-        picked = [r for r in rows if r["rank"] <= 10]
+        picked = [r for r in rows if r["rank"] and r["rank"] <= 10]
         area, subtitle, missing = "STATEWIDE", "TOP 10 IN EACH DIVISION", []
     else:
         region = regions[edition["region"]]
@@ -116,7 +120,8 @@ def build_edition(sport, rows, season, edition, regions):
                  if sport == "football" else " •  RANKED WITHIN EACH DIVISION")
     blocks = []
     for division in order:
-        teams = sorted((r for r in picked if r["division"] == division), key=lambda r: r["rank"])
+        teams = sorted((r for r in picked if r["division"] == division),
+                       key=lambda r: (r["rank"] is None, r["rank"] or 0, -r["pr"]))
         if teams:
             blocks.append((division, teams))
     stamps = [r["calculated_at"] for r in rows if r.get("calculated_at")]
@@ -327,7 +332,10 @@ def render_png(edition, scale=None):
                 mid = top + ROW / 2
                 name = DISPLAY_NAMES.get(team["school"], team["school"])
                 text(x + inset, mid, name, fit(name, 15 * fs, rank_x - inset - 8, lambda z: f.sans(z, "Medium")), INK, "lm")
-                text(x + rank_x, mid, f"#{team['rank']}", f.sans(16 * fs, "Bold"), TEAL, "lm")
+                if team["rank"]:
+                    text(x + rank_x, mid, f"#{team['rank']}", f.sans(16 * fs, "Bold"), TEAL, "lm")
+                else:
+                    text(x + rank_x, mid, "\u2014", f.sans(16 * fs, "Bold"), GREY, "lm")
                 text(x + pr_x, mid, f"{team['pr']:.2f}", f.sans(16 * fs, "Bold"), INK, "lm")
             box(x, y, x + 6, y + card_h, TEAL)
             y += card_h + CARD_GAP
@@ -342,7 +350,10 @@ def render_png(edition, scale=None):
     text(34, foot + 58, RATINGS_PAGE[edition["sport"]] + "   \u2022   @LAvsAllYall",
          f.sans(15, "Regular"), TEAL)
     text(690, foot + 28, "PR = POWER RATING", f.sans(12, "SemiBold"), GREY)
-    text(690, foot + 52, "Division rank shown", f.sans(12, "Regular"), GREY)
+    rank_note = "Division rank shown"
+    if any(t["rank"] is None for _, teams in edition["blocks"] for t in teams):
+        rank_note += "  \u2022  \u2014 = not in playoffs"
+    text(690, foot + 52, rank_note, f.sans(12, "Regular"), GREY)
 
     out = io.BytesIO()
     img.save(out, format="PNG", optimize=True)
