@@ -26,7 +26,7 @@ add_action('wp_footer', function () {
 }
 /* Bracket: pick your own winners */
 .lvb .lvb-sc{position:relative}
-.lvb .lvb-pk{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;background:transparent;color:#008584;font:700 11px/1 Arial,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.lvb .lvb-pk{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;background:transparent;color:#fff !important;font:700 11px/1 Arial,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .lvb .lvb-pk:hover,.lvb .lvb-pk:focus{background:#008584;color:#fff;outline:none}
 .lvb .lvb-win .lvb-pk{background:#008584;color:#fff}
 .lvb .lvb-win .lvb-n,.lvb .lvb-win .lvb-n a{font-weight:700 !important}
