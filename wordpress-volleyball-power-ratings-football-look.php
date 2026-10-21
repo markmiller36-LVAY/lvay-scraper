@@ -42,6 +42,16 @@ html body .lvay-vb-rankings th.lvay-dcol{color:#fff !important}
  html body .lvay-vb-rankings table td,html body .lvay-vb-rankings table td a{font-size:15px !important}
  html body .lvay-vb-rankings table th{font-size:15px !important}
 }
+.lvay-prs-wrap{position:relative;margin:0 0 26px}
+html body .lvay-prs-wrap .lvay-vb-search{margin:0 !important}
+.lvay-prs-list{position:absolute;left:0;right:0;top:100%;z-index:9999;background:#fff;border:2px solid #078b88;border-top:0;max-height:320px;overflow:auto;display:none;box-shadow:0 8px 18px rgba(0,0,0,.15)}
+.lvay-prs-list.on{display:block}
+.lvay-prs-item{display:flex;justify-content:space-between;gap:10px;padding:8px 14px;cursor:pointer;font-family:Teko,Arial,sans-serif;font-size:19px;line-height:1.1;color:#111;border-bottom:1px solid #eee}
+.lvay-prs-item small{color:#078b88;font-size:16px;white-space:nowrap}
+.lvay-prs-item:hover,.lvay-prs-item.act{background:#e6f4f3}
+.lvay-prs-none{padding:8px 14px;font-family:Teko,Arial,sans-serif;font-size:18px;color:#777}
+html body .lvay-vb-rankings.lvay-vb-rankings.lvay-vb-rankings table tbody tr.lvay-prs-hit > td{background:#fff3b0 !important}
+html body .lvay-vb-rankings.lvay-vb-rankings.lvay-vb-rankings table tbody tr.lvay-prs-hit > td:first-child{box-shadow:inset 4px 0 0 #078b88}
 </style>
 <script id="lvay-vbfb-js">
 (function(){
@@ -54,17 +64,39 @@ html body .lvay-vb-rankings th.lvay-dcol{color:#fff !important}
   lab.innerHTML='<b>'+(m?yr+' Season':'Current '+yr+' Season')+'</b><span>Unofficial '+yr+' power ratings — LHSAA Divisions I–V.</span>';
   var s=document.createElement('input');s.type='search';s.className='lvay-vb-search';s.placeholder='Search for a school...';s.setAttribute('aria-label','Search for a school');
   root.parentNode.insertBefore(s,root);root.parentNode.insertBefore(lab,root);
-  var was=null;
-  s.addEventListener('input',function(){
-   var q=s.value.trim().toLowerCase(),ds=root.querySelectorAll(':scope > details');
-   if(q&&!was){was=[].map.call(ds,function(d){return d.open;});}
-   ds.forEach(function(d,i){
-    var hit=0;d.querySelectorAll('table tbody tr').forEach(function(r){var c=r.cells[1];if(!c)return;var ok=!q||c.textContent.toLowerCase().indexOf(q)>-1;r.style.display=ok?'':'none';if(ok)hit++;});
-    if(q){d.style.display=hit?'':'none';if(hit&&!d.classList.contains('lvay-allacc'))d.open=true;}
-    else{d.style.display='';if(was)d.open=was[i];}
-   });
-   if(!q)was=null;
+  /* search: dropdown of schools; picking one opens that team's division (same as football #191) */
+  s.setAttribute('autocomplete','off');
+  var wrap=document.createElement('div');wrap.className='lvay-prs-wrap';s.parentNode.insertBefore(wrap,s);wrap.appendChild(s);
+  var list=document.createElement('div');list.className='lvay-prs-list';list.setAttribute('role','listbox');wrap.appendChild(list);
+  function divs(){return [].slice.call(root.querySelectorAll(':scope > details:not(.lvay-allacc)'));}
+  function divName(d){var sm=d.querySelector('summary');if(!sm)return '';var t=sm.cloneNode(true);[].forEach.call(t.querySelectorAll('a,button,i'),function(x){x.remove();});return t.textContent.replace(/\s+/g,' ').trim();}
+  function teamOf(r){var c=r.cells&&r.cells[1];return c?c.textContent.replace(/\s+/g,' ').trim():'';}
+  var idx=null,cur=[],act=-1;
+  function build(){idx=[];var seen={};divs().forEach(function(d){var dn=divName(d);[].forEach.call(d.querySelectorAll('table tbody tr'),function(r){if(r.closest('.lvay-pb'))return;var t=teamOf(r);if(!t||seen[t])return;seen[t]=1;idx.push({t:t,d:dn,g:d,r:r});});});idx.sort(function(a,b){return a.t.localeCompare(b.t);});}
+  function show(){
+   if(!idx||!idx.length)build();var q=s.value.toLowerCase().trim();act=-1;
+   if(!q){list.classList.remove('on');list.innerHTML='';return;}
+   cur=idx.filter(function(x){return x.t.toLowerCase().indexOf(q)!==-1;}).sort(function(a,b){return (a.t.toLowerCase().indexOf(q)===0?0:1)-(b.t.toLowerCase().indexOf(q)===0?0:1);}).slice(0,12);
+   list.innerHTML=cur.length?cur.map(function(x,i){return '<div class="lvay-prs-item" role="option" data-i="'+i+'"><span>'+x.t.replace(/</g,'&lt;')+'</span><small>'+x.d.replace(/</g,'&lt;')+'</small></div>';}).join(''):'<div class="lvay-prs-none">No school found</div>';
+   list.classList.add('on');
+  }
+  function pick(x){
+   list.classList.remove('on');s.value=x.t;
+   [].forEach.call(root.querySelectorAll('tbody tr'),function(r){r.style.display='';r.classList.remove('lvay-prs-hit');});
+   [].forEach.call(root.querySelectorAll(':scope > details'),function(d){d.style.display='';if(d!==x.g)d.open=false;});
+   x.g.open=true;x.r.classList.add('lvay-prs-hit');
+   setTimeout(function(){var go=function(){return x.r.getBoundingClientRect().top+window.pageYOffset-window.innerHeight/3;};window.scrollTo({top:go(),behavior:'smooth'});setTimeout(function(){if(Math.abs(x.r.getBoundingClientRect().top-window.innerHeight/3)>40)window.scrollTo({top:go(),behavior:'instant'});},700);},80);
+  }
+  s.addEventListener('input',function(){idx=null;show();});
+  s.addEventListener('focus',function(){if(s.value)show();});
+  s.addEventListener('keydown',function(e){
+   if(!list.classList.contains('on'))return;var its=list.querySelectorAll('.lvay-prs-item');
+   if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!its.length)return;act=(act+(e.key==='ArrowDown'?1:-1)+its.length)%its.length;[].forEach.call(its,function(n,i){n.classList.toggle('act',i===act);});its[act].scrollIntoView({block:'nearest'});}
+   else if(e.key==='Enter'){e.preventDefault();if(cur.length)pick(cur[act<0?0:act]);}
+   else if(e.key==='Escape'){list.classList.remove('on');}
   });
+  list.addEventListener('mousedown',function(e){var it=e.target.closest('.lvay-prs-item');if(!it)return;e.preventDefault();pick(cur[+it.getAttribute('data-i')]);});
+  document.addEventListener('click',function(e){if(!wrap.contains(e.target))list.classList.remove('on');});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();
 })();
