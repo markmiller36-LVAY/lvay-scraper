@@ -13,7 +13,8 @@
 [hidden]{display:none!important}
 html,body{height:100%;margin:0;overflow:hidden}
 body{background:radial-gradient(130% 100% at 50% 35%,#fbfbfb,var(--ground) 60%,#e2e2e2);color:var(--ink);font-family:var(--teko);overscroll-behavior:none}
-.app{position:fixed;inset:0}
+.app{position:fixed;inset:0;touch-action:none}
+.card,.srch ul,.regions{touch-action:pan-y}
 #stage{position:absolute;inset:0;touch-action:none}
 #stage canvas{display:block;width:100%;height:100%;outline:none}
 .bar{position:absolute;z-index:2;top:calc(env(safe-area-inset-top,0px) + 14px);left:16px;right:16px;display:flex;align-items:center;gap:14px;padding:8px 14px;min-height:50px;background:var(--teal);border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 10px 28px rgba(0,0,0,.14)}
@@ -585,6 +586,13 @@ q.addEventListener("focus",()=>{if(q.value.trim())q.dispatchEvent(new Event("inp
 
 /* keep the regions rail and help line just under the (possibly wrapped) top bar */
 {const bar=document.querySelector(".bar"),app=document.querySelector(".app");const fit=()=>{const a=app.getBoundingClientRect(),b=bar.getBoundingClientRect();if(b.height)app.style.setProperty("--bb",Math.round(b.bottom-a.top+10)+"px");};fit();addEventListener("resize",fit);if(window.ResizeObserver)new ResizeObserver(fit).observe(bar);}
+
+/* pinch / ctrl+scroll zooms the MAP, never the whole page (keeps the bar and legend in place) */
+{const cv=renderer.domElement;
+ window.addEventListener("wheel",e=>{if(!e.ctrlKey&&!e.metaKey)return;e.preventDefault();e.stopPropagation();
+   cv.dispatchEvent(new WheelEvent("wheel",{deltaY:e.deltaY*(e.deltaMode?1:4),deltaMode:e.deltaMode,clientX:e.clientX,clientY:e.clientY,bubbles:true,cancelable:true}));},{passive:false,capture:true});
+ ["gesturestart","gesturechange","gestureend"].forEach(n=>document.addEventListener(n,e=>e.preventDefault(),{passive:false}));
+ document.addEventListener("touchmove",e=>{if(e.touches&&e.touches.length>1&&!cv.contains(e.target))e.preventDefault();},{passive:false});}
 $("reset").onclick=()=>{$("fq").value="";region="";LV.forEach(l=>lvOn.add(l[0]));applyLevels();pickCollege(-1,false);select(null);flyTo(HOME.t.clone(),homeRadius(),HOME.phi,HOME.theta,1100);};
 window.addEventListener("keydown",e=>{if(e.key==="Escape")$("reset").onclick();});
 
