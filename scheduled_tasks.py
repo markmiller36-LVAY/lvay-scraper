@@ -118,9 +118,6 @@ def scheduled_run(only=None):
                     from volleyball_playoff_eligibility import update_playoff_eligibility as update_vb_eligibility
                     print(f"[SCHEDULER] Volleyball playoff eligibility: {update_vb_eligibility(VB_SEASON)}")
                 except Exception as eligibility_error:
-                    print(f"[SCHEDULER] Volleyball playoff eligibility not updated: {eligibility_error}")
-                    print(f"[SCHEDULER] Volleyball playoff eligibility: {update_vb_eligibility(VB_SEASON)}")
-                except Exception as eligibility_error:
                     # Keep the last stored LHSAA list; never block ratings.
                     print(f"[SCHEDULER] Volleyball playoff eligibility not updated: {eligibility_error}")
                     

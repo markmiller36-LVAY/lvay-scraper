@@ -53,6 +53,18 @@ def reconcile_snapshot(conn, snapshots, season):
         for row in rows:
             groups[(row['school'], canonical_date(row['date_raw']), row['opponent'],
                     int(row['match_num'] or 1))].append(row)
+    # LHSAA sometimes lists the same match twice: once with the result and
+    # once still blank (seen Oct 22, 2026: Iota vs Iowa). The blank copy is a
+    # leftover, not a different match, so drop it instead of failing the run.
+    drop = set()
+    for key, group in groups.items():
+        played = [r for r in group if str(r['win_loss'] or '').strip()]
+        blank = [r for r in group if not str(r['win_loss'] or '').strip()]
+        if played and blank:
+            drop.update(id(r) for r in blank)
+            groups[key] = played
+    if drop:
+        snapshots = {d: [r for r in rows if id(r) not in drop] for d, rows in snapshots.items()}
     for key, group in groups.items():
         outcomes = {(r['win_loss'], r['score']) for r in group}
         if len(outcomes) > 1:

@@ -105,7 +105,7 @@ def test_cancelled_and_postponed_matches_are_left_out_of_the_scrape(monkeypatch)
     html = '<table>' + row(1, '10/1/2026', 'Haughton', 'Postponed') + \
         row(2, '10/6/2026', 'Haughton', 'Cancelled') + \
         row(3, '10/19/2026', 'Haughton', '') + \
-        row(4, '9/29/2026', 'Airline', 'L') + '</table>'
+        row(4, '9/29/2026', 'Airline', 'L') + '</table></html>'
 
     class Resp:
         text = html
@@ -117,3 +117,21 @@ def test_cancelled_and_postponed_matches_are_left_out_of_the_scrape(monkeypatch)
     assert [(r['date_raw'], r['win_loss']) for r in rows] == [('10/19/2026', ''), ('9/29/2026', 'L')]
     assert is_called_off(' cancelled ') and is_called_off('Canceled') and is_called_off('POSTPONED')
     assert not is_called_off('') and not is_called_off('W')
+
+
+def test_blank_duplicate_of_a_played_match_is_dropped():
+    import sqlite3
+    from volleyball_sync import reconcile_snapshot
+    conn = sqlite3.connect(':memory:')
+    conn.execute('CREATE TABLE volleyball_games (sport TEXT, season TEXT, school TEXT, game_date TEXT, '
+                 'opponent TEXT, match_num INTEGER, result TEXT, score TEXT, counts_for_pr INTEGER)')
+    def row(school, opp, wl, score, div='III'):
+        return {'school': school, 'opponent': opp, 'date_raw': '10/22/2026 6:00:00 PM', 'match_num': '1',
+                'win_loss': wl, 'score': score, 'division': div}
+    snaps = {d: [row('Filler' + d, 'Other', 'W', '25-1', d)] for d in ('I', 'II', 'IV', 'V')}
+    snaps['III'] = [row('Iota', 'Iowa', '', ''), row('Iota', 'Iowa', 'W', '25-15, 25-15, 25-23'),
+                    row('Iowa', 'Iota', 'L', '15-25, 15-25, 23-25'), row('Iowa', 'Iota', '', '')]
+    rows, _ = reconcile_snapshot(conn, snaps, '2026')
+    iota = [r for r in rows if r['school'] == 'Iota']
+    assert len(iota) == 1 and iota[0]['win_loss'] == 'W'
+    assert [r['win_loss'] for r in rows if r['school'] == 'Iowa'] == ['L']

@@ -186,17 +186,29 @@ def scrape_division(division, season=SEASON, lhsaa_season_token=None):
     }
 
     print(f"  [VB] Fetching Division {division}...")
-    try:
-        resp = requests.post(
-            SCRAPE_URL,
-            params={"p": "1"},
-            data=payload,
-            headers=HEADERS,
-            timeout=45,
-        )
-        resp.raise_for_status()
-    except requests.RequestException as e:
-        print(f"  [VB] ERROR fetching Division {division}: {e}")
+    resp = None
+    # Each division page is ~2 MB and LHSAA sometimes sends it cut off part way.
+    # A cut-off page has no closing </html>; ask again (up to 3 tries) rather
+    # than failing the whole volleyball run on a short page.
+    for attempt in range(1, 4):
+        try:
+            resp = requests.post(
+                SCRAPE_URL,
+                params={"p": "1"},
+                data=payload,
+                headers=HEADERS,
+                timeout=90,
+            )
+            resp.raise_for_status()
+        except requests.RequestException as e:
+            print(f"  [VB] ERROR fetching Division {division} (try {attempt}): {e}")
+            resp = None
+            continue
+        if "</html>" in resp.text[-2000:].lower():
+            break
+        print(f"  [VB] Division {division} page was cut off (try {attempt}); retrying")
+        resp = None
+    if resp is None:
         return None
 
     if "Invalid object name" in resp.text or "Microsoft OLE DB Provider" in resp.text:
