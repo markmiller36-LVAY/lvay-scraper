@@ -114,8 +114,10 @@ body{background:radial-gradient(130% 100% at 50% 35%,#fbfbfb,var(--ground) 60%,#
 .card .site:hover{color:#006b6a}
 .card .site:focus-visible{outline:2px solid #000;outline-offset:2px}
 .tip{position:absolute;z-index:3;pointer-events:none;font-family:var(--teko);font-size:17px;font-weight:500;line-height:1;background:#000;color:#fff;padding:5px 8px 2px;border-radius:5px;white-space:nowrap}
+.bar select{width:auto;flex:0 1 210px;max-width:240px}
+body:has(.cky-btn-revisit-wrapper) .panel2{bottom:calc(env(safe-area-inset-bottom,0px) + 76px)}
 .srch{position:relative;flex:0 1 240px;min-width:130px}
-@media (max-width:1000px){.bar{flex-wrap:wrap;gap:8px 12px}.bar .srch{order:2;flex:1 1 100%}.bar select{order:3;flex:1 1 40%;min-width:0}}
+@media (max-width:1000px){.bar{flex-wrap:wrap;gap:8px 12px}.bar .srch{order:2;flex:1 1 100%}.bar select{order:3;flex:1 1 40%;min-width:0;max-width:none}}
 .srch input{width:100%;font-family:var(--teko);font-size:19px;font-weight:500;color:#000;background:#fff;border:1px solid #fff;border-radius:7px;padding:4px 10px 1px}
 .srch input:focus-visible{outline:2px solid #000;outline-offset:1px}
 .srch ul{position:absolute;left:0;top:calc(100% + 6px);width:max(100%,300px);max-height:340px;overflow:auto;margin:0;padding:4px;list-style:none;background:#fff;border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.22);z-index:5}
@@ -454,7 +456,13 @@ controls.mouseButtons={LEFT:THREE.MOUSE.PAN,MIDDLE:THREE.MOUSE.ROTATE,RIGHT:THRE
 renderer.domElement.addEventListener("mousedown",e=>{if(e.button===1)e.preventDefault();});
 renderer.domElement.addEventListener("auxclick",e=>{if(e.button===1)e.preventDefault();});
 const HOME={phi:.5,theta:0,t:new THREE.Vector3(0,0,2.6)};
-function homeRadius(){const w=stage.clientWidth||window.innerWidth||1280,h=stage.clientHeight||window.innerHeight||800,a=Math.max(.4,Math.min(3,w/Math.max(1,h)));return Math.min(170,Math.max(40,82/a));} /* the lower 48 fill the window */
+function homeRadius(){const w=stage.clientWidth||window.innerWidth||1280,h=stage.clientHeight||window.innerHeight||800,a=Math.max(.4,Math.min(3,w/Math.max(1,h)));
+  if(!stateMeshes.length)return Math.min(170,Math.max(40,82/a));
+  const L=stateMeshes,tx=HOME.t.x,tz=HOME.t.z,x0=Math.min(...L.map(m=>m.userData.x0)),x1=Math.max(...L.map(m=>m.userData.x1)),z0=Math.min(...L.map(m=>m.userData.z0)),z1=Math.max(...L.map(m=>m.userData.z1));
+  const tv=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),th=tv*a,c=Math.cos(HOME.phi);
+  const ui=Math.max(.55,1-170/h); /* leave room for the top bar and the legend */
+  const rw=Math.max(tx-x0,x1-tx)/th, rd=Math.max(tz-z0,z1-tz)*c/(tv*ui);
+  return Math.min(170,Math.max(20,Math.max(rw,rd)*1.04+DEPTH*2));} /* the lower 48 fill the window */
 function camFromSph(t,r,phi,theta){return new THREE.Vector3(t.x+r*Math.sin(phi)*Math.sin(theta),t.y+r*Math.cos(phi),t.z+r*Math.sin(phi)*Math.cos(theta));}
 let tween=null;
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
