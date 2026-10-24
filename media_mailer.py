@@ -286,21 +286,23 @@ def render_png(edition, scale=None):
             text(132, 70 + i * 48, word, f.slab(30), WHITE if i != 1 else TEAL, "mm")
     box(256, 32, 258, 230, (60, 66, 70))
     title_left, title_right = 282, 700
-    text(title_left, 30, f"{edition['season']} LHSAA", f.slab(28), WHITE)
-    title = f"{SPORT_LABEL[edition['sport']].upper()} POWER"
-    text(title_left, 66, title, fit(title, 40, title_right - title_left, f.slab), WHITE)
-    text(title_left, 112, "RATINGS", f.slab(40), TEAL)
+    # Title: season + sport, "POWER RATINGS", then the area in big teal so
+    # each outlet sees at a glance that the graphic is about its own teams.
+    top_line = f"{edition['season']} LHSAA {SPORT_LABEL[edition['sport']].upper()}"
+    text(title_left, 30, top_line, fit(top_line, 28, title_right - title_left, f.slab), WHITE)
+    text(title_left, 66, "POWER RATINGS", fit("POWER RATINGS", 40, title_right - title_left, f.slab), WHITE)
+    area_title = "STATEWIDE TOP 10" if edition["area"] == "STATEWIDE" else edition["area"]
+    text(title_left, 112, area_title, fit(area_title, 40, title_right - title_left, f.slab), TEAL)
     text(title_left, 176, "LOUISIANAVSALLYALL.COM", f.sans(19, "SemiBold"), WHITE)
     text(title_left, 204, "@LAvsAllYall", f.sans(19, "SemiBold"), TEAL)
     handle_end = title_left + d.textlength("@LAvsAllYall", font=f.sans(19, "SemiBold")) / s
     text(handle_end + 12, 207, "FACEBOOK  \u00b7  INSTAGRAM  \u00b7  X  \u00b7  YOUTUBE",
          f.sans(13, "Medium"), GREY)
-    d.rounded_rectangle([716 * s, 34 * s, 920 * s, 160 * s], radius=round(8 * s),
+    d.rounded_rectangle([716 * s, 34 * s, 920 * s, 134 * s], radius=round(8 * s),
                         fill=(16, 32, 33), outline=TEAL, width=round(2 * s))
     text(736, 48, "UNOFFICIAL", f.sans(19, "SemiBold"), TEAL)
     text(736, 78, "UPDATED", f.sans(13, "SemiBold"), GREY)
     text(736, 100, _updated_label(edition["updated"]), f.sans(17, "SemiBold"), WHITE)
-    text(736, 130, edition["area"], fit(edition["area"], 12, 170, lambda z: f.sans(z, "SemiBold")), GREY)
     box(0, HEADER_H, W, HEADER_H + BAR_H, TEAL)
     box(0, HEADER_H + BAR_H, W, HEADER_H + BAR_H + SUB_H, SUBBAR)
     text(34, HEADER_H + BAR_H + SUB_H / 2, edition["subtitle"], f.sans(15, "SemiBold"), INK, "lm")
