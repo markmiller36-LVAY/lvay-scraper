@@ -1,0 +1,1094 @@
+{
+  "_about": "Who gets the Saturday-morning LVAY Power Ratings graphics. Set \"active\": true to start sending to a recipient. Each edition is one PNG: a \"region\" edition shows only that region's schools; a \"top10\" edition shows the top 10 in every division statewide. Never add GeauxPreps (Mark, Oct 17, 2026). \"days\" sets which mornings a recipient gets it (default Saturday). \"internal\": true marks LVAY's own inboxes, which always get the real email. Regions starting with \"cov-\" are newspaper coverage areas (core parishes) from the Coverage Areas tab of the Louisiana Sports Media Contacts sheet (Oct 23, 2026); no recipient uses them yet.",
+  "regions": {
+    "north-louisiana": {
+      "title": "North Louisiana",
+      "schools": [
+        "Ruston",
+        "Haughton",
+        "West Monroe",
+        "Airline",
+        "Ouachita Parish",
+        "Neville",
+        "Franklin Parish",
+        "Sterlington",
+        "Wossman",
+        "West Ouachita",
+        "Tioga",
+        "Booker T. Washington - Shr.",
+        "Southwood",
+        "Northwood - Shrev.",
+        "Calvary Baptist",
+        "Beekman Charter",
+        "North Caddo",
+        "D'Arbonne Woods Charter",
+        "Magnolia School of Excellence",
+        "Jena",
+        "Union Parish",
+        "Vidalia",
+        "Caldwell Parish",
+        "Bastrop",
+        "Rayville",
+        "Richwood",
+        "Mangham",
+        "Oak Grove",
+        "Jonesboro-Hodge",
+        "Haynesville",
+        "Homer",
+        "Ferriday",
+        "Ringgold",
+        "Delhi",
+        "Lakeview",
+        "General Trass",
+        "Arcadia",
+        "Ouachita Christian",
+        "Cedar Creek",
+        "St. Mary's",
+        "Glenbrook",
+        "Lincoln Preparatory School",
+        "Delta Charter",
+        "Block",
+        "Northwood - Lena",
+        "Delhi Charter",
+        "St. Frederick"
+      ]
+    },
+    "north-louisiana-volleyball": {
+      "title": "North Louisiana",
+      "schools": [
+        "Ruston",
+        "Haughton",
+        "West Monroe",
+        "Airline",
+        "Benton",
+        "Captain Shreve",
+        "C.E. Byrd",
+        "Parkway",
+        "Bossier",
+        "Caddo Magnet",
+        "Huntington",
+        "Northwood - Shrev.",
+        "Woodlawn - Shrev.",
+        "Evangel Christian",
+        "Loyola Prep",
+        "Booker T. Washington - Shr.",
+        "Southwood",
+        "Neville",
+        "Wossman",
+        "Ouachita Parish",
+        "West Ouachita",
+        "St. Mary's",
+        "Calvary Baptist",
+        "North Caddo",
+        "Magnolia School of Excellence",
+        "Lincoln Preparatory School",
+        "Doyline",
+        "Downsville",
+        "Providence Classical Academy",
+        "Word of God Academy"
+      ]
+    },
+    "cov-nola": {
+      "title": "Greater New Orleans",
+      "outlet": "Times-Picayune / NOLA.com",
+      "parishes": [
+        "Orleans",
+        "Jefferson",
+        "St. Tammany",
+        "St. Bernard",
+        "Plaquemines",
+        "St. Charles",
+        "St. John the Baptist",
+        "St. James"
+      ],
+      "schools": [
+        "Abramson",
+        "Acad. of Sacred Heart - N.O.",
+        "Academy of Our Lady",
+        "Archbishop Chapelle",
+        "Archbishop Hannan",
+        "Archbishop Rummel",
+        "Archbishop Shaw",
+        "Belle Chasse",
+        "Ben Franklin",
+        "Bonnabel",
+        "Booker T. Washington - N.O.",
+        "Brother Martin",
+        "Cabrini",
+        "Chalmette",
+        "Christ Episcopal School",
+        "Covington",
+        "Crescent City",
+        "De La Salle",
+        "Destrehan",
+        "Dominican",
+        "East Jefferson",
+        "East St. John",
+        "Edna Karr",
+        "Eleanor McMain",
+        "First Baptist Christian",
+        "Fisher",
+        "Fontainebleau",
+        "Frederick A Douglass",
+        "George Washington Carver",
+        "Grand Isle",
+        "Hahnville",
+        "Haynes Academy",
+        "Holy Cross",
+        "Isidore Newman",
+        "Jefferson Rise Charter",
+        "Jesuit",
+        "John Curtis Christian",
+        "John Ehret",
+        "John F. Kennedy",
+        "Kenner Discovery Health Science",
+        "L. W. Higgins",
+        "Lakeshore",
+        "Livingston Collegiate",
+        "Lord Beaconsfield Landry",
+        "Louise McGehee",
+        "Lutcher",
+        "Lycee Francais de la Nouvelle Orleans",
+        "M.L. King Charter",
+        "Mandeville",
+        "McDonogh #35",
+        "Metairie Park Country Day",
+        "Morris Jeff",
+        "Mt. Carmel",
+        "N.O. Charter Science and Math",
+        "New Orleans Military & Maritime",
+        "Northlake Christian",
+        "Northshore",
+        "Patrick Taylor - Science/Tech.",
+        "Pearl River",
+        "Pope John Paul II",
+        "Riverdale",
+        "Riverside Academy",
+        "Salmen",
+        "Sarah T. Reed",
+        "Slidell",
+        "Sophie B. Wright",
+        "South Plaquemines",
+        "St. Augustine",
+        "St. Charles",
+        "St. James",
+        "St. Katharine Drexel",
+        "St. Martin's Episcopal",
+        "St. Mary's Academy",
+        "St. Paul's",
+        "St. Scholastica",
+        "The Willow School",
+        "Thomas Jefferson",
+        "Ursuline Academy",
+        "Walter L. Cohen",
+        "Warren Easton",
+        "West Jefferson",
+        "West St. John",
+        "Young Audiences Charter"
+      ]
+    },
+    "cov-advocate-br": {
+      "title": "Baton Rouge Area",
+      "outlet": "The Advocate (Baton Rouge)",
+      "parishes": [
+        "East Baton Rouge",
+        "West Baton Rouge",
+        "Iberville",
+        "Ascension",
+        "Livingston",
+        "Pointe Coupee",
+        "East Feliciana",
+        "West Feliciana"
+      ],
+      "schools": [
+        "Albany",
+        "Ascension Catholic",
+        "Ascension Christian",
+        "Baker",
+        "Baton Rouge",
+        "Belaire",
+        "Broadmoor",
+        "Brusly",
+        "Capitol",
+        "Catholic - B.R.",
+        "Catholic - P.C.",
+        "Central - B.R.",
+        "Central Private",
+        "Collegiate Baton Rouge",
+        "Denham Springs",
+        "Donaldsonville",
+        "Doyle",
+        "Dunham",
+        "Dutchtown",
+        "East Ascension",
+        "East Feliciana",
+        "East Iberville",
+        "Episcopal",
+        "False River",
+        "GEO Next Generation",
+        "Glen Oaks",
+        "Helix Mentorship Academy",
+        "Istrouma",
+        "La. School for Deaf",
+        "Liberty",
+        "Live Oak",
+        "Livonia",
+        "Madison Prep",
+        "McKinley",
+        "North Iberville",
+        "Northeast",
+        "Parkview Baptist",
+        "Plaquemine",
+        "Port Allen",
+        "Prairieville",
+        "Scotlandville",
+        "Slaughter Community Charter",
+        "Southern Lab",
+        "Springfield",
+        "St. Amant",
+        "St. John",
+        "St. Joseph's Academy",
+        "St. Michael the Archangel",
+        "Tara",
+        "Thrive Academy",
+        "University Lab",
+        "Walker",
+        "West Feliciana",
+        "White Castle",
+        "Woodlawn - B.R.",
+        "Zachary"
+      ]
+    },
+    "cov-acadiana-advocate": {
+      "title": "Acadiana",
+      "outlet": "The Acadiana Advocate",
+      "parishes": [
+        "Lafayette",
+        "St. Martin",
+        "Iberia",
+        "Vermilion",
+        "Acadia",
+        "St. Landry"
+      ],
+      "schools": [
+        "Abbeville",
+        "Acad. of Sacred Heart - G.C.",
+        "Acadiana",
+        "Acadiana Renaissance Charter",
+        "Ascension Episcopal",
+        "Beau Chene",
+        "Berchmans Academy",
+        "Breaux Bridge",
+        "Carencro",
+        "Catholic - N.I.",
+        "Cecilia",
+        "Church Point",
+        "Comeaux",
+        "Crowley",
+        "David Thibodaux",
+        "Delcambre",
+        "Episcopal of Acadiana",
+        "Erath",
+        "Eunice",
+        "Gueydan",
+        "Highland Baptist",
+        "Iota",
+        "Jeanerette",
+        "Kaplan",
+        "Lafayette",
+        "Lafayette Christian",
+        "Lafayette Renaissance Charter Academy",
+        "Loreauville",
+        "New Iberia",
+        "North Central",
+        "North Vermilion",
+        "Northside",
+        "Northwest",
+        "Notre Dame",
+        "Opelousas",
+        "Opelousas Catholic",
+        "Port Barre",
+        "Rayne",
+        "Southside",
+        "St. Edmund",
+        "St. Martinville",
+        "St. Thomas More",
+        "Teurlings Catholic",
+        "Vermilion Catholic",
+        "Westgate",
+        "Westminster Christian",
+        "Westminster Christian - Lafayette"
+      ]
+    },
+    "cov-daily-advertiser": {
+      "title": "Acadiana",
+      "outlet": "Lafayette Daily Advertiser",
+      "parishes": [
+        "Lafayette",
+        "St. Martin",
+        "Iberia",
+        "Vermilion",
+        "Acadia",
+        "St. Landry"
+      ],
+      "schools": [
+        "Abbeville",
+        "Acad. of Sacred Heart - G.C.",
+        "Acadiana",
+        "Acadiana Renaissance Charter",
+        "Ascension Episcopal",
+        "Beau Chene",
+        "Berchmans Academy",
+        "Breaux Bridge",
+        "Carencro",
+        "Catholic - N.I.",
+        "Cecilia",
+        "Church Point",
+        "Comeaux",
+        "Crowley",
+        "David Thibodaux",
+        "Delcambre",
+        "Episcopal of Acadiana",
+        "Erath",
+        "Eunice",
+        "Gueydan",
+        "Highland Baptist",
+        "Iota",
+        "Jeanerette",
+        "Kaplan",
+        "Lafayette",
+        "Lafayette Christian",
+        "Lafayette Renaissance Charter Academy",
+        "Loreauville",
+        "New Iberia",
+        "North Central",
+        "North Vermilion",
+        "Northside",
+        "Northwest",
+        "Notre Dame",
+        "Opelousas",
+        "Opelousas Catholic",
+        "Port Barre",
+        "Rayne",
+        "Southside",
+        "St. Edmund",
+        "St. Martinville",
+        "St. Thomas More",
+        "Teurlings Catholic",
+        "Vermilion Catholic",
+        "Westgate",
+        "Westminster Christian",
+        "Westminster Christian - Lafayette"
+      ]
+    },
+    "cov-sbc-advocate": {
+      "title": "Shreveport-Bossier",
+      "outlet": "Shreveport-Bossier City Advocate",
+      "parishes": [
+        "Caddo",
+        "Bossier"
+      ],
+      "schools": [
+        "Airline",
+        "Benton",
+        "Booker T. Washington - Shr.",
+        "Bossier",
+        "C.E. Byrd",
+        "Caddo Magnet",
+        "Calvary Baptist",
+        "Captain Shreve",
+        "Evangel Christian",
+        "Green Oaks",
+        "Haughton",
+        "Huntington",
+        "Loyola Prep",
+        "Magnolia School of Excellence",
+        "North Caddo",
+        "Northwood - Shrev.",
+        "Parkway",
+        "Plain Dealing",
+        "Southwood",
+        "Woodlawn - Shrev."
+      ]
+    },
+    "cov-shreveport-times": {
+      "title": "Northwest Louisiana",
+      "outlet": "Shreveport Times",
+      "parishes": [
+        "Caddo",
+        "Bossier",
+        "Webster",
+        "DeSoto"
+      ],
+      "schools": [
+        "Airline",
+        "Benton",
+        "Booker T. Washington - Shr.",
+        "Bossier",
+        "C.E. Byrd",
+        "Caddo Magnet",
+        "Calvary Baptist",
+        "Captain Shreve",
+        "Doyline",
+        "Evangel Christian",
+        "Glenbrook",
+        "Green Oaks",
+        "Haughton",
+        "Huntington",
+        "Lakeside",
+        "Logansport",
+        "Loyola Prep",
+        "Magnolia School of Excellence",
+        "Mansfield",
+        "Minden",
+        "North Caddo",
+        "North DeSoto",
+        "North Webster",
+        "Northwood - Shrev.",
+        "Parkway",
+        "Plain Dealing",
+        "Southwood",
+        "Woodlawn - Shrev."
+      ]
+    },
+    "cov-american-press": {
+      "title": "Southwest Louisiana",
+      "outlet": "Lake Charles American Press",
+      "parishes": [
+        "Calcasieu",
+        "Cameron",
+        "Allen",
+        "Beauregard",
+        "Jefferson Davis",
+        "Vernon"
+      ],
+      "schools": [
+        "Barbe",
+        "DeQuincy",
+        "DeRidder",
+        "East Beauregard",
+        "Elton",
+        "Grand Lake",
+        "Hamilton Christian",
+        "Iowa",
+        "Jennings",
+        "Kinder",
+        "LaGrange",
+        "Lake Arthur",
+        "Lake Charles College Prep",
+        "Leesville",
+        "Merryville",
+        "Oakdale",
+        "Oberlin",
+        "Pickering",
+        "Rosepine",
+        "Sam Houston",
+        "South Beauregard",
+        "St. Louis Catholic",
+        "Sulphur",
+        "Vinton",
+        "Washington-Marion",
+        "Welsh",
+        "Westlake"
+      ]
+    },
+    "cov-news-star": {
+      "title": "Northeast Louisiana",
+      "outlet": "Monroe News-Star",
+      "parishes": [
+        "Ouachita",
+        "Lincoln",
+        "Union",
+        "Morehouse",
+        "Richland"
+      ],
+      "schools": [
+        "Bastrop",
+        "Beekman Charter",
+        "Carroll",
+        "Cedar Creek",
+        "D'Arbonne Woods Charter",
+        "Delhi",
+        "Delhi Charter",
+        "Downsville",
+        "Lincoln Preparatory School",
+        "Mangham",
+        "Neville",
+        "Ouachita Christian",
+        "Ouachita Parish",
+        "Rayville",
+        "Richwood",
+        "Ruston",
+        "St. Frederick",
+        "Sterlington",
+        "Union Parish",
+        "West Monroe",
+        "West Ouachita",
+        "Wossman"
+      ]
+    },
+    "cov-town-talk": {
+      "title": "Rapides Parish",
+      "outlet": "Alexandria Town Talk",
+      "parishes": [
+        "Rapides"
+      ],
+      "schools": [
+        "Alexandria",
+        "Bolton Academy",
+        "Buckeye",
+        "Holy Savior Menard",
+        "Peabody",
+        "Pineville",
+        "Tioga"
+      ]
+    },
+    "cov-houma-comet": {
+      "title": "Terrebonne & Lafourche",
+      "outlet": "Houma Courier / Daily Comet",
+      "parishes": [
+        "Terrebonne",
+        "Lafourche"
+      ],
+      "schools": [
+        "A.J. Ellender",
+        "Central Lafourche",
+        "Covenant Christian",
+        "E.D. White",
+        "H.L. Bourgeois",
+        "Houma Christian",
+        "South Lafourche",
+        "South Terrebonne",
+        "Terrebonne",
+        "Thibodaux",
+        "Vandebilt Catholic"
+      ]
+    },
+    "cov-daily-iberian": {
+      "title": "Iberia Parish",
+      "outlet": "Daily Iberian",
+      "parishes": [
+        "Iberia"
+      ],
+      "schools": [
+        "Catholic - N.I.",
+        "Delcambre",
+        "Highland Baptist",
+        "Jeanerette",
+        "Loreauville",
+        "New Iberia",
+        "Westgate"
+      ]
+    },
+    "cov-crowley": {
+      "title": "Acadia Parish",
+      "outlet": "Crowley Post-Signal",
+      "parishes": [
+        "Acadia"
+      ],
+      "schools": [
+        "Church Point",
+        "Crowley",
+        "Iota",
+        "Notre Dame",
+        "Rayne"
+      ]
+    },
+    "cov-hammond": {
+      "title": "Tangipahoa & St. Helena",
+      "outlet": "Hammond Daily Star",
+      "parishes": [
+        "Tangipahoa",
+        "St. Helena"
+      ],
+      "schools": [
+        "Amite",
+        "Hammond",
+        "Independence",
+        "Jewel Sumner",
+        "Kentwood",
+        "Loranger",
+        "Ponchatoula",
+        "St. Helena College & Career Acad.",
+        "St. Thomas Aquinas"
+      ]
+    },
+    "cov-lpn": {
+      "title": "Livingston Parish",
+      "outlet": "Livingston Parish News",
+      "parishes": [
+        "Livingston"
+      ],
+      "schools": [
+        "Albany",
+        "Denham Springs",
+        "Doyle",
+        "Live Oak",
+        "Springfield",
+        "Walker"
+      ]
+    },
+    "cov-ouachita-citizen": {
+      "title": "Ouachita & Morehouse",
+      "outlet": "Ouachita Citizen",
+      "parishes": [
+        "Ouachita",
+        "Morehouse"
+      ],
+      "schools": [
+        "Bastrop",
+        "Beekman Charter",
+        "Carroll",
+        "Neville",
+        "Ouachita Christian",
+        "Ouachita Parish",
+        "Richwood",
+        "St. Frederick",
+        "Sterlington",
+        "West Monroe",
+        "West Ouachita",
+        "Wossman"
+      ]
+    },
+    "cov-franklin-sun": {
+      "title": "Franklin Parish",
+      "outlet": "Franklin Sun",
+      "parishes": [
+        "Franklin"
+      ],
+      "schools": [
+        "Franklin Parish"
+      ]
+    },
+    "cov-concordia-sentinel": {
+      "title": "Concordia Parish",
+      "outlet": "Concordia Sentinel",
+      "parishes": [
+        "Concordia"
+      ],
+      "schools": [
+        "Delta Charter",
+        "Ferriday",
+        "Vidalia"
+      ]
+    },
+    "cov-herald-guide": {
+      "title": "St. Charles Parish",
+      "outlet": "St. Charles Herald-Guide",
+      "parishes": [
+        "St. Charles"
+      ],
+      "schools": [
+        "Destrehan",
+        "Hahnville"
+      ]
+    },
+    "cov-lobservateur": {
+      "title": "River Parishes",
+      "outlet": "L'Observateur",
+      "parishes": [
+        "St. John the Baptist",
+        "St. James",
+        "St. Charles"
+      ],
+      "schools": [
+        "Destrehan",
+        "East St. John",
+        "Hahnville",
+        "Lutcher",
+        "Riverside Academy",
+        "St. Charles",
+        "St. James",
+        "West St. John"
+      ]
+    },
+    "cov-crescent-city-sports": {
+      "title": "Greater New Orleans",
+      "outlet": "Crescent City Sports",
+      "parishes": [
+        "Orleans",
+        "Jefferson",
+        "St. Tammany",
+        "St. Bernard",
+        "Plaquemines",
+        "St. Charles"
+      ],
+      "schools": [
+        "Abramson",
+        "Acad. of Sacred Heart - N.O.",
+        "Academy of Our Lady",
+        "Archbishop Chapelle",
+        "Archbishop Hannan",
+        "Archbishop Rummel",
+        "Archbishop Shaw",
+        "Belle Chasse",
+        "Ben Franklin",
+        "Bonnabel",
+        "Booker T. Washington - N.O.",
+        "Brother Martin",
+        "Cabrini",
+        "Chalmette",
+        "Christ Episcopal School",
+        "Covington",
+        "Crescent City",
+        "De La Salle",
+        "Destrehan",
+        "Dominican",
+        "East Jefferson",
+        "Edna Karr",
+        "Eleanor McMain",
+        "First Baptist Christian",
+        "Fisher",
+        "Fontainebleau",
+        "Frederick A Douglass",
+        "George Washington Carver",
+        "Grand Isle",
+        "Hahnville",
+        "Haynes Academy",
+        "Holy Cross",
+        "Isidore Newman",
+        "Jefferson Rise Charter",
+        "Jesuit",
+        "John Curtis Christian",
+        "John Ehret",
+        "John F. Kennedy",
+        "Kenner Discovery Health Science",
+        "L. W. Higgins",
+        "Lakeshore",
+        "Livingston Collegiate",
+        "Lord Beaconsfield Landry",
+        "Louise McGehee",
+        "Lycee Francais de la Nouvelle Orleans",
+        "M.L. King Charter",
+        "Mandeville",
+        "McDonogh #35",
+        "Metairie Park Country Day",
+        "Morris Jeff",
+        "Mt. Carmel",
+        "N.O. Charter Science and Math",
+        "New Orleans Military & Maritime",
+        "Northlake Christian",
+        "Northshore",
+        "Patrick Taylor - Science/Tech.",
+        "Pearl River",
+        "Pope John Paul II",
+        "Riverdale",
+        "Salmen",
+        "Sarah T. Reed",
+        "Slidell",
+        "Sophie B. Wright",
+        "South Plaquemines",
+        "St. Augustine",
+        "St. Katharine Drexel",
+        "St. Martin's Episcopal",
+        "St. Mary's Academy",
+        "St. Paul's",
+        "St. Scholastica",
+        "The Willow School",
+        "Thomas Jefferson",
+        "Ursuline Academy",
+        "Walter L. Cohen",
+        "Warren Easton",
+        "West Jefferson",
+        "Young Audiences Charter"
+      ]
+    },
+    "cov-journal-network": {
+      "title": "North Louisiana Journals",
+      "outlet": "Journal network (Lincoln, Shreveport-Bossier, Webster Parish Journals)",
+      "parishes": [
+        "Lincoln",
+        "Caddo",
+        "Bossier",
+        "Webster",
+        "Bienville",
+        "Claiborne",
+        "DeSoto",
+        "Jackson",
+        "Natchitoches",
+        "Sabine",
+        "Red River",
+        "Winn",
+        "Rapides"
+      ],
+      "schools": [
+        "Airline",
+        "Alexandria",
+        "Arcadia",
+        "Benton",
+        "Bolton Academy",
+        "Booker T. Washington - Shr.",
+        "Bossier",
+        "Buckeye",
+        "C.E. Byrd",
+        "Caddo Magnet",
+        "Calvary Baptist",
+        "Captain Shreve",
+        "Cedar Creek",
+        "Doyline",
+        "Evangel Christian",
+        "Glenbrook",
+        "Green Oaks",
+        "Haughton",
+        "Haynesville",
+        "Holy Savior Menard",
+        "Homer",
+        "Huntington",
+        "Jonesboro-Hodge",
+        "Lakeside",
+        "Lakeview",
+        "Lincoln Preparatory School",
+        "Logansport",
+        "Loyola Prep",
+        "Magnolia School of Excellence",
+        "Mansfield",
+        "Many",
+        "Minden",
+        "Natchitoches Central",
+        "North Caddo",
+        "North DeSoto",
+        "North Webster",
+        "Northwood - Lena",
+        "Northwood - Shrev.",
+        "Parkway",
+        "Peabody",
+        "Pineville",
+        "Plain Dealing",
+        "Red River",
+        "Ringgold",
+        "Ruston",
+        "Southwood",
+        "St. Mary's",
+        "Tioga",
+        "Winnfield",
+        "Woodlawn - Shrev."
+      ]
+    },
+    "cov-bossier-press": {
+      "title": "Bossier Parish",
+      "outlet": "Bossier Press-Tribune",
+      "parishes": [
+        "Bossier"
+      ],
+      "schools": [
+        "Airline",
+        "Benton",
+        "Bossier",
+        "Haughton",
+        "Parkway",
+        "Plain Dealing"
+      ]
+    },
+    "cov-minden-press": {
+      "title": "Webster Parish",
+      "outlet": "Minden Press-Herald",
+      "parishes": [
+        "Webster"
+      ],
+      "schools": [
+        "Doyline",
+        "Glenbrook",
+        "Lakeside",
+        "Minden",
+        "North Webster"
+      ]
+    },
+    "cov-natchitoches-times": {
+      "title": "Natchitoches Parish",
+      "outlet": "Natchitoches Times",
+      "parishes": [
+        "Natchitoches"
+      ],
+      "schools": [
+        "Lakeview",
+        "Natchitoches Central",
+        "St. Mary's"
+      ]
+    },
+    "cov-leesville": {
+      "title": "Vernon Parish",
+      "outlet": "Leesville Daily Leader",
+      "parishes": [
+        "Vernon"
+      ],
+      "schools": [
+        "Leesville",
+        "Pickering",
+        "Rosepine"
+      ]
+    },
+    "cov-beauregard": {
+      "title": "Beauregard Parish",
+      "outlet": "Beauregard Daily News",
+      "parishes": [
+        "Beauregard"
+      ],
+      "schools": [
+        "DeRidder",
+        "East Beauregard",
+        "Merryville",
+        "South Beauregard"
+      ]
+    },
+    "cov-bogalusa": {
+      "title": "Washington Parish",
+      "outlet": "Bogalusa Daily News",
+      "parishes": [
+        "Washington"
+      ],
+      "schools": [
+        "Bogalusa",
+        "Franklinton",
+        "Pine",
+        "Varnado"
+      ]
+    },
+    "cov-st-landry": {
+      "title": "St. Landry Parish",
+      "outlet": "St. Landry Now / Opelousas Daily World",
+      "parishes": [
+        "St. Landry"
+      ],
+      "schools": [
+        "Acad. of Sacred Heart - G.C.",
+        "Beau Chene",
+        "Berchmans Academy",
+        "Eunice",
+        "North Central",
+        "Northwest",
+        "Opelousas",
+        "Opelousas Catholic",
+        "Port Barre",
+        "St. Edmund",
+        "Westminster Christian"
+      ]
+    },
+    "cov-lafourche-gazette": {
+      "title": "Lafourche Parish",
+      "outlet": "Lafourche Gazette",
+      "parishes": [
+        "Lafourche"
+      ],
+      "schools": [
+        "Central Lafourche",
+        "E.D. White",
+        "South Lafourche",
+        "Thibodaux"
+      ]
+    }
+  },
+  "recipients": [
+    {
+      "id": "lvay-pipeline",
+      "name": "LVAY Pipeline inbox",
+      "email": "lvaypipeline@gmail.com",
+      "active": true,
+      "internal": true,
+      "days": [
+        "saturday",
+        "sunday"
+      ],
+      "editions": [
+        {
+          "sport": "football",
+          "region": "north-louisiana"
+        },
+        {
+          "sport": "volleyball",
+          "region": "north-louisiana-volleyball"
+        }
+      ]
+    },
+    {
+      "id": "k104",
+      "name": "K104 Downs Law Friday Night Scoreboard Show",
+      "email": "fns@radiopeople.com",
+      "active": true,
+      "editions": [
+        {
+          "sport": "football",
+          "region": "north-louisiana"
+        },
+        {
+          "sport": "volleyball",
+          "region": "north-louisiana-volleyball"
+        }
+      ],
+      "days": [
+        "saturday"
+      ]
+    },
+    {
+      "id": "sbc-advocate",
+      "name": "Roy Lang III, Shreveport-Bossier City Advocate",
+      "email": "Roy.Lang@TheAdvocate.com",
+      "active": false,
+      "editions": [
+        {
+          "sport": "football",
+          "top10": true
+        }
+      ]
+    },
+    {
+      "id": "advocate-br",
+      "name": "Jackson Reyes, The Advocate (Baton Rouge)",
+      "email": "jackson.reyes@theadvocate.com",
+      "active": false,
+      "editions": [
+        {
+          "sport": "football",
+          "top10": true
+        },
+        {
+          "sport": "volleyball",
+          "top10": true
+        }
+      ]
+    },
+    {
+      "id": "daily-advertiser",
+      "name": "Shannon Belt, Lafayette Daily Advertiser",
+      "email": "sbelt@gannett.com",
+      "active": false,
+      "editions": [
+        {
+          "sport": "football",
+          "top10": true
+        },
+        {
+          "sport": "volleyball",
+          "top10": true
+        }
+      ]
+    },
+    {
+      "id": "american-press",
+      "name": "American Press sports desk (Lake Charles)",
+      "email": "sports@americanpress.com",
+      "active": false,
+      "editions": [
+        {
+          "sport": "football",
+          "top10": true
+        },
+        {
+          "sport": "volleyball",
+          "top10": true
+        }
+      ]
+    },
+    {
+      "id": "houma-courier",
+      "name": "Houma Courier / Daily Comet",
+      "email": "news@houmatoday.com",
+      "active": false,
+      "editions": [
+        {
+          "sport": "football",
+          "top10": true
+        }
+      ]
+    }
+  ]
+}
