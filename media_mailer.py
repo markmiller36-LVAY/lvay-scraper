@@ -65,6 +65,12 @@ DISPLAY_NAMES = {
     "Lincoln Preparatory School": "Lincoln Prep",
     "Providence Classical Academy": "Providence Classical",
     "Word of God Academy": "Word of God",
+    "Magnolia School of Excellence": "Magnolia Excellence",
+    "Kenner Discovery Health Science": "Kenner Discovery",
+    "Patrick Taylor - Science/Tech.": "Patrick Taylor",
+    "Lafayette Renaissance Charter Academy": "Lafayette Renaissance",
+    "Acadiana Renaissance Charter Academy": "Acadiana Renaissance",
+    "St. Helena College & Career Acad.": "St. Helena",
 }
 MONTHS = ["JAN.", "FEB.", "MARCH", "APRIL", "MAY", "JUNE", "JULY",
           "AUG.", "SEPT.", "OCT.", "NOV.", "DEC."]
@@ -100,8 +106,21 @@ def load_rankings(sport):
             "rank": int(rank) if rank else None,
             "pr": float(row.get("power_rating") or 0),
             "calculated_at": row.get("calculated_at"),
+            "cls": "" if (row.get("class_") or "").lower() in ("", "unknown") else row["class_"],
+            "record": _record(row),
+            "sf": row.get("strength_factor"),
         })
     return data.get("season"), rows
+
+
+def _record(row):
+    """W-L (W-L-T when there are ties), the same record the ratings page shows."""
+    if row.get("wins") is None and row.get("losses") is None:
+        return ""
+    rec = f"{int(row.get('wins') or 0)}-{int(row.get('losses') or 0)}"
+    if row.get("ties"):
+        rec += f"-{int(row['ties'])}"
+    return rec
 
 
 def build_edition(sport, rows, season, edition, regions):
@@ -307,13 +326,22 @@ def render_png(edition, scale=None):
     box(0, HEADER_H + BAR_H, W, HEADER_H + BAR_H + SUB_H, SUBBAR)
     text(34, HEADER_H + BAR_H + SUB_H / 2, edition["subtitle"], f.sans(18, "SemiBold"), INK, "lm")
 
-    # Division cards.
+    # Division cards: team (class in grey) | RANK | REC | PR | SF, like the
+    # site's Power Ratings tables (volleyball has no SF column).
     if ncols == 2:
-        fs = min(k * 0.9, 1.6)
-        rank_x, pr_x, inset = COL - 120 * fs, COL - 66 * fs, 18
+        fs, inset = min(k * 0.9, 1.6), 18
     else:
-        fs = min(k * 0.95, 1.45)
-        rank_x, pr_x, inset = COL - 100 * fs, COL - 54 * fs, 14
+        fs, inset = min(k * 0.95, 1.45), 14
+    cols = [("RANK", 44), ("REC", 50), ("PR", 54)]
+    if edition["sport"] == "football":
+        cols.append(("SF", 46))
+    span = sum(w for _, w in cols) + 8
+    g = min(fs, max(0.7, (COL - inset - 150) / span))  # number columns never squeeze names below ~150
+    centers, right = {}, COL - 8 * g
+    for label, w in reversed(cols):
+        centers[label] = right - w * g / 2
+        right -= w * g
+    name_end = right - 6
     for index, blocks in enumerate(columns):
         x = PAD + index * (COL + GAP)
         y = body_top
@@ -323,22 +351,33 @@ def render_png(edition, scale=None):
             box(x, y, x + COL, y + card_h, ROW_B)
             box(x, y, x + COL, y + HEAD, BLACK)
             label = division.upper()
-            if ncols == 3:
+            if ncols == 3 or edition["sport"] == "football":
                 label = label.replace("DIVISION", "DIV.")
-            text(x + inset, y + HEAD / 2, label, fit(label, 20 * fs, rank_x - inset - 22, f.slab), (255, 255, 255), "lm")
-            text(x + rank_x, y + HEAD / 2, "RANK", f.sans(12 * fs, "SemiBold"), GREY, "lm")
-            text(x + pr_x, y + HEAD / 2, "PR", f.sans(12 * fs, "SemiBold"), GREY, "lm")
+            text(x + inset, y + HEAD / 2, label, fit(label, 20 * fs, name_end - inset - 10, f.slab), (255, 255, 255), "lm")
+            for col_label, _ in cols:
+                text(x + centers[col_label], y + HEAD / 2, col_label, f.sans(11.5 * g, "SemiBold"), GREY, "mm")
             for i, team in enumerate(teams):
                 top = y + HEAD + i * ROW
                 box(x, top, x + COL, top + ROW, ROW_A if i % 2 == 0 else ROW_B)
                 mid = top + ROW / 2
                 name = DISPLAY_NAMES.get(team["school"], team["school"])
-                text(x + inset, mid, name, fit(name, 18.5 * fs, rank_x - inset - 8, lambda z: f.sans(z, "Medium")), INK, "lm")
+                cls = team.get("cls") or ""
+                cls_font = f.sans(12.5 * fs, "Medium")
+                cls_w = (d.textlength(cls, font=cls_font) / s + 6) if cls else 0
+                name_font = fit(name, 18.5 * fs, name_end - inset - cls_w, lambda z: f.sans(z, "Medium"))
+                text(x + inset, mid, name, name_font, INK, "lm")
+                cls_x = x + inset + d.textlength(name, font=name_font) / s + 6
+                if cls and cls_x + cls_w - 6 <= x + name_end:
+                    text(cls_x, mid + 1, cls, cls_font, GREY, "lm")
                 if team["rank"]:
-                    text(x + rank_x, mid, f"#{team['rank']}", f.sans(19 * fs, "Bold"), TEAL, "lm")
+                    text(x + centers["RANK"], mid, f"#{team['rank']}", f.sans(18 * g, "Bold"), TEAL, "mm")
                 else:
-                    text(x + rank_x, mid, "\u2014", f.sans(19 * fs, "Bold"), GREY, "lm")
-                text(x + pr_x, mid, f"{team['pr']:.2f}", f.sans(19 * fs, "Bold"), INK, "lm")
+                    text(x + centers["RANK"], mid, "\u2014", f.sans(18 * g, "Bold"), GREY, "mm")
+                text(x + centers["REC"], mid, team.get("record") or "", f.sans(16 * g, "Medium"), INK, "mm")
+                text(x + centers["PR"], mid, f"{team['pr']:.2f}", f.sans(18 * g, "Bold"), INK, "mm")
+                if "SF" in centers:
+                    sf = team.get("sf")
+                    text(x + centers["SF"], mid, f"{float(sf):.2f}" if sf is not None else "", f.sans(15 * g, "Medium"), GREY, "mm")
             box(x, y, x + 6, y + card_h, TEAL)
             y += card_h + CARD_GAP
     if not edition["blocks"]:
@@ -351,11 +390,14 @@ def render_png(edition, scale=None):
     text(34, foot + 26, "SOURCE: LOUISIANA VS ALL Y’ALL", f.slab(17), (255, 255, 255))
     text(34, foot + 58, RATINGS_PAGE[edition["sport"]] + "   \u2022   @LAvsAllYall",
          f.sans(15, "Regular"), TEAL)
-    text(690, foot + 28, "PR = POWER RATING", f.sans(12, "SemiBold"), GREY)
+    legend = "PR = POWER RATING  \u2022  REC = RECORD"
+    if edition["sport"] == "football":
+        legend += "  \u2022  SF = STRENGTH FACTOR"
+    text(W - 34, foot + 28, legend, f.sans(12, "SemiBold"), GREY, "ra")
     rank_note = "Division rank shown"
     if any(t["rank"] is None for _, teams in edition["blocks"] for t in teams):
         rank_note += "  \u2022  \u2014 = not in playoffs"
-    text(690, foot + 52, rank_note, f.sans(12, "Regular"), GREY)
+    text(W - 34, foot + 52, rank_note, f.sans(12, "Regular"), GREY, "ra")
 
     out = io.BytesIO()
     img.save(out, format="PNG", optimize=True)
