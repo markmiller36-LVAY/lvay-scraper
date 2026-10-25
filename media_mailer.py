@@ -244,7 +244,7 @@ def render_png(edition, scale=None):
     if layout(2, 1)[1] > room:
         ncols = 3
     natural = layout(ncols, 1)[1] or 1
-    k = max(0.7, min(1.6, room / natural))
+    k = max(0.7, min(1.9, room / natural))
     columns, used = layout(ncols, k)
     while used > room and k > 0.5:
         k -= 0.02
@@ -305,15 +305,15 @@ def render_png(edition, scale=None):
     text(736, 100, _updated_label(edition["updated"]), f.sans(17, "SemiBold"), WHITE)
     box(0, HEADER_H, W, HEADER_H + BAR_H, TEAL)
     box(0, HEADER_H + BAR_H, W, HEADER_H + BAR_H + SUB_H, SUBBAR)
-    text(34, HEADER_H + BAR_H + SUB_H / 2, edition["subtitle"], f.sans(15, "SemiBold"), INK, "lm")
+    text(34, HEADER_H + BAR_H + SUB_H / 2, edition["subtitle"], f.sans(18, "SemiBold"), INK, "lm")
 
     # Division cards.
     if ncols == 2:
-        fs = min(k * 0.9, 1.3)
-        rank_x, pr_x, inset = COL - 104 * fs, COL - 59 * fs, 18
+        fs = min(k * 0.9, 1.6)
+        rank_x, pr_x, inset = COL - 120 * fs, COL - 66 * fs, 18
     else:
-        fs = min(k * 0.95, 1.25)
-        rank_x, pr_x, inset = COL - 86 * fs, COL - 46 * fs, 14
+        fs = min(k * 0.95, 1.45)
+        rank_x, pr_x, inset = COL - 100 * fs, COL - 54 * fs, 14
     for index, blocks in enumerate(columns):
         x = PAD + index * (COL + GAP)
         y = body_top
@@ -325,20 +325,20 @@ def render_png(edition, scale=None):
             label = division.upper()
             if ncols == 3:
                 label = label.replace("DIVISION", "DIV.")
-            text(x + inset, y + HEAD / 2, label, fit(label, 17 * fs, rank_x - inset - 8, f.slab), (255, 255, 255), "lm")
-            text(x + rank_x, y + HEAD / 2, "RANK", f.sans(11 * fs, "SemiBold"), GREY, "lm")
-            text(x + pr_x, y + HEAD / 2, "PR", f.sans(11 * fs, "SemiBold"), GREY, "lm")
+            text(x + inset, y + HEAD / 2, label, fit(label, 20 * fs, rank_x - inset - 22, f.slab), (255, 255, 255), "lm")
+            text(x + rank_x, y + HEAD / 2, "RANK", f.sans(12 * fs, "SemiBold"), GREY, "lm")
+            text(x + pr_x, y + HEAD / 2, "PR", f.sans(12 * fs, "SemiBold"), GREY, "lm")
             for i, team in enumerate(teams):
                 top = y + HEAD + i * ROW
                 box(x, top, x + COL, top + ROW, ROW_A if i % 2 == 0 else ROW_B)
                 mid = top + ROW / 2
                 name = DISPLAY_NAMES.get(team["school"], team["school"])
-                text(x + inset, mid, name, fit(name, 15 * fs, rank_x - inset - 8, lambda z: f.sans(z, "Medium")), INK, "lm")
+                text(x + inset, mid, name, fit(name, 18.5 * fs, rank_x - inset - 8, lambda z: f.sans(z, "Medium")), INK, "lm")
                 if team["rank"]:
-                    text(x + rank_x, mid, f"#{team['rank']}", f.sans(16 * fs, "Bold"), TEAL, "lm")
+                    text(x + rank_x, mid, f"#{team['rank']}", f.sans(19 * fs, "Bold"), TEAL, "lm")
                 else:
-                    text(x + rank_x, mid, "\u2014", f.sans(16 * fs, "Bold"), GREY, "lm")
-                text(x + pr_x, mid, f"{team['pr']:.2f}", f.sans(16 * fs, "Bold"), INK, "lm")
+                    text(x + rank_x, mid, "\u2014", f.sans(19 * fs, "Bold"), GREY, "lm")
+                text(x + pr_x, mid, f"{team['pr']:.2f}", f.sans(19 * fs, "Bold"), INK, "lm")
             box(x, y, x + 6, y + card_h, TEAL)
             y += card_h + CARD_GAP
     if not edition["blocks"]:
