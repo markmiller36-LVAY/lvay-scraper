@@ -535,10 +535,14 @@
       ]
     },
     "cov-town-talk": {
-      "title": "Rapides Parish",
+      "title": "Central Louisiana",
       "outlet": "Alexandria Town Talk",
       "parishes": [
-        "Rapides"
+        "Rapides",
+        "Avoyelles",
+        "Grant",
+        "Catahoula",
+        "LaSalle"
       ],
       "schools": [
         "Alexandria",
@@ -547,8 +551,17 @@
         "Holy Savior Menard",
         "Peabody",
         "Pineville",
-        "Tioga"
-      ]
+        "Tioga",
+        "Avoyelles",
+        "Bunkie",
+        "Marksville",
+        "Grant",
+        "Montgomery",
+        "Block",
+        "Jena",
+        "LaSalle"
+      ],
+      "note": "Central Louisiana (Mark, Oct 24, 2026): Rapides plus Avoyelles, Grant, Catahoula and LaSalle."
     },
     "cov-houma-comet": {
       "title": "Terrebonne & Lafourche",
