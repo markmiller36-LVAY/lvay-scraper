@@ -386,7 +386,9 @@
       "outlet": "Shreveport-Bossier City Advocate",
       "parishes": [
         "Caddo",
-        "Bossier"
+        "Bossier",
+        "DeSoto",
+        "Red River"
       ],
       "schools": [
         "Airline",
@@ -408,8 +410,13 @@
         "Parkway",
         "Plain Dealing",
         "Southwood",
-        "Woodlawn - Shrev."
-      ]
+        "Woodlawn - Shrev.",
+        "North DeSoto",
+        "Mansfield",
+        "Logansport",
+        "Red River"
+      ],
+      "note": "DeSoto Parish (North DeSoto, Mansfield, Logansport) and Red River added at Mark's request, Oct 24, 2026."
     },
     "cov-shreveport-times": {
       "title": "Northwest Louisiana",
