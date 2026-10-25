@@ -113,6 +113,19 @@ def load_rankings(sport):
     return data.get("season"), rows
 
 
+def expand_specs(specs):
+    """{"sport": ..., "all_divisions": true} becomes one division edition per
+    division (football: Non-Select I-IV, Select I-IV; volleyball: I-V)."""
+    out = []
+    for spec in specs:
+        if spec.get("all_divisions"):
+            order = FOOTBALL_ORDER if spec["sport"] == "football" else VOLLEYBALL_ORDER
+            out.extend({"sport": spec["sport"], "division": d} for d in order)
+        else:
+            out.append(spec)
+    return out
+
+
 def _record(row):
     """W-L (W-L-T when there are ties), the same record the ratings page shows."""
     if row.get("wins") is None and row.get("losses") is None:
@@ -126,6 +139,30 @@ def _record(row):
 def build_edition(sport, rows, season, edition, regions):
     """Group rows into the division blocks one graphic shows."""
     order = FOOTBALL_ORDER if sport == "football" else VOLLEYBALL_ORDER
+    if edition.get("division"):
+        # One division's full list, split into side-by-side columns.
+        division = edition["division"]
+        teams = sorted((r for r in rows if r["division"] == division),
+                       key=lambda r: (r["rank"] is None, r["rank"] or 0, -r["pr"]))
+        n = len(teams)
+        parts = 1 if n <= 14 else (2 if n <= 46 else 3)
+        size = -(-n // parts) if n else 0
+        blocks = []
+        for p in range(parts):
+            chunk = teams[p * size:(p + 1) * size]
+            if not chunk:
+                continue
+            first = chunk[0]["rank"] or "\u2014"
+            last = chunk[-1]["rank"] or "\u2014"
+            label = division if parts == 1 else f"{division}  {first}\u2013{last}"
+            blocks.append((label, chunk))
+        stamps = [r["calculated_at"] for r in rows if r.get("calculated_at")]
+        updated = _parse_time(max(stamps)) if stamps else datetime.now(CENTRAL)
+        return {
+            "sport": sport, "season": str(season or "")[:4], "area": division.upper(),
+            "subtitle": "EVERY TEAM IN THE DIVISION  \u2022  RANKED BY POWER RATING",
+            "blocks": blocks, "updated": updated, "missing": [], "kind": "division",
+        }
     if edition.get("top10"):
         picked = [r for r in rows if r["rank"] and r["rank"] <= 10]
         area, subtitle, missing = "STATEWIDE", "TOP 10 IN EACH DIVISION", []
@@ -414,7 +451,7 @@ def _file_name(edition):
 def _email_body(recipient, editions, preview_for=None):
     items = "".join(
         f"<li><b>{SPORT_LABEL[e['sport']]}</b> — "
-        f"{'Top 10 in every division' if e['area'] == 'STATEWIDE' else html.escape(e['area'].title()) + ' teams'}"
+        f"{'Top 10 in every division' if e['area'] == 'STATEWIDE' else (html.escape(e['area'].title()) + ' (every team)' if e.get('kind') == 'division' else html.escape(e['area'].title()) + ' teams')}"
         f" (<a href=\"https://{RATINGS_PAGE[e['sport']]}\">full ratings</a>)</li>"
         for e in editions
     )
@@ -510,7 +547,7 @@ def send_media_emails(now=None, force_preview=False, only=None):
                 summary.append(f"{rid}: already sent {today}")
                 continue
             editions = []
-            for spec in recipient["editions"]:
+            for spec in expand_specs(recipient["editions"]):
                 sport = spec["sport"]
                 if sport not in rankings:
                     rankings[sport] = load_rankings(sport)
@@ -523,7 +560,7 @@ def send_media_emails(now=None, force_preview=False, only=None):
             attachments = [{"filename": _file_name(e),
                             "content": base64.b64encode(render_png(e)).decode()}
                            for e in editions]
-            sports = " & ".join(SPORT_LABEL[e["sport"]] for e in editions)
+            sports = " & ".join(dict.fromkeys(SPORT_LABEL[e["sport"]] for e in editions))
             day = editions[0]["updated"]
             subject = f"LVAY {sports} Power Ratings \u2014 {day:%b} {day.day}"
             if live:

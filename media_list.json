@@ -1032,6 +1032,14 @@
         {
           "sport": "volleyball",
           "region": "north-louisiana-volleyball"
+        },
+        {
+          "sport": "football",
+          "all_divisions": true
+        },
+        {
+          "sport": "volleyball",
+          "all_divisions": true
         }
       ],
       "days": [
