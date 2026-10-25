@@ -91,6 +91,7 @@ def load_rankings(sport):
     data = response.get_json() or {}
     if response.status_code != 200 or "rankings" not in data:
         raise RuntimeError(f"{sport} rankings unavailable: {data.get('error')}")
+    overall = _overall_records(app, sport, data.get("season"))
     rows = []
     for row in data["rankings"]:
         # Schools LHSAA lists as not playing in the playoffs have no division
@@ -107,10 +108,28 @@ def load_rankings(sport):
             "pr": float(row.get("power_rating") or 0),
             "calculated_at": row.get("calculated_at"),
             "cls": "" if (row.get("class_") or "").lower() in ("", "unknown") else row["class_"],
-            "record": _record(row),
+            "record": overall.get(row["school"]) or _record(row),
             "sf": row.get("strength_factor"),
         })
     return data.get("season"), rows
+
+
+def _overall_records(app, sport, season):
+    """Volleyball: the overall record from the schedules (matches the LHSAA
+    report and the site's Power Ratings page since Oct 25, 2026). The power
+    rating still counts only counting matches; this is only what's displayed.
+    Football records already include every counted game, so nothing changes."""
+    if sport != "volleyball":
+        return {}
+    try:
+        q = f"?season={season}" if season else ""
+        resp = app.test_client().get(f"/api/schedules/volleyball{q}")
+        data = resp.get_json() or {}
+        return {s["school"]: s["record"] for s in data.get("schools", [])
+                if s.get("school") and s.get("record")}
+    except Exception as exc:  # never block the email over a display detail
+        print(f"[MEDIA] Overall records unavailable ({exc}); using counting records")
+        return {}
 
 
 def expand_specs(specs):
