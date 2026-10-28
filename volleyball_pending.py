@@ -114,6 +114,43 @@ PENDING_TOURNAMENTS = [
             ("2026-10-31", "12:00 PM", "Gym 1", "Acadiana", "Wossman"),
         ],
     },
+    {
+        # Episcopal of Acadiana "Spooktacular" (PDF sent by Mark, Oct 28, 2026).
+        # Pool play only. Saturday's Gold/Silver/Bronze brackets depend on pool
+        # finishes, so add those matches once Friday's results are in.
+        # The PDF says "Ascension Catholic" in Pool A (LHSAA's participant list
+        # shows Ascension Episcopal instead); the host's sheet is used here.
+        "tournament": "Episcopal of Acadiana",
+        "venue": "Episcopal School of Acadiana",
+        "matches": [
+            # Thursday, Oct 29: Pools A, B, C
+            ("2026-10-29", "4:30 PM", "Court 1", "Ascension Catholic", "Acad. of Sacred Heart - G.C."),
+            ("2026-10-29", "4:30 PM", "Court 2", "Highland Baptist", "Westlake"),
+            ("2026-10-29", "4:30 PM", "Court 3 (MS Gym)", "Assumption", "Berwick"),
+            ("2026-10-29", "5:30 PM", "Court 1", "Ascension Catholic", "St. Thomas More"),
+            ("2026-10-29", "5:30 PM", "Court 2", "Westlake", "E.D. White"),
+            ("2026-10-29", "5:30 PM", "Court 3 (MS Gym)", "Assumption", "Barbe"),
+            ("2026-10-29", "6:30 PM", "Court 1", "St. Thomas More", "Acad. of Sacred Heart - G.C."),
+            ("2026-10-29", "6:30 PM", "Court 2", "E.D. White", "Highland Baptist"),
+            ("2026-10-29", "6:30 PM", "Court 3 (MS Gym)", "Berwick", "Barbe"),
+            # Friday, Oct 30: Pools D, E, F, G, H
+            ("2026-10-30", "4:30 PM", "Court 1", "Lafayette Christian", "Acadiana Renaissance Charter"),
+            ("2026-10-30", "4:30 PM", "Court 2", "Teurlings Catholic", "Vandebilt Catholic"),
+            ("2026-10-30", "4:30 PM", "Court 3 (MS Gym)", "Notre Dame", "Catholic - N.I."),
+            ("2026-10-30", "4:30 PM", "Court 4 (MS Gym)", "Cabrini", "Southside"),
+            ("2026-10-30", "5:30 PM", "Court 1", "Dominican", "Episcopal of Acadiana"),
+            ("2026-10-30", "5:30 PM", "Court 2", "Lafayette Christian", "St. Joseph's Academy"),
+            ("2026-10-30", "5:30 PM", "Court 3 (MS Gym)", "Notre Dame", "Parkview Baptist"),
+            ("2026-10-30", "5:30 PM", "Court 4 (MS Gym)", "Cabrini", "Westminster Christian"),
+            ("2026-10-30", "6:30 PM", "Court 1", "Iowa", "Dominican"),
+            ("2026-10-30", "6:30 PM", "Court 2", "Dutchtown", "Vandebilt Catholic"),
+            ("2026-10-30", "6:30 PM", "Court 3 (MS Gym)", "St. Joseph's Academy", "Acadiana Renaissance Charter"),
+            ("2026-10-30", "6:30 PM", "Court 4 (MS Gym)", "Westminster Christian", "Southside"),
+            ("2026-10-30", "7:30 PM", "Court 1", "Iowa", "Episcopal of Acadiana"),
+            ("2026-10-30", "7:30 PM", "Court 2", "Dutchtown", "Teurlings Catholic"),
+            ("2026-10-30", "7:30 PM", "Court 3 (MS Gym)", "Parkview Baptist", "Catholic - N.I."),
+        ],
+    },
 ]
 
 
