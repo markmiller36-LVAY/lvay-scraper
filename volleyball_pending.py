@@ -75,7 +75,51 @@ PENDING_TOURNAMENTS = [
             ("2026-10-31", "2:00 PM", 3, "Dunham", "South Lafourche"),
         ],
     },
+    {
+        # District 2 tournament bracket (sent by Mark, Oct 28, 2026). Tuesday's
+        # games are already on LHSAA: Crowley beat Opelousas then lost to
+        # Iota; Eunice beat Northwest then lost to Church Point. Thursday's
+        # consolation = losers of games 1 & 2, finals = the two semifinal winners.
+        "tournament": "Iota",
+        "venue": "Iota High School",
+        "matches": [
+            ("2026-10-29", "5:00 PM", "Consolation", "Opelousas", "Northwest"),
+            ("2026-10-29", "7:00 PM", "Finals", "Iota", "Church Point"),
+        ],
+    },
+    {
+        # "Brusly Round Robin" (sent by Mark, Oct 28, 2026). Saturday morning.
+        "tournament": "Brusly",
+        "venue": "Brusly High School",
+        "matches": [
+            ("2026-10-31", "9:00 AM", "Main Gym", "Covington", "Woodlawn - B.R."),
+            ("2026-10-31", "9:00 AM", "Aux Gym", "Houma Christian", "Baton Rouge"),
+            ("2026-10-31", "10:00 AM", "Main Gym", "Brusly", "Houma Christian"),
+            ("2026-10-31", "10:00 AM", "Aux Gym", "Woodlawn - B.R.", "Baton Rouge"),
+            ("2026-10-31", "11:00 AM", "Main Gym", "Brusly", "Covington"),
+            ("2026-10-31", "12:00 PM", "Main Gym", "Houma Christian", "Covington"),
+        ],
+    },
+    {
+        # Natchitoches Central "Saturday Volleyball Tournament" (sent by Mark,
+        # Oct 28, 2026). Best 2 of 3.
+        "tournament": "Natchitoches Central",
+        "venue": "Natchitoches Central High School",
+        "matches": [
+            ("2026-10-31", "9:00 AM", "Gym 1", "Marksville", "Natchitoches Central"),
+            ("2026-10-31", "9:00 AM", "Gym 2", "Neville", "Northwood - Shrev."),
+            ("2026-10-31", "10:00 AM", "Gym 1", "Neville", "Natchitoches Central"),
+            ("2026-10-31", "10:00 AM", "Gym 2", "Marksville", "Acadiana"),
+            ("2026-10-31", "11:00 AM", "Gym 1", "Wossman", "Northwood - Shrev."),
+            ("2026-10-31", "12:00 PM", "Gym 1", "Acadiana", "Wossman"),
+        ],
+    },
 ]
+
+
+def _court_label(court):
+    """Dunham numbers its courts; other hosts name gyms ("Main Gym", "Finals")."""
+    return f"Court {court}" if isinstance(court, int) else str(court)
 
 
 def _time_key(value):
@@ -111,7 +155,7 @@ def pending_by_school(today=None, tournaments=None):
                     "tournament": t["tournament"], "venue": t.get("venue", ""),
                 })
     for rows in out.values():
-        rows.sort(key=lambda r: (r["date"], _time_key(r["time"]), r["court"]))
+        rows.sort(key=lambda r: (r["date"], _time_key(r["time"]), str(r["court"])))
     return out
 
 
@@ -157,7 +201,7 @@ def merge_pending_games(school, games, school_info, pending=None):
             "score": None,
             "counts_for_pr": 1,
             "match_time": row["time"],
-            "location": f'{row["venue"]} · Court {row["court"]}' if row["venue"] else f'Court {row["court"]}',
+            "location": (f'{row["venue"]} · ' if row["venue"] else "") + _court_label(row["court"]),
             "source": "lvay_pending",
         })
     return games + added

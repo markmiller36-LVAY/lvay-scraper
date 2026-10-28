@@ -43,6 +43,15 @@ class PendingTournamentTests(unittest.TestCase):
         self.assertNotIn("St. Scholastica",
                          [g["opponent"] for g in games if g.get("source") == "lvay_pending"])
 
+    def test_named_courts_and_other_tournaments(self):
+        games = merge_pending_games("Iota", [], {}, self.pending)
+        self.assertEqual([(g["opponent"], g["match_time"], g["location"]) for g in games],
+                         [("Church Point", "7:00 PM", "Iota High School · Finals")])
+        brusly = merge_pending_games("Brusly", [], {}, self.pending)
+        self.assertEqual(len(brusly), 2)
+        self.assertEqual(brusly[0]["location"], "Brusly High School · Main Gym")
+        self.assertEqual(len(self.pending["Natchitoches Central"]), 2)
+
     def test_stale_placeholders_drop_off(self):
         self.assertEqual(pending_by_school(today=date(2026, 11, 5)), {})
 
