@@ -2096,6 +2096,14 @@ def schedules_volleyball():
             for row in school_rows
         }
         schools = []
+        # Tournament matches LHSAA hasn't posted yet (host schedules Mark
+        # entered in volleyball_pending.py). Unplayed placeholders only.
+        from volleyball_pending import pending_by_school, merge_pending_games
+        pending = pending_by_school()
+        school_info = {
+            row["school"]: {"division": row.get("division"), "district": row.get("district")}
+            for row in school_rows
+        }
 
         for s in school_rows:
             c.execute("""
@@ -2106,7 +2114,10 @@ def schedules_volleyball():
                 WHERE sport='volleyball' AND season=? AND school=?
                 ORDER BY game_date ASC, match_num ASC
             """, (season, s["school"]))
-            games = sort_schedule_games([dict(r) for r in c.fetchall()])
+            games = [dict(r) for r in c.fetchall()]
+            if str(season) == "2026":
+                games = merge_pending_games(s["school"], games, school_info, pending)
+            games = sort_schedule_games(games)
 
             annotate_volleyball_games(games, opponent_records)
             overall = schedule_record(games)
