@@ -64,3 +64,13 @@ def test_lhsaa_date_with_weekday_suffix_matches():
                      [("Carroll", "Wossman", "10/02/26Fri"), ("Wossman", "Carroll", "10/2/2026Fri")])
     assert apply_football_forfeits(conn, "2026", today=date(2026, 10, 5)) == 2
     assert dict(conn.execute("SELECT school, win_loss FROM games").fetchall()) == {"Carroll": "L(f)", "Wossman": "W(f)"}
+
+
+def test_official_forfeit_counts_on_game_day():
+    conn = sqlite3.connect(":memory:")
+    conn.execute("CREATE TABLE games (sport, season, school, week, game_date, opponent, score, win_loss)")
+    conn.executemany("INSERT INTO games VALUES ('football', '2026', ?, 9, '10/30/2026', ?, '-', '')",
+                     [("Livonia", "Cecilia"), ("Cecilia", "Livonia")])
+    apply_football_forfeits(conn, "2026", today=date(2026, 10, 30))
+    assert _row(conn, "Livonia", "Cecilia") == ("Forfeit", "L(f)")
+    assert _row(conn, "Cecilia", "Livonia") == ("Forfeit", "W(f)")

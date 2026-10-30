@@ -25,7 +25,7 @@ from zoneinfo import ZoneInfo
 CENTRAL = ZoneInfo("America/Chicago")
 FORFEIT_SCORE = "Forfeit"
 
-# (season) -> list of {"team", "opponent", "game_date" (M/D/YYYY)}
+# (season) -> list of {"team", "opponent", "game_date" (M/D/YYYY), optional "count_now"}
 FOOTBALL_FORFEITS = {
     "2026": [
         # Carroll ordered to forfeit the rest of its 2026 schedule (Week 5 on). Mark, Oct 5, 2026.
@@ -45,6 +45,11 @@ FOOTBALL_FORFEITS = {
         {"team": "Capitol", "opponent": "St. John", "game_date": "10/23/2026"},
         {"team": "Capitol", "opponent": "White Castle", "game_date": "10/30/2026"},
         {"team": "Capitol", "opponent": "Southern Lab", "game_date": "11/6/2026"},
+        # Livonia forfeits its Week 9 game to Cecilia (already official, so it counts
+        # today rather than the day after). Mark, Oct 30, 2026.
+        {"team": "Livonia", "opponent": "Cecilia", "game_date": "10/30/2026", "count_now": True},
+        # Northlake Christian forfeits its Week 9 game to Amite (official; counts today). Mark, Oct 30, 2026.
+        {"team": "Northlake Christian", "opponent": "Amite", "game_date": "10/30/2026", "count_now": True},
     ],
 }
 
@@ -225,7 +230,8 @@ def apply_football_forfeits(conn, season, today=None):
         game_day = _parse_date(entry["game_date"])
         if game_day is None:
             continue
-        counted = game_day < today
+        # Counts the day after the game, or right away when the forfeit is already official.
+        counted = game_day < today or bool(entry.get("count_now"))
         sides = (
             (entry["team"], entry["opponent"], "L(f)"),
             (entry["opponent"], entry["team"], "W(f)"),
