@@ -28,6 +28,12 @@ services:
         value: "true"
       - key: RESEND_API_KEY
         sync: false
+      # Saturday Power Ratings graphics (media_mailer.py). "false" sends
+      # every edition to Mark as a preview; "true" emails the outlets.
+      - key: MEDIA_EMAIL_LIVE
+        value: "false"
+      - key: MEDIA_EMAIL_REPLY_TO
+        value: markmiller36@gmail.com
     disk:
       name: lvay-data
       mountPath: /data
