@@ -78,6 +78,16 @@ FOOTBALL_SWAPPED_GAMES = {
          "week": 7, "game_date": "10/16/2026", "home_away": "A"},
     ],
 }
+# Games moved to a new date (same opponent). The listed school's game and the
+# opponent's matching game move from old_date to new_date while unplayed.
+# Mark, Oct 31, 2026: Patrick Taylor at Walter L. Cohen moved from Friday
+# 10/30 to Saturday 10/31 at 2:00 PM.
+FOOTBALL_MOVED_GAMES = {
+    "2026": [
+        {"school": "Patrick Taylor - Science/Tech.", "opponent": "Walter L. Cohen",
+         "old_date": "10/30/2026", "new_date": "10/31/2026"},
+    ],
+}
 # Games that no longer happen; the week becomes an open week for that school.
 FOOTBALL_DROPPED_GAMES = {
     "2026": [
@@ -127,7 +137,8 @@ def apply_football_schedule_changes(conn, season):
     season = str(season)
     swaps = FOOTBALL_SWAPPED_GAMES.get(season, [])
     drops = FOOTBALL_DROPPED_GAMES.get(season, [])
-    if not swaps and not drops:
+    moves = FOOTBALL_MOVED_GAMES.get(season, [])
+    if not swaps and not drops and not moves:
         return 0
     try:
         rows = conn.execute(
@@ -145,6 +156,7 @@ def apply_football_schedule_changes(conn, season):
                     and _parse_date(game_date) in (day, None)):
                 conn.execute("DELETE FROM games WHERE rowid=?", (rowid,))
                 changed += 1
+    changed += _apply_moves(conn, rows, moves)
     columns = {row[1] for row in conn.execute("PRAGMA table_info(games)")}
     for swap in swaps:
         day = _parse_date(swap["game_date"])
@@ -175,6 +187,28 @@ def apply_football_schedule_changes(conn, season):
                 )
             has_new = True
             changed += 1
+    return changed
+
+
+def _apply_moves(conn, rows, moves):
+    """Move listed games to their new date on both schedules."""
+    changed = 0
+    for move in moves:
+        old_day = _parse_date(move["old_date"])
+        new_day = _parse_date(move["new_date"])
+        for school, opponent in ((move["school"], move["opponent"]), (move["opponent"], move["school"])):
+            pair = [r for r in rows if _key(r[1]) == _key(school) and _key(r[2]) == _key(opponent)]
+            has_new = any(_parse_date(r[3]) == new_day for r in pair)
+            for rowid, _school, _opp, game_date, _week in pair:
+                if _parse_date(game_date) != old_day:
+                    continue
+                if has_new:
+                    # LHSAA already lists the game on its new date; drop the old row.
+                    conn.execute("DELETE FROM games WHERE rowid=?", (rowid,))
+                else:
+                    conn.execute("UPDATE games SET game_date=? WHERE rowid=?", (move["new_date"], rowid))
+                    has_new = True
+                changed += 1
     return changed
 
 
