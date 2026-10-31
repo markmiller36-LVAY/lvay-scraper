@@ -5,6 +5,7 @@ LVAY Scraper - API Server
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import gzip
+import hashlib
 import hmac
 import json
 import sqlite3
@@ -852,6 +853,20 @@ def _pipeline_authorized():
     )
 
 
+# Oct 31, 2026: WordPress "Run Pipeline" button (Mark, from his phone). The
+# site holds its own key (X-LVAY-Trigger-Key); only its SHA-256 lives here.
+# This key can only START a run: it opens no other endpoint.
+WP_TRIGGER_KEY_SHA256 = "42182cc107ebf19f6764b28be5dacc74c3c45d2f22b00b106a07493df58d66f5"
+
+
+def _wp_trigger_authorized():
+    supplied = request.headers.get("X-LVAY-Trigger-Key", "")
+    if not supplied:
+        return False
+    digest = hashlib.sha256(supplied.encode("utf-8")).hexdigest()
+    return hmac.compare_digest(digest, WP_TRIGGER_KEY_SHA256)
+
+
 @app.route("/api/pipeline/run", methods=["POST"])
 def run_full_pipeline():
     if not os.environ.get("PIPELINE_TOKEN"):
@@ -859,7 +874,7 @@ def run_full_pipeline():
             "status": "unavailable",
             "message": "PIPELINE_TOKEN is not configured",
         }), 503
-    if not _pipeline_authorized():
+    if not (_pipeline_authorized() or _wp_trigger_authorized()):
         return jsonify({"status": "unauthorized"}), 401
     if not PIPELINE_LOCK.acquire(blocking=False):
         return jsonify({
