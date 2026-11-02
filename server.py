@@ -1459,9 +1459,13 @@ def rankings_volleyball():
     c = conn.cursor()
     try:
         season = available_season(conn, "volleyball", "volleyball_rankings")
+        try:
+            c.execute("ALTER TABLE volleyball_rankings ADD COLUMN pr_published REAL")
+        except Exception:
+            pass
         c.execute("""
             SELECT school, division, class_, district,
-                   rank, div_rank, power_rating, wins, losses, games_played
+                   rank, div_rank, power_rating, pr_published, wins, losses, games_played
             FROM volleyball_rankings
             WHERE sport='volleyball' AND season=?
             ORDER BY rank ASC

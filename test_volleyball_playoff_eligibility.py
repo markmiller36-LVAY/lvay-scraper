@@ -105,3 +105,16 @@ def test_low_match_schools_seed_at_bottom_and_ties_use_two_decimals(tmp_path):
     assert by["South Plaquemines"]["in_playoff_field"]
     assert by["Team 27"]["division_rank"] == 31
     assert by["Team 28"]["division_rank"] == 33 and not by["Team 28"]["in_playoff_field"]
+
+
+def test_ties_use_lhsaa_published_rating(tmp_path):
+    from run_power_rankings_volleyball import published_rating
+    conn = sqlite3.connect(str(tmp_path / "p.db"))
+    # 2026 Div I #23/#24: stored 14.446 vs 14.445, but LHSAA prints 14.45 vs 14.44 (no tie)
+    rows = [{"school": "Hahnville", "division": "Division I", "div_rank": 1, "power_rating": 14.445,
+             "pr_published": published_rating(14.44459), "games_played": 37},
+            {"school": "Terrebonne", "division": "Division I", "div_rank": 2, "power_rating": 14.446,
+             "pr_published": published_rating(14.44622), "games_played": 37}]
+    annotate_rankings(rows, conn, "2026", today="2026-11-02")
+    assert [r["school"] for r in sorted(rows, key=lambda r: r["division_rank"])] == ["Terrebonne", "Hahnville"]
+    assert published_rating(26.525) == 26.53

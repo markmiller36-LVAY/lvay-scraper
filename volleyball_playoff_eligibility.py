@@ -349,22 +349,27 @@ def seed_field(field, conn, season, apply_low=True):
     """
     dp = _division_play(conn, season)
 
+    def pub(row):
+        """The rating as LHSAA prints it; falls back to rounding our stored value."""
+        v = row.get("pr_published")
+        return v if v is not None else round(row.get("power_rating") or 0, 2)
+
     def pct(row):
         w, l = dp.get(school_key(row.get("school")), (0, 0))
         return w / (w + l) if w + l else 0.0
 
     low = _low_matches if apply_low else (lambda r: False)
-    ordered = sorted(field, key=lambda r: (low(r), -round(r.get("power_rating") or 0, 2), -pct(r)))
+    ordered = sorted(field, key=lambda r: (low(r), -pub(r), -pct(r)))
     # head-to-head first for two-team ties
     i = 0
     while i < len(ordered) - 1:
         a, b = ordered[i], ordered[i + 1]
         same = (low(a) == low(b)
-                and round(a.get("power_rating") or 0, 2) == round(b.get("power_rating") or 0, 2))
+                and pub(a) == pub(b))
         three = (i + 2 < len(ordered) and low(ordered[i + 2]) == low(a)
-                 and round(ordered[i + 2].get("power_rating") or 0, 2) == round(a.get("power_rating") or 0, 2))
+                 and pub(ordered[i + 2]) == pub(a))
         prev = (i > 0 and low(ordered[i - 1]) == low(a)
-                and round(ordered[i - 1].get("power_rating") or 0, 2) == round(a.get("power_rating") or 0, 2))
+                and pub(ordered[i - 1]) == pub(a))
         if same and not three and not prev:
             net = _head_to_head(conn, season, a.get("school"), b.get("school"))
             if net < 0:

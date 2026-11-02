@@ -159,7 +159,15 @@ def calculate_school_pr(school_name, games, opp_win_totals):
         "losses":       losses,
         "games_played": games_played,
         "power_rating": round(pr, 3),
+        # The rating as LHSAA prints it (2 decimals, half up from the exact
+        # value).  Seeding ties (Bylaw 24.7.2) are judged on this number.
+        "pr_published": published_rating(pr),
     }
+
+
+def published_rating(pr):
+    from decimal import Decimal, ROUND_HALF_UP
+    return float(Decimal(repr(float(pr))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -197,12 +205,20 @@ def resolve_school_metadata(school_name, vb_division_roman, vb_district):
 # STEP 4 — WRITE RANKINGS TO DB
 # ──────────────────────────────────────────────────────────────────────────────
 
+def ensure_published_column(conn):
+    try:
+        conn.execute("ALTER TABLE volleyball_rankings ADD COLUMN pr_published REAL")
+        conn.commit()
+    except Exception:
+        pass
+
+
 def upsert_ranking(conn, school, meta, stats):
     conn.execute("""
         INSERT INTO volleyball_rankings
             (sport, season, school, division, class_, district,
-             wins, losses, games_played, power_rating, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+             wins, losses, games_played, power_rating, pr_published, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
         ON CONFLICT(sport, season, school) DO UPDATE SET
             division     = excluded.division,
             class_       = excluded.class_,
@@ -211,12 +227,13 @@ def upsert_ranking(conn, school, meta, stats):
             losses       = excluded.losses,
             games_played = excluded.games_played,
             power_rating = excluded.power_rating,
+            pr_published = excluded.pr_published,
             updated_at   = datetime('now')
     """, (
         SPORT, SEASON, school,
         meta["division"], meta["class_"], meta["district"],
         stats["wins"], stats["losses"], stats["games_played"],
-        stats["power_rating"],
+        stats["power_rating"], stats.get("pr_published"),
     ))
 
 
@@ -275,6 +292,7 @@ def run_volleyball_rankings(season=None):
     print(f"{'='*54}")
 
     conn = get_db()
+    ensure_published_column(conn)
     # Recalculations must also repair historical eligibility without requiring
     # another scrape. Preserve every game for the schedule's overall record.
     repair_oos_eligibility(conn, SEASON)
