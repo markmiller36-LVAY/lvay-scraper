@@ -29,6 +29,10 @@ DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 SPORT = "volleyball"
 REPORT_URL = "https://www.lhsaaonline.org/rpt/VBbyDivisionPR.html"
 PLAYOFF_FIELD = 32  # Bylaw 24.6.1: 32-team bracket in Divisions I-V
+MIN_MATCHES = 20   # Bylaw 24.7.1: under 20 regular-season matches = seeded at the bottom
+# Last day of the regular season (Bylaw 24.1).  The 20-match rule only moves
+# seeds once the season is over -- mid-season most schools are still under 20.
+REGULAR_SEASON_END = {"2026": "2026-10-31"}
 
 NOT_PLAYING_MARKER = re.compile(
     r"schools\s+(?:not\s+(?:playing|participating)\s+in|excluded\s+from)\s+the\s+playoff", re.I
@@ -279,24 +283,124 @@ def last_updated(conn, season):
         return None
 
 
-def annotate_rankings(rows, conn, season):
-    """Flag ineligible schools and renumber each division among eligible ones.
+def season_over(season, today=None):
+    end = REGULAR_SEASON_END.get(str(season))
+    today = today or datetime.now().strftime("%Y-%m-%d")
+    return bool(end) and today > end
 
-    Adds playoff_eligible, division_rank (None when not playing) and
-    in_playoff_field (division_rank <= 32).  Rows must already be in power
-    rating order within each division (div_rank / power_rating desc).
+
+def _low_matches(row):
+    """Bylaw 24.7.1: fewer than 20 regular-season matches played."""
+    gp = row.get("games_played")
+    return gp is not None and int(gp) < MIN_MATCHES
+
+
+def _roman(division):
+    m = DIVISION_RE.search(f"Division {str(division or '').replace('Division', '').strip()}")
+    return m.group(1) if m else None
+
+
+def _division_play(conn, season):
+    """{school_key: (wins, losses)} against schools in the same division (24.7.2 #2).
+
+    volleyball_games stores opp_division as just the numeral ("V"), so both
+    sides are reduced to the numeral before comparing.
+    """
+    out = {}
+    try:
+        rows = conn.execute(
+            "SELECT school, school_division, opp_division, result FROM volleyball_games "
+            "WHERE season=? AND counts_for_pr=1", (str(season),)
+        ).fetchall()
+    except sqlite3.OperationalError:
+        return out
+    for school, mine, theirs, result in rows:
+        if not _roman(mine) or _roman(mine) != _roman(theirs):
+            continue
+        w, l = out.get(school_key(school), (0, 0))
+        r = str(result or "").upper()[:1]
+        out[school_key(school)] = (w + (r == "W"), l + (r == "L"))
+    return out
+
+
+def _head_to_head(conn, season, a, b):
+    """Matches a won minus matches b won, from a's schedule (24.7.2 #1)."""
+    try:
+        rows = conn.execute(
+            "SELECT opponent, result FROM volleyball_games WHERE season=? AND school=? AND counts_for_pr=1",
+            (str(season), a)).fetchall()
+    except sqlite3.OperationalError:
+        return 0
+    kb, net = school_key(b), 0
+    for opp, result in rows:
+        if school_key(opp) == kb:
+            r = str(result or "").upper()[:1]
+            net += (r == "W") - (r == "L")
+    return net
+
+
+def seed_field(field, conn, season, apply_low=True):
+    """Order a division's playoff field the way LHSAA seeds it.
+
+    Bylaw 24.7.1: schools with fewer than 20 matches are ranked separately and
+    seeded below everyone else (they still make the field on power rating).
+    Bylaw 24.7.2: power ratings are compared as published (2 decimals); a tie
+    goes to head-to-head (two-team ties), then divisional play percentage.
+    """
+    dp = _division_play(conn, season)
+
+    def pct(row):
+        w, l = dp.get(school_key(row.get("school")), (0, 0))
+        return w / (w + l) if w + l else 0.0
+
+    low = _low_matches if apply_low else (lambda r: False)
+    ordered = sorted(field, key=lambda r: (low(r), -round(r.get("power_rating") or 0, 2), -pct(r)))
+    # head-to-head first for two-team ties
+    i = 0
+    while i < len(ordered) - 1:
+        a, b = ordered[i], ordered[i + 1]
+        same = (low(a) == low(b)
+                and round(a.get("power_rating") or 0, 2) == round(b.get("power_rating") or 0, 2))
+        three = (i + 2 < len(ordered) and low(ordered[i + 2]) == low(a)
+                 and round(ordered[i + 2].get("power_rating") or 0, 2) == round(a.get("power_rating") or 0, 2))
+        prev = (i > 0 and low(ordered[i - 1]) == low(a)
+                and round(ordered[i - 1].get("power_rating") or 0, 2) == round(a.get("power_rating") or 0, 2))
+        if same and not three and not prev:
+            net = _head_to_head(conn, season, a.get("school"), b.get("school"))
+            if net < 0:
+                ordered[i], ordered[i + 1] = b, a
+            i += 2
+            continue
+        i += 1
+    return ordered
+
+
+def annotate_rankings(rows, conn, season, today=None):
+    """Flag ineligible schools and number each division the way LHSAA seeds it.
+
+    Adds playoff_eligible, low_matches, division_rank (None when not playing)
+    and in_playoff_field.  The field is the top 32 eligible schools by power
+    rating; inside the field division_rank is the LHSAA seed (Bylaw 24.7:
+    under-20-match schools at the bottom, 24.7.2 tiebreakers).  Schools outside
+    the field keep power rating order from 33 down.  Rows must already be in
+    power rating order within each division (div_rank / power_rating desc).
     """
     out = not_playing_keys(conn, season)
-    counters = {}
+    apply_low = season_over(season, today)
+    by_div = {}
     for row in sorted(rows, key=lambda r: (r.get("division") or "", r.get("div_rank") or 9999)):
         reason = out.get(school_key(row.get("school")))
         row["playoff_eligible"] = reason is None
         row["not_playing_reason"] = reason
+        row["low_matches"] = apply_low and _low_matches(row)
         if reason is None:
-            counters[row.get("division")] = counters.get(row.get("division"), 0) + 1
-            row["division_rank"] = counters[row.get("division")]
-            row["in_playoff_field"] = row["division_rank"] <= PLAYOFF_FIELD
+            by_div.setdefault(row.get("division"), []).append(row)
         else:
             row["division_rank"] = None
             row["in_playoff_field"] = False
+    for division, eligible in by_div.items():
+        field = seed_field(eligible[:PLAYOFF_FIELD], conn, season, apply_low)
+        for i, row in enumerate(field + eligible[PLAYOFF_FIELD:], 1):
+            row["division_rank"] = i
+            row["in_playoff_field"] = i <= PLAYOFF_FIELD
     return rows

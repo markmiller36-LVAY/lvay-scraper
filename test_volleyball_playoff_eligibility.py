@@ -76,3 +76,32 @@ def test_update_annotate_and_parity(tmp_path):
         raise RuntimeError("LHSAA down")
     assert not update_playoff_eligibility("2026", db_path=db, fetch=broken)["updated"]
     assert len(not_playing_keys(conn, "2026")) == 2
+
+
+def test_low_match_schools_seed_at_bottom_and_ties_use_two_decimals(tmp_path):
+    conn = sqlite3.connect(str(tmp_path / "s.db"))
+    conn.execute("""CREATE TABLE volleyball_games (season TEXT, school TEXT, school_division TEXT,
+        opponent TEXT, opp_division TEXT, result TEXT, counts_for_pr INT)""")
+    # Christ Episcopal has the better divisional play % (LHSAA 2026 Div V #11 vs #12)
+    games = [("Christ Episcopal School", "Opp A", "W")] * 6 + [("Christ Episcopal School", "Opp A", "L")] \
+        + [("Providence Classical Academy", "Opp B", "W")] * 8 + [("Providence Classical Academy", "Opp B", "L")] * 3
+    conn.executemany("INSERT INTO volleyball_games VALUES ('2026',?,'Division V',?,'V',?,1)", games)
+    rows = [
+        {"school": "Westminster Christian", "division": "Division V", "div_rank": 1, "power_rating": 22.64, "games_played": 37},
+        {"school": "Providence Classical Academy", "division": "Division V", "div_rank": 2, "power_rating": 12.162, "games_played": 23},
+        {"school": "Christ Episcopal School", "division": "Division V", "div_rank": 3, "power_rating": 12.160, "games_played": 26},
+        {"school": "South Plaquemines", "division": "Division V", "div_rank": 4, "power_rating": 10.16, "games_played": 19},
+        {"school": "Centerville", "division": "Division V", "div_rank": 5, "power_rating": 6.68, "games_played": 24},
+    ] + [{"school": f"Team {i}", "division": "Division V", "div_rank": 5 + i, "power_rating": 6.5 - i * 0.01,
+          "games_played": 22} for i in range(1, 29)]
+    mid = [dict(r) for r in rows]
+    annotate_rankings(mid, conn, "2026", today="2026-10-15")
+    assert {r["school"]: r for r in mid}["South Plaquemines"]["division_rank"] == 4  # mid-season: PR order
+    annotate_rankings(rows, conn, "2026", today="2026-11-02")
+    by = {r["school"]: r for r in rows}
+    assert by["Christ Episcopal School"]["division_rank"] == 2
+    assert by["Providence Classical Academy"]["division_rank"] == 3
+    assert by["South Plaquemines"]["division_rank"] == 32 and by["South Plaquemines"]["low_matches"]
+    assert by["South Plaquemines"]["in_playoff_field"]
+    assert by["Team 27"]["division_rank"] == 31
+    assert by["Team 28"]["division_rank"] == 33 and not by["Team 28"]["in_playoff_field"]
