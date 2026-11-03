@@ -118,3 +118,16 @@ def test_ties_use_lhsaa_published_rating(tmp_path):
     annotate_rankings(rows, conn, "2026", today="2026-11-02")
     assert [r["school"] for r in sorted(rows, key=lambda r: r["division_rank"])] == ["Terrebonne", "Hahnville"]
     assert published_rating(26.525) == 26.53
+
+
+def test_field_adjust_swaps_school_into_field(tmp_path, monkeypatch):
+    import volleyball_playoff_eligibility as m
+    _, conn = _db(tmp_path)
+    monkeypatch.setattr(m, "PLAYOFF_FIELD", 2)
+    monkeypatch.setattr(m, "FIELD_ADJUST", {"2025": {"Division II": {"add": ["C"], "drop": ["B"]}}})
+    rows = [{"school": n, "division": "Division II", "div_rank": i, "power_rating": p,
+             "wins": 20, "losses": 5, "games_played": 25}
+            for i, (n, p) in enumerate([("A", 15.0), ("B", 12.0), ("C", 9.0)], 1)]
+    out = {r["school"]: r for r in m.annotate_rankings(rows, conn, "2025")}
+    assert (out["A"]["division_rank"], out["C"]["division_rank"], out["B"]["division_rank"]) == (1, 2, 3)
+    assert out["C"]["in_playoff_field"] and not out["B"]["in_playoff_field"]

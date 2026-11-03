@@ -33,6 +33,15 @@ MIN_MATCHES = 20   # Bylaw 24.7.1: under 20 regular-season matches = seeded at t
 # Last day of the regular season (Bylaw 24.1).  The 20-match rule only moves
 # seeds once the season is over -- mid-season most schools are still under 20.
 REGULAR_SEASON_END = {"2026": "2026-10-31"}
+# Field changes LHSAA made on its posted brackets that the power ratings alone
+# don't produce (e.g. a district champion given a bid).  Names as in our data.
+# 2026: LHSAA's revised Division II bracket (Nov 2) puts Caddo Magnet in as
+# the 32 seed and drops Patrick Taylor.
+FIELD_ADJUST = {
+    "2026": {
+        "Division II": {"add": ["Caddo Magnet"], "drop": ["Patrick Taylor - Science/Tech."]},
+    },
+}
 
 NOT_PLAYING_MARKER = re.compile(
     r"schools\s+(?:not\s+(?:playing|participating)\s+in|excluded\s+from)\s+the\s+playoff", re.I
@@ -404,8 +413,17 @@ def annotate_rankings(rows, conn, season, today=None):
             row["division_rank"] = None
             row["in_playoff_field"] = False
     for division, eligible in by_div.items():
-        field = seed_field(eligible[:PLAYOFF_FIELD], conn, season, apply_low)
-        for i, row in enumerate(field + eligible[PLAYOFF_FIELD:], 1):
+        top = eligible[:PLAYOFF_FIELD]
+        adj = FIELD_ADJUST.get(str(season), {}).get(division)
+        if adj:
+            drop = {school_key(n) for n in adj.get("drop", [])}
+            add = {school_key(n) for n in adj.get("add", [])}
+            top = [r for r in eligible if (r in top and school_key(r.get("school")) not in drop)
+                   or school_key(r.get("school")) in add]
+            rest = [r for r in eligible if r not in top]
+            eligible = top + rest
+        field = seed_field(top, conn, season, apply_low)
+        for i, row in enumerate(field + eligible[len(top):], 1):
             row["division_rank"] = i
             row["in_playoff_field"] = i <= PLAYOFF_FIELD
     return rows
