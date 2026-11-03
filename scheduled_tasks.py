@@ -17,6 +17,10 @@ def require_success(result, label):
     return result
 
 
+# First day of the LHSAA volleyball playoffs (Nov 3 in 2026).
+VOLLEYBALL_PLAYOFFS_START_DAY = 3
+
+
 def get_active_sports():
     """Return list of sports currently in season based on month."""
     month = datetime.now().month
@@ -27,7 +31,11 @@ def get_active_sports():
         and os.environ.get("ENABLE_FOOTBALL", "true").lower() == "true"
     ):                                  # Aug - Nov
         sports.append("football")
-    if month in [8, 9, 10, 11]:
+    # Volleyball pulls stop when the playoffs start (Mark, Nov 3, 2026): the
+    # final power ratings and records stay frozen, and playoff results are
+    # handled on the site (LHSAA bracket pages), not by the pipeline.
+    today = datetime.now()
+    if month in [8, 9, 10] or (month == 11 and today.day < VOLLEYBALL_PLAYOFFS_START_DAY):
         sports.append("volleyball")
 
     if month in [2, 3, 4, 5]:          # Feb - May
@@ -36,7 +44,6 @@ def get_active_sports():
 
     # Basketball pulls start Oct 19 each fall (Mark, Oct 2026) so early-October
     # runs stay football-only and quick.
-    today = datetime.now()
     if month in [11, 12, 1, 2, 3] or (month == 10 and today.day >= 19):
         sports.extend(["boys_basketball", "girls_basketball"])
     if month in [10, 11, 12, 1, 2, 3]:

@@ -40,3 +40,10 @@ def test_only_subset_skips_other_sports():
          mock.patch.object(scraper, "scrape_sport", side_effect=lambda k: called.append(k) or 0):
         scraper.run_all_sports(only=["football"])
     assert called == ["football"]
+
+
+def test_volleyball_pauses_for_the_playoffs():
+    assert "volleyball" in active_on(2026, 11, 2)
+    assert "volleyball" not in active_on(2026, 11, 3)
+    assert "volleyball" not in active_on(2026, 11, 20)
+    assert "football" in active_on(2026, 11, 3)
