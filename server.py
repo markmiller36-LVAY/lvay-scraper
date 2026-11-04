@@ -3151,3 +3151,11 @@ _yall_warm.start()
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
+
+
+# ── MATCHUP DRIVING ROUTES ──────────────────────────────────
+# Cached school-to-school driving routes for the Playoff HQ Matchup Map.
+# Nov 3, 2026.
+import route_service  # noqa: E402
+
+app.register_blueprint(route_service.bp)
