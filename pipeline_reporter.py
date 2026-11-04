@@ -237,6 +237,26 @@ def build_report(before, after, active_sports, started_at=None, oos_summary=None
         <h3>Record changes</h3><ul>{changes}</ul>
         <h3>Issues</h3><ul>{issues}</ul>"""
 
+    stuck = (oos_summary or {}).get("stuck") or []
+    stuck_section = ""
+    if stuck:
+        stuck_rows = "".join(
+            "<tr>" + "".join(
+                f"<td>{html.escape(str(value))}</td>" for value in (
+                    item.get("team"), item.get("louisiana"), item.get("record"),
+                    item.get("since"),
+                    "—" if item.get("days") is None else item.get("days"),
+                    item.get("reason"),
+                )
+            ) + "</tr>" for item in stuck
+        )
+        stuck_section = f"""
+    <div style="border:3px solid #B5432B;background:#fdecea;padding:10px 14px;margin:12px 0">
+    <h2 style="color:#B5432B;margin:0 0 6px">&#9888; Out-of-state records stuck ({len(stuck)})</h2>
+    <p style="margin:0 0 8px">These teams' records are NOT updating, so every Louisiana team that played them is getting an old Opponent Quality. Fix the row in the OOS Team Registry (or put the real record in with a MANUAL OVERRIDE note).</p>
+    <table><thead><tr><th>OOS team</th><th>Louisiana opponent(s)</th><th>Record in use</th><th>Last verified</th><th>Days</th><th>Why</th></tr></thead><tbody>{stuck_rows}</tbody></table>
+    </div>"""
+
     signups = fetch_signup_stats()
 
     body = f"""<html><head><style>{css}</style></head><body>
@@ -244,6 +264,7 @@ def build_report(before, after, active_sports, started_at=None, oos_summary=None
     <p><strong>Run:</strong> {html.escape(run_time)}<br>
     <strong>Sports:</strong> {html.escape(', '.join(active_sports))}<br>
     <strong>Game updates:</strong> {len(game_changes)} &nbsp; <strong>Rating updates:</strong> {len(rating_changes)}</p>
+    {stuck_section}
     {_signup_section(signups)}
     <h2>New or Corrected Games</h2><table><thead><tr><th>Sport</th><th>Date</th><th>Team</th><th>Opponent</th><th>Result</th><th>Score</th><th>Base</th><th>Bonus</th><th>Opponent Quality</th><th>Total</th></tr></thead><tbody>{game_rows}</tbody></table>
     <h2>Record and Power-Rating Changes</h2><table><thead><tr><th>Sport</th><th>Team</th><th>Old Record</th><th>New Record</th><th>Old Rating</th><th>New Rating</th></tr></thead><tbody>{rating_rows}</tbody></table>
@@ -251,6 +272,8 @@ def build_report(before, after, active_sports, started_at=None, oos_summary=None
     {oos_section}
     </body></html>"""
     subject = f"LVAY scrape report — {len(game_changes)} game updates — {run_time}"
+    if stuck:
+        subject = f"⚠ {len(stuck)} OOS record(s) stuck — " + subject
     if signups and signups.get("total") is not None:
         subject += f" — {signups.get('total')} fans (+{signups.get('today', 0)} today)"
     return subject, body, {"game_changes": len(game_changes), "rating_changes": len(rating_changes)}

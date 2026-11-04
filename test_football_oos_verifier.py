@@ -141,3 +141,26 @@ class FootballOOSVerifierTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StuckAlertTests(unittest.TestCase):
+    def test_title_instead_of_url_is_flagged_even_when_recent(self):
+        from football_oos_verifier import stuck_alert
+        row = {"Primary Record URL": "West Point Varsity Football Schedule - MHSAA",
+               "Louisiana Opponent(s)": "Ruston"}
+        alert = stuck_alert("West Point High School", row, 0, 6, 0, "2026-11-02",
+                            today=date(2026, 11, 3))
+        self.assertIsNotNone(alert)
+        self.assertIn("not web addresses", alert["reason"])
+        self.assertEqual("0-6", alert["record"])
+
+    def test_old_needs_review_record_is_flagged(self):
+        from football_oos_verifier import stuck_alert
+        row = {"Primary Record URL": "https://www.maxpreps.com/ms/x/football/"}
+        alert = stuck_alert("X", row, 2, 5, 0, "2026-10-11", today=date(2026, 11, 3))
+        self.assertEqual(23, alert["days"])
+
+    def test_fresh_needs_review_with_good_links_is_quiet(self):
+        from football_oos_verifier import stuck_alert
+        row = {"Primary Record URL": "https://www.maxpreps.com/ms/x/football/"}
+        self.assertIsNone(stuck_alert("X", row, 2, 5, 0, "2026-11-02", today=date(2026, 11, 3)))

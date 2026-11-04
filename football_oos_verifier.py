@@ -31,6 +31,42 @@ SHEET_ID = os.environ.get(
 TAB_NAME = os.environ.get("FOOTBALL_OOS_TAB", "OOS Team Registry")
 REGISTRY_RANGE = "A4:X1000"
 SEASON = os.environ.get("FOOTBALL_SEASON_YEAR", os.environ.get("SEASON_YEAR", "2026"))
+# A team whose record has not been re-verified for this many days is called
+# out at the top of the pipeline email (Mark, Nov 3 2026: West Point MS sat at
+# 0-6 for three weeks because its record links held page titles, not URLs).
+STUCK_AFTER_DAYS = int(os.environ.get("OOS_STUCK_AFTER_DAYS", "3"))
+URL_COLUMNS = ("Primary Record URL", "Secondary Record URL", "Backup Record URL")
+
+
+def stuck_alert(team, row, wins, losses, ties, record_through, today=None):
+    """Return a stuck-record alert for a Needs Review row, or None if it is fresh."""
+    today = today or date.today()
+    try:
+        since = datetime.strptime(str(record_through or "").strip()[:10], "%Y-%m-%d").date()
+        days = (today - since).days
+    except ValueError:
+        since, days = None, None
+    bad_links = [
+        column for column in URL_COLUMNS
+        if str(row.get(column) or "").strip()
+        and not str(row.get(column)).strip().lower().startswith(("http://", "https://"))
+    ]
+    if days is not None and days < STUCK_AFTER_DAYS and not bad_links:
+        return None
+    record = f"{wins}-{losses}" + (f"-{ties}" if str(ties or "0") not in ("", "0") else "")
+    reason = (
+        "record links are not web addresses (" + ", ".join(bad_links) + ")"
+        if bad_links else "no source returned a usable current record"
+    )
+    return {
+        "team": team,
+        "louisiana": str(row.get("Louisiana Opponent(s)") or ""),
+        "record": record,
+        "since": since.isoformat() if since else "unknown",
+        "days": days,
+        "reason": reason,
+    }
+
 CREDS_PATH = os.environ.get(
     "GOOGLE_CREDENTIALS_PATH", "/etc/secrets/google-credentials.json"
 )
@@ -363,7 +399,7 @@ def run(db_path=None, worksheet=None, session=None):
     session = session or requests.Session()
     cache = {}
     updates = []
-    summary = {"checked": 0, "verified": 0, "review": 0, "imported": 0, "changes": [], "issues": []}
+    summary = {"checked": 0, "verified": 0, "review": 0, "imported": 0, "changes": [], "issues": [], "stuck": []}
     conn = sqlite3.connect(db_path or DB_PATH)
     _ensure_oos_table(conn)
     try:
@@ -485,6 +521,10 @@ def run(db_path=None, worksheet=None, session=None):
             if errors:
                 notes += "; " + " | ".join(errors)
 
+            if status == "Needs Review":
+                alert = stuck_alert(team, row, wins, losses, ties, record_through)
+                if alert:
+                    summary["stuck"].append(alert)
             games = ""
             try:
                 games = str(int(wins) + int(losses) + int(ties or 0))
