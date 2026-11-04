@@ -7,7 +7,8 @@ GET /api/route?a=<lat>,<lng>&b=<lat>,<lng>
   -> {"status": "ok", "mi": 212.4, "min": 198, "via": ["I-49", "I-10"],
       "pts": [[lat, lng], ...]}
 
-Routes come from the public OSRM server (OpenStreetMap data) and are cached
+Routes come from the public Valhalla server (OpenStreetMap data, with the
+OSRM demo server as a fallback) and are cached
 forever in SQLite, so each school pair is only ever looked up once. OSRM is
 called at most a few times a second, and a request that cannot get a turn
 quickly returns "busy" instead of tying up a web thread. Nov 3, 2026.
@@ -27,6 +28,8 @@ bp = Blueprint("route_service", __name__)
 
 OSRM_URL = os.environ.get(
     "OSRM_URL", "https://router.project-osrm.org/route/v1/driving/")
+VALHALLA_URL = os.environ.get(
+    "VALHALLA_URL", "https://valhalla1.openstreetmap.de/route")
 DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 METERS_PER_MILE = 1609.344
 _MIN_GAP_SECONDS = 0.4
@@ -51,7 +54,7 @@ def _parse_point(text):
 
 
 def _cache_key(a, b):
-    return "v2|%.5f,%.5f|%.5f,%.5f" % (a[0], a[1], b[0], b[1])
+    return "v3|%.5f,%.5f|%.5f,%.5f" % (a[0], a[1], b[0], b[1])
 
 
 def _db():
@@ -85,7 +88,7 @@ def _cache_put(key, body):
         pass
 
 
-_REF_RE = re.compile(r"^(I|US|LA|TX|MS|AR)\s*-?\s*(\d+[A-Z]?)$", re.I)
+_REF_RE = re.compile(r"^(I|US|LA|TX|MS|AR)\s*-?\s*(\d+[A-Z]?)\b", re.I)
 
 
 def _clean_ref(ref):
@@ -154,7 +157,74 @@ def _thin(coords, tol=0.0012):
     return [[round(c[1], 4), round(c[0], 4)] for c in pts]
 
 
+_UA = {"User-Agent": "LVAY-PlayoffHQ/1.0 (louisianavsallyall.com)"}
+
+
+def decode_polyline6(text):
+    """Valhalla shape (Google polyline, 6 decimals) -> [[lng, lat], ...]."""
+    coords, index, lat, lng = [], 0, 0, 0
+    while index < len(text):
+        for which in (0, 1):
+            shift, result = 0, 0
+            while True:
+                byte = ord(text[index]) - 63
+                index += 1
+                result |= (byte & 0x1F) << shift
+                shift += 5
+                if byte < 0x20:
+                    break
+            delta = ~(result >> 1) if result & 1 else result >> 1
+            if which == 0:
+                lat += delta
+            else:
+                lng += delta
+        coords.append([lng / 1e6, lat / 1e6])
+    return coords
+
+
+def fetch_route_valhalla(a, b):
+    """Valhalla (FOSSGIS public server) - drive times much closer to
+    real-world/Google than the OSRM demo server."""
+    body = {
+        "locations": [{"lat": a[0], "lon": a[1]}, {"lat": b[0], "lon": b[1]}],
+        "costing": "auto",
+        "directions_options": {"units": "miles"},
+    }
+    resp = requests.post(VALHALLA_URL, json=body, timeout=12, headers=_UA)
+    data = resp.json()
+    trip = data.get("trip") or {}
+    legs = trip.get("legs") or []
+    summary = trip.get("summary") or {}
+    if not legs or not summary.get("length"):
+        return None
+    coords = [c for leg in legs for c in decode_polyline6(leg.get("shape", ""))]
+    steps = []
+    for leg in legs:
+        for m in leg.get("maneuvers", []):
+            names = m.get("street_names") or []
+            refs = [r for r in (_clean_ref(n) for n in names) if r]
+            steps.append({"distance": (m.get("length") or 0) * METERS_PER_MILE,
+                          "ref": ";".join(refs)})
+    return {
+        "mi": round(summary["length"], 1),
+        "min": round(summary["time"] / 60),
+        "via": highway_summary(steps),
+        "pts": _thin(coords),
+        "src": "valhalla",
+    }
+
+
 def fetch_route(a, b):
+    try:
+        body = fetch_route_valhalla(a, b)
+        if body:
+            return body
+    except Exception:
+        pass
+    return fetch_route_osrm(a, b)
+
+
+def fetch_route_osrm(a, b):
     url = "%s%f,%f;%f,%f" % (OSRM_URL, a[1], a[0], b[1], b[0])
     resp = requests.get(url, params={
         "overview": "full", "geometries": "geojson",
