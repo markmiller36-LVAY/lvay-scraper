@@ -51,7 +51,7 @@ def _parse_point(text):
 
 
 def _cache_key(a, b):
-    return "%.5f,%.5f|%.5f,%.5f" % (a[0], a[1], b[0], b[1])
+    return "v2|%.5f,%.5f|%.5f,%.5f" % (a[0], a[1], b[0], b[1])
 
 
 def _db():
@@ -123,18 +123,41 @@ def highway_summary(steps, min_miles=6.0):
     return out
 
 
-def _thin(coords, step=1):
-    pts = [[round(c[1], 4), round(c[0], 4)] for c in coords[::step]]
-    last = [round(coords[-1][1], 4), round(coords[-1][0], 4)]
-    if pts[-1] != last:
-        pts.append(last)
-    return pts
+def _simplify(pts, tol):
+    """Douglas-Peucker on [lng, lat] points."""
+    if len(pts) < 3:
+        return pts
+    keep = [False] * len(pts)
+    keep[0] = keep[-1] = True
+    stack = [(0, len(pts) - 1)]
+    while stack:
+        i, j = stack.pop()
+        ax, ay = pts[i]
+        bx, by = pts[j]
+        dx, dy = bx - ax, by - ay
+        length = (dx * dx + dy * dy) ** 0.5 or 1e-12
+        best, idx = 0.0, None
+        for k in range(i + 1, j):
+            d = abs(dy * (pts[k][0] - ax) - dx * (pts[k][1] - ay)) / length
+            if d > best:
+                best, idx = d, k
+        if idx is not None and best > tol:
+            keep[idx] = True
+            stack.append((i, idx))
+            stack.append((idx, j))
+    return [p for p, k in zip(pts, keep) if k]
+
+
+def _thin(coords, tol=0.0012):
+    """Simplified path as [lat, lng] pairs (about 130 m tolerance)."""
+    pts = _simplify([[c[0], c[1]] for c in coords], tol)
+    return [[round(c[1], 4), round(c[0], 4)] for c in pts]
 
 
 def fetch_route(a, b):
     url = "%s%f,%f;%f,%f" % (OSRM_URL, a[1], a[0], b[1], b[0])
     resp = requests.get(url, params={
-        "overview": "simplified", "geometries": "geojson",
+        "overview": "full", "geometries": "geojson",
         "steps": "true"}, timeout=10,
         headers={"User-Agent": "LVAY-PlayoffHQ/1.0 (louisianavsallyall.com)"})
     data = resp.json()
@@ -147,7 +170,7 @@ def fetch_route(a, b):
         "mi": round(route["distance"] / METERS_PER_MILE, 1),
         "min": round(route["duration"] / 60),
         "via": highway_summary(steps),
-        "pts": _thin(coords, 1 if len(coords) < 400 else 2),
+        "pts": _thin(coords),
     }
 
 
