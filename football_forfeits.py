@@ -88,6 +88,16 @@ FOOTBALL_MOVED_GAMES = {
          "old_date": "10/30/2026", "new_date": "10/31/2026"},
     ],
 }
+# Scores a school typed into LHSAA backwards. Each entry gives the correct
+# final from the winner's side; both schools' rows get the right score and
+# W/L. Only a row whose LHSAA score has the same two numbers is touched, so
+# if LHSAA posts a different score later, theirs is kept.
+# Mark, Nov 6, 2026: Notre Dame won 35-28 at Welsh but LHSAA shows 28-35.
+FOOTBALL_SCORE_FIXES = {
+    "2026": [
+        {"winner": "Notre Dame", "loser": "Welsh", "game_date": "11/5/2026", "score": "35-28"},
+    ],
+}
 # Games that no longer happen; the week becomes an open week for that school.
 FOOTBALL_DROPPED_GAMES = {
     "2026": [
@@ -243,9 +253,53 @@ def apply_football_cancellations(conn, season):
     return changed
 
 
+def _score_numbers(score):
+    nums = re.findall(r"\d+", score or "")
+    return sorted(int(n) for n in nums) if len(nums) == 2 else None
+
+
+def apply_football_score_fixes(conn, season):
+    """Put listed backwards scores right on both schedules. Returns rows changed."""
+    entries = FOOTBALL_SCORE_FIXES.get(str(season))
+    if not entries:
+        return 0
+    try:
+        rows = conn.execute(
+            "SELECT rowid, school, opponent, game_date, score, win_loss FROM games "
+            "WHERE sport='football' AND season=?",
+            (str(season),),
+        ).fetchall()
+    except sqlite3.OperationalError:
+        return 0
+    changed = 0
+    for entry in entries:
+        day = _parse_date(entry["game_date"])
+        win_pts, lose_pts = entry["score"].split("-")
+        want = _score_numbers(entry["score"])
+        sides = (
+            (entry["winner"], entry["loser"], f"{win_pts}-{lose_pts}", "W"),
+            (entry["loser"], entry["winner"], f"{lose_pts}-{win_pts}", "L"),
+        )
+        for school, opponent, score, result in sides:
+            for rowid, row_school, row_opp, row_date, row_score, win_loss in rows:
+                if (_key(row_school) != _key(school) or _key(row_opp) != _key(opponent)
+                        or _parse_date(row_date) != day):
+                    continue
+                if _score_numbers(row_score) != want:
+                    continue  # LHSAA shows some other score now; leave theirs
+                if row_score == score and (win_loss or "") == result:
+                    continue
+                conn.execute(
+                    "UPDATE games SET score=?, win_loss=? WHERE rowid=?", (score, result, rowid)
+                )
+                changed += 1
+    return changed
+
+
 def apply_football_forfeits(conn, season, today=None):
     """Mark listed forfeits (and cancelled games) in the games table. Returns rows changed."""
     cancelled = apply_football_schedule_changes(conn, season)
+    cancelled += apply_football_score_fixes(conn, season)
     cancelled += apply_football_cancellations(conn, season)
     entries = FOOTBALL_FORFEITS.get(str(season))
     if not entries:
