@@ -1414,6 +1414,18 @@ def rankings_football():
             for position, row in enumerate(group, 1):
                 row["division_rank"] = position
                 row["tiebreak"] = labels.get(row["school"])
+        # Bylaw 14.10: district champions qualify automatically; wildcards
+        # fill the rest of each 24 (Select) / 28 (Non-Select) bracket.
+        from football_seeding import FIELD_SIZE, district_champions, project_field
+        champions = district_champions(rows, seed_games)
+        for row in rows:
+            row["district_champion"] = row["school"] in champions
+            row["in_field"] = False
+            row["projected_seed"] = None
+            row["bumped"] = False
+        for division_key, group in by_division.items():
+            size = FIELD_SIZE["select" if str(division_key or "").startswith("Select") else "non-select"]
+            project_field(group, champions, size)
     except Exception as e:
         conn.close()
         return jsonify({"error": str(e)}), 500

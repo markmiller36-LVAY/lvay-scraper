@@ -168,3 +168,64 @@ def tiebreak_labels(teams, games):
             for team in same:
                 labels[team["school"]] = method
     return labels
+
+
+FIELD_SIZE = {"select": 24, "non-select": 28}  # Bylaw 14.9 / 14.11.1
+
+
+def district_champions(rows, games):
+    """Bylaw 14.10: the first-place team in each district, or every team tied
+    for first, qualifies automatically. rows need school, class_, district and
+    playoff_eligible; schools not playing in the playoffs can't be champions.
+    Returns {school: (district_wins, district_losses, district_ties)}.
+    """
+    by_district = {}
+    for row in rows:
+        if not row.get("playoff_eligible") or not row.get("district"):
+            continue
+        by_district.setdefault((row.get("class_"), str(row.get("district"))), []).append(row["school"])
+    champions = {}
+    for schools in by_district.values():
+        records = {}
+        for school in schools:
+            played = [g for g in games.get(school, []) if g["is_district"]]
+            if not played:
+                continue
+            w = sum(1 for g in played if g["result"] == "W")
+            t = sum(1 for g in played if g["result"] == "T")
+            records[school] = ((w + 0.5 * t) / len(played), (w, len(played) - w - t, t))
+        if not records:
+            continue
+        best = max(pct for pct, _ in records.values())
+        for school, (pct, record) in records.items():
+            if pct == best:
+                champions[school] = record
+    return champions
+
+
+def project_field(seeded, champions, size):
+    """seeded: one division's eligible teams already in seed order.
+    Every district champion is in; wildcards fill the rest in rating order
+    (Bylaw 14.10). Qualifiers are then seeded 1..size by power rating
+    (14.11.1) - i.e. in their existing order. Sets in_field, projected_seed,
+    district_champion and bumped (in the top `size` but pushed out)."""
+    champs_here = [t for t in seeded if t["school"] in champions]
+    wildcard_slots = max(size - len(champs_here), 0)
+    field, wildcards = set(), 0
+    for team in seeded:
+        if team["school"] in champions:
+            field.add(team["school"])
+        elif wildcards < wildcard_slots:
+            field.add(team["school"])
+            wildcards += 1
+    seed = 0
+    for position, team in enumerate(seeded, 1):
+        team["district_champion"] = team["school"] in champions
+        team["in_field"] = team["school"] in field
+        team["bumped"] = position <= size and not team["in_field"]
+        if team["in_field"]:
+            seed += 1
+            team["projected_seed"] = seed
+        else:
+            team["projected_seed"] = None
+    return seeded

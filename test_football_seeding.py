@@ -63,3 +63,40 @@ def test_tiebreak_labels():
              _t("Rayville", 9.47, 6.3), _t("Solo", 12.0, 5.0)]
     assert tiebreak_labels(teams, games) == {
         "Sulphur": "h2h", "Sam Houston": "h2h", "Oakdale": "sf", "Rayville": "sf"}
+
+
+def test_district_champion_outside_top_n_bumps_last_wildcard():
+    from football_seeding import district_champions, project_field
+    rows = [{"school": f"T{i}", "class_": "2A", "district": "1", "playoff_eligible": True,
+             "power_rating": 20 - i, "strength_factor": 0} for i in range(1, 6)]
+    rows.append({"school": "Champ", "class_": "2A", "district": "9", "playoff_eligible": True,
+                 "power_rating": 1, "strength_factor": 0})
+    rows.append({"school": "Rival", "class_": "2A", "district": "9", "playoff_eligible": True,
+                 "power_rating": 0.5, "strength_factor": 0})
+    games = build_game_index([
+        {"school": "Champ", "opponent": "Rival", "result": "W", "is_district": 1},
+        {"school": "Rival", "opponent": "Champ", "result": "L", "is_district": 1},
+    ] + [{"school": f"T{i}", "opponent": "x", "result": "W" if i == 1 else "L", "is_district": 1}
+         for i in range(1, 6)])
+    champs = district_champions(rows, games)
+    assert "Champ" in champs and "Rival" not in champs
+    seeded = seed_division(rows, games, {})
+    project_field(seeded, champs, 4)
+    by = {t["school"]: t for t in seeded}
+    assert [t["school"] for t in seeded if t["in_field"]] == ["T1", "T2", "T3", "Champ"]
+    assert by["T4"]["bumped"] and not by["T4"]["in_field"]
+    assert by["Champ"]["projected_seed"] == 4
+
+
+def test_tie_for_first_all_qualify_and_ineligible_school_cannot_win():
+    from football_seeding import district_champions
+    rows = [{"school": s, "class_": "1A", "district": "7", "playoff_eligible": e}
+            for s, e in (("A", True), ("B", True), ("X", False))]
+    games = build_game_index([
+        {"school": "A", "opponent": "B", "result": "W", "is_district": 1},
+        {"school": "A", "opponent": "C", "result": "L", "is_district": 1},
+        {"school": "B", "opponent": "A", "result": "L", "is_district": 1},
+        {"school": "B", "opponent": "D", "result": "W", "is_district": 1},
+        {"school": "X", "opponent": "Z", "result": "W", "is_district": 1},
+    ])
+    assert set(district_champions(rows, games)) == {"A", "B"}
