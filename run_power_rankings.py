@@ -567,6 +567,51 @@ def print_football_division_dump(ratings):
             print(f"{i:2}. {r.name:<30} PR={round(r.power_rating, 2):>6} | {r.record}")
 
 
+def _apply_football_seed_tiebreakers(ratings, strength_factors, sport, season):
+    """Reorder identical football ratings within a division by LHSAA
+    Bylaw 14.11.2-14.11.3 (head to head first for two-team ties).
+
+    Teams keep the overall positions their tied group already holds; only
+    the order inside each (rating, division) group changes.
+    """
+    from football_seeding import build_game_index, seed_division
+
+    def info(name):
+        return get_school(name, sport, season) or {}
+
+    games = []
+    for r in ratings:
+        mine = info(r.name)
+        for g in r.breakdown:
+            opp = info(g.get("opponent"))
+            is_district = bool(
+                mine and opp
+                and mine.get("class") == opp.get("class")
+                and mine.get("district") == opp.get("district")
+                and not is_non_district_game(sport, season, r.name, g.get("opponent"))
+            )
+            games.append({"school": r.name, "opponent": g.get("opponent"),
+                          "result": g.get("result"), "is_district": is_district})
+    index = build_game_index(games)
+    class_of = {r.name: info(r.name).get("class", "") for r in ratings}
+
+    groups = {}
+    for position, r in enumerate(ratings):
+        key = (r.power_rating, info(r.name).get("division") or r.division)
+        groups.setdefault(key, []).append(position)
+    for positions in groups.values():
+        if len(positions) < 2:
+            continue
+        teams = [
+            {"school": ratings[p].name, "power_rating": ratings[p].power_rating,
+             "strength_factor": strength_factors[ratings[p].name], "obj": ratings[p]}
+            for p in positions
+        ]
+        ordered = seed_division(teams, index, class_of)
+        for p, team in zip(positions, ordered):
+            ratings[p] = team["obj"]
+
+
 def run_power_rankings(season=SEASON, sport=SPORT):
     print(f"\n{'='*54}")
     print("LVAY Power Rankings Calculator")
@@ -946,6 +991,7 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             ),
             reverse=True,
         )
+        _apply_football_seed_tiebreakers(ratings, strength_factors, sport, season)
         for rank, rating in enumerate(ratings, start=1):
             rating.rank = rank
 

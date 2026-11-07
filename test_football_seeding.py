@@ -37,3 +37,20 @@ def test_forfeit_win_counts_as_head_to_head_win():
     teams = [_t("A", 10.0, 9.0), _t("B", 10.0, 8.0)]
     games = build_game_index([{"school": "B", "opponent": "A", "result": "W(f)"}])
     assert [t["school"] for t in seed_division(teams, games, {})] == ["B", "A"]
+
+
+def test_engine_overall_rank_uses_head_to_head(monkeypatch):
+    import run_power_rankings as rpr
+
+    class R:
+        def __init__(self, name, pr, opp, result):
+            self.name, self.power_rating, self.division = name, pr, "Non-Select Division I"
+            self.breakdown = [{"opponent": opp, "result": result, "week": 4}]
+
+    info = {"Sulphur": {"class": "5A", "district": 3, "division": "Non-Select Division I"},
+            "Sam Houston": {"class": "5A", "district": 3, "division": "Non-Select Division I"}}
+    monkeypatch.setattr(rpr, "get_school", lambda n, sp, se: info.get(n))
+    ratings = [R("Sam Houston", 9.9, "Sulphur", "L"), R("Sulphur", 9.9, "Sam Houston", "W")]
+    rpr._apply_football_seed_tiebreakers(
+        ratings, {"Sam Houston": 10.8, "Sulphur": 9.5}, "football", "2026")
+    assert [r.name for r in ratings] == ["Sulphur", "Sam Houston"]
