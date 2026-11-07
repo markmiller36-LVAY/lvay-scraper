@@ -96,6 +96,8 @@ FOOTBALL_MOVED_GAMES = {
 FOOTBALL_SCORE_FIXES = {
     "2026": [
         {"winner": "Notre Dame", "loser": "Welsh", "game_date": "11/5/2026", "score": "35-28"},
+        # Mark, Nov 6, 2026: Lafayette Renaissance beat Thibodaux 26-8; LHSAA had it backwards.
+        {"winner": "Lafayette Renaissance Charter Academy", "loser": "Thibodaux", "game_date": "11/6/2026", "score": "26-8"},
     ],
 }
 # Games that no longer happen; the week becomes an open week for that school.
