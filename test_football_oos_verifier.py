@@ -138,6 +138,71 @@ class FootballOOSVerifierTests(unittest.TestCase):
             ])
             conn.close()
 
+    def test_record_over_ten_games_is_never_imported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            conn = sqlite3.connect(os.path.join(tmp, "oos-cap.db"))
+            from football_oos_verifier import _ensure_oos_table
+            _ensure_oos_table(conn)
+            row = {
+                "Season": "2026", "OOS School": "Louisville High School",
+                "Louisiana Opponent(s)": "John Curtis Christian",
+                "LHSAA Class": "2A",
+            }
+            self.assertEqual(
+                import_verified_row(conn, row, (9, 2, 0), "u", "now"), 0
+            )
+            self.assertEqual(
+                conn.execute("SELECT COUNT(*) FROM oos_opponents").fetchone()[0], 0
+            )
+            self.assertEqual(
+                import_verified_row(conn, row, (8, 2, 0), "u", "now"), 1
+            )
+            conn.close()
+
+    def test_run_flags_source_record_over_ten_games(self):
+        import football_oos_verifier as v
+
+        headers = [
+            "Season", "State", "OOS School", "Louisiana Opponent(s)",
+            "LHSAA Class", "Primary Record URL", "Secondary Record URL",
+            "Backup Record URL", "Record Source", "Wins", "Losses", "Ties",
+            "Games Played", "Record Through Date", "Verified By",
+            "Verification Status", "Include in Engine?", "Last Checked", "Notes",
+        ]
+        data = dict.fromkeys(headers, "")
+        data.update({
+            "Season": "2026", "State": "MS", "OOS School": "Louisville High School",
+            "Louisiana Opponent(s)": "John Curtis Christian", "LHSAA Class": "2A",
+            "Primary Record URL": "https://a", "Wins": "8", "Losses": "2",
+            "Ties": "0", "Include in Engine?": "Yes",
+        })
+
+        class FakeWS:
+            def __init__(self):
+                self.updates = []
+
+            def get(self, _range):
+                return [headers, [data[h] for h in headers]]
+
+            def batch_update(self, updates, value_input_option=None):
+                self.updates.extend(updates)
+
+        obs = Observation(9, 2, 0, "https://a", "MHSAA/SBLive")
+        orig_fetch, orig_choose = v.fetch_observation, v.choose_verified_record
+        v.fetch_observation = lambda url, season, session: (obs, None)
+        v.choose_verified_record = lambda observations, state="": ((9, 2, 0), "ok")
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                ws = FakeWS()
+                summary = v.run(db_path=os.path.join(tmp, "x.db"), worksheet=ws, session=object())
+        finally:
+            v.fetch_observation, v.choose_verified_record = orig_fetch, orig_choose
+        self.assertEqual(summary["imported"], 0)
+        self.assertEqual(summary["review"], 1)
+        written = {u["range"]: u["values"][0][0] for u in ws.updates}
+        self.assertIn("8", written.values())
+        self.assertIn("Needs Review", written.values())
+
 
 if __name__ == "__main__":
     unittest.main()

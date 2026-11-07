@@ -30,6 +30,11 @@ SHEET_ID = os.environ.get(
 )
 TAB_NAME = os.environ.get("FOOTBALL_OOS_TAB", "OOS Team Registry")
 REGISTRY_RANGE = "A4:X1000"
+# Mark's rule (Nov 6, 2026): an out-of-state school's record counts at most
+# its first 10 games. Anything more is almost always playoff games (e.g.
+# Louisville, MS 9-2 included a playoff win). A record over 10 games is never
+# imported; it is flagged so the first-10 record can be set by MANUAL OVERRIDE.
+MAX_OOS_GAMES = 10
 SEASON = os.environ.get("FOOTBALL_SEASON_YEAR", os.environ.get("SEASON_YEAR", "2026"))
 # A team whose record has not been re-verified for this many days is called
 # out at the top of the pipeline email (Mark, Nov 3 2026: West Point MS sat at
@@ -327,6 +332,8 @@ def _ensure_oos_table(conn):
 
 def import_verified_row(conn, row, record, source_url, checked_at):
     wins, losses, ties = record
+    if wins + losses + ties > MAX_OOS_GAMES:
+        return 0
     opponent = str(row.get("OOS School") or "").strip()
     classification = str(row.get("LHSAA Class") or "").strip()
     correction = oos_class_correction(row.get("Season") or SEASON, opponent)
@@ -432,6 +439,12 @@ def run(db_path=None, worksheet=None, session=None):
                     )
                 except (TypeError, ValueError):
                     record = None
+                if record is not None and sum(record) > MAX_OOS_GAMES:
+                    summary["review"] += 1
+                    summary["issues"].append(
+                        f"{team}: manual override has {sum(record)} games; max is {MAX_OOS_GAMES}"
+                    )
+                    record = None
                 if record is not None:
                     wins, losses, ties = record
                     checked_at = datetime.now().strftime("%Y-%m-%d %I:%M %p")
@@ -484,7 +497,23 @@ def run(db_path=None, worksheet=None, session=None):
                     previous_games = sum(int(value or 0) for value in old_record)
                 except (TypeError, ValueError):
                     previous_games = 0
-                if wins + losses + ties < previous_games:
+                if wins + losses + ties > MAX_OOS_GAMES:
+                    summary["review"] += 1
+                    summary["issues"].append(
+                        f"{team}: source shows {wins}-{losses}-{ties} "
+                        f"({wins + losses + ties} games); max is {MAX_OOS_GAMES}. "
+                        "Set the first-10 record with MANUAL OVERRIDE."
+                    )
+                    record = None
+                    wins, losses, ties = old_record
+                    status = "Needs Review"
+                    source = str(row.get("Record Source") or "")
+                    record_through = str(row.get("Record Through Date") or "")
+                    notes = (
+                        f"Source record is over {MAX_OOS_GAMES} games (likely playoffs); "
+                        "kept last record. Set first-10 record with MANUAL OVERRIDE"
+                    )
+                elif wins + losses + ties < previous_games:
                     summary["review"] += 1
                     summary["issues"].append(
                         f"{team}: source record has fewer games than the last verified record"
