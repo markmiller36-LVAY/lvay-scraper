@@ -1396,8 +1396,17 @@ def rankings_football():
             row["division_rank"] = None
             if row["playoff_eligible"]:
                 by_division.setdefault(row.get("division"), []).append(row)
-        for group in by_division.values():
-            group.sort(key=lambda r: (-(r.get("power_rating") or 0), -(r.get("strength_factor") or 0)))
+        # LHSAA Bylaw 14.11.2-14.11.3 tiebreakers for identical ratings
+        # (head to head first for two-team ties, then strength factor, ...).
+        from football_seeding import build_game_index, seed_division
+        seed_games = build_game_index(dict(g) for g in c.execute("""
+            SELECT school, opponent, result, is_district
+            FROM game_power_points
+            WHERE sport='football' AND season=?
+        """, (season,)).fetchall())
+        class_of = {row["school"]: row.get("class_") or "" for row in rows}
+        for division_key, group in list(by_division.items()):
+            group[:] = seed_division(group, seed_games, class_of)
             for position, row in enumerate(group, 1):
                 row["division_rank"] = position
     except Exception as e:
