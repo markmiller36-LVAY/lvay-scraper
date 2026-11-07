@@ -1405,10 +1405,15 @@ def rankings_football():
             WHERE sport='football' AND season=?
         """, (season,)).fetchall())
         class_of = {row["school"]: row.get("class_") or "" for row in rows}
+        from football_seeding import tiebreak_labels
+        for row in rows:
+            row["tiebreak"] = None
         for division_key, group in list(by_division.items()):
             group[:] = seed_division(group, seed_games, class_of)
+            labels = tiebreak_labels(group, seed_games)
             for position, row in enumerate(group, 1):
                 row["division_rank"] = position
+                row["tiebreak"] = labels.get(row["school"])
     except Exception as e:
         conn.close()
         return jsonify({"error": str(e)}), 500

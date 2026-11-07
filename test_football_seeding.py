@@ -54,3 +54,12 @@ def test_engine_overall_rank_uses_head_to_head(monkeypatch):
     rpr._apply_football_seed_tiebreakers(
         ratings, {"Sam Houston": 10.8, "Sulphur": 9.5}, "football", "2026")
     assert [r.name for r in ratings] == ["Sulphur", "Sam Houston"]
+
+
+def test_tiebreak_labels():
+    from football_seeding import tiebreak_labels
+    games = build_game_index([{"school": "Sulphur", "opponent": "Sam Houston", "result": "W"}])
+    teams = [_t("Sulphur", 9.9, 9.5), _t("Sam Houston", 9.9, 10.8), _t("Oakdale", 9.47, 7.0),
+             _t("Rayville", 9.47, 6.3), _t("Solo", 12.0, 5.0)]
+    assert tiebreak_labels(teams, games) == {
+        "Sulphur": "h2h", "Sam Houston": "h2h", "Oakdale": "sf", "Rayville": "sf"}

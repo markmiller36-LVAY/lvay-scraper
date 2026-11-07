@@ -131,3 +131,40 @@ def seed_division(teams, games, class_of):
         group = by_rating[rating]
         ordered.extend(group if len(group) == 1 else _order_tied(group, games, class_of))
     return ordered
+
+
+def tiebreak_labels(teams, games):
+    """For teams that share an identical rating, say how each was placed:
+    "h2h" (head to head), "sf" (strength factor) or "record" (W-L criteria).
+    Teams not in a tie are left out.
+    """
+    by_rating = {}
+    for team in teams:
+        by_rating.setdefault(round(float(team.get("power_rating") or 0), 2), []).append(team)
+    labels = {}
+    for group in by_rating.values():
+        if len(group) < 2:
+            continue
+        if len(group) == 2:
+            a, b = group
+            if _head_to_head(a["school"], b["school"], games):
+                method = "h2h"
+            elif _sf(a) != _sf(b):
+                method = "sf"
+            else:
+                method = "record"
+            labels[a["school"]] = labels[b["school"]] = method
+            continue
+        by_sf = {}
+        for team in group:
+            by_sf.setdefault(_sf(team), []).append(team)
+        for same in by_sf.values():
+            if len(same) == 1:
+                method = "sf"
+            elif len(same) == 2 and _head_to_head(same[0]["school"], same[1]["school"], games):
+                method = "h2h"
+            else:
+                method = "record"
+            for team in same:
+                labels[team["school"]] = method
+    return labels
