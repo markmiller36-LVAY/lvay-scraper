@@ -162,6 +162,11 @@ SPORTS = {
         "base_url": "https://www.lhsaaonline.org/pr/sopr/admin/ReportSchedule.asp",
         "referer": "https://www.lhsaaonline.org/pr/sopr/admin/SearchboyssoccerSchedule.asp",
         "loop_by_class": True, "season_mode": "school_year",
+        # Soccer ignores the class filter ("d"), so pull district by district
+        # ("f"). LHSAA reads boys vs girls from the session, so the referer
+        # search page must be opened first or girls silently returns boys.
+        "loop_by_district": True, "districts": list(range(1, 13)),
+        "session_from_referer": True,
         "active_start": "08-01", "active_end": "03-31",
         "current_season_selector": "1",
         "payload_template": {
@@ -177,6 +182,11 @@ SPORTS = {
         "base_url": "https://www.lhsaaonline.org/pr/sopr/admin/ReportSchedule.asp",
         "referer": "https://www.lhsaaonline.org/pr/sopr/admin/SearchgirlssoccerSchedule.asp",
         "loop_by_class": True, "season_mode": "school_year",
+        # Soccer ignores the class filter ("d"), so pull district by district
+        # ("f"). LHSAA reads boys vs girls from the session, so the referer
+        # search page must be opened first or girls silently returns boys.
+        "loop_by_district": True, "districts": list(range(1, 13)),
+        "session_from_referer": True,
         "active_start": "08-01", "active_end": "03-31",
         "current_season_selector": "1",
         "payload_template": {
@@ -352,7 +362,7 @@ def build_payload(template, season, classification=""):
     }
 
 
-def fetch_page(sport_key, season, classification=""):
+def fetch_page(sport_key, season, classification="", district=None, session=None):
     config = SPORTS[sport_key]
     source_season = season
     if (
@@ -363,11 +373,14 @@ def fetch_page(sport_key, season, classification=""):
     payload = build_payload(
         config["payload_template"], source_season, classification
     )
+    if district is not None:
+        payload["f"] = str(district)
     headers = HEADERS.copy()
     headers["Referer"] = config["referer"]
+    http = session or requests
 
     try:
-        resp = requests.post(
+        resp = http.post(
             config["base_url"],
             params=config["query_params"],
             data=payload,
@@ -747,6 +760,10 @@ def scrape_class_loop_sport(sport_key: str):
     total = 0
     failed_classes = []
 
+    config = SPORTS[sport_key]
+    if config.get("loop_by_district"):
+        return scrape_district_loop_sport(sport_key, season)
+
     classifications = CLASSIFICATIONS_BY_SPORT.get(sport_key, [])
 
     for class_ in classifications:
@@ -768,6 +785,34 @@ def scrape_class_loop_sport(sport_key: str):
             f"{sport_key} scrape incomplete; failed classes: "
             f"{', '.join(failed_classes)}"
         )
+    log_scrape(sport_key, total, "success", f"season={season}")
+    return total
+
+
+def scrape_district_loop_sport(sport_key: str, season: str):
+    """Soccer: LHSAA's schedule report filters by district, not class."""
+    config = SPORTS[sport_key]
+    session = requests.Session()
+    total = 0
+    failed = []
+    for district in config.get("districts", range(1, 13)):
+        if config.get("session_from_referer"):
+            try:
+                session.get(config["referer"], headers={"User-Agent": HEADERS["User-Agent"]}, timeout=45)
+            except requests.RequestException as e:
+                print(f"  Referer fetch error ({sport_key} district {district}): {e}")
+        print(f"  District {district}...")
+        html = fetch_page(sport_key, season, "", district=district, session=session)
+        if not html:
+            failed.append(str(district))
+            continue
+        games = parse_schedule_table(html, sport_key, season)
+        print(f"    Parsed {len(games)} games")
+        total += save_games(games)
+        time.sleep(2)
+    if failed:
+        log_scrape(sport_key, total, "error", f"season={season}; failed_districts={','.join(failed)}")
+        raise RuntimeError(f"{sport_key} scrape incomplete; failed districts: {', '.join(failed)}")
     log_scrape(sport_key, total, "success", f"season={season}")
     return total
 
