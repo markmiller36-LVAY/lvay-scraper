@@ -2309,6 +2309,14 @@ def get_sport_schedules(sport):
 
     school_rows = [dict(r) for r in c.fetchall()]
     preseason = False
+    if school_rows and int(season) >= int(resolve_season(sport)):
+        # Early season: only schools that have played have a power rating.
+        # Keep every other school with a posted LHSAA schedule on the page.
+        ranked = {str(r["school"]).casefold() for r in school_rows}
+        school_rows += [
+            r for r in preseason_school_rows(c, sport, season, school_filter)
+            if str(r["school"]).casefold() not in ranked
+        ]
     if not school_rows and int(season) >= int(resolve_season(sport)):
         # Preseason: LHSAA schedules are posted before any power rating exists.
         # Build the list from the season roster (or the scraped games) so the
