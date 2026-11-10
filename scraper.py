@@ -789,12 +789,40 @@ def scrape_class_loop_sport(sport_key: str):
     return total
 
 
+def remove_stale_games(sport_key: str, season: str, seen) -> int:
+    """Delete this season's rows that LHSAA no longer lists (a moved date leaves
+    the old row behind, since rows are keyed on the date). Only called after
+    every district pulled cleanly. Locked archive seasons are never touched."""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    if c.execute(
+        "SELECT 1 FROM season_registry WHERE sport=? AND season=? AND is_locked=1",
+        (sport_key, str(season)),
+    ).fetchone():
+        conn.close()
+        return 0
+    rows = c.execute(
+        "SELECT rowid, school, game_date, opponent FROM games WHERE sport=? AND season=?",
+        (sport_key, str(season)),
+    ).fetchall()
+    stale = [r[0] for r in rows if (r[1], r[2], r[3]) not in seen]
+    # Safety: never wipe most of a season because of an odd LHSAA response.
+    if stale and len(stale) <= max(50, len(rows) // 5):
+        c.executemany("DELETE FROM games WHERE rowid=?", [(r,) for r in stale])
+        conn.commit()
+    else:
+        stale = [] if len(stale) > max(50, len(rows) // 5) else stale
+    conn.close()
+    return len(stale)
+
+
 def scrape_district_loop_sport(sport_key: str, season: str):
     """Soccer: LHSAA's schedule report filters by district, not class."""
     config = SPORTS[sport_key]
     session = requests.Session()
     total = 0
     failed = []
+    seen = set()
     for district in config.get("districts", range(1, 13)):
         if config.get("session_from_referer"):
             try:
@@ -807,9 +835,17 @@ def scrape_district_loop_sport(sport_key: str, season: str):
             failed.append(str(district))
             continue
         games = parse_schedule_table(html, sport_key, season)
+        # Cancelled games are not shown on LVAY (Mark, Nov 2026).
+        games = [g for g in games if (g.get("win_loss") or "").strip().lower() != "cancelled"]
+        for g in games:
+            seen.add((g["school"], g["game_date"], g["opponent"]))
         print(f"    Parsed {len(games)} games")
         total += save_games(games)
         time.sleep(2)
+    if not failed and seen:
+        removed = remove_stale_games(sport_key, season, seen)
+        if removed:
+            print(f"  Removed {removed} games no longer on LHSAA (moved or cancelled)")
     if failed:
         log_scrape(sport_key, total, "error", f"season={season}; failed_districts={','.join(failed)}")
         raise RuntimeError(f"{sport_key} scrape incomplete; failed districts: {', '.join(failed)}")
