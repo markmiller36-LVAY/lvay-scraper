@@ -2281,6 +2281,36 @@ def scraped_schedule_games(c, sport, season, school):
     return sort_schedule_games(games)
 
 
+def merge_unplayed_schedule_games(rated_games, scraped_games):
+    """Add the rest of a school's posted schedule to its rated (played) games.
+
+    Once a school has a power rating its schedule comes from the rated games,
+    which only hold results. Mark (Nov 16, 2026): show the whole schedule with
+    scores filled in as games are played, the way football does. A scraped
+    game is added unless a rated game already covers it (same date and
+    opponent, or any rated game that day when the scraped row has a result,
+    which guards against opponent-name spelling differences).
+    """
+    if not rated_games:
+        return scraped_games
+    def date_key(g):
+        parsed = parse_schedule_date(g.get("game_date"))
+        return parsed.date() if parsed else str(g.get("game_date") or "").strip()
+    def opp_key(g):
+        return re.sub(r"[^a-z0-9]", "", str(g.get("opponent") or "").casefold())
+    rated_pairs = {(date_key(g), opp_key(g)) for g in rated_games}
+    rated_dates = {date_key(g) for g in rated_games}
+    merged = list(rated_games)
+    for g in scraped_games:
+        if (date_key(g), opp_key(g)) in rated_pairs:
+            continue
+        played = str(g.get("result") or "").strip().upper() in ("W", "L", "T")
+        if played and date_key(g) in rated_dates:
+            continue
+        merged.append(g)
+    return sort_schedule_games(merged)
+
+
 def get_sport_schedules(sport):
     conn = get_db()
     c = conn.cursor()
@@ -2367,7 +2397,11 @@ def get_sport_schedules(sport):
         """, (sport, season, school))
 
         games = sort_schedule_games([dict(r) for r in c.fetchall()])
-        if not games:
+        if int(season) >= int(resolve_season(sport)):
+            games = merge_unplayed_schedule_games(
+                games, scraped_schedule_games(c, sport, season, school)
+            )
+        elif not games:
             games = scraped_schedule_games(c, sport, season, school)
         annotate_current_opponent_records(games, opponent_records)
 
