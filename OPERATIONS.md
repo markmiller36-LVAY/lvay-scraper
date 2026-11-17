@@ -7,7 +7,9 @@
 - Render web service: `lvay-scraper`
 - Render cron job: `lvay-pipeline-scheduler`
 - Persistent database: `/data/lvay_v2.db`
-- Schedule: `0 */4 * * *` (every four hours)
+- Schedule: cron wakes every 30 minutes; `trigger_pipeline.py` decides what runs.
+  Football/volleyball every 6h from 5am, basketball every 6h from 6am, soccer
+  every 4h from 3am (Central). See `trigger_pipeline.py` for game-night extras.
 
 Do not deploy from the duplicate local folders. Make production changes from a
 clean branch based on the latest `origin/main`, review the diff, run the full
