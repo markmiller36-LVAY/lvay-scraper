@@ -14,8 +14,11 @@ def at(y, mo, d, h, mi):
 
 
 def test_football_volleyball_every_6_hours_from_5am():
-    for hour in (5, 11, 17, 23):
+    for hour in (5, 17):
         assert sports_for_now(at(2026, 10, 20, hour, 0)) == FB
+    for hour in (11, 23):  # shared with soccer in winter
+        assert sports_for_now(at(2026, 10, 20, hour, 0)) == FB + SC
+        assert sports_for_now(at(2026, 7, 10, hour, 0)) == FB
 
 
 def test_basketball_every_6_hours_from_6am():
@@ -23,9 +26,12 @@ def test_basketball_every_6_hours_from_6am():
         assert sports_for_now(at(2026, 10, 20, hour, 0)) == BB
 
 
-def test_soccer_every_6_hours_from_7am():
-    for hour in (1, 7, 13, 19):
+def test_soccer_every_4_hours():
+    for hour in (3, 7, 15, 19):
         assert sports_for_now(at(2026, 10, 20, hour, 0)) == SC
+    for hour in (11, 23):
+        assert all(sp in sports_for_now(at(2026, 10, 20, hour, 0)) for sp in SC)
+    assert not should_trigger_now(at(2026, 7, 10, 3, 0))  # out of season
 
 
 def test_basketball_slots_wait_until_oct_19():
@@ -40,7 +46,7 @@ def test_slot_fires_when_render_starts_late():
 
 
 def test_other_hours_stay_quiet():
-    for hour in (2, 3, 4, 8, 9, 10, 14, 15, 16, 20, 21, 22):
+    for hour in (1, 2, 4, 8, 9, 10, 13, 14, 16, 20, 21, 22):
         assert not should_trigger_now(at(2026, 10, 20, hour, 0))  # Tuesday
 
 
@@ -48,7 +54,7 @@ def test_game_nights_run_football_at_10pm_midnight_and_1am():
     # Thursday Oct 15 and Friday Oct 16, 2026
     for day in (15, 16):
         assert sports_for_now(at(2026, 10, day, 22, 0)) == ["football"]
-        assert sports_for_now(at(2026, 10, day, 23, 0)) == FB
+        assert sports_for_now(at(2026, 10, day, 23, 0)) == FB + SC
     # The midnight/1am runs after those nights fall on Friday and Saturday
     for day in (16, 17):
         assert sports_for_now(at(2026, 10, day, 0, 0)) == ["football"]

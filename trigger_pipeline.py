@@ -29,12 +29,13 @@ CENTRAL = ZoneInfo("America/Chicago")
 # the site stays quick:
 #   - football + volleyball (and baseball/softball in spring): 5, 11am, 5, 11pm
 #   - basketball: 6am, noon, 6pm, midnight
-#   - soccer: 7am, 1pm, 7pm, 1am
+#   - soccer: every 4 hours -- 3am, 7am, 11am, 3pm, 7pm, 11pm (Mark, Nov 16,
+#     2026). The 11am/11pm soccer slots share a run with football/volleyball.
 # Sports out of season are skipped by the web service. Thursday/Friday
 # game nights add football runs at 10pm, midnight and 1am (see below).
 PRIMARY_HOURS = {5, 11, 17, 23}
 BASKETBALL_HOURS = {0, 6, 12, 18}
-SOCCER_HOURS = {1, 7, 13, 19}
+SOCCER_HOURS = {3, 7, 11, 15, 19, 23}
 PRIMARY_SPORTS = ["football", "volleyball", "baseball", "softball"]
 BASKETBALL_SPORTS = ["boys_basketball", "girls_basketball"]
 SOCCER_SPORTS = ["boys_soccer", "girls_soccer"]
@@ -65,7 +66,10 @@ def sports_for_now(now=None):
     if now.minute >= 10:
         return None
     if now.hour in PRIMARY_HOURS:
-        return list(PRIMARY_SPORTS)
+        sports = list(PRIMARY_SPORTS)
+        if now.month in WINTER_MONTHS and now.hour in SOCCER_HOURS:
+            sports += SOCCER_SPORTS
+        return sports
     if is_game_night_slot(now):
         # Game-night scores come first; basketball/soccer catch up 6 hours later.
         return list(GAME_NIGHT_SPORTS)
