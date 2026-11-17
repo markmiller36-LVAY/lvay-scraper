@@ -47,3 +47,8 @@ def test_volleyball_pauses_for_the_playoffs():
     assert "volleyball" not in active_on(2026, 11, 3)
     assert "volleyball" not in active_on(2026, 11, 20)
     assert "football" in active_on(2026, 11, 3)
+
+
+def test_football_runs_through_december_playoffs():
+    assert "football" in active_on(2026, 12, 11)
+    assert "football" not in active_on(2027, 1, 8)

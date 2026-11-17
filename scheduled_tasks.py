@@ -27,9 +27,9 @@ def get_active_sports():
     sports = []
 
     if (
-        month in [8, 9, 10, 11]
+        month in [8, 9, 10, 11, 12]
         and os.environ.get("ENABLE_FOOTBALL", "true").lower() == "true"
-    ):                                  # Aug - Nov
+    ):                                  # Aug - Dec (playoffs run into Dec)
         sports.append("football")
     # Volleyball pulls stop when the playoffs start (Mark, Nov 3, 2026): the
     # final power ratings and records stay frozen, and playoff results are

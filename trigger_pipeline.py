@@ -45,14 +45,49 @@ WINTER_MONTHS = {10, 11, 12, 1, 2, 3}
 # These replace the old Claude "football refresh" task, which couldn't send the
 # pipeline token, so it never pulled new LHSAA scores. Midnight and 1am belong
 # to the night before (Friday 12am = Thursday night's games).
+# Football playoffs (Mark, Nov 16, 2026): no regular-season games left, so
+# from Nov 10 through December football only runs on Fridays and Saturdays
+# (6-hour slots plus Friday-night 10pm/midnight/1am). Volleyball is done for
+# the year once its playoffs start (Nov 3), and baseball/softball are spring
+# only, so their slots stay quiet out of season.
+FOOTBALL_PLAYOFFS_START = (11, 10)
+VOLLEYBALL_END = (11, 3)
 GAME_NIGHT_SPORTS = ["football"]
 GAME_NIGHT_MONTHS = {8, 9, 10, 11, 12}
 THURSDAY, FRIDAY, SATURDAY = 3, 4, 5
 
 
+def in_football_playoffs(now):
+    return (now.month, now.day) >= FOOTBALL_PLAYOFFS_START or now.month == 12
+
+
+def football_runs_today(now):
+    if now.month not in GAME_NIGHT_MONTHS:
+        return False
+    if in_football_playoffs(now):
+        return now.weekday() in (FRIDAY, SATURDAY)
+    return True
+
+
+def primary_sports_for(now):
+    sports = []
+    if football_runs_today(now):
+        sports.append("football")
+    if now.month in (8, 9, 10) or (now.month == 11 and now.day < VOLLEYBALL_END[1]):
+        sports.append("volleyball")
+    if now.month in (2, 3, 4, 5):
+        sports += ["baseball", "softball"]
+    return sports
+
+
 def is_game_night_slot(now):
     if now.month not in GAME_NIGHT_MONTHS:
         return False
+    if in_football_playoffs(now):
+        # Friday-night games only: 10pm Friday, then midnight/1am Saturday.
+        if now.hour == 22:
+            return now.weekday() == FRIDAY
+        return now.hour in (0, 1) and now.weekday() == SATURDAY
     if now.hour == 22 and now.weekday() in (THURSDAY, FRIDAY):
         return True
     return now.hour in (0, 1) and now.weekday() in (FRIDAY, SATURDAY)
@@ -66,10 +101,10 @@ def sports_for_now(now=None):
     if now.minute >= 10:
         return None
     if now.hour in PRIMARY_HOURS:
-        sports = list(PRIMARY_SPORTS)
+        sports = primary_sports_for(now)
         if now.month in WINTER_MONTHS and now.hour in SOCCER_HOURS:
             sports += SOCCER_SPORTS
-        return sports
+        return sports or None
     if is_game_night_slot(now):
         # Game-night scores come first; basketball/soccer catch up 6 hours later.
         return list(GAME_NIGHT_SPORTS)

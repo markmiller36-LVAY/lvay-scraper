@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from trigger_pipeline import should_trigger_now, sports_for_now
 
 CT = ZoneInfo("America/Chicago")
-FB = ["football", "volleyball", "baseball", "softball"]
+FB = ["football", "volleyball"]  # October slots
 BB = ["boys_basketball", "girls_basketball"]
 SC = ["boys_soccer", "girls_soccer"]
 
@@ -18,7 +18,7 @@ def test_football_volleyball_every_6_hours_from_5am():
         assert sports_for_now(at(2026, 10, 20, hour, 0)) == FB
     for hour in (11, 23):  # shared with soccer in winter
         assert sports_for_now(at(2026, 10, 20, hour, 0)) == FB + SC
-        assert sports_for_now(at(2026, 7, 10, hour, 0)) == FB
+        assert sports_for_now(at(2026, 4, 10, hour, 0)) == ["baseball", "softball"]
 
 
 def test_basketball_every_6_hours_from_6am():
@@ -69,4 +69,36 @@ def test_game_nights_run_football_at_10pm_midnight_and_1am():
 
 def test_no_basketball_slot_out_of_season():
     assert not should_trigger_now(at(2026, 7, 10, 6, 0))
-    assert sports_for_now(at(2026, 7, 10, 5, 0)) == FB
+    assert sports_for_now(at(2026, 8, 10, 5, 0)) == ["football", "volleyball"]
+
+
+def test_quiet_in_july():
+    for hour in range(24):
+        assert not should_trigger_now(at(2026, 7, 10, hour, 0))
+
+
+def test_volleyball_done_after_nov_3():
+    assert "volleyball" in sports_for_now(at(2026, 11, 2, 5, 0))
+    assert sports_for_now(at(2026, 11, 6, 5, 0)) == ["football"]  # Friday, pre-playoffs
+
+
+def test_playoff_football_only_fridays_and_saturdays():
+    # Mon Nov 16 2026: no football; 11am/11pm still carry soccer
+    assert not should_trigger_now(at(2026, 11, 16, 5, 0))
+    assert not should_trigger_now(at(2026, 11, 16, 17, 0))
+    assert sports_for_now(at(2026, 11, 16, 23, 0)) == SC
+    # Thursday night: no game-night runs
+    assert not should_trigger_now(at(2026, 11, 19, 22, 0))
+    assert sports_for_now(at(2026, 11, 20, 0, 0)) == BB  # Fri midnight
+    assert sports_for_now(at(2026, 11, 20, 1, 0)) is None  # Fri 1am
+    # Friday: 6-hour slots plus 10pm; Saturday: midnight/1am plus 6-hour slots
+    assert sports_for_now(at(2026, 11, 20, 5, 0)) == ["football"]
+    assert sports_for_now(at(2026, 11, 20, 22, 0)) == ["football"]
+    assert sports_for_now(at(2026, 11, 20, 23, 0)) == ["football"] + SC
+    assert sports_for_now(at(2026, 11, 21, 0, 0)) == ["football"]
+    assert sports_for_now(at(2026, 11, 21, 1, 0)) == ["football"]
+    assert sports_for_now(at(2026, 11, 21, 17, 0)) == ["football"]
+    # Sunday and December weekdays stay quiet; December Fridays run
+    assert not should_trigger_now(at(2026, 11, 22, 5, 0))
+    assert not should_trigger_now(at(2026, 12, 8, 5, 0))
+    assert sports_for_now(at(2026, 12, 11, 5, 0)) == ["football"]
