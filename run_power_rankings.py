@@ -630,6 +630,17 @@ def run_power_rankings(season=SEASON, sport=SPORT):
         if apply_football_forfeits(conn, season):
             conn.commit()
 
+    if str(sport).lower() in {
+        "boys_soccer", "girls_soccer", "boys_basketball", "girls_basketball",
+    }:
+        # LVAY tournament finals count until LHSAA posts its own result
+        # (Mark, Nov 20, 2026). Never let a site hiccup stop the ratings.
+        try:
+            from lvay_tournament_finals import apply_tournament_finals
+            apply_tournament_finals(conn, sport, season)
+        except Exception as exc:
+            print(f"  Tournament finals skipped: {exc}")
+
     raw_rows = load_games(conn, season, sport, include_unscored=True)
     overrides = load_sheet_overrides(sport, season)
     rows = [apply_override_to_row(r, sport, season, overrides) for r in raw_rows]
