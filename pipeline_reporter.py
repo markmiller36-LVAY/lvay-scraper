@@ -7,6 +7,8 @@ import os
 import sqlite3
 from datetime import datetime
 
+from coach_stats_report import coach_stats_section, coach_stats_subject, fetch_coach_stats
+
 DB_PATH = os.environ.get("DB_PATH", "/data/lvay_v2.db")
 REPORT_TO = os.environ.get("REPORT_EMAIL_TO", "markmiller36@gmail.com")
 REPORT_FROM = os.environ.get(
@@ -258,6 +260,7 @@ def build_report(before, after, active_sports, started_at=None, oos_summary=None
     </div>"""
 
     signups = fetch_signup_stats()
+    coach_stats = fetch_coach_stats()
 
     body = f"""<html><head><style>{css}</style></head><body>
     <h1>LVAY Pipeline Report</h1>
@@ -266,6 +269,7 @@ def build_report(before, after, active_sports, started_at=None, oos_summary=None
     <strong>Game updates:</strong> {len(game_changes)} &nbsp; <strong>Rating updates:</strong> {len(rating_changes)}</p>
     {stuck_section}
     {_signup_section(signups)}
+    {coach_stats_section(coach_stats)}
     <h2>New or Corrected Games</h2><table><thead><tr><th>Sport</th><th>Date</th><th>Team</th><th>Opponent</th><th>Result</th><th>Score</th><th>Base</th><th>Bonus</th><th>Opponent Quality</th><th>Total</th></tr></thead><tbody>{game_rows}</tbody></table>
     <h2>Record and Power-Rating Changes</h2><table><thead><tr><th>Sport</th><th>Team</th><th>Old Record</th><th>New Record</th><th>Old Rating</th><th>New Rating</th></tr></thead><tbody>{rating_rows}</tbody></table>
     <h2>Past Football Games Still Missing Results</h2><table><thead><tr><th>Date</th><th>Team</th><th>Opponent</th><th>Score Field</th></tr></thead><tbody>{missing_rows}</tbody></table>
@@ -276,6 +280,7 @@ def build_report(before, after, active_sports, started_at=None, oos_summary=None
         subject = f"⚠ {len(stuck)} OOS record(s) stuck — " + subject
     if signups and signups.get("total") is not None:
         subject += f" — {signups.get('total')} fans (+{signups.get('today', 0)} today)"
+    subject += coach_stats_subject(coach_stats)
     return subject, body, {"game_changes": len(game_changes), "rating_changes": len(rating_changes)}
 
 
