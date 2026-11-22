@@ -78,6 +78,10 @@ def coach_stats_section(data):
         coach = _esc(team.get("coach") or "—")
         if team.get("role"):
             coach += f" <span style=\"color:#777\">({_esc(team.get('role'))})</span>"
+        if team.get("display_name"):
+            found = "&#10003; account" if team.get("account") else "no account found"
+            coach += (f"<br><span style=\"font-size:12px;color:#555\">LVAY: {_esc(team.get('display_name'))}"
+                      f" ({found})</span>")
         new = " <strong style=\"color:#0a7a3b\">NEW</strong>" if team.get("new_24h") else ""
         rows += (
             f"<tr><td>{_esc(team.get('sport'))}</td><td>{_esc(team.get('school'))}{new}</td>"
