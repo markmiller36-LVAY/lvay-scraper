@@ -18,6 +18,11 @@ from collections import deque
 from volleyball_records import schedule_record
 from district_exceptions import is_non_district_game
 from jv_only_schools import JV_ONLY_LABEL, is_jv_only_game
+from basketball_first_contest import (
+    BASKETBALL_SPORTS as FIRST_CONTEST_SPORTS,
+    is_before_first_contest,
+    normalize_class as normalize_basketball_class,
+)
 import winter_archive
 import bracket_archive
 import power_board_predictions
@@ -2252,6 +2257,9 @@ def preseason_school_rows(c, sport, season, school_filter=""):
     return rows
 
 
+_FIRST_CONTEST_CLASS_CACHE = {}
+
+
 def scraped_schedule_games(c, sport, season, school):
     """A school's posted LHSAA schedule straight from the scraped games table."""
     games = []
@@ -2264,8 +2272,35 @@ def scraped_schedule_games(c, sport, season, school):
         """, (sport, season, school)).fetchall()
     except sqlite3.OperationalError:
         return []
+    class_by_school = {}
+    cached = _FIRST_CONTEST_CLASS_CACHE.get((sport, str(season)))
+    if sport in FIRST_CONTEST_SPORTS and cached and time.time() - cached[0] < 300:
+        class_by_school = cached[1]
+    elif sport in FIRST_CONTEST_SPORTS:
+        try:
+            class_by_school = {
+                str(r["school"]).strip().casefold(): normalize_basketball_class(r["dc"])
+                for r in c.execute("""
+                    SELECT school, MAX(district_class) AS dc FROM games
+                    WHERE sport=? AND season=? GROUP BY school
+                """, (sport, season)).fetchall()
+            }
+        except sqlite3.OperationalError:
+            class_by_school = {}
+        _FIRST_CONTEST_CLASS_CACHE[(sport, str(season))] = (time.time(), class_by_school)
     for row in rows:
         g = dict(row)
+        if sport in FIRST_CONTEST_SPORTS:
+            # Jamborees/scrimmages before the class's first contest date are
+            # not regular-season games (Mark, Nov 22, 2026).
+            opp_cls = (
+                normalize_basketball_class(g.get("opponent_class"))
+                or class_by_school.get(str(g.get("opponent") or "").strip().casefold(), "")
+            )
+            if is_before_first_contest(
+                sport, season, g.get("game_date"), g.get("district_class"), opp_cls
+            ):
+                continue
         g["result"] = g.pop("win_loss", None) or ""
         # LHSAA's "District or Tournament" column: D = district game, T = tournament.
         kind = str(g.get("tournament") or "").strip().upper()
