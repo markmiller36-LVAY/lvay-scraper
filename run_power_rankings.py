@@ -39,6 +39,11 @@ from official_record_overrides import (
 from district_exceptions import is_non_district_game
 from oos_class_corrections import oos_class_correction
 from jv_only_schools import is_jv_only_game
+from basketball_first_contest import (
+    BASKETBALL_SPORTS,
+    is_before_first_contest,
+    normalize_class,
+)
 from school_database import (
     get_school,
     loose_school_key,
@@ -662,6 +667,30 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             f"  Excluded {jv_only_rows} JV-only games "
             "(shown on schedules, never counted)"
         )
+    if str(sport).lower() in BASKETBALL_SPORTS:
+        # Jamborees/scrimmages before a class's first contest date never count
+        # (5A-1A: Nov 23, 2026; B & C: Nov 9, 2026). Mark, Nov 22, 2026.
+        class_by_school = {}
+        for r in rows:
+            cls = normalize_class(r.get("class_")) or normalize_class(r.get("district_class"))
+            if cls:
+                class_by_school.setdefault(_rating_name_key(r.get("school")), cls)
+
+        def _early(r):
+            opp_cls = (
+                normalize_class(r.get("opponent_class"))
+                or class_by_school.get(_rating_name_key(r.get("opponent")), "")
+            )
+            own_cls = normalize_class(r.get("class_")) or normalize_class(r.get("district_class"))
+            return is_before_first_contest(sport, season, r.get("game_date"), own_cls, opp_cls)
+
+        early = [r for r in rows if _early(r)]
+        if early:
+            rows = [r for r in rows if not _early(r)]
+            print(
+                f"  Excluded {len(early)} basketball games played before the "
+                "class's first contest date (jamborees/scrimmages)"
+            )
     if not rows:
         print(f"  No games found for {sport} season {season}")
         conn.close()
