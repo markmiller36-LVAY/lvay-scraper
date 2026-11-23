@@ -777,7 +777,17 @@ def run_power_rankings(season=SEASON, sport=SPORT):
             )
 
     scores_lookup = load_scores(conn, season, sport)
-    school_records = build_school_records(rows, sport)
+    record_rows = rows
+    if str(sport).lower() in BASKETBALL_SPORTS and int(season) >= 2027:
+        # LHSAA basketball OppQ uses the opponent's in-state record only:
+        # out-of-state games are left out of both its wins and its games
+        # played (verified against LHSAA's girls report, Nov 22, 2026 —
+        # e.g. Starks 1-3 with a Texas win counts as 0-3 for opponents).
+        def _row_is_oos(r):
+            flag = str(r.get("out_of_state") or "").strip().upper() in ("Y", "YES", "1", "TRUE")
+            return flag or get_school(r.get("opponent"), sport, season) is None
+        record_rows = [r for r in rows if not _row_is_oos(r)]
+    school_records = build_school_records(record_rows, sport)
     record_overrides = get_record_overrides(sport, season)
     for school, (wins, losses, ties) in record_overrides.items():
         school_records[school] = {
