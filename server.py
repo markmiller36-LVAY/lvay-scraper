@@ -2239,6 +2239,25 @@ def preseason_school_rows(c, sport, season, school_filter=""):
                 district, class_ = winter_archive.split_district_class(dc[r["school"]])
                 r["class_"] = class_
                 r["district"] = r.get("district") or district
+    # Fill each school's playoff division from the alignment (school_database)
+    # so filters (e.g. the basketball scoreboard's Division filter, Mark
+    # Nov 24, 2026) work before a school has a power rating.
+    if any(not r.get("division") for r in rows):
+        try:
+            from school_database import get_school
+        except Exception:
+            get_school = None
+        if get_school:
+            for r in rows:
+                if r.get("division"):
+                    continue
+                try:
+                    info = get_school(r["school"], sport, season)
+                except Exception:
+                    info = None
+                if info and info.get("division"):
+                    r["division"] = info["division"]
+                    r["track"] = r.get("track") or info.get("track") or ""
     if school_filter:
         exact = [r for r in rows if str(r["school"]).casefold() == school_filter.casefold()]
         rows = exact or [r for r in rows if school_filter.casefold() in str(r["school"]).casefold()]
