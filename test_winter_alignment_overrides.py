@@ -39,8 +39,9 @@ class WinterAlignmentOverrideTests(unittest.TestCase):
             "Sterlington", "girls_basketball", 2027
         )
         self.assertEqual("Non-Select Division II", archived["division"])
-        self.assertEqual("Division II", upcoming["division"])
-        self.assertEqual("combined", upcoming["track"])
+        # 2026-27 now follows the official post-season PDF designation.
+        self.assertEqual("Non-Select Division II", upcoming["division"])
+        self.assertEqual("non-select", upcoming["track"])
 
     def test_soccer_uses_official_2026_division_and_district(self):
         mt_carmel = get_school("Mt. Carmel", "girls_soccer", 2026)
