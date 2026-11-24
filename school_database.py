@@ -105,6 +105,41 @@ def _load_versioned_sport_alignments():
 
 VERSIONED_SPORT_ALIGNMENTS = _load_versioned_sport_alignments()
 
+
+def _load_winter_postseason_designations():
+    """Load official 2026-27 basketball post-season designations.
+
+    The regular-season alignment PDFs only say "Division III"; the
+    separate post-season PDFs say whether a school plays in the Select
+    or Non-Select bracket.  These are the source of truth for division
+    and track when present.
+    """
+    path = Path(__file__).with_name("winter_postseason_2026_2027.json")
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+WINTER_POSTSEASON_DESIGNATIONS = _load_winter_postseason_designations()
+
+
+def _postseason_designation(sport_key, season_key, names):
+    data = WINTER_POSTSEASON_DESIGNATIONS
+    if data.get("season_keys", {}).get(sport_key) != season_key:
+        return None
+    table = data.get("sports", {}).get(sport_key, {})
+    for name in names:
+        if name and name in table:
+            return table[name]
+    wanted = {normalize_school_name(n).casefold() for n in names if n}
+    for school_name, label in table.items():
+        if normalize_school_name(school_name).casefold() in wanted:
+            return label
+    return None
+
 # ──────────────────────────────────────────────────────────────────────────────
 # DIVISION ASSIGNMENTS
 # ──────────────────────────────────────────────────────────────────────────────
@@ -961,6 +996,16 @@ def get_school(name, sport=None, season=None):
                     merged["track"] = "non-select"
                 elif str(merged.get("division") or "").startswith("Select"):
                     merged["track"] = "select"
+            postseason = _postseason_designation(
+                sport_key, season_key, (raw, canonical, merged.get("name"))
+            )
+            if postseason:
+                merged["division"] = postseason
+                merged["track"] = (
+                    "non-select" if postseason.startswith("Non-Select")
+                    else "select" if postseason.startswith("Select")
+                    else "small-school"
+                )
             if versioned_info.get("alignment_status"):
                 merged["alignment_status"] = versioned_info[
                     "alignment_status"
