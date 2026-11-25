@@ -48,6 +48,20 @@ def _date_key(game_date) -> str:
     return ""
 
 
+def _time_key(game_date) -> str:
+    """'11/23/2026 12:30:00 PM' -> '12:30' (24h); '' when there is no time."""
+    m = re.search(r"(\d{1,2}):(\d{2})(?::\d{2})?\s*([AP]M)", str(game_date or ""), re.I)
+    if not m:
+        return ""
+    hh = int(m.group(1)) % 12 + (12 if m.group(3).upper() == "PM" else 0)
+    return f"{hh:02d}:{m.group(2)}"
+
+
+def _hm(time_hm) -> str:
+    m = re.match(r"^(\d{1,2}):(\d{2})", str(time_hm or ""))
+    return f"{int(m.group(1)):02d}:{m.group(2)}" if m else ""
+
+
 def _lhsaa_date(date_ymd: str, time_hm: str) -> str:
     d = datetime.strptime(date_ymd, "%Y-%m-%d")
     hh, mm = 12, 0
@@ -156,6 +170,19 @@ def apply_tournament_finals(conn, sport: str, season: str, finals=None) -> dict:
         if not date_ymd or not a or not b or a == b:
             stats["skipped"] += 1
             continue
+        # LHSAA already has either school in a different game in the same
+        # time slot that day: the tournament page's pairing is stale
+        # (Sterlington, Nov 23 2026: page said Rayville vs Ouachita Parish at
+        # 12:30; LHSAA had Bastrop vs Ouachita Parish). Never invent a game
+        # LHSAA contradicts -- skip both sides.
+        slot = _hm(f.get("time"))
+        if slot and any(
+            _date_key(r[3]) == date_ymd and _time_key(r[3]) == slot and _key(r[2]) != them
+            for me, them in ((a, b), (b, a))
+            for r in by_school.get(me, [])
+        ):
+            stats["conflict"] = stats.get("conflict", 0) + 1
+            continue
         for me, them, mine, theirs in ((a, b, sa, sb), (b, a, sb, sa)):
             if me not in by_school:
                 stats["skipped"] += 1  # out of state / not an LHSAA school here
@@ -205,6 +232,7 @@ def apply_tournament_finals(conn, sport: str, season: str, finals=None) -> dict:
     print(
         "  Tournament finals: "
         f"{stats['inserted']} added, {stats['filled']} filled, "
-        f"{stats['lhsaa']} already on LHSAA, {stats['skipped']} skipped"
+        f"{stats['lhsaa']} already on LHSAA, {stats.get('conflict', 0)} conflict with LHSAA, "
+        f"{stats['skipped']} skipped"
     )
     return stats

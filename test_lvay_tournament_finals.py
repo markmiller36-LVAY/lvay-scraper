@@ -117,3 +117,17 @@ class TournamentFinalsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StaleTournamentPairingTests(unittest.TestCase):
+    def test_skips_game_when_lhsaa_has_school_in_other_game_same_slot(self):
+        conn = make_db()
+        # LHSAA: Ruston plays Bossier at 10:30 on 11/21. A tournament page that
+        # still says Ruston vs Captain Shreve at 10:30 must not invent a game.
+        stale = {"date": "2026-11-21", "time": "10:30", "a": "Ruston", "b": "Captain Shreve",
+                 "sa": 3, "sb": 1, "tournament": "T", "host": "H"}
+        st = ltf.apply_tournament_finals(conn, "boys_soccer", "2027", [stale])
+        self.assertEqual(st.get("conflict"), 1)
+        self.assertFalse([r for r in results(conn, "Ruston") if r[4] == ltf.SOURCE_INSERT])
+        # The pairing is suspect, so neither side is added.
+        self.assertEqual(st["inserted"], 0)
