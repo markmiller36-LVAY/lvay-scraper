@@ -1534,6 +1534,18 @@ def parity_volleyball():
     return jsonify(report)
 
 
+@app.route("/api/parity/lhsaa/<sport>")
+def parity_lhsaa_report(sport):
+    """LHSAA's live basketball/soccer power rating report, parsed (read-only)."""
+    from winter_parity import REPORTS, fetch_report
+    if sport not in REPORTS:
+        return jsonify({"error": "unknown sport", "sports": sorted(REPORTS)}), 404
+    try:
+        return jsonify(fetch_report(sport))
+    except Exception as e:
+        return jsonify({"sport": sport, "error": str(e)}), 502
+
+
 @app.route("/embed/volleyball-rankings")
 def embed_volleyball_rankings():
     conn = get_db()
