@@ -195,6 +195,10 @@ def get_sport_config(
         if current_cycle:
             config = dict(config)
             config["opp_quality"] = current_style
+            # Bylaw 11.6.1 (verified vs LHSAA's live report, Nov 25 2026):
+            # +2 per division the opponent is above, when its class is also
+            # higher -- not capped by the class gap.
+            config["bonus_mode"] = "division_steps_class_gated"
         return config
     if sport == "soccer" or sport.endswith("_soccer"):
         return SPORT_CONFIGS["soccer"]

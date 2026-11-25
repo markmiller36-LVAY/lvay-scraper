@@ -75,3 +75,9 @@ class BasketballSeasonRuleTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_2027_bonus_is_per_division_step_when_class_higher():
+    from power_rating_engine import get_sport_config
+    assert get_sport_config("girls_basketball", "2A", "2027")["bonus_mode"] == "division_steps_class_gated"
+    assert get_sport_config("girls_basketball", "2A", "2026")["bonus_mode"] == "division_steps_with_class_gate"
