@@ -2365,13 +2365,22 @@ def merge_unplayed_schedule_games(rated_games, scraped_games):
     def opp_key(g):
         return re.sub(r"[^a-z0-9]", "", str(g.get("opponent") or "").casefold())
     rated_pairs = {(date_key(g), opp_key(g)) for g in rated_games}
-    rated_dates = {date_key(g) for g in rated_games}
+    # Played rated games per day not matched by name yet. A played scraped
+    # game with no name match is taken as a spelling variant only while that
+    # day still has an unmatched rated game -- so a second game that day (a
+    # tournament doubleheader, an out-of-state game) is still shown.
+    spare = {}
+    scraped_pairs = {(date_key(g), opp_key(g)) for g in scraped_games}
+    for g in rated_games:
+        if (date_key(g), opp_key(g)) not in scraped_pairs:
+            spare[date_key(g)] = spare.get(date_key(g), 0) + 1
     merged = list(rated_games)
     for g in scraped_games:
         if (date_key(g), opp_key(g)) in rated_pairs:
             continue
         played = str(g.get("result") or "").strip().upper() in ("W", "L", "T")
-        if played and date_key(g) in rated_dates:
+        if played and spare.get(date_key(g), 0) > 0:
+            spare[date_key(g)] -= 1
             continue
         merged.append(g)
     return sort_schedule_games(merged)
