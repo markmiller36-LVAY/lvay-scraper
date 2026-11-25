@@ -19,22 +19,13 @@ import requests
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
-SOCCER_REPORT = ("https://www.lhsaaonline.org/PR/sopr/admin/ReportPowerByDivision.asp"
-                 "?d=0&ExcludeNewSchools=1&NotInPlayoff=1&p=1")
-
+R = "https://www.lhsaaonline.org/rpt/"
 REPORTS = {
-    "boys_basketball": {"url": "https://www.lhsaaonline.org/rpt/BBbyClassPR.html"},
-    "girls_basketball": {"url": "https://www.lhsaaonline.org/rpt/GBBbyClassPR.html"},
-    "boys_soccer": {
-        "url": SOCCER_REPORT,
-        "session_pages": ["https://www.lhsaaonline.org/pr/sopr/admin/SearchboyssoccerSchedule.asp"],
-        "title_word": "boys",
-    },
-    "girls_soccer": {
-        "url": SOCCER_REPORT,
-        "session_pages": ["https://www.lhsaaonline.org/pr/sopr/admin/SearchgirlssoccerSchedule.asp"],
-        "title_word": "girls",
-    },
+    # Basketball: Class B/C report + Non-Select and Select division reports.
+    "boys_basketball": {"urls": [R + "BBbyClassPR.html", R + "BBNonSelectbyDivisionPR.html", R + "BBSelectbyDivisionPR.html"]},
+    "girls_basketball": {"urls": [R + "GBBbyClassPR.html", R + "GBBNonSelectbyDivisionPR.html", R + "GBBSelectbyDivisionPR.html"]},
+    "boys_soccer": {"urls": [R + "SObyDivisionPR.html"], "title_word": "boys"},
+    "girls_soccer": {"urls": [R + "GSObyDivisionPR.html"], "title_word": "girls"},
 }
 
 NOT_PLAYING_RE = re.compile(
@@ -44,7 +35,7 @@ GROUP_RE = re.compile(
     r"((?:Non-?Select|Select)?\s*(?:Division\s+(?:IV|III|II|I)\b|Class\s+(?:5A|4A|3A|2A|1A|B|C)\b)"
     r"|\b(?:5A|4A|3A|2A|1A)\b|\bClass\s+[BC]\b)", re.I)
 DATE_RE = re.compile(r"Date:\s*([0-9/]+\s+[0-9:]+\s*[AP]M)", re.I)
-TITLE_RE = re.compile(r"((?:Boys|Girls)\s+(?:Basketball|Soccer)[^<\n]{0,80}?(?:Ranking|Rating)[^<\n]{0,40})", re.I)
+TITLE_RE = re.compile(r"((?:Boys|Girls)'?\s+(?:Basketball|Soccer)[^<\n]{0,80}?(?:Ranking|Rating)[^<\n]{0,40})", re.I)
 
 
 def _text(html):
@@ -106,12 +97,16 @@ def fetch_report(sport, timeout=60):
         raise ValueError(f"unknown sport {sport}")
     session = requests.Session()
     session.headers.update(HEADERS)
-    for page in config.get("session_pages", []):
-        session.get(page, timeout=timeout)
-    response = session.get(config["url"], timeout=timeout,
-                           headers={"Referer": (config.get("session_pages") or [config["url"]])[0]})
-    response.raise_for_status()
-    rows, meta = parse_report(response.text)
-    word = config.get("title_word")
-    meta["gender_ok"] = None if not word else bool(meta.get("title") and word in meta["title"].lower())
-    return {"sport": sport, "url": config["url"], "count": len(rows), **meta, "rows": rows}
+    rows, reports = [], []
+    for url in config["urls"]:
+        response = session.get(url, timeout=timeout)
+        response.raise_for_status()
+        part, meta = parse_report(response.text)
+        for row in part:
+            row["report"] = url.rsplit("/", 1)[-1]
+        rows += part
+        word = config.get("title_word")
+        meta["gender_ok"] = None if not word else bool(meta.get("title") and word in meta["title"].lower())
+        reports.append({"url": url, "count": len(part), **meta})
+    return {"sport": sport, "count": len(rows), "reports": reports,
+            "as_of": min((r["as_of"] or "" for r in reports), default=None), "rows": rows}
