@@ -766,6 +766,7 @@ def scrape_class_loop_sport(sport_key: str):
 
     classifications = CLASSIFICATIONS_BY_SPORT.get(sport_key, [])
 
+    seen = set()
     for class_ in classifications:
         print(f"  Class {class_}...")
         html = fetch_page(sport_key, season, class_)
@@ -774,9 +775,19 @@ def scrape_class_loop_sport(sport_key: str):
             continue
 
         games = parse_schedule_table(html, sport_key, season)
+        for g in games:
+            seen.add((g["school"], g["game_date"], g["opponent"]))
         print(f"    Parsed {len(games)} games")
         total += save_games(games)
         time.sleep(2)
+
+    # Basketball: a game a school edits on LHSAA (new opponent, new time)
+    # used to leave the old row behind -- e.g. girls Rayville vs Ouachita
+    # Parish, Nov 23 2026. Same clean-up soccer has had since Nov 10.
+    if sport_key.endswith("_basketball") and not failed_classes and seen:
+        removed = remove_stale_games(sport_key, season, seen)
+        if removed:
+            print(f"  Removed {removed} games no longer on LHSAA (moved or edited)")
 
     if failed_classes:
         note = f"season={season}; failed_classes={','.join(failed_classes)}"
@@ -802,7 +813,8 @@ def remove_stale_games(sport_key: str, season: str, seen) -> int:
         conn.close()
         return 0
     rows = c.execute(
-        "SELECT rowid, school, game_date, opponent FROM games WHERE sport=? AND season=?",
+        "SELECT rowid, school, game_date, opponent FROM games WHERE sport=? AND season=? "
+        "AND COALESCE(source, '') NOT LIKE 'LVAY%'",  # LVAY tournament rows rebuild themselves
         (sport_key, str(season)),
     ).fetchall()
     stale = [r[0] for r in rows if (r[1], r[2], r[3]) not in seen]
